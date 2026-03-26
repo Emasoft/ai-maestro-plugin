@@ -45,17 +45,18 @@ Creates and manages 3 persistent markdown files (task_plan.md, findings.md, prog
 
 ## Output
 
-| File | Purpose | Update Frequency |
-|------|---------|-----------------|
-| task_plan.md | Goals, phases, decisions | After each phase |
-| findings.md | Research discoveries | During research |
-| progress.md | Session log, test results | Throughout session |
+- `task_plan.md`: Goals, phases, decisions (update after each phase)
+- `findings.md`: Research discoveries (update during research)
+- `progress.md`: Session log, test results (update throughout session)
 
 ## Error Handling
 
 - **Templates not found**: Check `ls <skill-path>/templates/`
 - **Dir not writable**: Set `AIMAESTRO_PLANNING_DIR` to writable path
-- **Lost track**: Run `grep -E "^\s*-\s*\[" "$PLAN_DIR/task_plan.md"` to see checkboxes
+- **Lost track**: Check task_plan.md checkboxes:
+  ```bash
+  grep -E "^\s*-\s*\[" "$PLAN_DIR/task_plan.md"
+  ```
 - **3 consecutive failures**: Stop, document all attempts, escalate to user
 
 ## Examples
@@ -71,6 +72,8 @@ Creates 3 files in docs_dev/, task_plan.md populated with goal broken into phase
 Creates planning files with migration-specific phases.
 
 ## Checklist
+
+Copy this checklist and track your progress:
 
 - [ ] Create output directory
 - [ ] Copy 3 template files

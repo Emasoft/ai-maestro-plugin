@@ -89,6 +89,8 @@ Adds agent to team's agentIds array.
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Verified governance role via `/api/governance`
 - [ ] Confirmed MANAGER or COS title
 - [ ] Obtained governance password from user (if COS assignment)

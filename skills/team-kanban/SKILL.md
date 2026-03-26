@@ -79,6 +79,8 @@ Connects team to GitHub Projects v2.
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Identified correct team ID
 - [ ] Verified auth headers (if closed team)
 - [ ] Used valid status column IDs

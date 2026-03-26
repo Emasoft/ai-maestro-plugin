@@ -78,6 +78,8 @@ Focuses on PostToolUse hooks only. Returns root cause and fix command.
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Check global hooks in `~/.claude/settings.json`
 - [ ] Check project hooks in `.claude/settings.json`
 - [ ] Verify hook script exists and is executable

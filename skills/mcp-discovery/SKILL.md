@@ -74,6 +74,8 @@ Expected: JSON with tools array.
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Identify target (installed plugin or standalone/remote)
 - [ ] Run discovery command
 - [ ] Review discovered tools

@@ -66,6 +66,8 @@ docs-index-delta.sh /path/to/project
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Verify docs scripts installed (`which docs-search.sh`)
 - [ ] Verify AI Maestro running (`docs-stats.sh`)
 - [ ] Index project documentation if needed
