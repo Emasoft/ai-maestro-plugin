@@ -25,7 +25,7 @@ cleanup() {
     # Clean up any temporary files created during execution
     local f
     for f in "${_TEMP_FILES[@]}"; do
-        [[ -f "$f" ]] && rm -f "$f" 2>/dev/null || true
+        if [[ -f "$f" ]]; then rm -f "$f" 2>/dev/null; fi
     done
     # Reset terminal colors in case of abnormal exit
     printf '%s' "${NC:-}" 2>/dev/null || true
