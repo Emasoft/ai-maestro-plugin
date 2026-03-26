@@ -12,7 +12,7 @@ on:
       - 'scripts/**'
 
 env:
-  MARKETPLACE_OWNER: '23blocks-OS'
+  MARKETPLACE_OWNER: 'Emasoft'
   MARKETPLACE_REPO: 'ai-maestro-plugins'
 
 jobs:
