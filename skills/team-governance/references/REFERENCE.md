@@ -66,6 +66,16 @@ curl -s -X POST "http://localhost:23000/api/teams" \
   -d '{"name": "security-team", "type": "closed"}' | jq .
 ```
 
+```bash
+# With COS — auto-assigns COS title and auto-installs ai-maestro-chief-of-staff role-plugin
+curl -s -X POST "http://localhost:23000/api/teams" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <manager-agent-id>" \
+  -d '{"name": "security-team", "type": "closed", "chiefOfStaffId": "<cos-agent-id>"}' | jq .
+```
+
+**Auto-COS chain:** When `chiefOfStaffId` is provided, the `ai-maestro-chief-of-staff` role-plugin is automatically installed on the designated COS agent (`--scope local`). If no `chiefOfStaffId` is provided, the response includes `needsChiefOfStaff: true` — a COS must be assigned separately via `POST /api/teams/{id}/chief-of-staff`.
+
 ### Delete a Closed Team (MANAGER Only)
 
 ```bash
@@ -147,6 +157,8 @@ curl -s -X POST "http://localhost:23000/api/teams/<team-id>/chief-of-staff" \
 
 **Never store, cache, or log the governance password.** Ask the user each time.
 
+**Role-plugin auto-install:** Assigning a COS automatically installs the `ai-maestro-chief-of-staff` role-plugin on the COS agent with `--scope local`. Similarly, assigning the MANAGER title auto-installs `ai-maestro-assistant-manager-agent`. These are non-blocking — title assignment succeeds even if plugin install fails.
+
 ---
 
 ## Team Broadcast Messaging
@@ -194,6 +206,11 @@ done
 | Broadcast own team | No | Yes | No | Yes |
 | Broadcast any team | No | No | No | Yes |
 | Message any agent (AMP) | Yes | Yes | Yes | Yes |
+
+**Membership constraints:**
+- A COS agent can lead **one closed team only** — cannot be COS of multiple teams simultaneously.
+- A normal agent can belong to at most **one closed team** at any time. Joining a closed team revokes open team memberships.
+- MANAGER can belong to **unlimited** open and closed teams.
 
 ---
 

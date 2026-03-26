@@ -296,7 +296,42 @@ aimaestro-agent.sh skill remove my-api custom-skill
 | Scope | User or local | Always local |
 | Per agent | Multiple | One at a time |
 | Has .agent.toml | No | Yes (required) |
-| Stored in | Any marketplace | `~/agents/role-plugins/` |
+| Stored in | Any marketplace | `ai-maestro-plugins` marketplace (6 defaults) or `~/agents/role-plugins/` (custom) |
+
+### Role-Plugin Installation Architecture
+
+**Default role-plugins** (6 predefined, from `Emasoft/ai-maestro-plugins` marketplace):
+
+| Role Plugin | Prefix | Governance Binding |
+|-------------|--------|-------------------|
+| `ai-maestro-assistant-manager-agent` | `amama-` | Auto-installed when MANAGER title assigned |
+| `ai-maestro-chief-of-staff` | `amcos-` | Auto-installed when COS title assigned |
+| `ai-maestro-programmer-agent` | `ampa-` | User choice (MEMBER) |
+| `ai-maestro-orchestrator-agent` | `amoa-` | User choice (MEMBER) |
+| `ai-maestro-integrator-agent` | `amia-` | User choice (MEMBER) |
+| `ai-maestro-architect-agent` | `amaa-` | User choice (MEMBER) |
+
+**Custom role-plugins** — Created by Haephestos from `.agent.toml` profiles. Stored in `~/agents/role-plugins/` local marketplace.
+
+**Key principles:**
+1. **On-demand install** — Role-plugins are NOT pre-installed. Downloaded when user selects from dropdown or governance title is assigned. Uses `claude plugin install <name> --scope local`.
+2. **Always local scope** — All role-plugins use `--scope local` (agent's working directory only).
+3. **One at a time** — An agent can have at most one active role-plugin. Installing a new one replaces the previous.
+
+### Governance Title → Role-Plugin Binding
+
+| Title | Required Role-Plugin | Auto-installed? | Locked? |
+|-------|---------------------|:---------------:|:-------:|
+| MANAGER | `ai-maestro-assistant-manager-agent` | Yes | Yes |
+| CHIEF-OF-STAFF | `ai-maestro-chief-of-staff` | Yes | Yes |
+| MEMBER | Any role-plugin | No (user choice) | No |
+
+**Auto-install triggers:**
+- `POST /api/governance/manager` — assigns MANAGER → installs manager plugin
+- `POST /api/teams/{id}/chief-of-staff` — assigns COS → installs COS plugin
+- `POST /api/teams` with `type: "closed"` + `chiefOfStaffId` — creates team + auto-installs COS plugin
+
+Auto-installations are non-blocking: title assignment succeeds even if plugin install fails.
 
 ### 16. List Plugins
 
