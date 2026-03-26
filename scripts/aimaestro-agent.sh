@@ -39,11 +39,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _source_module() {
     local module="$1"
     if [[ -f "${SCRIPT_DIR}/${module}" ]]; then
+        # shellcheck disable=SC1090 # Module path resolved at runtime from SCRIPT_DIR
         if ! source "${SCRIPT_DIR}/${module}"; then
             echo "Error: Failed to source ${module}" >&2
             exit 1
         fi
     elif [[ -f "${HOME}/.local/bin/${module}" ]]; then
+        # shellcheck disable=SC1090 # Module path resolved at runtime from ~/.local/bin fallback
         if ! source "${HOME}/.local/bin/${module}"; then
             echo "Error: Failed to source ${module} from ~/.local/bin" >&2
             exit 1

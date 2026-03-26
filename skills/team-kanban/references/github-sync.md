@@ -1,5 +1,25 @@
 # GitHub Projects v2 Integration
 
+## Table of Contents
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+  - [Link a Team to a GitHub Project](#link-a-team-to-a-github-project)
+  - [Unlink a Team](#unlink-a-team)
+  - [Show Status](#show-status)
+- [How It Works](#how-it-works)
+- [Field Mapping](#field-mapping)
+  - [Label Taxonomy (AMOA Convention)](#label-taxonomy-amoa-convention)
+  - [Custom Project Fields](#custom-project-fields)
+  - [Dependency Resolution](#dependency-resolution)
+- [Status Column ID Conversion](#status-column-id-conversion)
+- [Caching](#caching)
+- [Rate Limits](#rate-limits)
+- [Error Handling](#error-handling)
+- [API Examples](#api-examples)
+- [Legacy: kanban-sync.sh](#legacy-kanban-syncsh)
+
+---
+
 AI Maestro kanban is a live browser of GitHub Projects v2. There is no sync — GitHub IS the source of truth. All task CRUD operations proxy through the GitHub GraphQL API.
 
 ## Prerequisites

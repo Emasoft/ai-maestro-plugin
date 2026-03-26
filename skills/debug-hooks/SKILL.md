@@ -1,277 +1,111 @@
 ---
 name: debug-hooks
-description: >-
-  Systematic hook debugging workflow for AI Maestro agents. Use when hooks
-  aren't firing, producing wrong output, or behaving unexpectedly. Covers
-  PreToolUse, PostToolUse, SessionStart, SessionEnd, Stop, Notification,
-  and UserPromptSubmit hooks.
-allowed-tools: [Bash, Read, Grep]
+description: "Debug Claude Code hooks (PreToolUse, PostToolUse, etc.). Use when hooks aren't firing or produce wrong output. Trigger with /debug-hooks."
+allowed-tools: "Bash(cat:*), Bash(jq:*), Bash(ls:*), Bash(chmod:*), Bash(file:*), Bash(find:*), Bash(echo:*), Bash(node:*), Bash(npx:*), Bash(tail:*), Read, Grep, Glob"
 metadata:
-  author: 23blocks
-  version: "1.0"
+  author: "Emasoft"
+  version: "2.0.0"
 ---
 
-# Debug Hooks
+## Overview
 
-Systematic workflow for debugging Claude Code hooks in AI Maestro agent sessions.
+Systematic workflow for debugging Claude Code hooks in AI Maestro agent sessions. Covers all 7 hook types: PreToolUse, PostToolUse, SessionStart, SessionEnd, Stop, Notification, and UserPromptSubmit. Most issues are caught in the first 3 diagnostic steps.
 
----
+## Prerequisites
 
-## When to Use
+- Claude Code installed with hooks support
+- Access to `~/.claude/settings.json` (global hooks)
+- `jq` available on PATH for JSON parsing
+- AI Maestro plugin installed (for AI Maestro-specific hooks)
 
-- "My hook isn't firing"
-- "Hook produces wrong output"
-- "SessionEnd/Stop not working"
-- "PostToolUse hook not triggering"
-- "Why didn't my hook run?"
-- "Notification hook not showing"
-- "UserPromptSubmit hook blocked something"
-- "Hook works locally but not on agent"
+## Instructions
 
----
+1. **Check hook registration** — Verify the hook exists in settings.json with correct event name (case-sensitive). Check both global (`~/.claude/settings.json`) and project-level (`.claude/settings.json`).
+   ```bash
+   cat ~/.claude/settings.json | jq '.hooks // empty'
+   cat .claude/settings.json | jq '.hooks // empty' 2>/dev/null
+   ```
 
-## Quick Diagnosis Checklist
+2. **Verify script exists and is executable** — Check the script path and permissions.
+   ```bash
+   ls -la /path/to/my-hook.sh
+   chmod +x /path/to/my-hook.sh  # fix if needed
+   ```
 
-Run these in order. Most issues are caught by step 1-3.
+3. **Test hook manually** — Pipe sample JSON to the hook script to see if it runs.
+   ```bash
+   echo '{"tool_name": "Write", "tool_input": {}, "session_id": "test"}' | /path/to/my-hook.sh
+   ```
 
-| Step | Check | Command |
-|------|-------|---------|
-| 1 | Is hook registered? | `cat ~/.claude/settings.json \| jq '.hooks'` |
-| 2 | Does the script exist? | `ls -la <script-path>` |
-| 3 | Is script executable? | `chmod +x <script-path>` |
-| 4 | Does it run standalone? | `echo '{}' \| <script-path>` |
-| 5 | Is the event name correct? | See Event Reference below |
-| 6 | Does it match tool/event? | Check matcher pattern |
-| 7 | Check for silent failures | Look at stderr/exit code |
+4. **Check for silent failures** — If hook uses background processes (`&`, `nohup`), redirect stderr to a log file to capture hidden errors.
+   ```bash
+   nohup my-script.sh >> /tmp/hook-debug.log 2>&1 &
+   tail -f /tmp/hook-debug.log
+   ```
 
----
+5. **Verify event name and matcher** — Event names are case-sensitive (`PostToolUse` not `posttooluse`). Tool-specific hooks need a `matcher` field.
 
-## Step 1: Check Hook Registration
+6. **Check AI Maestro hooks** — If AI Maestro hooks are broken, verify the hook runner exists and is registered.
+   ```bash
+   find ~/.claude/plugins/cache -name "ai-maestro-hook.cjs" | head -1
+   ```
 
-Hooks are registered in `settings.json` (global or project-level). Both are merged at runtime.
+7. **Rebuild TypeScript hooks** — If you edited TS source, rebuild the bundle. Source edits alone don't take effect.
+   ```bash
+   npx esbuild src/my-hook.ts --bundle --platform=node --format=esm --outfile=dist/my-hook.mjs
+   ```
 
-```bash
-# Global hooks (apply to ALL sessions)
-cat ~/.claude/settings.json | jq '.hooks // empty'
+## Output
 
-# Project-level hooks (apply to this project only)
-cat .claude/settings.json | jq '.hooks // empty' 2>/dev/null
+- Diagnosis of why a hook is not firing or misbehaving
+- Specific fix commands (chmod, path correction, matcher fix, rebuild)
+- Debug log file at `/tmp/hook-debug.log` if verbose logging was added
 
-# AI Maestro's own hooks (from plugin)
-cat ~/.claude/plugins/cache/*/ai-maestro/*/hooks/hooks.json 2>/dev/null | jq .
+## Error Handling
+
+- If hook script not found: check absolute path, verify plugin installation
+- If permission denied: run `chmod +x` on the script
+- If hook fires for wrong tool: fix the `matcher` field in settings.json
+- If hook runs twice: remove duplicate registration from global or project settings
+- If AI Maestro hook missing: reinstall with `./install-messaging.sh -y`
+
+## Examples
+
 ```
-
-### Hook Registration Format
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write",
-        "command": "/path/to/my-hook.sh"
-      }
-    ],
-    "SessionEnd": [
-      {
-        "command": "/path/to/cleanup.sh"
-      }
-    ]
-  }
-}
+/debug-hooks
 ```
+Runs the full 7-step diagnosis on all registered hooks.
 
-**Common issues:**
-- Hook type misspelled (case-sensitive: `PostToolUse` not `posttooluse`)
-- `command` path is relative (must be absolute or on PATH)
-- Missing `matcher` when needed (tool-specific hooks)
-
----
-
-## Step 2: Verify Script Exists and Is Executable
-
-```bash
-# Check the script exists
-ls -la /path/to/my-hook.sh
-
-# Check it's executable
-file /path/to/my-hook.sh
-ls -la /path/to/my-hook.sh | awk '{print $1}'
-
-# Fix if not executable
-chmod +x /path/to/my-hook.sh
 ```
-
----
-
-## Step 3: Test Hook Manually
-
-Each hook type receives different JSON on stdin. Test with sample input:
-
-### PreToolUse / PostToolUse
-
-```bash
-# PreToolUse — receives tool_name + tool_input
-echo '{"tool_name": "Write", "tool_input": {"file_path": "/tmp/test.txt", "content": "hello"}, "session_id": "test-123"}' | /path/to/my-hook.sh
-
-# PostToolUse — receives tool_name + tool_input + tool_output
-echo '{"tool_name": "Bash", "tool_input": {"command": "ls"}, "tool_output": "file1.txt\nfile2.txt", "session_id": "test-123"}' | /path/to/my-hook.sh
+/debug-hooks PostToolUse
 ```
+Focuses diagnosis on PostToolUse hooks only.
 
-### SessionStart / SessionEnd / Stop
+Expected result: identification of the root cause and a specific fix command.
 
-```bash
-# SessionStart — receives session info
-echo '{"session_id": "test-123", "cwd": "/path/to/project"}' | /path/to/my-hook.sh
+## Checklist
 
-# SessionEnd — receives session + transcript path
-echo '{"session_id": "test-123", "reason": "user_exit", "transcript_path": "/tmp/test.jsonl"}' | /path/to/my-hook.sh
+Copy this checklist and track your progress:
+- [ ] Check global hooks in `~/.claude/settings.json`
+- [ ] Check project hooks in `.claude/settings.json`
+- [ ] Verify hook script exists at registered path
+- [ ] Verify hook script is executable
+- [ ] Test hook manually with sample JSON input
+- [ ] Check for silent failures (background/spawn patterns)
+- [ ] Verify event name casing is correct
+- [ ] Verify matcher pattern matches target tool
+- [ ] Rebuild TypeScript hooks if source was edited
+- [ ] Remove verbose logging after debugging
 
-# Stop — receives final message
-echo '{"session_id": "test-123", "stop_reason": "end_turn"}' | /path/to/my-hook.sh
-```
+## Resources
 
-### UserPromptSubmit
-
-```bash
-# Receives the user's prompt text
-echo '{"prompt": "write a function", "session_id": "test-123"}' | /path/to/my-hook.sh
-```
-
-### Notification
-
-```bash
-# Receives notification content
-echo '{"title": "Test", "body": "Test notification", "session_id": "test-123"}' | /path/to/my-hook.sh
-```
-
----
-
-## Step 4: Check for Silent Failures
-
-If your hook uses `spawn` or `&` to run in background:
-
-```bash
-# This pattern HIDES all errors!
-nohup my-script.sh &>/dev/null &
-```
-
-**Fix:** Redirect output to a log file temporarily:
-
-```bash
-# Debug version — captures all output
-nohup my-script.sh >> /tmp/hook-debug.log 2>&1 &
-
-# Check the log
-tail -f /tmp/hook-debug.log
-```
-
-For TypeScript/Node hooks using `spawn`:
-
-```typescript
-// BAD — hides errors
-spawn(cmd, args, { detached: true, stdio: 'ignore' })
-
-// GOOD — captures errors to a log
-const logFile = fs.openSync('/tmp/hook-debug.log', 'a');
-spawn(cmd, args, {
-  detached: true,
-  stdio: ['ignore', logFile, logFile]
-});
-```
-
----
-
-## Step 5: Check AI Maestro Hook (ai-maestro-hook.cjs)
-
-AI Maestro installs its own hooks via `hooks.json`. If these aren't working:
-
-```bash
-# Check the hook runner exists
-ls -la ~/.local/bin/ai-maestro-hook.cjs 2>/dev/null || \
-  find ~/.claude/plugins/cache -name "ai-maestro-hook.cjs" | head -1
-
-# Test it directly
-echo '{"session_id": "test"}' | node $(find ~/.claude/plugins/cache -name "ai-maestro-hook.cjs" | head -1) Notification
-
-# Check it's registered
-cat ~/.claude/settings.json | jq '.hooks.Notification // empty'
-```
-
----
-
-## Step 6: Rebuild After TypeScript Edits
-
-If you edited TypeScript hook source, you MUST rebuild:
-
-```bash
-cd .claude/hooks
-npx esbuild src/my-hook.ts \
-  --bundle --platform=node --format=esm \
-  --outfile=dist/my-hook.mjs
-```
-
-Source edits alone don't take effect — the shell wrapper runs the bundled `.mjs`.
-
----
-
-## Hook Event Reference
-
-| Event | Fires When | Input Fields | Output |
-|-------|-----------|-------------|--------|
-| `PreToolUse` | Before a tool runs | `tool_name`, `tool_input` | `permissionDecision`, `reason` (optional) |
-| `PostToolUse` | After a tool runs | `tool_name`, `tool_input`, `tool_output` | (ignored) |
-| `SessionStart` | Session begins | `session_id`, `cwd` | (ignored) |
-| `SessionEnd` | Session ends | `session_id`, `reason`, `transcript_path` | (ignored) |
-| `Stop` | Response completes | `session_id`, `stop_reason` | (ignored) |
-| `Notification` | Notification sent | `title`, `body` | (ignored) |
-| `UserPromptSubmit` | User sends prompt | `prompt`, `session_id` | (ignored) |
-
-### PreToolUse Permission Decisions
-
-PreToolUse hooks can return JSON to control tool execution:
-
-```json
-{"permissionDecision": "allow"}
-{"permissionDecision": "deny", "reason": "Blocked by policy"}
-{"permissionDecision": "ask"}
-```
-
-If no JSON returned, the default permission model applies.
-
----
-
-## Common Issues
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Hook never fires | Wrong event name | Use exact casing: `PostToolUse` not `posttooluse` |
-| Hook fires for wrong tool | Missing/wrong `matcher` | Set `"matcher": "Write"` for tool-specific hooks |
-| Hook runs but no effect | Script error hidden | Test manually with `echo '{}' \| /path/to/hook.sh` |
-| Hook works locally, not on agent | Different PATH | Use absolute paths in `command` |
-| "Permission denied" | Not executable | `chmod +x /path/to/hook.sh` |
-| Hook runs twice | Registered in both global + project | Remove duplicate from one settings.json |
-| PreToolUse blocks everything | Bad matcher/logic | Check matcher regex, test with sample input |
-| AI Maestro hook missing | Plugin not installed | Run `./install-messaging.sh -y` |
-
----
-
-## Debugging with Verbose Logging
-
-Add temporary logging to any hook:
-
-```bash
-#!/usr/bin/env bash
-# Add at top of any hook script for debugging
-exec >> /tmp/hook-$(basename "$0").log 2>&1
-echo "=== $(date) ==="
-echo "Event: ${1:-unknown}"
-echo "Stdin:"
-cat  # dumps the JSON input
-echo ""
-echo "---"
-
-# ... your actual hook logic below ...
-```
-
-Remove the logging lines when done debugging.
+- [Detailed Reference](references/REFERENCE.md) - Full hook debugging procedures
+  - Hook Event Reference (all 7 types with input/output fields)
+  - PreToolUse Permission Decisions (allow/deny/ask)
+  - Testing Hooks Manually (sample JSON for each event type)
+  - Silent Failure Patterns (bash and TypeScript)
+  - AI Maestro Hook Debugging
+  - Rebuilding TypeScript Hooks
+  - Common Issues Table
+  - Verbose Logging Snippet
+  - Hook Registration Format

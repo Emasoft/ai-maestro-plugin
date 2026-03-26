@@ -19,9 +19,12 @@ fi
 
 # Colors for output
 RED='\033[0;31m'
+# shellcheck disable=SC2034 # Available for sourced helper functions
 GREEN='\033[0;32m'
+# shellcheck disable=SC2034 # Available for sourced helper functions
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+# shellcheck disable=SC2034 # Available for sourced helper functions
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 

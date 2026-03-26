@@ -1,199 +1,100 @@
 ---
 name: memory-search
-description: Searches conversation history and semantic memory to find previous discussions, decisions, and context. Use when the user asks to "search memory", "what did we discuss", "remember when", "find previous conversation", "check history", or before starting new work to recall prior decisions and avoid repeating past discussions.
-allowed-tools: Bash
-compatibility: Requires AI Maestro (aimaestro.dev) with Bash shell access
+description: "Search conversation history and semantic memory for past discussions and decisions. Use when recalling prior context or decisions. Trigger with /memory-search."
+allowed-tools: "Bash(memory-*:*), Bash(curl:*), Bash(jq:*), Bash(docs-*:*), Bash(graph-*:*), Read, Grep, Glob"
 metadata:
-  author: 23blocks
-  version: 2.0.0
+  author: "Emasoft"
+  version: "2.0.0"
 ---
 
-# AI Maestro Memory Search
+## Overview
 
-## How It Works
+Searches AI Maestro's indexed conversation history using `memory-search.sh`. Supports semantic, keyword, term, and symbol search modes. Conversations are automatically indexed by the subconscious process, creating a searchable memory across all sessions.
 
-AI Maestro automatically indexes your conversations via the subconscious process. This creates a searchable memory of everything discussed across sessions. You search it with `memory-search.sh`.
+## Prerequisites
 
-**Memory pipeline:**
-1. Conversations are automatically indexed (subconscious runs `index-delta` periodically)
-2. Indexed conversations are available for semantic and keyword search
-3. Long-term memory consolidation merges repeated themes into durable summaries
+- AI Maestro running on `localhost:23000`
+- `memory-search.sh` installed at `~/.local/bin/` (via `./install-memory-tools.sh`)
+- Subconscious process running and indexing conversations
+- Optional: `docs-search.sh` and `graph-query.sh` for combined search
 
-## Command Reference
+## Instructions
 
-```
-memory-search.sh <query> [--mode MODE] [--role ROLE] [--limit N]
-```
+1. **Identify the search query** from the user's request (topic, term, code symbol, or question).
 
-| Option | Values | Default | Purpose |
-|--------|--------|---------|---------|
-| `<query>` | any text | (required) | What to search for |
-| `--mode` | `hybrid`, `semantic`, `term`, `symbol` | `hybrid` | Search strategy |
-| `--role` | `user`, `assistant` | (both) | Filter by speaker |
-| `--limit` | number | `10` | Max results to return |
+2. **Choose the search mode** based on query type:
+   - `hybrid` (default) — general purpose, combines semantic + keyword
+   - `semantic` — conceptually related content, different wording
+   - `term` — exact text/substring matching
+   - `symbol` — code identifiers (functions, classes, variables)
 
-**Search modes explained:**
-
-| Mode | What it does | Best for |
-|------|-------------|----------|
-| `hybrid` | Combines semantic + keyword matching | General use (recommended default) |
-| `semantic` | Vector similarity, finds conceptually related content | Different wording for same idea |
-| `term` | Exact text/substring matching | Specific phrases, error messages |
-| `symbol` | Code identifier matching across contexts | Function names, class names, constants |
-
----
-
-## Use Cases
-
-### 1. Search memory for a topic (semantic)
-
-Find conceptually related past discussions, even if the exact words differ.
-
-```bash
-memory-search.sh "authentication flow" --mode semantic
-memory-search.sh "database migration strategy" --mode semantic
-```
-
-Use semantic mode when you know the topic but not the exact words used before.
-
-### 2. Search memory for an exact term (keyword)
-
-Find conversations containing a specific name, error message, or phrase.
-
-```bash
-memory-search.sh "PaymentService" --mode term
-memory-search.sh "ECONNREFUSED" --mode term
-memory-search.sh "MAX_RETRY_COUNT" --mode symbol
-```
-
-Use `term` for exact text. Use `symbol` specifically for code identifiers (functions, classes, variables).
-
-### 3. Check if something was discussed before
-
-Before starting any task, search memory to avoid repeating past work or contradicting previous decisions.
-
-```bash
-# User says "let's add caching"
-memory-search.sh "caching"
-memory-search.sh "cache" --mode term
-```
-
-If results come back, review them before proceeding. If no results, this is a new topic.
-
-### 4. Find previous decisions about a topic
-
-Locate past agreements, design choices, or conclusions.
-
-```bash
-memory-search.sh "decided" --mode semantic
-memory-search.sh "approach we agreed on" --mode semantic
-memory-search.sh "architecture decision" --mode semantic
-```
-
-Filter to see only what the user said (their instructions and preferences):
-
-```bash
-memory-search.sh "preferred approach" --role user
-```
-
-### 5. Recall what was done in a past session
-
-Find prior work, implementations, or progress on a feature.
-
-```bash
-memory-search.sh "last session" --mode semantic
-memory-search.sh "implementation progress" --mode semantic
-memory-search.sh "what we built" --role assistant
-```
-
-To see your own past explanations and solutions:
-
-```bash
-memory-search.sh "solution" --role assistant --limit 5
-```
-
-### 6. Combined search: memory + docs + graph
-
-For complete context, search multiple sources. Memory tells you what was discussed; docs tell you what is documented; graph tells you how concepts relate.
-
-```bash
-# Step 1: What did we discuss about this?
-memory-search.sh "authentication"
-
-# Step 2: What do the project docs say?
-docs-search.sh "authentication"
-
-# Step 3: What concepts are connected?
-graph-query.sh "authentication"
-```
-
-Always start with memory search. If memory has no results, fall back to docs.
-
-### 7. Troubleshooting: no results found
-
-If `memory-search.sh` returns zero results:
-
-1. **Try different wording.** Semantic search handles synonyms, but very different phrasing may miss.
+3. **Run the search:**
    ```bash
-   memory-search.sh "auth" --mode term          # shorter keyword
-   memory-search.sh "login system" --mode semantic  # different angle
+   memory-search.sh "<query>" --mode <mode> --limit 10
    ```
 
-2. **Broaden the search.** Remove specific qualifiers.
+4. **Filter by speaker** if needed:
    ```bash
-   # Instead of:
-   memory-search.sh "React authentication component error handling"
-   # Try:
-   memory-search.sh "authentication error"
+   memory-search.sh "<query>" --role user      # user instructions only
+   memory-search.sh "<query>" --role assistant  # assistant responses only
    ```
 
-3. **Increase the limit.** Low-scoring results may still be relevant.
+5. **Review results** and summarize relevant findings for the user.
+
+6. **If no results**, try: different wording, broader query, `--limit 20`, or different mode. If still nothing, the topic is genuinely new.
+
+7. **For complete context**, optionally search docs and graph too:
    ```bash
-   memory-search.sh "deployment" --limit 20
+   docs-search.sh "<query>"
+   graph-query.sh "<query>"
    ```
 
-4. **Check if the topic is genuinely new.** No results is valid information. Say so and proceed.
+## Output
 
-### 8. Troubleshooting: memory not indexed
+Returns matching conversation excerpts with timestamps, session context, and relevance scores. Present results as a concise summary highlighting key decisions, prior work, and relevant context.
 
-If searches consistently return nothing even for topics you know were discussed:
+## Error Handling
 
-1. **Check the subconscious is running:**
-   ```bash
-   curl -s http://localhost:23000/api/agents/{agentId}/subconscious/status | jq .
-   ```
+- **No results**: Try alternate wording, broader terms, increased limit, or different mode. No results is valid — report the topic as new.
+- **Script not found**: Run `./install-memory-tools.sh` to install.
+- **Memory not indexed**: Check subconscious status via `curl -s http://localhost:23000/api/agents/{agentId}/subconscious/status | jq .` and trigger manual indexing if needed.
+- **Connection refused**: Verify AI Maestro is running on port 23000.
 
-2. **Verify the script is installed:**
-   ```bash
-   which memory-search.sh
-   ls -la ~/.local/bin/memory-search.sh
-   ```
-
-3. **Re-install if missing:**
-   ```bash
-   ./install-memory-tools.sh
-   ```
-
-4. **Trigger manual indexing** if the subconscious timer has not run yet:
-   ```bash
-   curl -s -X POST http://localhost:23000/api/agents/{agentId}/subconscious/index-delta
-   ```
-
----
-
-## Default Behavior Rule
-
-When you receive ANY task instruction, search memory FIRST:
+## Examples
 
 ```
-1. User gives instruction
-2. Search memory for the topic mentioned
-3. Review results for prior context, decisions, progress
-4. Proceed with the task, building on what was already discussed
+/memory-search authentication flow
 ```
+Searches for past discussions about authentication using hybrid mode.
 
-This prevents repeating explanations, contradicting past decisions, or restarting completed work.
+```
+/memory-search "ECONNREFUSED" --mode term
+```
+Finds exact occurrences of the error message in conversation history.
 
-## Helper Scripts
+```
+/memory-search MAX_RETRY_COUNT --mode symbol
+```
+Locates discussions about the `MAX_RETRY_COUNT` code identifier.
 
-This skill relies on `memory-helper.sh`, sourced automatically by the tool scripts. It provides `memory_query` and `init_memory` functions. Located at `~/.local/bin/memory-helper.sh` (installed) or `scripts/memory-helper.sh (in ai-maestro repo)` (source).
+## Checklist
+
+Copy this checklist and track your progress:
+- [ ] Identify search query from user request
+- [ ] Select appropriate search mode
+- [ ] Run memory-search.sh with chosen parameters
+- [ ] Review and summarize results
+- [ ] If no results, retry with alternate strategy
+- [ ] Optionally search docs/graph for broader context
+- [ ] Present findings to user
+
+## Resources
+
+- [Detailed Reference](references/REFERENCE.md) - Full CLI reference and search patterns
+  - Memory Pipeline
+  - CLI Reference and Options
+  - Search Modes Explained
+  - Use Cases with Examples
+  - Combined Search Pattern
+  - Troubleshooting Guide
+  - Helper Scripts

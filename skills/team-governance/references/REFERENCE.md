@@ -1,0 +1,251 @@
+# Team Governance Reference
+
+## Table of Contents
+- [Governance API Endpoints](#governance-api-endpoints)
+- [Team Management](#team-management)
+- [Agent Assignment](#agent-assignment)
+- [Chief-of-Staff Assignment](#chief-of-staff-assignment)
+- [Team Broadcast Messaging](#team-broadcast-messaging)
+- [Permission Matrix](#permission-matrix)
+- [Team Messaging Rules](#team-messaging-rules)
+- [Error Codes](#error-codes)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Governance API Endpoints
+
+Base URL: `${AIMAESTRO_API:-http://localhost:23000}`
+
+All authenticated operations require `X-Agent-Id: <your-agent-id>` header.
+
+| Operation | Method | Endpoint | Auth Required |
+|-----------|--------|----------|---------------|
+| Check own governance role | GET | `/api/governance` | None |
+| List all teams | GET | `/api/teams` | None |
+| Get team details | GET | `/api/teams/{id}` | None |
+| Create team | POST | `/api/teams` | MANAGER for closed teams |
+| Update team | PUT | `/api/teams/{id}` | MANAGER or COS |
+| Delete team | DELETE | `/api/teams/{id}` | MANAGER |
+| Assign/remove COS | POST | `/api/teams/{id}/chief-of-staff` | MANAGER + password |
+
+---
+
+## Team Management
+
+### Check Your Governance Role (Run First)
+
+```bash
+curl -s "http://localhost:23000/api/governance" | jq .
+```
+
+Returns your agent's governance permissions. **If not MANAGER or COS, STOP** -- governance operations require elevated privileges.
+
+### List All Teams
+
+```bash
+curl -s "http://localhost:23000/api/teams" | jq .
+```
+
+### Create an Open Team
+
+Any agent can create an open team. Open teams allow any agent to join or leave freely.
+
+```bash
+curl -s -X POST "http://localhost:23000/api/teams" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "frontend-squad", "type": "open"}' | jq .
+```
+
+### Create a Closed Team (MANAGER Only)
+
+```bash
+curl -s -X POST "http://localhost:23000/api/teams" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"name": "security-team", "type": "closed"}' | jq .
+```
+
+### Delete a Closed Team (MANAGER Only)
+
+```bash
+curl -s -X DELETE "http://localhost:23000/api/teams/<team-id>" \
+  -H "X-Agent-Id: <your-agent-id>" | jq .
+```
+
+### Change Team Type (MANAGER Only)
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"type": "closed"}' | jq .
+```
+
+Replace `"closed"` with `"open"` to open a team.
+
+---
+
+## Agent Assignment
+
+### Assign Agent to Closed Team (MANAGER or COS of that team)
+
+```bash
+# Get current members first
+CURRENT=$(curl -s "http://localhost:23000/api/teams/<team-id>" | jq -r '.agentIds | join(",")')
+
+# Add new agent to the list
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"agentIds": ["existing-agent-1", "existing-agent-2", "new-agent-id"]}' | jq .
+```
+
+### Remove Agent from Closed Team
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"agentIds": ["remaining-agent-1", "remaining-agent-2"]}' | jq .
+```
+
+### Transfer Agent Cross-Team (MANAGER Only)
+
+Assign agent to the new team -- old membership is automatically removed.
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<new-team-id>" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"agentIds": ["current-members...", "transferred-agent-id"]}' | jq .
+```
+
+---
+
+## Chief-of-Staff Assignment
+
+COS is a trusted agent managing day-to-day team operations for the MANAGER. Only a MANAGER can assign/remove COS. Requires governance password from the user.
+
+### Assign COS
+
+```bash
+curl -s -X POST "http://localhost:23000/api/teams/<team-id>/chief-of-staff" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"agentId": "<cos-agent-id>", "password": "<governance-password>"}' | jq .
+```
+
+### Remove COS
+
+```bash
+curl -s -X POST "http://localhost:23000/api/teams/<team-id>/chief-of-staff" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Id: <your-agent-id>" \
+  -d '{"agentId": null, "password": "<governance-password>"}' | jq .
+```
+
+**Never store, cache, or log the governance password.** Ask the user each time.
+
+---
+
+## Team Broadcast Messaging
+
+Use AMP to broadcast to all agents in a team. COS broadcasts to own team; MANAGER to any team.
+
+### Broadcast to a Team
+
+```bash
+TEAM_ID="<team-uuid>"
+AGENTS=$(curl -s "http://localhost:23000/api/teams/$TEAM_ID" | jq -r '.agentIds[]')
+for AGENT_ID in $AGENTS; do
+  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.name')
+  amp-send "$AGENT_NAME" "Team Update" "Your message here"
+done
+```
+
+### Broadcast with Priority
+
+```bash
+TEAM_ID="<team-uuid>"
+AGENTS=$(curl -s "http://localhost:23000/api/teams/$TEAM_ID" | jq -r '.agentIds[]')
+for AGENT_ID in $AGENTS; do
+  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.name')
+  amp-send "$AGENT_NAME" "Urgent: Team Update" "Your urgent message here" --priority urgent
+done
+```
+
+---
+
+## Permission Matrix
+
+| Action | Normal Agent | COS (own team) | COS (other team) | MANAGER |
+|--------|:------------:|:--------------:|:-----------------:|:-------:|
+| Create open team | Yes | Yes | Yes | Yes |
+| Create closed team | No | No | No | Yes |
+| Delete open team | No | No | No | Yes |
+| Delete closed team | No | No | No | Yes |
+| Change team type | No | No | No | Yes |
+| Assign agent (own team) | No | Yes | No | Yes |
+| Remove agent (own team) | No | Yes | No | Yes |
+| Assign agent (other team) | No | No | No | Yes |
+| Remove agent (other team) | No | No | No | Yes |
+| Assign COS | No | No | No | Yes |
+| Broadcast own team | No | Yes | No | Yes |
+| Broadcast any team | No | No | No | Yes |
+| Message any agent (AMP) | Yes | Yes | Yes | Yes |
+
+---
+
+## Team Messaging Rules
+
+Closed teams have messaging isolation.
+
+| Your Title | Who You Can Message |
+|-----------|-------------------|
+| **Open-world agent** (not in any closed team) | Any agent NOT in a closed team |
+| **Closed team member** | Same-team members + your team's Chief-of-Staff |
+| **Chief-of-Staff** | Own team members + MANAGER + other Chiefs-of-Staff |
+| **MANAGER** | Anyone (unrestricted) |
+
+### Key Restrictions
+
+- You **CANNOT** message into a closed team from outside (403 `message_blocked`)
+- You **CANNOT** message out of a closed team to non-team-members (except COS/MANAGER)
+
+### Contacting a Closed Team from Outside
+
+Go through the team's Chief-of-Staff:
+
+1. Find COS ID: `curl -s "${AIMAESTRO_API:-http://localhost:23000}/api/teams/<team-id>" | jq -r '.chiefOfStaffId'`
+2. Resolve COS name: `curl -s "${AIMAESTRO_API:-http://localhost:23000}/api/agents/<cos-id>" | jq -r '.agent.name'`
+3. Send message to the COS, who relays to team members
+
+---
+
+## Error Codes
+
+| HTTP Status | Error Code | Description |
+|-------------|------------|-------------|
+| 403 | `message_blocked` | No permission to message agents in a closed team you don't belong to |
+| 403 | `access_denied_closed_team` | Governance op on closed team without MANAGER or COS role |
+| 400 | `agent_already_in_closed_team` | Agent is in another closed team; use cross-team transfer |
+| 401 | `invalid_governance_password` | Incorrect governance password for COS assignment/removal |
+| 404 | `team_not_found` | Team ID does not exist |
+| 400 | `invalid_team_type` | Team type must be "open" or "closed" |
+
+---
+
+## Troubleshooting
+
+### "Access denied" on team operations
+Verify role: `curl -s "http://localhost:23000/api/governance" | jq .` -- must be MANAGER or COS of target team.
+
+### "Agent already in closed team"
+Agent can only belong to one closed team. Use MANAGER cross-team transfer.
+
+### "Invalid governance password"
+Ask user to re-provide password. Passwords are never stored or cached.
+
+### COS cannot manage other teams
+COS authority is scoped to assigned team only. Cross-team ops require MANAGER.

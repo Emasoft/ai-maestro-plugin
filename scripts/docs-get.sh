@@ -6,6 +6,7 @@ set -e
 
 # Source docs helpers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null  # Resolved at runtime based on SCRIPT_DIR
 source "${SCRIPT_DIR}/docs-helper.sh"
 
 if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

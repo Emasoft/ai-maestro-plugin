@@ -8,6 +8,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null  # Resolved at runtime based on SCRIPT_DIR
 source "${SCRIPT_DIR}/memory-helper.sh"
 
 show_help() {

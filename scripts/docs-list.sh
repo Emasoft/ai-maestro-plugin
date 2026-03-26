@@ -6,13 +6,16 @@ set -e
 
 # Source docs helpers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null  # Resolved at runtime based on SCRIPT_DIR
 source "${SCRIPT_DIR}/docs-helper.sh"
 
+# shellcheck disable=SC2034 # LIMIT is parsed from CLI args, reserved for future API pagination support
 LIMIT=50
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --limit|-l)
+      # shellcheck disable=SC2034 # Parsed from CLI, reserved for future API pagination support
       LIMIT="$2"
       shift 2
       ;;

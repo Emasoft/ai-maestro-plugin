@@ -693,6 +693,7 @@ remove_from_enabled_plugins() {
 
     # Use safe_json_edit with the filter
     # Signature: safe_json_edit <file> <jq_filter> [jq_args...]
+    # shellcheck disable=SC2016 # $pattern is a jq variable (passed via --arg), not a shell variable
     safe_json_edit "$settings_file" \
         'if .enabledPlugins then
             .enabledPlugins |= with_entries(
@@ -712,6 +713,7 @@ remove_from_installed_plugins() {
     fi
 
     # Signature: safe_json_edit <file> <jq_filter> [jq_args...]
+    # shellcheck disable=SC2016 # $id is a jq variable (passed via --arg), not a shell variable
     safe_json_edit "$plugins_file" \
         'if .plugins then
             .plugins |= map(select(.name != $id and .id != $id))
@@ -729,6 +731,7 @@ remove_from_known_marketplaces() {
     fi
 
     # Signature: safe_json_edit <file> <jq_filter> [jq_args...]
+    # shellcheck disable=SC2016 # $name is a jq variable (passed via --arg), not a shell variable
     safe_json_edit "$mp_file" \
         'del(.[$name])' \
         --arg name "$mp_name"
@@ -744,6 +747,7 @@ remove_marketplace_plugins() {
     fi
 
     # Signature: safe_json_edit <file> <jq_filter> [jq_args...]
+    # shellcheck disable=SC2016 # $mp is a jq variable (passed via --arg), not a shell variable
     safe_json_edit "$plugins_file" \
         'if .plugins then
             .plugins |= map(select(.marketplace != $mp))

@@ -131,7 +131,7 @@ mv "$TEMP_FILE" "$OUTPUT_PATH"
 rm -f "$HEADERS_FILE"
 
 # Get file size
-FILE_SIZE=$(ls -lh "$OUTPUT_PATH" | awk '{print $5}')
+FILE_SIZE=$(du -h "$OUTPUT_PATH" | cut -f1)
 
 # Show manifest info
 echo -e "${GREEN}Export successful!${NC}"

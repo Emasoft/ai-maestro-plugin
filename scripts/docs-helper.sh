@@ -5,8 +5,10 @@
 # Source common helpers - try installed location first, then repo location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "${HOME}/.local/share/aimaestro/shell-helpers/common.sh" ]; then
+    # shellcheck source=/dev/null  # Resolved at runtime based on install location
     source "${HOME}/.local/share/aimaestro/shell-helpers/common.sh"
 elif [ -f "${SCRIPT_DIR}/../scripts/shell-helpers/common.sh" ]; then
+    # shellcheck source=/dev/null  # Resolved at runtime based on install location
     source "${SCRIPT_DIR}/../scripts/shell-helpers/common.sh"
 else
     echo "Error: common.sh not found. Run install-doc-tools.sh to fix." >&2
@@ -18,7 +20,7 @@ docs_query() {
     local agent_id="$1"
     local action="$2"
     shift 2
-    local params="$@"
+    local params="$*"
 
     api_query "GET" "/api/agents/${agent_id}/docs?action=${action}${params}"
 }

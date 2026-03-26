@@ -1,5 +1,8 @@
 # AI Maestro Plugin
 
+<!--BADGES-START-->
+<!--BADGES-END-->
+
 Built from plugin.manifest.json with 3 sources.
 
 **Skills:** 7 | **Scripts:** 50

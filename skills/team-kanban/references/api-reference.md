@@ -1,5 +1,26 @@
 # Kanban API Reference
 
+## Table of Contents
+- [Endpoints](#endpoints)
+  - [GET /api/teams/{id}/tasks](#get-apiteamsidtasks)
+  - [POST /api/teams/{id}/tasks](#post-apiteamsidtasks)
+  - [PUT /api/teams/{id}/tasks/{taskId}](#put-apiteamsidtaskstaskid)
+  - [DELETE /api/teams/{id}/tasks/{taskId}](#delete-apiteamsidtaskstaskid)
+  - [GET /api/teams/{id}/kanban-config](#get-apiteamsidkanban-config)
+  - [PUT /api/teams/{id}/kanban-config](#put-apiteamsidkanban-config)
+  - [GET /api/teams/stats](#get-apiteamsstats)
+- [Task Lifecycle Examples](#task-lifecycle-examples)
+- [Task Dependencies](#task-dependencies)
+- [Kanban Configuration](#kanban-configuration)
+- [Velocity and Distribution](#velocity-and-distribution)
+- [Extended Task Fields](#extended-task-fields)
+- [Error Codes](#error-codes)
+- [Task Storage](#task-storage)
+- [Available Tailwind Colors](#available-tailwind-colors)
+- [Available Lucide Icons](#available-lucide-icons)
+
+---
+
 ## Endpoints
 
 ### GET /api/teams/{id}/tasks
@@ -177,3 +198,218 @@ Clock  AlertTriangle  Bug  Wrench  FlaskConical
 SearchCheck  Rocket  Pause  XCircle  Star
 GitPullRequest  Code  Shield  Zap  Target
 ```
+
+---
+
+## Task Lifecycle Examples
+
+### Auth Headers
+
+All task/kanban endpoints require authentication:
+
+```bash
+AUTH="-H 'Authorization: Bearer <api-key>' -H 'X-Agent-Id: <your-agent-uuid>'"
+```
+
+If running as the system owner (no agents configured), omit auth headers.
+
+### Create a Task
+
+```bash
+curl -s -X POST "http://localhost:23000/api/teams/<team-id>/tasks" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "Implement auth middleware",
+    "description": "Add JWT validation to all API routes",
+    "status": "backlog",
+    "priority": 1,
+    "assigneeAgentId": "<agent-uuid>",
+    "labels": ["backend", "security"],
+    "taskType": "feature"
+  }' | jq .
+```
+
+### List Tasks (with Filters)
+
+```bash
+# All tasks (API returns { tasks: [...] } — unwrap with .tasks)
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | jq '.tasks'
+
+# Filter by status
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks?status=in_progress" | jq '.tasks'
+
+# Filter by assignee
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks?assignee=<agent-uuid>" | jq '.tasks'
+
+# Filter by label
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks?label=backend" | jq '.tasks'
+
+# Filter by task type
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks?taskType=bug" | jq '.tasks'
+```
+
+### Move Task (Update Status)
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}' | jq .
+```
+
+Status must match a column ID in the team's kanban config. Default columns: `backlog`, `pending`, `in_progress`, `review`, `completed`.
+
+### Assign/Unassign Task
+
+```bash
+# Assign
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
+  -H "Content-Type: application/json" \
+  -d '{"assigneeAgentId": "<agent-uuid>"}' | jq .
+
+# Unassign
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
+  -H "Content-Type: application/json" \
+  -d '{"assigneeAgentId": null}' | jq .
+```
+
+### Delete Task
+
+```bash
+curl -s -X DELETE "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" | jq .
+```
+
+---
+
+## Task Dependencies
+
+Tasks can block other tasks via `blockedBy` (array of task IDs).
+
+### Set Dependencies
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
+  -H "Content-Type: application/json" \
+  -d '{"blockedBy": ["<blocking-task-id-1>", "<blocking-task-id-2>"]}' | jq .
+```
+
+### Check What's Blocked
+
+```bash
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | \
+  jq '[.tasks[] | select(.isBlocked == true) | {id, subject, blockedBy}]'
+```
+
+### Clear Dependencies
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
+  -H "Content-Type: application/json" \
+  -d '{"blockedBy": []}' | jq .
+```
+
+Circular dependencies are rejected by the API.
+
+---
+
+## Kanban Configuration
+
+### Default Columns
+
+| id | label | color | icon |
+|----|-------|-------|------|
+| `backlog` | Backlog | bg-gray-500 | Archive |
+| `pending` | To Do | bg-gray-400 | Circle |
+| `in_progress` | In Progress | bg-blue-400 | PlayCircle |
+| `review` | Review | bg-amber-400 | Eye |
+| `completed` | Done | bg-emerald-400 | CheckCircle2 |
+
+### Customize Columns
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/kanban-config" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "columns": [
+      {"id": "backlog", "label": "Backlog", "color": "bg-gray-500", "icon": "Archive"},
+      {"id": "todo", "label": "TODO", "color": "bg-gray-400", "icon": "Circle"},
+      {"id": "in_progress", "label": "In Progress", "color": "bg-blue-400", "icon": "PlayCircle"},
+      {"id": "ai_review", "label": "AI Review", "color": "bg-purple-400", "icon": "SearchCheck"},
+      {"id": "human_review", "label": "Human Review", "color": "bg-amber-400", "icon": "Eye"},
+      {"id": "testing", "label": "Testing", "color": "bg-cyan-400", "icon": "FlaskConical"},
+      {"id": "completed", "label": "Done", "color": "bg-emerald-400", "icon": "CheckCircle2"}
+    ]
+  }' | jq .
+```
+
+Each column needs: `id` (used as task status value), `label` (display name), `color` (Tailwind class). `icon` is optional (Lucide icon name).
+
+After updating columns, existing tasks with statuses not in the new config cannot be moved until their status is updated to a valid column ID.
+
+---
+
+## Velocity and Distribution
+
+### Tasks Per Status (Team Velocity Snapshot)
+
+```bash
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | \
+  jq '.tasks | group_by(.status) | map({status: .[0].status, count: length})'
+```
+
+### Tasks Per Agent (Load Distribution)
+
+```bash
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | \
+  jq '.tasks | group_by(.assigneeAgentId) | map({agent: .[0].assigneeAgentId, assigneeName: .[0].assigneeName, count: length, in_progress: [.[] | select(.status == "in_progress")] | length})'
+```
+
+### Completed in Date Range
+
+```bash
+curl -s "http://localhost:23000/api/teams/<team-id>/tasks?status=completed" | \
+  jq --arg since "2026-03-01" '[.tasks[] | select(.completedAt >= $since)] | length'
+```
+
+### Bulk Stats (All Teams)
+
+```bash
+curl -s "http://localhost:23000/api/teams/stats" | jq .
+# Returns: { "<teamId>": { taskCount: N, docCount: N }, ... }
+```
+
+---
+
+## Extended Task Fields
+
+Tasks support fields for workflow tracking beyond basic status:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `externalRef` | string | Link to external issue (GitHub issue URL) |
+| `externalProjectRef` | string | Link to external project (GitHub project URL) |
+| `acceptanceCriteria` | string[] | Definition of done checklist |
+| `handoffDoc` | string | Handoff documentation for next assignee |
+| `prUrl` | string | Pull request URL |
+| `reviewResult` | string | Review outcome notes |
+| `previousStatus` | string | Status before current (for undo) |
+
+### Link PR to Task
+
+```bash
+curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
+  -H "Content-Type: application/json" \
+  -d '{"prUrl": "https://github.com/org/repo/pull/42", "status": "review"}' | jq .
+```
+
+---
+
+## Error Codes
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 400 | `Invalid status` | Status must match a kanban column ID |
+| 400 | `Circular dependency` | blockedBy would create a cycle |
+| 400 | `priority must be a finite number` | Priority must be a number |
+| 403 | `Access denied` | Agent not a member of closed team |
+| 404 | `Team not found` | Invalid team ID |
+| 404 | `Task not found` | Invalid task ID |

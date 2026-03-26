@@ -805,6 +805,7 @@ HELP
     # Save current enabled state
     local settings_json="$HOME/.claude/settings.json"
     local was_enabled=false
+    # shellcheck disable=SC2034 # plugin_key reserved for future use in enabled-state restore logic
     local plugin_key="$plugin"
 
     if [[ -f "$settings_json" ]]; then

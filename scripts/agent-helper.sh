@@ -48,15 +48,19 @@ check_dependencies || exit 1
 # ============================================================================
 
 if [ -f "${SCRIPT_DIR}/messaging-helper.sh" ]; then
+    # shellcheck source=/dev/null  # Resolved at runtime based on install location
     source "${SCRIPT_DIR}/messaging-helper.sh"
 elif [ -f "${HOME}/.local/share/aimaestro/shell-helpers/messaging-helper.sh" ]; then
+    # shellcheck source=/dev/null  # Resolved at runtime based on install location
     source "${HOME}/.local/share/aimaestro/shell-helpers/messaging-helper.sh"
 else
     # Fallback to common.sh directly
     if [ -f "${HOME}/.local/share/aimaestro/shell-helpers/common.sh" ]; then
+        # shellcheck source=/dev/null  # Resolved at runtime based on install location
         source "${HOME}/.local/share/aimaestro/shell-helpers/common.sh"
     elif [ -f "${SCRIPT_DIR}/../../scripts/shell-helpers/common.sh" ]; then
         # From plugin/scripts/ go up two levels to reach scripts/shell-helpers/
+        # shellcheck source=/dev/null  # Resolved at runtime based on install location
         source "${SCRIPT_DIR}/../../scripts/shell-helpers/common.sh"
     else
         echo "Error: common.sh not found. Please reinstall AI Maestro." >&2
@@ -753,6 +757,7 @@ resolve_agent() {
             | jq -r '.agents[].name // empty' 2>/dev/null | sort -u)
         if [[ -n "$agent_list" ]]; then
             echo "Agents on localhost:" >&2
+            # shellcheck disable=SC2001 # sed is needed here for multi-line prefix insertion; ${var//} doesn't support ^ anchors
             echo "$agent_list" | sed 's/^/   /' >&2
             echo "" >&2
         fi

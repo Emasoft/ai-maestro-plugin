@@ -531,8 +531,10 @@ HELP
 
 cmd_delete() {
     local agent=""
+    # shellcheck disable=SC2034 # keep_folder is parsed from CLI args, reserved for future implementation
     local keep_folder=false keep_data=false confirm_delete=false
 
+    # shellcheck disable=SC2034 # keep_folder parsed from CLI, reserved for future implementation
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --confirm) confirm_delete=true; shift ;;
@@ -836,8 +838,10 @@ HELP
 # ============================================================================
 
 cmd_export() {
+    # shellcheck disable=SC2034 # include_data, include_folder parsed from CLI args, reserved for future implementation
     local agent="" output="" include_data=false include_folder=false
 
+    # shellcheck disable=SC2034 # include_data, include_folder parsed from CLI, reserved for future implementation
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -o|--output)

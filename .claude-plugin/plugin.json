@@ -2,7 +2,7 @@
   "name": "ai-maestro",
   "displayName": "AI Maestro",
   "description": "AI agent orchestration — agent management, memory search, code graph, docs search, task planning, team governance, team kanban, MCP discovery, and hook debugging.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": {
     "name": "23blocks",
     "email": "hello@23blocks.com"

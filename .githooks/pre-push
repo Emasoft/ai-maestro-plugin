@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Pre-push hook: validate plugin before pushing
+echo "Running pre-push validation..."
+if command -v cpv-validate &>/dev/null; then
+  cpv-validate . --quiet
+elif command -v uvx &>/dev/null; then
+  uvx --from git+https://github.com/Emasoft/claude-plugins-validation --with pyyaml cpv-validate . --quiet
+else
+  echo "Warning: cpv-validate not available, skipping validation"
+fi

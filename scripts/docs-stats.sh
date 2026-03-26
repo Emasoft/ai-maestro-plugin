@@ -35,6 +35,7 @@ show_help() {
 
 # Source docs helpers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null  # Resolved at runtime based on SCRIPT_DIR
 source "${SCRIPT_DIR}/docs-helper.sh"
 
 # Initialize (gets SESSION, AGENT_ID, HOST_ID)

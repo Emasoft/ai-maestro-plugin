@@ -9,6 +9,7 @@ set -e
 
 # Get script directory and source helper
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null  # Resolved at runtime based on SCRIPT_DIR
 source "${SCRIPT_DIR}/graph-helper.sh"
 
 show_help() {
