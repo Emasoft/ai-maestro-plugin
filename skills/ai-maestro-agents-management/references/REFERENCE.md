@@ -177,7 +177,7 @@ The CLI is split into focused modules, all sourced by the main dispatcher:
 - **`agent-skill.sh`** - Skill management: `skill list/add/remove/install/uninstall`.
 - **`agent-plugin.sh`** - Plugin management (10 subcommands) + marketplace (4 subcommands).
 
-All modules are located alongside the CLI script in `~/.local/bin/` (installed) or `plugin/src/scripts/` (source). Each module has a double-source guard to prevent re-sourcing. If the CLI fails with sourcing errors, verify all `agent-*.sh` files are present in the same directory.
+All modules are located alongside the CLI script in `~/.local/bin/` (installed) or `scripts/ (in ai-maestro repo)` (source). Each module has a double-source guard to prevent re-sourcing. If the CLI fails with sourcing errors, verify all `agent-*.sh` files are present in the same directory.
 
 ---
 

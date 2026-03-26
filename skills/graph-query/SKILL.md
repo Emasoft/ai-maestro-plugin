@@ -240,4 +240,4 @@ Scripts are installed to `~/.local/bin/`. If missing, run the installer:
 - Inform the user: "Graph unavailable, proceeding with manual analysis -- increased risk of missing dependencies."
 
 **Helper script:**
-- `graph-helper.sh` is sourced by all `graph-*.sh` scripts. It provides shared API functions (`graph_query`, `init_graph`). Located in `~/.local/bin/` (installed) or `plugin/plugins/ai-maestro/scripts/` (source).
+- `graph-helper.sh` is sourced by all `graph-*.sh` scripts. It provides shared API functions (`graph_query`, `init_graph`). Located in `~/.local/bin/` (installed) or `scripts/ (in ai-maestro repo)` (source).

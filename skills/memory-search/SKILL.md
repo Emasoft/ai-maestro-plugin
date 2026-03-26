@@ -196,4 +196,4 @@ This prevents repeating explanations, contradicting past decisions, or restartin
 
 ## Helper Scripts
 
-This skill relies on `memory-helper.sh`, sourced automatically by the tool scripts. It provides `memory_query` and `init_memory` functions. Located at `~/.local/bin/memory-helper.sh` (installed) or `plugin/src/scripts/memory-helper.sh` (source).
+This skill relies on `memory-helper.sh`, sourced automatically by the tool scripts. It provides `memory_query` and `init_memory` functions. Located at `~/.local/bin/memory-helper.sh` (installed) or `scripts/memory-helper.sh (in ai-maestro repo)` (source).
