@@ -1,0 +1,43 @@
+name: Notify Marketplace
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '.claude-plugin/plugin.json'
+      - 'hooks/**'
+      - 'commands/**'
+      - 'agents/**'
+      - 'skills/**'
+      - 'scripts/**'
+
+env:
+  MARKETPLACE_OWNER: '23blocks-OS'
+  MARKETPLACE_REPO: 'ai-maestro-plugins'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: plugin
+        run: |
+          echo "name=$(jq -r '.name' .claude-plugin/plugin.json)" >> $GITHUB_OUTPUT
+          echo "version=$(jq -r '.version' .claude-plugin/plugin.json)" >> $GITHUB_OUTPUT
+          echo "ref=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Trigger marketplace update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.MARKETPLACE_DISPATCH_TOKEN }}
+          repository: ${{ env.MARKETPLACE_OWNER }}/${{ env.MARKETPLACE_REPO }}
+          event-type: plugin-updated
+          client-payload: |
+            {
+              "plugin": "${{ steps.plugin.outputs.name }}",
+              "version": "${{ steps.plugin.outputs.version }}",
+              "ref": "${{ steps.plugin.outputs.ref }}",
+              "triggered_by": "${{ github.actor }}"
+            }

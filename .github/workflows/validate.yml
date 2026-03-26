@@ -1,0 +1,58 @@
+name: Plugin Validation
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '.claude-plugin/**'
+      - 'agents/**'
+      - 'commands/**'
+      - 'skills/**'
+      - 'hooks/**'
+      - 'scripts/**'
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate plugin.json
+        run: |
+          if [ ! -f .claude-plugin/plugin.json ]; then
+            echo "ERROR: .claude-plugin/plugin.json not found"
+            exit 1
+          fi
+          jq empty .claude-plugin/plugin.json || { echo "ERROR: Invalid JSON"; exit 1; }
+          NAME=$(jq -r '.name' .claude-plugin/plugin.json)
+          VERSION=$(jq -r '.version' .claude-plugin/plugin.json)
+          echo "Plugin: $NAME v$VERSION"
+
+      - name: Validate skills
+        run: |
+          for skill_dir in skills/*/; do
+            if [ -d "$skill_dir" ]; then
+              SKILL_NAME=$(basename "$skill_dir")
+              if [ ! -f "$skill_dir/SKILL.md" ]; then
+                echo "ERROR: $SKILL_NAME missing SKILL.md"
+                exit 1
+              fi
+              echo "OK: $SKILL_NAME"
+            fi
+          done
+
+      - name: Check scripts are executable
+        run: |
+          for script in scripts/*.sh; do
+            if [ -f "$script" ] && [ ! -x "$script" ]; then
+              echo "WARNING: $script is not executable"
+            fi
+          done
+
+      - name: Summary
+        run: |
+          echo "## Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Skills: $(ls -d skills/*/ 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- Scripts: $(ls scripts/*.sh 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
