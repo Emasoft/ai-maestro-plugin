@@ -9,48 +9,44 @@ metadata:
 
 ## Overview
 
-Systematic workflow for debugging Claude Code hooks in AI Maestro agent sessions. Covers all 7 hook types: PreToolUse, PostToolUse, SessionStart, SessionEnd, Stop, Notification, and UserPromptSubmit. Most issues are caught in the first 3 diagnostic steps.
+Systematic workflow for debugging Claude Code hooks. Covers all 7 hook types: PreToolUse, PostToolUse, SessionStart, SessionEnd, Stop, Notification, UserPromptSubmit.
 
 ## Prerequisites
 
-- Claude Code installed with hooks support
-- Access to `~/.claude/settings.json` (global hooks)
-- `jq` available on PATH for JSON parsing
-- AI Maestro plugin installed (for AI Maestro-specific hooks)
+- Claude Code with hooks support
+- Access to `~/.claude/settings.json`
+- `jq` on PATH; AI Maestro plugin installed
 
 ## Instructions
 
-1. **Check hook registration** — Verify the hook exists in settings.json with correct event name (case-sensitive). Check both global (`~/.claude/settings.json`) and project-level (`.claude/settings.json`).
+1. **Check registration** — Verify hook in settings.json (case-sensitive event name). Check global (`~/.claude/settings.json`) and project (`.claude/settings.json`):
    ```bash
    cat ~/.claude/settings.json | jq '.hooks // empty'
-   cat .claude/settings.json | jq '.hooks // empty' 2>/dev/null
    ```
 
-2. **Verify script exists and is executable** — Check the script path and permissions.
+2. **Verify script** — Check path exists and is executable:
    ```bash
-   ls -la /path/to/my-hook.sh
-   chmod +x /path/to/my-hook.sh  # fix if needed
+   ls -la /path/to/my-hook.sh && chmod +x /path/to/my-hook.sh
    ```
 
-3. **Test hook manually** — Pipe sample JSON to the hook script to see if it runs.
+3. **Test manually** — Pipe sample JSON to the hook:
    ```bash
-   echo '{"tool_name": "Write", "tool_input": {}, "session_id": "test"}' | /path/to/my-hook.sh
+   echo '{"tool_name":"Write","tool_input":{},"session_id":"test"}' | /path/to/my-hook.sh
    ```
 
-4. **Check for silent failures** — If hook uses background processes (`&`, `nohup`), redirect stderr to a log file to capture hidden errors.
+4. **Check silent failures** — Redirect stderr to log if hook uses background processes:
    ```bash
    nohup my-script.sh >> /tmp/hook-debug.log 2>&1 &
-   tail -f /tmp/hook-debug.log
    ```
 
-5. **Verify event name and matcher** — Event names are case-sensitive (`PostToolUse` not `posttooluse`). Tool-specific hooks need a `matcher` field.
+5. **Verify event name/matcher** — Names are case-sensitive. Tool-specific hooks need a `matcher` field.
 
-6. **Check AI Maestro hooks** — If AI Maestro hooks are broken, verify the hook runner exists and is registered.
+6. **Check AI Maestro hooks** — Find the hook runner:
    ```bash
    find ~/.claude/plugins/cache -name "ai-maestro-hook.cjs" | head -1
    ```
 
-7. **Rebuild TypeScript hooks** — If you edited TS source, rebuild the bundle. Source edits alone don't take effect.
+7. **Rebuild TS hooks** — If you edited TS source, rebuild:
    ```bash
    npx esbuild src/my-hook.ts --bundle --platform=node --format=esm --outfile=dist/my-hook.mjs
    ```
@@ -59,53 +55,36 @@ Systematic workflow for debugging Claude Code hooks in AI Maestro agent sessions
 
 - Diagnosis of why a hook is not firing or misbehaving
 - Specific fix commands (chmod, path correction, matcher fix, rebuild)
-- Debug log file at `/tmp/hook-debug.log` if verbose logging was added
 
 ## Error Handling
 
-- If hook script not found: check absolute path, verify plugin installation
-- If permission denied: run `chmod +x` on the script
-- If hook fires for wrong tool: fix the `matcher` field in settings.json
-- If hook runs twice: remove duplicate registration from global or project settings
-- If AI Maestro hook missing: reinstall with `./install-messaging.sh -y`
+- Script not found: check absolute path, verify plugin installation
+- Permission denied: `chmod +x` the script
+- Fires for wrong tool: fix `matcher` in settings.json
+- Runs twice: remove duplicate registration
+- AI Maestro hook missing: reinstall with `./install-messaging.sh -y`
 
 ## Examples
 
 ```
 /debug-hooks
 ```
-Runs the full 7-step diagnosis on all registered hooks.
+Runs full 7-step diagnosis on all registered hooks.
 
 ```
 /debug-hooks PostToolUse
 ```
-Focuses diagnosis on PostToolUse hooks only.
-
-Expected result: identification of the root cause and a specific fix command.
+Focuses on PostToolUse hooks only. Returns root cause and fix command.
 
 ## Checklist
 
-Copy this checklist and track your progress:
 - [ ] Check global hooks in `~/.claude/settings.json`
 - [ ] Check project hooks in `.claude/settings.json`
-- [ ] Verify hook script exists at registered path
-- [ ] Verify hook script is executable
-- [ ] Test hook manually with sample JSON input
-- [ ] Check for silent failures (background/spawn patterns)
-- [ ] Verify event name casing is correct
-- [ ] Verify matcher pattern matches target tool
+- [ ] Verify hook script exists and is executable
+- [ ] Test hook manually with sample JSON
+- [ ] Verify event name casing and matcher pattern
 - [ ] Rebuild TypeScript hooks if source was edited
-- [ ] Remove verbose logging after debugging
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - Full hook debugging procedures
-  - Hook Event Reference (all 7 types with input/output fields)
-  - PreToolUse Permission Decisions (allow/deny/ask)
-  - Testing Hooks Manually (sample JSON for each event type)
-  - Silent Failure Patterns (bash and TypeScript)
-  - AI Maestro Hook Debugging
-  - Rebuilding TypeScript Hooks
-  - Common Issues Table
-  - Verbose Logging Snippet
-  - Hook Registration Format
+- [Detailed Reference](references/REFERENCE.md) - Hook Event Reference, PreToolUse Permission Decisions, Testing Hooks Manually, Silent Failure Patterns, AI Maestro Hook Debugging, Common Issues Table

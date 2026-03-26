@@ -101,7 +101,7 @@ if [ "$HTTP_CODE" != "200" ]; then
 
     # Try to parse error message from JSON
     if [ -f "$TEMP_FILE" ]; then
-        ERROR_MSG=$(cat "$TEMP_FILE" | python3 -c "import sys, json; print(json.load(sys.stdin).get('error', 'Unknown error'))" 2>/dev/null || echo "Unknown error")
+        ERROR_MSG=$(python3 -c "import sys, json; print(json.load(sys.stdin).get('error', 'Unknown error'))" < "$TEMP_FILE" 2>/dev/null || echo "Unknown error")
         echo -e "${RED}$ERROR_MSG${NC}"
     fi
 
@@ -143,7 +143,7 @@ echo ""
 # Try to show manifest summary
 if command -v unzip &> /dev/null; then
     MANIFEST=$(unzip -p "$OUTPUT_PATH" manifest.json 2>/dev/null || echo "{}")
-    if [ ! -z "$MANIFEST" ] && [ "$MANIFEST" != "{}" ]; then
+    if [ -n "$MANIFEST" ] && [ "$MANIFEST" != "{}" ]; then
         echo -e "${BLUE}Export Contents:${NC}"
         echo "$MANIFEST" | python3 -c "
 import sys, json

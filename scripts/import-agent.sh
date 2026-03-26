@@ -138,7 +138,7 @@ echo ""
 echo -e "${BLUE}Package Contents:${NC}"
 if command -v unzip &> /dev/null; then
     MANIFEST=$(unzip -p "$ZIP_FILE" manifest.json 2>/dev/null || echo "{}")
-    if [ ! -z "$MANIFEST" ] && [ "$MANIFEST" != "{}" ]; then
+    if [ -n "$MANIFEST" ] && [ "$MANIFEST" != "{}" ]; then
         echo "$MANIFEST" | python3 -c "
 import sys, json
 try:
@@ -163,7 +163,7 @@ fi
 
 # Build options JSON
 OPTIONS_JSON="{\"newId\":$NEW_ID,\"skipMessages\":$SKIP_MESSAGES,\"overwrite\":$OVERWRITE"
-if [ ! -z "$NEW_ALIAS" ]; then
+if [ -n "$NEW_ALIAS" ]; then
     OPTIONS_JSON="$OPTIONS_JSON,\"newAlias\":\"$NEW_ALIAS\""
 fi
 OPTIONS_JSON="$OPTIONS_JSON}"

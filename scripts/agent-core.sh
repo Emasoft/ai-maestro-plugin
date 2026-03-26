@@ -377,8 +377,11 @@ is_marketplace_installed() {
 
     # Check if marketplace exists in claude's marketplace list
     local output
-    output=$(cd "$agent_dir" && claude plugin marketplace list 2>/dev/null | grep -i "$mp_name" || true)
-    [[ -n "$output" ]]
+    if output=$(cd "$agent_dir" && claude plugin marketplace list 2>/dev/null | grep -i "$mp_name"); then
+        return 0
+    else
+        return 1
+    fi
 }
 
 # Gracefully restart Claude Code inside the SAME tmux session.

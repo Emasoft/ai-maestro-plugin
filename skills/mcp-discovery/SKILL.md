@@ -9,114 +9,76 @@ metadata:
 
 ## Overview
 
-Discover and inspect tools, resources, and prompts from any MCP server. Works with installed Claude Code plugins (via `mcp-discover.sh`) and standalone/remote servers (via `mcp_discovery.py`). Supports JSON, text, and LLM-optimized output formats.
+Discover and inspect tools, resources, and prompts from any MCP server. Works with installed plugins (via `mcp-discover.sh`) and standalone/remote servers (via `mcp_discovery.py`).
 
 ## Prerequisites
 
-- `mcp-discover.sh` installed at `~/.local/bin/` (included with AI Maestro plugin)
+- `mcp-discover.sh` at `~/.local/bin/` (included with AI Maestro plugin)
 - `jq` for JSON processing
 - For standalone discovery: `uv` and `scripts_dev/mcp_discovery.py`
-- For API discovery: AI Maestro server running on port 23000
 
 ## Instructions
 
-1. **Identify the target**: Determine whether the MCP server is in an installed plugin or standalone/remote.
-
-2. **For installed plugins** -- use `mcp-discover.sh`:
+1. **For installed plugins** — use `mcp-discover.sh`:
    ```bash
-   # List all tools from a plugin's MCP server
    mcp-discover.sh --plugin <plugin-name> <server-name>
-
-   # Human-readable output
    mcp-discover.sh --plugin <plugin-name> <server-name> --format text
-
-   # LLM-optimized output
    mcp-discover.sh --plugin <plugin-name> <server-name> --format llm
    ```
 
-3. **For standalone/remote servers** -- use `mcp_discovery.py`:
+2. **For standalone/remote servers** — use `mcp_discovery.py`:
    ```bash
-   # Remote HTTP/SSE server
    uv run scripts_dev/mcp_discovery.py --url https://mcp.example.com/sse
-
-   # NPX package (before installing)
-   uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y <package-name>
-
-   # Local binary
-   uv run scripts_dev/mcp_discovery.py --transport stdio -- /path/to/server
+   uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y <package>
    ```
 
-4. **Find server name** if unknown:
+3. **Find server name** if unknown:
    ```bash
-   cat ~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/.mcp.json | jq 'keys[]'
+   jq 'keys[]' < ~/.claude/plugins/cache/<marketplace>/<plugin>/<ver>/.mcp.json
    ```
 
-5. **Advanced operations** (call tools, list resources/prompts):
+4. **Advanced** — call tools, list resources/prompts:
    ```bash
-   # Call a tool directly
-   mcp-discover.sh --plugin <plugin-name> <server-name> \
-     --method tools/call --tool-name <tool-name> --tool-arg key=value
-
-   # List resources or prompts
-   mcp-discover.sh --plugin <plugin-name> <server-name> --method resources/list
-   mcp-discover.sh --plugin <plugin-name> <server-name> --method prompts/list
+   mcp-discover.sh --plugin <name> <server> --method tools/call --tool-name <t> --tool-arg k=v
+   mcp-discover.sh --plugin <name> <server> --method resources/list
    ```
 
-6. **For remote agents** -- route through AI Maestro API:
-   ```bash
-   mcp-discover.sh --plugin <plugin-name> <server-name> --api
-   ```
+5. **Remote agents** — route through API: `mcp-discover.sh --plugin <name> <server> --api`
 
 ## Output
 
 - **JSON** (default): `{ tools, resources, prompts, serverInfo, capabilities }`
-- **Text** (`--format text`): Human-readable summary with tool names and descriptions
-- **LLM** (`--format llm`): Optimized for passing to another LLM
-- **Raw** (`--raw`): Exact protocol response for debugging
+- **Text**: Human-readable summary
+- **LLM**: Optimized for passing to another LLM
+- **Raw** (`--raw`): Exact protocol response
 
 ## Error Handling
 
-- **Server timeout**: Increase with `--timeout 60` (default 25s). NPX servers may need extra time.
-- **Server not found**: Verify plugin name and server key with `jq 'keys[]'` on the `.mcp.json`.
-- **Connection refused**: Ensure the MCP server is reachable. For remote, check URL and auth token.
-- **Missing tools**: The server may not implement `tools/list`. Try `--raw` to see raw capabilities.
+- **Timeout**: Increase with `--timeout 60` (default 25s)
+- **Server not found**: Verify plugin name and server key via `jq 'keys[]'` on `.mcp.json`
+- **Connection refused**: Check URL and auth token for remote servers
+- **Missing tools**: Try `--raw` to see raw capabilities
 
 ## Examples
 
 ```bash
-# Discover chromedev-tools plugin tools
 /mcp-discovery
 mcp-discover.sh --plugin chromedev-tools cdt --format text
 ```
-
 Expected: list of tool names with descriptions.
 
 ```bash
-# Check an NPX MCP server before installing
-uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y chrome-devtools-mcp@latest --headless
+uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y chrome-devtools-mcp@latest
 ```
-
 Expected: JSON with tools array.
-
-```bash
-# Discover via UI
-# Settings > Claude Plugins > Elements > MCP Servers > Discover Tools
-```
 
 ## Checklist
 
-Copy this checklist and track your progress:
 - [ ] Identify target (installed plugin or standalone/remote)
-- [ ] Run discovery command with appropriate tool
-- [ ] Review discovered tools list
+- [ ] Run discovery command
+- [ ] Review discovered tools
 - [ ] Test specific tool calls if needed
-- [ ] Document discovered capabilities
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - Full CLI reference and all discovery patterns
-  - Plugin-based discovery (mcp-discover.sh)
-  - Output formats (JSON, text, LLM)
-  - Advanced methods (tool calls, resources, prompts)
-  - Remote/standalone discovery (mcp_discovery.py)
-  - AI Maestro API and UI discovery
+- [Detailed Reference](references/REFERENCE.md) - Plugin-based discovery, Output formats, Advanced methods, Remote/standalone discovery, AI Maestro API and UI discovery

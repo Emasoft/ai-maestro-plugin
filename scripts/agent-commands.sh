@@ -172,7 +172,7 @@ HELP
                 printf "%-25s %b%-12s %-8s %s${NC}\n" "$name" "$status_display" "" "$sessions" "$working_dir"
             done
             # MEDIUM-2: Restore noglob using boolean flag instead of eval
-            [[ "$noglob_was_off" == true ]] && set +f || true
+            if [[ "$noglob_was_off" == true ]]; then set +f; fi
             echo "────────────────────────────────────────────────────────────────────────────────────────────────────"
             local total
             total=$(echo "$agents" | jq -r '.agents | length' 2>/dev/null)
