@@ -28,73 +28,73 @@
     {
       "name": "amp-init",
       "description": "Initialize your agent identity and messaging",
-      "script": "scripts/amp-init.sh",
+      "script": "~/.local/bin/amp-init.sh",
       "usage": "amp-init [--name <name>] [--tenant <tenant>] [--auto]"
     },
     {
       "name": "amp-identity",
       "description": "Quick identity check for context recovery",
-      "script": "scripts/amp-identity.sh",
+      "script": "~/.local/bin/amp-identity.sh",
       "usage": "amp-identity [--id UUID] [--json] [--brief]"
     },
     {
       "name": "amp-status",
       "description": "Show your agent messaging status and registrations",
-      "script": "scripts/amp-status.sh",
+      "script": "~/.local/bin/amp-status.sh",
       "usage": "amp-status [--id UUID] [--json]"
     },
     {
       "name": "amp-inbox",
       "description": "Check your message inbox",
-      "script": "scripts/amp-inbox.sh",
+      "script": "~/.local/bin/amp-inbox.sh",
       "usage": "amp-inbox [--id UUID] [--all] [--count] [--json]"
     },
     {
       "name": "amp-read",
       "description": "Read a specific message",
-      "script": "scripts/amp-read.sh",
+      "script": "~/.local/bin/amp-read.sh",
       "usage": "amp-read [--id UUID] <message-id> [--no-mark-read] [--json]"
     },
     {
       "name": "amp-send",
       "description": "Send a message to another agent",
-      "script": "scripts/amp-send.sh",
+      "script": "~/.local/bin/amp-send.sh",
       "usage": "amp-send [--id UUID] <recipient> <subject> <message> [options]"
     },
     {
       "name": "amp-reply",
       "description": "Reply to a message in your inbox",
-      "script": "scripts/amp-reply.sh",
+      "script": "~/.local/bin/amp-reply.sh",
       "usage": "amp-reply [--id UUID] <message-id> <reply-message> [options]"
     },
     {
       "name": "amp-delete",
       "description": "Delete a message",
-      "script": "scripts/amp-delete.sh",
+      "script": "~/.local/bin/amp-delete.sh",
       "usage": "amp-delete [--id UUID] <message-id> [--sent] [--force]"
     },
     {
       "name": "amp-register",
       "description": "Register with an external AMP provider",
-      "script": "scripts/amp-register.sh",
+      "script": "~/.local/bin/amp-register.sh",
       "usage": "amp-register [--id UUID] --provider <provider> --tenant <tenant> [--name <name>]"
     },
     {
       "name": "amp-fetch",
       "description": "Fetch new messages from external providers",
-      "script": "scripts/amp-fetch.sh",
+      "script": "~/.local/bin/amp-fetch.sh",
       "usage": "amp-fetch [--id UUID] [--provider <provider>] [--verbose]"
     },
     {
       "name": "amp-download",
       "description": "Download attachments from a message",
-      "script": "scripts/amp-download.sh",
+      "script": "~/.local/bin/amp-download.sh",
       "usage": "amp-download [--id UUID] <message-id> [attachment-id|--all] [--dest DIR] [--sent]"
     },
     {
       "name": "amp-statusline",
       "description": "Install AMP status line for Claude Code (shows agent identity and unread count)",
-      "script": "scripts/amp-statusline.sh",
+      "script": "~/.local/bin/amp-statusline.sh",
       "usage": "amp-statusline.sh [--install | --uninstall | --test]"
     }
   ],
