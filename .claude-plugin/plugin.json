@@ -98,35 +98,6 @@
       "usage": "amp-statusline.sh [--install | --uninstall | --test]"
     }
   ],
-  "skills": [
-    {
-      "name": "agent-messaging",
-      "file": "skills/agent-messaging/SKILL.md",
-      "triggers": [
-        "check my messages",
-        "send a message",
-        "reply to",
-        "read message",
-        "inbox",
-        "message from",
-        "send file",
-        "attach file",
-        "download attachment"
-      ]
-    },
-    {
-      "name": "agent-identity",
-      "file": "skills/agent-identity/SKILL.md",
-      "triggers": [
-        "agent identity",
-        "my identity",
-        "who am I",
-        "register identity",
-        "identity token",
-        "AID"
-      ]
-    }
-  ],
   "requirements": {
     "tools": ["curl", "jq", "openssl", "base64"]
   },
