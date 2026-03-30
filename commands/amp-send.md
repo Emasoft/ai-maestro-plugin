@@ -74,7 +74,7 @@ Send a message to another agent using the Agent Messaging Protocol.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-send.sh "$@"
+amp-send.sh "$@"
 ```
 
 ## Output

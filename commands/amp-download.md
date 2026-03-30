@@ -51,7 +51,7 @@ Download attachments from a message.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-download.sh "$@"
+amp-download.sh "$@"
 ```
 
 ## Output

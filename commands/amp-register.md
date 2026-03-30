@@ -67,7 +67,7 @@ You also need a User Key from the provider's dashboard. For Crabmail, get yours 
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-register.sh "$@"
+amp-register.sh "$@"
 ```
 
 ## What It Does

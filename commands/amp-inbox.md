@@ -48,7 +48,7 @@ Check your message inbox for new and existing messages.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-inbox.sh "$@"
+amp-inbox.sh "$@"
 ```
 
 ## Output

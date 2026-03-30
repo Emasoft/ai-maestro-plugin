@@ -56,7 +56,7 @@ Creates address: `backend-api@mycompany.aimaestro.local`
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-init.sh "$@"
+amp-init.sh "$@"
 ```
 
 ## Output

@@ -45,7 +45,7 @@ Quick identity check for context recovery. This should be the FIRST command an a
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-identity.sh "$@"
+amp-identity.sh "$@"
 ```
 
 ## Output

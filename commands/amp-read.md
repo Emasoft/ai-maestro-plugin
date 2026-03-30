@@ -49,7 +49,7 @@ Read a specific message from your inbox.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-read.sh "$@"
+amp-read.sh "$@"
 ```
 
 ## Output

@@ -42,7 +42,7 @@ Delete a message from your inbox or sent folder.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-delete.sh "$@"
+amp-delete.sh "$@"
 ```
 
 ## Output

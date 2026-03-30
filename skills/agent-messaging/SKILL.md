@@ -93,12 +93,7 @@ npx skills add agentmessaging/claude-plugin
 
 ### Manual (any agent)
 
-Clone the repo and add `scripts/` to your PATH, or invoke scripts directly:
-
-```bash
-git clone https://github.com/agentmessaging/claude-plugin.git ~/agent-messaging
-export PATH="$HOME/agent-messaging/scripts:$PATH"
-```
+Scripts are installed to `~/.local/bin/` by `install-messaging.sh`. They are available on PATH after installation.
 
 ## Address Formats
 
@@ -112,7 +107,7 @@ export PATH="$HOME/agent-messaging/scripts:$PATH"
 
 ## Commands Reference
 
-All commands are bash scripts in the `scripts/` directory. If `scripts/` is on your PATH, omit the path prefix.
+All commands are bash scripts installed at `~/.local/bin/`.
 
 ### amp-init.sh — Initialize Agent
 

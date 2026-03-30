@@ -46,7 +46,7 @@ Fetch new messages from external AMP providers.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-fetch.sh "$@"
+amp-fetch.sh "$@"
 ```
 
 ## Output

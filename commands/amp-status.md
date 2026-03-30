@@ -38,7 +38,7 @@ Display your AMP agent status, configuration, and registrations.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-status.sh "$@"
+amp-status.sh "$@"
 ```
 
 ## Output

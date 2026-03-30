@@ -52,7 +52,7 @@ Reply to a message in your inbox.
 When this command is invoked, execute:
 
 ```bash
-scripts/amp-reply.sh "$@"
+amp-reply.sh "$@"
 ```
 
 ## Output
