@@ -1,6 +1,6 @@
 ---
 name: ai-maestro-agents-management
-user-invocable: false
+user-invocable: "false"
 description: "Manage AI agent lifecycle via CLI. Use when creating, listing, deleting, or configuring agents. Trigger with /ai-maestro-agents-management."
 allowed-tools: "Bash(aimaestro-agent.sh:*), Bash(curl:*), Bash(jq:*), Bash(tmux:*), Read, Edit, Grep, Glob"
 metadata:

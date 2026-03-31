@@ -1,6 +1,6 @@
 ---
 name: team-kanban
-user-invocable: false
+user-invocable: "false"
 description: "Manage team kanban boards and tasks. Use when creating, moving, or filtering tasks. Trigger with /team-kanban."
 allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
 metadata:

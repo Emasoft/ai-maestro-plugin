@@ -1,6 +1,6 @@
 ---
 name: mcp-discovery
-user-invocable: false
+user-invocable: "false"
 description: "Discover MCP server tools, resources, and prompts without installing plugins. Use when exploring MCP servers or debugging connections. Trigger with /mcp-discovery."
 allowed-tools: "Bash(mcp-discover.sh:*), Bash(jq:*), Bash(curl:*), Bash(uv:*), Bash(cat:*), Read, Glob"
 metadata:

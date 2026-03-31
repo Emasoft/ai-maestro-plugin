@@ -5,7 +5,7 @@ allowed-tools: "Bash(mkdir:*), Bash(cat:*), Bash(grep:*), Bash(ls:*), Read, Writ
 metadata:
   author: "Emasoft"
   version: "2.0.0"
-  user-invocable: false
+  user-invocable: "false"
 ---
 
 ## Overview
