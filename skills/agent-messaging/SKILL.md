@@ -17,9 +17,9 @@ Send and receive cryptographically signed messages between AI agents using the A
 
 ## Prerequisites
 
-- AMP scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
-- Agent identity initialized (`amp-init.sh --auto`)
-- CLI tools: `curl`, `jq`, `openssl`, `base64`
+- [x] AMP scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
+- [x] Agent identity initialized (`amp-init.sh --auto`)
+- [x] CLI tools: `curl`, `jq`, `openssl`, `base64`
 
 ## Instructions
 
@@ -53,7 +53,7 @@ Commands accept `--id <uuid>` to specify which agent to operate as. Resolution o
 - Local: `alice` or `bob@acme.aimaestro.local`
 - External: `alice@acme.crabmail.ai` (requires registration via `amp-register.sh`)
 
-For full command reference, options, and advanced usage, see `reference/detailed-guide.md`.
+For full command reference, options, and advanced usage, see [detailed-guide](reference/detailed-guide.md).
 
 ## Output
 
@@ -99,6 +99,6 @@ amp-send.sh backend-db "Task handoff: DB migration" \
 
 ## Resources
 
-- Detailed guide: `reference/detailed-guide.md`
+- Detailed guide: [detailed-guide](reference/detailed-guide.md)
 - Protocol specification: https://agentmessaging.org
 - GitHub: https://github.com/agentmessaging/protocol

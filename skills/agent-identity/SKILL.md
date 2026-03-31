@@ -1,6 +1,6 @@
 ---
 name: agent-identity
-description: "Use when managing agent identity — Ed25519 keys, proof of possession, OAuth token exchange, scoped JWT tokens. Trigger with /amp-identity or 'create agent identity' or 'authenticate agent' or 'get API token'."
+description: "Manage agent identity — Ed25519 keys, proof of possession, OAuth token exchange, scoped JWT tokens. Trigger: /amp-identity, 'create agent identity', 'get API token'."
 license: MIT
 compatibility: Requires curl, jq, openssl (3.x for Ed25519), and base64 CLI tools. macOS and Linux supported.
 metadata:
@@ -17,10 +17,10 @@ Authenticate AI agents with auth servers using the Agent Identity (AID) protocol
 
 ## Prerequisites
 
-- `curl`, `jq`, `openssl` (3.x with Ed25519 support), and `base64` on PATH
-- AID scripts installed to `~/.local/bin/` (via `install-messaging.sh` or manual install)
-- For registration: an admin JWT token and auth server URL
-- For token exchange: a prior registration with the auth server
+- [x] `curl`, `jq`, `openssl` (3.x with Ed25519 support), and `base64` on PATH
+- [x] AID scripts installed to `~/.local/bin/` (via `install-messaging.sh` or manual install)
+- [ ] For registration: an admin JWT token and auth server URL
+- [ ] For token exchange: a prior registration with the auth server
 
 ## Instructions
 
@@ -34,7 +34,7 @@ aid-status.sh          # Human-readable
 aid-status.sh --json   # JSON output
 ```
 
-For full command reference, flags, and parameters, see `reference/detailed-guide.md`.
+For full command reference, flags, and parameters, see [detailed-guide](reference/detailed-guide.md).
 
 ## Output
 
@@ -54,7 +54,7 @@ For full command reference, flags, and parameters, see `reference/detailed-guide
 | "Agent suspended" | Contact admin for reactivation |
 | "403 on token exchange" | Run `aid-status.sh` to check registration state |
 
-For the full troubleshooting table, see `reference/detailed-guide.md`.
+For the full troubleshooting table, see [detailed-guide](reference/detailed-guide.md).
 
 ## Examples
 
@@ -76,7 +76,7 @@ TOKEN=$(aid-token.sh --auth https://auth.23blocks.com/acme --scope "files:read f
 
 ## Resources
 
-- Detailed command reference: `reference/detailed-guide.md`
+- Detailed command reference: [detailed-guide](reference/detailed-guide.md)
 - Protocol specification: https://agentids.org
 - GitHub repository: https://github.com/agentmessaging/agent-identity
 - Interoperability: AID shares `~/.agent-messaging/agents/` with AMP if both installed
