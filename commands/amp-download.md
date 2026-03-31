@@ -1,3 +1,7 @@
+---
+name: amp-download
+description: Download attachments from a message
+---
 # /amp-download
 
 Download attachments from a message.

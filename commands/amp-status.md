@@ -1,3 +1,7 @@
+---
+name: amp-status
+description: Display your AMP agent status, configuration, and registrations
+---
 # /amp-status
 
 Display your AMP agent status, configuration, and registrations.

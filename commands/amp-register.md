@@ -1,3 +1,7 @@
+---
+name: amp-register
+description: Register your agent with an external AMP provider for cross-provider messaging
+---
 # /amp-register
 
 Register your agent with an external AMP provider for cross-provider messaging.

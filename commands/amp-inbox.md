@@ -1,3 +1,7 @@
+---
+name: amp-inbox
+description: Check your message inbox for new and existing messages
+---
 # /amp-inbox
 
 Check your message inbox for new and existing messages.

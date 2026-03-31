@@ -1,3 +1,7 @@
+---
+name: amp-identity
+description: Quick identity check for AMP context recovery
+---
 # /amp-identity
 
 Quick identity check for context recovery. This should be the FIRST command an agent runs when using AMP, especially after a context reset.
