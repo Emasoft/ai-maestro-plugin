@@ -25,18 +25,18 @@
     "AID"
   ],
   "commands": [
-    "commands/amp-init.md",
-    "commands/amp-send.md",
-    "commands/amp-inbox.md",
-    "commands/amp-read.md",
-    "commands/amp-reply.md",
-    "commands/amp-delete.md",
-    "commands/amp-fetch.md",
-    "commands/amp-download.md",
-    "commands/amp-register.md",
-    "commands/amp-status.md",
-    "commands/amp-statusline.md",
-    "commands/amp-identity.md"
+    "./commands/amp-init.md",
+    "./commands/amp-send.md",
+    "./commands/amp-inbox.md",
+    "./commands/amp-read.md",
+    "./commands/amp-reply.md",
+    "./commands/amp-delete.md",
+    "./commands/amp-fetch.md",
+    "./commands/amp-download.md",
+    "./commands/amp-register.md",
+    "./commands/amp-status.md",
+    "./commands/amp-statusline.md",
+    "./commands/amp-identity.md"
   ],
   "requirements": {
     "tools": ["curl", "jq", "openssl", "base64"]
