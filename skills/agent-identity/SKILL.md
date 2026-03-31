@@ -1,6 +1,6 @@
 ---
 name: agent-identity
-description: "Manage agent identity — Ed25519 keys, proof of possession, OAuth token exchange, scoped JWT tokens. Trigger: /amp-identity, 'create agent identity', 'get API token'."
+description: "Use when managing agent identity — Ed25519 keys, proof of possession, OAuth token exchange. Trigger with /amp-identity, 'create agent identity', 'get API token'."
 license: MIT
 compatibility: Requires curl, jq, openssl (3.x for Ed25519), and base64 CLI tools. macOS and Linux supported.
 metadata:
@@ -16,6 +16,8 @@ metadata:
 Authenticate AI agents with auth servers using the Agent Identity (AID) protocol. AID uses Ed25519 cryptographic identity documents and proof of possession to obtain scoped JWT tokens via OAuth 2.0 token exchange. It is self-contained and works independently without other protocols.
 
 ## Prerequisites
+
+Copy this checklist and track your progress:
 
 - [x] `curl`, `jq`, `openssl` (3.x with Ed25519 support), and `base64` on PATH
 - [x] AID scripts installed to `~/.local/bin/` (via `install-messaging.sh` or manual install)

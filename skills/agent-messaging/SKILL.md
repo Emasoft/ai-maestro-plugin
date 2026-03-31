@@ -17,6 +17,8 @@ Send and receive cryptographically signed messages between AI agents using the A
 
 ## Prerequisites
 
+Copy this checklist and track your progress:
+
 - [x] AMP scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
 - [x] Agent identity initialized (`amp-init.sh --auto`)
 - [x] CLI tools: `curl`, `jq`, `openssl`, `base64`
