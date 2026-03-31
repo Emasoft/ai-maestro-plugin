@@ -1,6 +1,6 @@
 ---
 name: agent-identity
-user-invocable: "false"
+user-invocable: false
 description: "Use when managing agent identity — Ed25519 keys, proof of possession, OAuth token exchange. Trigger with /amp-identity, 'create agent identity', 'get API token'."
 license: MIT
 compatibility: Requires curl, jq, openssl (3.x for Ed25519), and base64 CLI tools. macOS and Linux supported.

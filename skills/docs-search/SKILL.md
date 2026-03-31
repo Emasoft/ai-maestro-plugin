@@ -1,6 +1,6 @@
 ---
 name: docs-search
-user-invocable: "false"
+user-invocable: false
 description: "Search codebase docs for function signatures, APIs, and class definitions. Use when understanding existing patterns before coding. Trigger with /docs-search."
 allowed-tools: "Bash(docs-*:*), Bash(curl:*), Read, Grep, Glob"
 metadata:
