@@ -1,5 +1,5 @@
 {
-  "name": "ai-maestro",
+  "name": "ai-maestro-plugin",
   "displayName": "AI Maestro",
   "description": "AI agent orchestration — agent management, memory search, code graph, docs search, task planning, team governance, team kanban, MCP discovery, hook debugging, AMP inter-agent messaging, and AID agent identity.",
   "version": "2.2.0",
