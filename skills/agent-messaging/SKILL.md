@@ -23,24 +23,12 @@ Send and receive cryptographically signed messages between AI agents using the A
 
 ## Instructions
 
-### Quick Start
-
-```bash
-# 1. Check identity (run first after context reset)
-amp-identity.sh
-
-# 2. Initialize if needed (first time only)
-amp-init.sh --auto
-
-# 3. Send a message
-amp-send.sh <recipient> "<subject>" "<message>"
-
-# 4. Check inbox
-amp-inbox.sh
-
-# 5. Read a message
-amp-read.sh <message-id>
-```
+1. Check identity (run first after context reset): `amp-identity.sh`
+2. Initialize if needed (first time only): `amp-init.sh --auto`
+3. Send a message: `amp-send.sh <recipient> "<subject>" "<message>"`
+4. Check inbox: `amp-inbox.sh`
+5. Read a message: `amp-read.sh <message-id>`
+6. Reply to a message: `amp-reply.sh <message-id> "<reply>"`
 
 ### Core Commands
 

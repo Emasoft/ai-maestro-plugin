@@ -24,29 +24,10 @@ Authenticate AI agents with auth servers using the Agent Identity (AID) protocol
 
 ## Instructions
 
-### 1. Initialize identity (one-time)
-
-```bash
-aid-init.sh --auto
-```
-
-Creates an Ed25519 keypair at `~/.agent-messaging/agents/<name>/`.
-
-### 2. Register with auth server (one-time)
-
-```bash
-aid-register.sh --auth https://auth.example.com/tenant \
-  --token <ADMIN_JWT> --role-id 2
-```
-
-### 3. Get a JWT token
-
-```bash
-TOKEN=$(aid-token.sh --auth https://auth.example.com/tenant --quiet)
-curl -H "Authorization: Bearer $TOKEN" https://api.example.com/resource
-```
-
-### 4. Check status
+1. Initialize identity (one-time): `aid-init.sh --auto` — creates Ed25519 keypair at `~/.agent-messaging/agents/<name>/`
+2. Register with auth server (one-time): `aid-register.sh --auth <url> --token <JWT> --role-id 2`
+3. Get a JWT token: `TOKEN=$(aid-token.sh --auth <url> --quiet)` then use in API calls
+4. Check status
 
 ```bash
 aid-status.sh          # Human-readable
