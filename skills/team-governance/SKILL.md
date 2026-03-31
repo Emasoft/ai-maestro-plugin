@@ -1,5 +1,6 @@
 ---
 name: team-governance
+user-invocable: false
 description: "Manage team governance: create/delete teams, assign agents, set COS roles. Use when managing teams or roles. Trigger with /team-governance."
 allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
 metadata:

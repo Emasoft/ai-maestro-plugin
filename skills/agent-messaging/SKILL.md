@@ -1,5 +1,6 @@
 ---
 name: agent-messaging
+user-invocable: false
 description: "Use when sending or receiving inter-agent messages via AMP protocol. Trigger with /amp-send, /amp-inbox, /amp-read, or 'check my messages', 'send a message to'."
 license: Apache-2.0
 compatibility: Requires curl, jq, openssl, and base64 CLI tools. macOS and Linux supported.
