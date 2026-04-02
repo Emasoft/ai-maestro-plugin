@@ -47,17 +47,9 @@ Returns your agent's governance permissions. **If not MANAGER or COS, STOP** -- 
 curl -s "http://localhost:23000/api/teams" | jq .
 ```
 
-### Create an Open Team
+### Create a Team (MANAGER Only)
 
-Any agent can create an open team. Open teams allow any agent to join or leave freely.
-
-```bash
-curl -s -X POST "http://localhost:23000/api/teams" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "frontend-squad", "type": "open"}' | jq .
-```
-
-### Create a Closed Team (MANAGER Only)
+All teams are closed (isolated messaging with COS gateway). For lightweight unstructured agent collections, use Groups instead (`/api/groups`).
 
 ```bash
 curl -s -X POST "http://localhost:23000/api/teams" \
@@ -92,7 +84,7 @@ curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
   -d '{"type": "closed"}' | jq .
 ```
 
-Replace `"closed"` with `"open"` to open a team.
+All teams are closed. Use Groups (`/api/groups`) for open agent collections.
 
 ---
 
@@ -171,7 +163,7 @@ Use AMP to broadcast to all agents in a team. COS broadcasts to own team; MANAGE
 TEAM_ID="<team-uuid>"
 AGENTS=$(curl -s "http://localhost:23000/api/teams/$TEAM_ID" | jq -r '.agentIds[]')
 for AGENT_ID in $AGENTS; do
-  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.name')
+  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.agent.name')
   amp-send "$AGENT_NAME" "Team Update" "Your message here"
 done
 ```
@@ -182,7 +174,7 @@ done
 TEAM_ID="<team-uuid>"
 AGENTS=$(curl -s "http://localhost:23000/api/teams/$TEAM_ID" | jq -r '.agentIds[]')
 for AGENT_ID in $AGENTS; do
-  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.name')
+  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.agent.name')
   amp-send "$AGENT_NAME" "Urgent: Team Update" "Your urgent message here" --priority urgent
 done
 ```
@@ -193,11 +185,8 @@ done
 
 | Action | Normal Agent | COS (own team) | COS (other team) | MANAGER |
 |--------|:------------:|:--------------:|:-----------------:|:-------:|
-| Create open team | Yes | Yes | Yes | Yes |
-| Create closed team | No | No | No | Yes |
-| Delete open team | No | No | No | Yes |
-| Delete closed team | No | No | No | Yes |
-| Change team type | No | No | No | Yes |
+| Create team | No | No | No | Yes |
+| Delete team | No | No | No | Yes |
 | Assign agent (own team) | No | Yes | No | Yes |
 | Remove agent (own team) | No | Yes | No | Yes |
 | Assign agent (other team) | No | No | No | Yes |
@@ -209,8 +198,8 @@ done
 
 **Membership constraints:**
 - A COS agent can lead **one closed team only** — cannot be COS of multiple teams simultaneously.
-- A normal agent can belong to at most **one closed team** at any time. Joining a closed team revokes open team memberships.
-- MANAGER can belong to **unlimited** open and closed teams.
+- A normal agent can belong to at most **one team** at any time.
+- MANAGER can belong to **unlimited** teams.
 
 ---
 
@@ -220,8 +209,8 @@ Closed teams have messaging isolation.
 
 | Your Title | Who You Can Message |
 |-----------|-------------------|
-| **Open-world agent** (not in any closed team) | Any agent NOT in a closed team |
-| **Closed team member** | Same-team members + your team's Chief-of-Staff |
+| **Unaffiliated agent** (not in any team) | Any unaffiliated agent, or via COS for team agents |
+| **Team member** | Same-team members + your team's Chief-of-Staff |
 | **Chief-of-Staff** | Own team members + MANAGER + other Chiefs-of-Staff |
 | **MANAGER** | Anyone (unrestricted) |
 
@@ -249,7 +238,7 @@ Go through the team's Chief-of-Staff:
 | 400 | `agent_already_in_closed_team` | Agent is in another closed team; use cross-team transfer |
 | 401 | `invalid_governance_password` | Incorrect governance password for COS assignment/removal |
 | 404 | `team_not_found` | Team ID does not exist |
-| 400 | `invalid_team_type` | Team type must be "open" or "closed" |
+| 400 | `invalid_team_type` | Invalid team configuration |
 
 ---
 

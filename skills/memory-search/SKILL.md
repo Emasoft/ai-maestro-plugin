@@ -17,7 +17,7 @@ Searches AI Maestro's indexed conversation history using `memory-search.sh`. Sup
 - AI Maestro running on `localhost:23000`
 - `memory-search.sh` installed at `~/.local/bin/` (via `./install-memory-tools.sh`)
 - Subconscious process running and indexing conversations
-- Optional: `docs-search.sh` and `graph-query.sh` for combined search
+- Optional: `docs-search.sh` and `graph-describe.sh` for combined search
 
 ## Instructions
 
@@ -47,7 +47,7 @@ Searches AI Maestro's indexed conversation history using `memory-search.sh`. Sup
 7. **For complete context**, optionally search docs and graph too:
    ```bash
    docs-search.sh "<query>"
-   graph-query.sh "<query>"
+   graph-describe.sh "<query>"
    ```
 
 ## Output

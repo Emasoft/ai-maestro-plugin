@@ -1,7 +1,7 @@
 ---
 name: team-governance
 user-invocable: false
-description: "Manage team governance: create/delete teams, assign agents, set COS roles. Use when managing teams or roles. Trigger with /team-governance."
+description: "Manage team governance: create/delete teams, assign agents, set COS titles. Use when managing teams or titles. Trigger with /team-governance."
 allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -10,7 +10,7 @@ metadata:
 
 ## Overview
 
-Manage teams, assign agents, set team types (open/closed), assign Chief-of-Staff roles, and handle broadcasts via the AI Maestro governance API. Requires MANAGER or CHIEF-OF-STAFF title.
+Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the AI Maestro governance API. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
 
 ## Prerequisites
 
@@ -53,7 +53,7 @@ Manage teams, assign agents, set team types (open/closed), assign Chief-of-Staff
    ```bash
    AGENTS=$(curl -s "http://localhost:23000/api/teams/<id>" | jq -r '.agentIds[]')
    for AID in $AGENTS; do
-     NAME=$(curl -s "http://localhost:23000/api/agents/$AID" | jq -r '.name')
+     NAME=$(curl -s "http://localhost:23000/api/agents/$AID" | jq -r '.agent.name')
      amp-send "$NAME" "Subject" "Message"
    done
    ```

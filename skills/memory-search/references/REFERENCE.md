@@ -110,7 +110,7 @@ memory-search.sh "authentication"
 docs-search.sh "authentication"
 
 # Step 3: What concepts are connected?
-graph-query.sh "authentication"
+graph-describe.sh "authentication"
 ```
 
 Always start with memory search. If memory has no results, fall back to docs.
