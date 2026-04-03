@@ -194,7 +194,9 @@ done
 | Assign COS | No | No | No | Yes |
 | Broadcast own team | No | Yes | No | Yes |
 | Broadcast any team | No | No | No | Yes |
-| Message any agent (AMP) | Yes | Yes | Yes | Yes |
+| Message via AMP | Title-restricted | Team + COS + MANAGER | Team + COS + MANAGER | Unrestricted |
+
+**Note:** AMP messaging between agents is governed by the title-based communication graph (see below). Normal agents (ARCHITECT, INTEGRATOR, MEMBER) can only reach COS and ORCHESTRATOR.
 
 **Membership constraints:**
 - A COS agent can lead **one closed team only** — cannot be COS of multiple teams simultaneously.

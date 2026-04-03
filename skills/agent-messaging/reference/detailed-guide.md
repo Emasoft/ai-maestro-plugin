@@ -283,6 +283,7 @@ When a message is blocked (403), the server returns a routing suggestion. The ag
 | Sender Title | Blocked Recipient | Routing Suggestion |
 |-------------|-------------------|-------------------|
 | ORCHESTRATOR | MANAGER | Route through COS — COS can relay to MANAGER |
+| ORCHESTRATOR | ORCHESTRATOR | Route through CHIEF-OF-STAFF for cross-team coordination |
 | ORCHESTRATOR | AUTONOMOUS | Route through COS or MANAGER |
 | ARCHITECT | MANAGER | Route through COS — COS can relay to MANAGER |
 | ARCHITECT | ARCHITECT | Route through ORCHESTRATOR or COS |
