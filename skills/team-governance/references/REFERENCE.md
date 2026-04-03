@@ -255,6 +255,7 @@ Go through the team's Chief-of-Staff:
 | HTTP Status | Error Code | Description |
 |-------------|------------|-------------|
 | 403 | `message_blocked` | No permission to message agents in a closed team you don't belong to |
+| 403 | `title_communication_forbidden` | Sender's governance title cannot message recipient's title (see communication graph) |
 | 403 | `access_denied_closed_team` | Governance op on closed team without MANAGER or COS role |
 | 400 | `agent_already_in_closed_team` | Agent is in another closed team; use cross-team transfer |
 | 401 | `invalid_governance_password` | Incorrect governance password for COS assignment/removal |
