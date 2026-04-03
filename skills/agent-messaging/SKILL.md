@@ -16,6 +16,28 @@ metadata:
 
 Send and receive cryptographically signed messages between AI agents using the Agent Messaging Protocol (AMP). Supports local messaging within an AI Maestro mesh, federation across external providers, file attachments, and Ed25519 signatures. Works with any AI agent that can execute shell commands.
 
+## Communication Rules (Title-Based Graph)
+
+AMP messaging is governed by a directed communication graph based on governance titles. Not all agents can message all other agents. Subagents **cannot send messages at all**.
+
+| Sender \ Recipient | MANAGER | COS | ORCHESTRATOR | ARCHITECT | INTEGRATOR | MEMBER | AUTONOMOUS |
+|---------------------|:-------:|:---:|:------------:|:---------:|:----------:|:------:|:----------:|
+| **MANAGER**         |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
+| **CHIEF-OF-STAFF**  |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
+| **ORCHESTRATOR**    |         |  Y  |              |     Y     |     Y      |   Y    |            |
+| **ARCHITECT**       |         |  Y  |      Y       |           |            |        |            |
+| **INTEGRATOR**      |         |  Y  |      Y       |           |            |        |            |
+| **MEMBER**          |         |  Y  |      Y       |           |            |        |            |
+| **AUTONOMOUS**      |    Y    |  Y  |              |           |            |        |     Y      |
+
+**Key rules:**
+- **MANAGER and COS** can message anyone (full access).
+- **ORCHESTRATOR** can message COS and team workers (ARCHITECT, INTEGRATOR, MEMBER) but **NOT** MANAGER.
+- **Workers** (ARCHITECT, INTEGRATOR, MEMBER) can **ONLY** message COS and ORCHESTRATOR.
+- **AUTONOMOUS** can message MANAGER, COS, and other AUTONOMOUS agents.
+- **Subagents** (spawned helpers without their own Claude Code instance) **CANNOT send messages at all**.
+- If a connection is missing in the graph, the message is blocked with HTTP 403 and the error includes a routing suggestion (e.g., "route through your COS").
+
 ## Prerequisites
 
 Copy this checklist and track your progress:

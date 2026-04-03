@@ -12,6 +12,8 @@ metadata:
 
 Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the AI Maestro governance API. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
 
+**Communication graph:** AMP messaging between agents is governed by a title-based directed graph. MANAGER and COS have full access; ORCHESTRATOR can reach COS and workers; workers (ARCHITECT, INTEGRATOR, MEMBER) can only reach COS and ORCHESTRATOR; AUTONOMOUS can reach MANAGER, COS, and other AUTONOMOUS. Subagents cannot send messages. See the [reference](references/REFERENCE.md#team-messaging-rules) for the full adjacency matrix and routing suggestions.
+
 ## Prerequisites
 
 - AI Maestro at `${AIMAESTRO_API:-http://localhost:23000}`

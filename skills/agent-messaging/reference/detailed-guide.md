@@ -234,6 +234,87 @@ The `AMP_DIR` environment variable points to the agent's directory and is auto-r
 - **Private keys stay local** — never sent to providers
 - **Per-agent identity** — each agent has a unique keypair
 
+## Communication Graph (Title-Based Directed Graph)
+
+AMP enforces a directed communication graph based on governance titles. Each node is a governance title; each directed edge represents an allowed messaging path. Messages that violate the graph are blocked with HTTP 403.
+
+### Graph Nodes
+
+| Node | Description |
+|------|-------------|
+| `MANAGER` | Team manager — full messaging access |
+| `CHIEF-OF-STAFF` (COS) | Team operations lead — full messaging access |
+| `ORCHESTRATOR` | Task coordinator — messages COS and workers |
+| `ARCHITECT` | Design lead — messages COS and ORCHESTRATOR |
+| `INTEGRATOR` | Integration specialist — messages COS and ORCHESTRATOR |
+| `MEMBER` | Team member — messages COS and ORCHESTRATOR |
+| `AUTONOMOUS` | Independent agent — messages MANAGER, COS, and other AUTONOMOUS |
+
+Subagents (spawned task helpers without their own Claude Code instance) are **not nodes** — they cannot send messages at all.
+
+### Directed Edges (Allowed Connections)
+
+```
+MANAGER       → MANAGER, COS, ORCHESTRATOR, ARCHITECT, INTEGRATOR, MEMBER, AUTONOMOUS
+COS           → MANAGER, COS, ORCHESTRATOR, ARCHITECT, INTEGRATOR, MEMBER, AUTONOMOUS
+ORCHESTRATOR  → COS, ARCHITECT, INTEGRATOR, MEMBER
+ARCHITECT     → COS, ORCHESTRATOR
+INTEGRATOR    → COS, ORCHESTRATOR
+MEMBER        → COS, ORCHESTRATOR
+AUTONOMOUS    → MANAGER, COS, AUTONOMOUS
+```
+
+### Adjacency Matrix
+
+| Sender \ Recipient | MANAGER | COS | ORCHESTRATOR | ARCHITECT | INTEGRATOR | MEMBER | AUTONOMOUS |
+|---------------------|:-------:|:---:|:------------:|:---------:|:----------:|:------:|:----------:|
+| **MANAGER**         |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
+| **CHIEF-OF-STAFF**  |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
+| **ORCHESTRATOR**    |         |  Y  |              |     Y     |     Y      |   Y    |            |
+| **ARCHITECT**       |         |  Y  |      Y       |           |            |        |            |
+| **INTEGRATOR**      |         |  Y  |      Y       |           |            |        |            |
+| **MEMBER**          |         |  Y  |      Y       |           |            |        |            |
+| **AUTONOMOUS**      |    Y    |  Y  |              |           |            |        |     Y      |
+
+### Routing Suggestions (When Blocked)
+
+When a message is blocked (403), the server returns a routing suggestion. The agent should follow the suggestion to deliver the message indirectly.
+
+| Sender Title | Blocked Recipient | Routing Suggestion |
+|-------------|-------------------|-------------------|
+| ORCHESTRATOR | MANAGER | Route through COS — COS can relay to MANAGER |
+| ORCHESTRATOR | AUTONOMOUS | Route through COS or MANAGER |
+| ARCHITECT | MANAGER | Route through COS — COS can relay to MANAGER |
+| ARCHITECT | ARCHITECT | Route through ORCHESTRATOR or COS |
+| ARCHITECT | INTEGRATOR | Route through ORCHESTRATOR or COS |
+| ARCHITECT | MEMBER | Route through ORCHESTRATOR or COS |
+| ARCHITECT | AUTONOMOUS | Route through COS or MANAGER |
+| INTEGRATOR | MANAGER | Route through COS — COS can relay to MANAGER |
+| INTEGRATOR | ARCHITECT | Route through ORCHESTRATOR or COS |
+| INTEGRATOR | INTEGRATOR | Route through ORCHESTRATOR or COS |
+| INTEGRATOR | MEMBER | Route through ORCHESTRATOR or COS |
+| INTEGRATOR | AUTONOMOUS | Route through COS or MANAGER |
+| MEMBER | MANAGER | Route through COS — COS can relay to MANAGER |
+| MEMBER | ARCHITECT | Route through ORCHESTRATOR or COS |
+| MEMBER | INTEGRATOR | Route through ORCHESTRATOR or COS |
+| MEMBER | MEMBER | Route through ORCHESTRATOR or COS |
+| MEMBER | AUTONOMOUS | Route through COS or MANAGER |
+| AUTONOMOUS | ORCHESTRATOR | Route through MANAGER or COS |
+| AUTONOMOUS | ARCHITECT | Route through MANAGER or COS |
+| AUTONOMOUS | INTEGRATOR | Route through MANAGER or COS |
+| AUTONOMOUS | MEMBER | Route through MANAGER or COS |
+
+### Error Response Format
+
+```json
+{
+  "error": "message_blocked",
+  "status": 403,
+  "message": "ARCHITECT cannot message MANAGER directly",
+  "suggestion": "Route through COS — COS can relay to MANAGER"
+}
+```
+
 ## Extended Workflow Examples
 
 ### Code Review Request

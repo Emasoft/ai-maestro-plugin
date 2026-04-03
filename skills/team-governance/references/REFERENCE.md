@@ -205,19 +205,40 @@ done
 
 ## Team Messaging Rules
 
-Closed teams have messaging isolation.
+AMP messaging is governed by a **title-based directed communication graph**. Each governance title defines which other titles the agent can message directly. Connections not in the graph are blocked with HTTP 403 and a routing suggestion.
 
-| Your Title | Who You Can Message |
-|-----------|-------------------|
-| **Unaffiliated agent** (not in any team) | Any unaffiliated agent, or via COS for team agents |
-| **Team member** | Same-team members + your team's Chief-of-Staff |
-| **Chief-of-Staff** | Own team members + MANAGER + other Chiefs-of-Staff |
-| **MANAGER** | Anyone (unrestricted) |
+**Subagents** (spawned task helpers without their own Claude Code instance) **cannot send messages at all** — they are not nodes in the graph.
 
-### Key Restrictions
+### Communication Graph — Adjacency Matrix
 
-- You **CANNOT** message into a closed team from outside (403 `message_blocked`)
-- You **CANNOT** message out of a closed team to non-team-members (except COS/MANAGER)
+| Sender \ Recipient | MANAGER | COS | ORCHESTRATOR | ARCHITECT | INTEGRATOR | MEMBER | AUTONOMOUS |
+|---------------------|:-------:|:---:|:------------:|:---------:|:----------:|:------:|:----------:|
+| **MANAGER**         |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
+| **CHIEF-OF-STAFF**  |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
+| **ORCHESTRATOR**    |         |  Y  |              |     Y     |     Y      |   Y    |            |
+| **ARCHITECT**       |         |  Y  |      Y       |           |            |        |            |
+| **INTEGRATOR**      |         |  Y  |      Y       |           |            |        |            |
+| **MEMBER**          |         |  Y  |      Y       |           |            |        |            |
+| **AUTONOMOUS**      |    Y    |  Y  |              |           |            |        |     Y      |
+
+### Key Rules
+
+- **MANAGER and COS** can message anyone (full access row in the matrix).
+- **ORCHESTRATOR** can message COS and team workers (ARCHITECT, INTEGRATOR, MEMBER) but **NOT** MANAGER.
+- **Workers** (ARCHITECT, INTEGRATOR, MEMBER) can **ONLY** message COS and ORCHESTRATOR.
+- **AUTONOMOUS** can message MANAGER, COS, and other AUTONOMOUS agents.
+- If a connection is missing, the message is blocked with HTTP 403. The error response includes a `suggestion` field with a routing path.
+
+### Routing Suggestions (When Blocked)
+
+| Sender Title | Blocked Recipient | Routing Suggestion |
+|-------------|-------------------|-------------------|
+| ORCHESTRATOR | MANAGER | Route through COS |
+| ORCHESTRATOR | AUTONOMOUS | Route through COS or MANAGER |
+| ARCHITECT / INTEGRATOR / MEMBER | MANAGER | Route through COS |
+| ARCHITECT / INTEGRATOR / MEMBER | Other workers | Route through ORCHESTRATOR or COS |
+| ARCHITECT / INTEGRATOR / MEMBER | AUTONOMOUS | Route through COS or MANAGER |
+| AUTONOMOUS | ORCHESTRATOR / workers | Route through MANAGER or COS |
 
 ### Contacting a Closed Team from Outside
 
