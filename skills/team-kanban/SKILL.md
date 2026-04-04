@@ -1,7 +1,7 @@
 ---
 name: team-kanban
 user-invocable: false
-description: "Manage team kanban boards and tasks. Use when creating, moving, or filtering tasks. Trigger with /team-kanban."
+description: "Manage team kanban boards and tasks. Use when creating, moving, or filtering tasks. Trigger with /team-kanban.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"

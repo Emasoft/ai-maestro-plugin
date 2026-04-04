@@ -1,5 +1,15 @@
 # Network Security Reference
 
+## Table of Contents
+- [IP Filter Implementation](#ip-filter-implementation)
+- [Tailscale CGNAT Range Detail](#tailscale-cgnat-range-detail)
+- [Server Bind Modes](#server-bind-modes)
+- [Port 23000](#port-23000)
+- [WebSocket Security](#websocket-security)
+- [AMP Message Security](#amp-message-security)
+
+---
+
 ## IP Filter Implementation
 
 The `isAllowedSource()` function in `server.mjs`:

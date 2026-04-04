@@ -1,7 +1,7 @@
 ---
 name: graph-query
 user-invocable: false
-description: "Query code graph DB for symbol relationships, callers, callees, and dependencies. Use when exploring codebase structure or impact. Trigger with /graph-query."
+description: "Query code graph DB for symbol relationships, callers, callees, and dependencies. Use when exploring codebase structure or impact. Trigger with /graph-query.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(graph-*:*), Bash(curl:*), Bash(jq:*), Read, Glob, Grep"
 metadata:
   author: "Emasoft"

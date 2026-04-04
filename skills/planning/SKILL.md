@@ -1,7 +1,7 @@
 ---
 name: planning
 user-invocable: false
-description: "Persistent markdown planning files for complex tasks. Use when starting multi-step tasks needing 5+ tool calls. Trigger with /planning."
+description: "Persistent markdown planning files for complex tasks. Use when starting multi-step tasks needing 5+ tool calls. Trigger with /planning.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(mkdir:*), Bash(cat:*), Bash(grep:*), Bash(ls:*), Read, Write, Edit, Glob, Grep"
 metadata:
   author: "Emasoft"

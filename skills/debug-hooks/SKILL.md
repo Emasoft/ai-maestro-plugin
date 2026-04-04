@@ -1,7 +1,7 @@
 ---
 name: debug-hooks
 user-invocable: false
-description: "Debug Claude Code hooks (PreToolUse, PostToolUse, etc.). Use when hooks aren't firing or produce wrong output. Trigger with /debug-hooks."
+description: "Debug Claude Code hooks (PreToolUse, PostToolUse, etc.). Use when hooks aren't firing or produce wrong output. Trigger with /debug-hooks.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(cat:*), Bash(jq:*), Bash(ls:*), Bash(chmod:*), Bash(file:*), Bash(find:*), Bash(echo:*), Bash(node:*), Bash(npx:*), Bash(tail:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -90,4 +90,12 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - Hook Event Reference, PreToolUse Permission Decisions, Testing Hooks Manually, Silent Failure Patterns, AI Maestro Hook Debugging, Common Issues Table
+- [Detailed Reference](references/REFERENCE.md)
+  - Hook Event Reference
+  - PreToolUse Permission Decisions
+  - Testing Hooks Manually
+  - Silent Failure Patterns
+  - AI Maestro Hook Debugging
+  - Rebuilding TypeScript Hooks
+  - Common Issues Table
+  - Verbose Logging Snippet

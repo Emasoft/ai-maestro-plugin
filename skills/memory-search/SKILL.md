@@ -1,7 +1,7 @@
 ---
 name: memory-search
 user-invocable: false
-description: "Search conversation history and semantic memory for past discussions and decisions. Use when recalling prior context or decisions. Trigger with /memory-search."
+description: "Search conversation history and semantic memory for past discussions and decisions. Use when recalling prior context or decisions. Trigger with /memory-search.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(memory-*:*), Bash(curl:*), Bash(jq:*), Bash(docs-*:*), Bash(graph-*:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"

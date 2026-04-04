@@ -1,7 +1,7 @@
 ---
 name: team-governance
 user-invocable: false
-description: "Manage team governance: create/delete teams, assign agents, set COS titles. Use when managing teams or titles. Trigger with /team-governance."
+description: "Use when managing teams or governance titles. Trigger with /team-governance. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"

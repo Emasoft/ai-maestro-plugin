@@ -1,7 +1,7 @@
 ---
 name: agent-messaging
 user-invocable: false
-description: "Use when sending or receiving inter-agent messages via AMP protocol. Trigger with /amp-send, /amp-inbox, /amp-read, or 'check my messages', 'send a message to'."
+description: "Use when sending or receiving inter-agent messages via AMP. Trigger with /amp-send, /amp-inbox, /amp-read. Loaded by ai-maestro-plugin"
 license: Apache-2.0
 compatibility: Requires curl, jq, openssl, and base64 CLI tools. macOS and Linux supported.
 metadata:
@@ -16,27 +16,16 @@ metadata:
 
 Send and receive cryptographically signed messages between AI agents using the Agent Messaging Protocol (AMP). Supports local messaging within an AI Maestro mesh, federation across external providers, file attachments, and Ed25519 signatures. Works with any AI agent that can execute shell commands.
 
-## Communication Rules (Title-Based Graph)
+## Communication Rules
 
-AMP messaging is governed by a directed communication graph based on governance titles. Not all agents can message all other agents. Subagents **cannot send messages at all**.
-
-| Sender \ Recipient | MANAGER | COS | ORCHESTRATOR | ARCHITECT | INTEGRATOR | MEMBER | AUTONOMOUS |
-|---------------------|:-------:|:---:|:------------:|:---------:|:----------:|:------:|:----------:|
-| **MANAGER**         |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
-| **CHIEF-OF-STAFF**  |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
-| **ORCHESTRATOR**    |         |  Y  |              |     Y     |     Y      |   Y    |            |
-| **ARCHITECT**       |         |  Y  |      Y       |           |            |        |            |
-| **INTEGRATOR**      |         |  Y  |      Y       |           |            |        |            |
-| **MEMBER**          |         |  Y  |      Y       |           |            |        |            |
-| **AUTONOMOUS**      |    Y    |  Y  |              |           |            |        |     Y      |
+AMP messaging is governed by a title-based directed graph. Not all agents can message all others. Subagents **cannot send messages**. See [detailed-guide](reference/detailed-guide.md) for the full adjacency matrix and routing rules.
 
 **Key rules:**
-- **MANAGER and COS** can message anyone (full access).
-- **ORCHESTRATOR** can message COS and team workers (ARCHITECT, INTEGRATOR, MEMBER) but **NOT** MANAGER.
-- **Workers** (ARCHITECT, INTEGRATOR, MEMBER) can **ONLY** message COS and ORCHESTRATOR.
-- **AUTONOMOUS** can message MANAGER, COS, and other AUTONOMOUS agents.
-- **Subagents** (spawned helpers without their own Claude Code instance) **CANNOT send messages at all**.
-- If a connection is missing in the graph, the message is blocked with HTTP 403 and the error includes a routing suggestion (e.g., "route through your COS").
+- **MANAGER and COS**: full access to all titles
+- **ORCHESTRATOR**: can reach COS, ARCHITECT, INTEGRATOR, MEMBER — NOT MANAGER
+- **Workers** (ARCHITECT, INTEGRATOR, MEMBER): can only reach COS and ORCHESTRATOR
+- **AUTONOMOUS**: can reach MANAGER, COS, and other AUTONOMOUS agents
+- Blocked routes return HTTP 403 with routing suggestion
 
 ## Prerequisites
 
@@ -69,16 +58,7 @@ Copy this checklist and track your progress:
 | `amp-download.sh <id> --all` | Download attachments |
 | `amp-fetch.sh` | Fetch from external providers |
 
-### Agent Identification
-
-Commands accept `--id <uuid>` to specify which agent to operate as. Resolution order: `AMP_DIR` env var, `--id` flag, `CLAUDE_AGENT_ID`, `CLAUDE_AGENT_NAME`, single-agent auto-select.
-
-### Addresses
-
-- Local: `alice` or `bob@acme.aimaestro.local`
-- External: `alice@acme.crabmail.ai` (requires registration via `amp-register.sh`)
-
-For full command reference, options, and advanced usage, see [detailed-guide](reference/detailed-guide.md).
+Agent ID resolution: `AMP_DIR` env var > `--id` flag > `CLAUDE_AGENT_ID` > auto-select. Addresses: `alice` (local) or `alice@acme.crabmail.ai` (external, requires registration).
 
 ## Output
 
@@ -87,43 +67,34 @@ For full command reference, options, and advanced usage, see [detailed-guide](re
 - `amp-send.sh` returns a confirmation with the message ID
 - `amp-identity.sh` returns agent name, UUID, tenant, and key fingerprint
 
-## Error Handling
-
-| Problem | Solution |
-|---------|----------|
-| "AMP not initialized" | Run `amp-init.sh --auto` |
-| "Not registered with provider" | Run `amp-register.sh --provider <url> --user-key <key>` |
-| "Authentication failed" | Get a new User Key from the provider dashboard |
-| "Agent not found" | Verify address format: `name@tenant.provider` |
-| Messages not arriving | Run `amp-fetch.sh` to pull from external providers |
-
 ## Examples
 
-### Send a code review request
-
 ```bash
-amp-send.sh frontend-dev "Code review request" \
-  "Please review PR #42 - OAuth implementation" \
-  --type request --context '{"pr": 42}'
-```
-
-### Check inbox and read messages
-
-```bash
+amp-send.sh frontend-dev "Code review" "Please review PR #42"
 amp-inbox.sh          # List unread
 amp-read.sh msg_abc   # Read specific message
 ```
 
-### Hand off a task with priority
+## Error Handling
 
-```bash
-amp-send.sh backend-db "Task handoff: DB migration" \
-  "Schema design complete. Please implement migrations." \
-  --type handoff --priority high
-```
+Run `amp-init.sh --auto` if not initialized. Run `amp-fetch.sh` if messages not arriving. See detailed guide for full troubleshooting.
 
 ## Resources
 
 - Detailed guide: [detailed-guide](reference/detailed-guide.md)
+  - Agent Identification (`--id`)
+  - Identity Check (Run First)
+  - Installation
+  - Address Formats
+  - Full Commands Reference
+  - User Authorization for External Providers
+  - Message Types
+  - Priority Levels
+  - Attachment Security
+  - Local Storage
+  - Security
+  - Communication Graph (Title-Based Directed Graph)
+  - Extended Workflow Examples
+  - Protocol Reference
 - Protocol specification: https://agentmessaging.org
 - GitHub: https://github.com/agentmessaging/protocol

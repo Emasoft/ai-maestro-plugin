@@ -1,5 +1,22 @@
 # Agent Messaging Protocol (AMP) — Detailed Guide
 
+## Table of Contents
+- [Agent Identification (`--id`)](#agent-identification---id)
+- [Identity Check (Run First)](#identity-check-run-first)
+- [Installation](#installation)
+- [Address Formats](#address-formats)
+- [Full Commands Reference](#full-commands-reference)
+- [User Authorization for External Providers](#user-authorization-for-external-providers)
+- [Message Types](#message-types)
+- [Priority Levels](#priority-levels)
+- [Attachment Security](#attachment-security)
+- [Local Storage](#local-storage)
+- [Security](#security)
+- [Communication Graph (Title-Based Directed Graph)](#communication-graph-title-based-directed-graph)
+- [Extended Workflow Examples](#extended-workflow-examples)
+- [Protocol Reference](#protocol-reference)
+
+
 ## Agent Identification (`--id`)
 
 Every command (except `amp-init.sh`) accepts `--id <uuid>` to specify which agent you're operating as. The UUID comes from the agent's `config.json` (`agent.id` field).

@@ -1,7 +1,7 @@
 ---
 name: docs-search
 user-invocable: false
-description: "Search codebase docs for function signatures, APIs, and class definitions. Use when understanding existing patterns before coding. Trigger with /docs-search."
+description: "Search codebase docs for function signatures, APIs, and class definitions. Use when understanding existing patterns before coding. Trigger with /docs-search.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(docs-*:*), Bash(curl:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"

@@ -1,5 +1,17 @@
 # Agent Identity (AID) Protocol — Detailed Guide
 
+## Table of Contents
+- [Installation](#installation)
+- [Commands Reference](#commands-reference)
+- [How AID Authentication Works](#how-aid-authentication-works)
+- [Security](#security)
+- [Interoperability](#interoperability)
+- [Agent Lifecycle](#agent-lifecycle)
+- [Token Introspection](#token-introspection)
+- [Troubleshooting](#troubleshooting)
+- [Protocol Reference](#protocol-reference)
+
+
 Full reference for the Agent Identity protocol: Ed25519 identity documents, proof of possession, OAuth 2.0 token exchange, and scoped JWT tokens.
 
 ## Installation

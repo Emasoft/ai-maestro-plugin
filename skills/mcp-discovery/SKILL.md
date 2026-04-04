@@ -1,7 +1,7 @@
 ---
 name: mcp-discovery
 user-invocable: false
-description: "Discover MCP server tools, resources, and prompts without installing plugins. Use when exploring MCP servers or debugging connections. Trigger with /mcp-discovery."
+description: "Discover MCP server tools, resources, and prompts without installing plugins. Use when exploring MCP servers or debugging connections. Trigger with /mcp-discovery.. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(mcp-discover.sh:*), Bash(jq:*), Bash(curl:*), Bash(uv:*), Bash(cat:*), Read, Glob"
 metadata:
   author: "Emasoft"

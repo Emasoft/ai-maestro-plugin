@@ -1,7 +1,7 @@
 ---
 name: agent-identity
 user-invocable: false
-description: "Use when managing agent identity — Ed25519 keys, proof of possession, OAuth token exchange. Trigger with /amp-identity, 'create agent identity', 'get API token'."
+description: "Use when managing agent identity — Ed25519 keys, proof of possession, OAuth token exchange. Trigger with /amp-identity, 'create agent identity', 'get API token'.. Loaded by ai-maestro-plugin"
 license: MIT
 compatibility: Requires curl, jq, openssl (3.x for Ed25519), and base64 CLI tools. macOS and Linux supported.
 metadata:
@@ -80,6 +80,15 @@ TOKEN=$(aid-token.sh --auth https://auth.23blocks.com/acme --scope "files:read f
 ## Resources
 
 - Detailed command reference: [detailed-guide](reference/detailed-guide.md)
+  - Installation
+  - Commands Reference
+  - How AID Authentication Works
+  - Security
+  - Interoperability
+  - Agent Lifecycle
+  - Token Introspection
+  - Troubleshooting
+  - Protocol Reference
 - Protocol specification: https://agentids.org
 - GitHub repository: https://github.com/agentmessaging/agent-identity
 - Interoperability: AID shares `~/.agent-messaging/agents/` with AMP if both installed
