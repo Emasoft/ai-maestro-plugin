@@ -87,7 +87,25 @@ function evaluateAccess(event) {
       };
     }
 
-    const resolved = path.resolve(filePath);
+    // Resolve symlinks to prevent symlink-escape attacks:
+    // Agent creates symlink inside sandbox pointing outside → path.resolve() sees
+    // it as inside, but actual write goes outside. realpathSync() follows symlinks.
+    let resolved;
+    try {
+      const fs = require('fs');
+      // If file exists, resolve symlinks. If not, resolve the parent dir's symlinks.
+      if (fs.existsSync(filePath)) {
+        resolved = fs.realpathSync(filePath);
+      } else {
+        const dir = path.dirname(filePath);
+        const base = path.basename(filePath);
+        const realDir = fs.existsSync(dir) ? fs.realpathSync(dir) : path.resolve(dir);
+        resolved = path.join(realDir, base);
+      }
+    } catch {
+      resolved = path.resolve(filePath);
+    }
+
     if (!isAllowedPath(resolved, agentWorkDir)) {
       return {
         decision: 'deny',
