@@ -14,3 +14,9 @@ dev = [
     "ruff",
     "pytest",
 ]
+
+[tool.hatch.build.targets.wheel]
+# This is a Claude Code plugin, not a Python wheel. The pyproject.toml
+# exists only for tool configuration (ruff, pytest, uv). Hatchling needs
+# at least one package target to not crash on `uv run`.
+packages = ["scripts"]
