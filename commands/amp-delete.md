@@ -8,7 +8,7 @@ Delete a message from your inbox or sent folder.
 
 ## Usage
 
-```
+```text
 /amp-delete <message-id> [options]
 ```
 
@@ -25,19 +25,19 @@ Delete a message from your inbox or sent folder.
 
 ### Delete an inbox message
 
-```
+```text
 /amp-delete msg_1706648400_abc123
 ```
 
 ### Delete without confirmation
 
-```
+```text
 /amp-delete msg_1706648400_abc123 --force
 ```
 
 ### Delete a sent message
 
-```
+```text
 /amp-delete msg_1706648400_abc123 --sent
 ```
 
@@ -52,7 +52,8 @@ amp-delete.sh "$@"
 ## Output
 
 With confirmation:
-```
+
+```text
 Message to delete:
 
   ID:      msg_1706648400_abc123
@@ -65,7 +66,8 @@ Are you sure you want to delete this message? [y/N] y
 ```
 
 With --force:
-```
+
+```text
 Message to delete:
 
   ID:      msg_1706648400_abc123
@@ -79,7 +81,8 @@ Message to delete:
 ## Errors
 
 Message not found:
-```
+
+```text
 Error: Message not found: msg_invalid_id
 
 Check the message ID and folder (inbox/sent).
