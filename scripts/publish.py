@@ -1,19 +1,33 @@
 #!/usr/bin/env python3
-"""Smart publish pipeline: auto-detect → test → lint → validate → consistency → bump → commit → push.
+"""Strict publish pipeline: auto-detect → test → lint → validate → consistency → bump → commit → push.
 
 Auto-detects plugin name, version, marketplace, git root, and plugin root.
 Handles subfolder plugins where git root != plugin root.
+
+**NO SKIP POLICY (enforced):**
+Every validation step (tests, lint, CPV --strict validate, version consistency)
+MUST pass with zero errors before the version bump, commit, and push are
+allowed. There are NO flags, environment variables, or configuration options
+to bypass any validation step. If a step fails, the pipeline exits with the
+failing step's exit code and no git state is changed.
+
+This is a deliberate design choice. Do NOT add `--skip-*` flags, `FORCE=1`
+overrides, or any other escape hatch — validation skipping caused a 2.5.1
+release to ship without CPV strict signoff in the past. If a validation step
+is wrong for the current release, fix the validator or fix the code, do not
+bypass the check.
 
 Usage:
   uv run python scripts/publish.py --patch            # bump patch and publish
   uv run python scripts/publish.py --minor            # bump minor and publish
   uv run python scripts/publish.py --major            # bump major and publish
-  uv run python scripts/publish.py --patch --dry-run   # preview only
-  uv run python scripts/publish.py --patch --skip-tests # skip pytest step
+  uv run python scripts/publish.py --patch --dry-run  # run every validation
+                                                      # step then stop before
+                                                      # bump/commit/push
 
 Exit codes:
-    0 - Success
-    1 - Any step failed (fail-fast)
+    0 - Success (every step passed with 0 errors)
+    1 - Any step failed (fail-fast, no partial state)
 """
 
 from __future__ import annotations
@@ -369,24 +383,142 @@ def do_bump(plugin_root: Path, new_version: str, dry_run: bool = False) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Smart publish pipeline: auto-detect -> test -> lint -> validate -> bump -> commit -> push",
+        description=(
+            "Strict publish pipeline: auto-detect -> test -> lint -> "
+            "CPV strict validate -> consistency -> bump -> commit -> push. "
+            "NO validation steps can be skipped. Every check must pass with "
+            "zero errors before the release is published."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   %(prog)s --patch              # 1.0.0 -> 1.0.1, commit, push
   %(prog)s --minor              # 1.0.0 -> 1.1.0, commit, push
   %(prog)s --major              # 1.0.0 -> 2.0.0, commit, push
-  %(prog)s --patch --dry-run    # preview only, no changes
-  %(prog)s --patch --skip-tests # skip pytest step
+  %(prog)s --patch --dry-run    # run every validation step fully, then
+                                # stop before bump/commit/push
         """,
     )
     bump_group = parser.add_mutually_exclusive_group(required=True)
     bump_group.add_argument("--major", action="store_true", help="Bump major version")
     bump_group.add_argument("--minor", action="store_true", help="Bump minor version")
     bump_group.add_argument("--patch", action="store_true", help="Bump patch version")
-    parser.add_argument("--dry-run", action="store_true", help="Preview without making changes")
-    parser.add_argument("--skip-tests", action="store_true", help="Skip pytest step")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=(
+            "Run every validation step fully, then stop before the version "
+            "bump, commit, and push. Does NOT skip any check."
+        ),
+    )
     args = parser.parse_args()
+
+    # ── Self-integrity check ──
+    # Scan this script's own source for forbidden bypass patterns. If someone
+    # re-introduces a --skip-* flag, an `if SKIP_...:` branch, a `try/except:
+    # pass` around a validation call, or commented-out `# run([...lint...])`,
+    # this check fails before the pipeline runs. Makes the no-skip policy
+    # self-enforcing against future edits.
+    try:
+        source = Path(__file__).read_text(encoding="utf-8")
+    except Exception as err:
+        print(f"{RED}✗ Self-integrity check: cannot read own source: {err}{NC}", file=sys.stderr)
+        return 1
+
+    forbidden_source_patterns = [
+        ("--skip-tests",       "bypass flag"),
+        ("--skip-lint",        "bypass flag"),
+        ("--skip-validate",    "bypass flag"),
+        ("--skip-checks",      "bypass flag"),
+        ("--skip-validation",  "bypass flag"),
+        ("--no-validate",      "bypass flag"),
+        ("--force-publish",    "bypass flag"),
+        ("--bypass",           "bypass flag"),
+        ("skip_tests",         "skip variable"),
+        ("skip_lint",          "skip variable"),
+        ("skip_validate",      "skip variable"),
+        ("skip_validation",    "skip variable"),
+    ]
+    # Allow forbidden strings INSIDE the two authorized lists (this one and
+    # the env-var blocklist above) — those are the allowlists themselves.
+    # Everywhere else they're forbidden.
+    lines = source.splitlines()
+    in_forbidden_env_block = False
+    in_forbidden_source_block = False
+    for idx, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if "forbidden_bypass_env_vars = [" in stripped:
+            in_forbidden_env_block = True
+            continue
+        if "forbidden_source_patterns = [" in stripped:
+            in_forbidden_source_block = True
+            continue
+        if in_forbidden_env_block:
+            if stripped.startswith("]"):
+                in_forbidden_env_block = False
+            continue
+        if in_forbidden_source_block:
+            if stripped.startswith("]"):
+                in_forbidden_source_block = False
+            continue
+        # docstring / comment lines that warn about bypasses are allowed
+        # when they explicitly forbid the pattern (contain "NO", "MUST NOT",
+        # "do not", "forbidden", "bypass" etc.)
+        stripped_lower = stripped.lower()
+        is_prohibition_comment = (
+            stripped.startswith("#")
+            or stripped.startswith('"""')
+            or stripped.startswith("'''")
+            or '"""' in stripped
+        ) and any(kw in stripped_lower for kw in (
+            "no skip", "no bypass", "must not", "do not", "forbidden",
+            "rejected", "forbids", "no-skip", "no-bypass", "no escape",
+            "cannot be skipped", "caused a 2.5.1", "no flag",
+        ))
+        if is_prohibition_comment:
+            continue
+        for pattern, kind in forbidden_source_patterns:
+            if pattern in line:
+                print(
+                    f"{RED}✗ Self-integrity check: forbidden {kind} "
+                    f"'{pattern}' found at line {idx}:{NC}\n"
+                    f"  {line}\n"
+                    f"  Strict publish forbids validation bypasses. Remove the "
+                    f"pattern or move it into the authorized blocklist with a "
+                    f"clear prohibition comment.",
+                    file=sys.stderr,
+                )
+                return 1
+
+    # ── Reject any bypass attempt via environment variables ──
+    # This is a deliberate belt-and-suspenders check: even if someone adds a
+    # skip flag in the future by editing this script, these env var bypasses
+    # stay rejected. There is no escape hatch.
+    forbidden_bypass_env_vars = [
+        "SKIP_TESTS",
+        "SKIP_LINT",
+        "SKIP_VALIDATE",
+        "SKIP_CHECKS",
+        "SKIP_VALIDATION",
+        "PUBLISH_SKIP",
+        "PUBLISH_FORCE",
+        "CPV_SKIP",
+        "CPV_NO_STRICT",
+        "FORCE_PUBLISH",
+        "NO_VALIDATION",
+        "BYPASS_VALIDATION",
+    ]
+    for var in forbidden_bypass_env_vars:
+        if os.environ.get(var):
+            print(
+                f"{RED}✗ Validation bypass attempt rejected: environment "
+                f"variable '{var}' is set.{NC}\n"
+                f"  Strict publish has NO skip options. If a validation step "
+                f"is wrong, fix the validator or fix the code. Do not bypass "
+                f"the check. Unset {var} and retry.",
+                file=sys.stderr,
+            )
+            return 1
 
     bump_type = "major" if args.major else "minor" if args.minor else "patch"
 
@@ -427,33 +559,44 @@ Examples:
             return 1
     print(f"{GREEN}ok Working tree clean{NC}")
 
-    # ── Step 2: Tests ──
-    if not args.skip_tests:
-        tests_dir = plugin_root / "tests"
-        if tests_dir.exists() and any(tests_dir.rglob("test_*.py")):
-            print(f"\n{BLUE}=== Step 2: Run tests ==={NC}")
-            run(["python3", "-m", "pytest", "tests/", "-x", "-q", "--tb=short"], cwd=plugin_root)
-            print(f"{GREEN}ok All tests passed{NC}")
-        else:
-            print(f"\n{YELLOW}=== Step 2: Tests skipped (no tests/ directory or test files) ==={NC}")
+    # ── Step 2: Tests (MANDATORY if test infrastructure is present) ──
+    # Policy: if a `tests/` directory exists with any `test_*.py` file, the
+    # test suite MUST run and MUST pass. There is no --skip-tests flag.
+    # If there are no tests, the step is a no-op but surfaces a clear
+    # warning so you notice the gap.
+    print(f"\n{BLUE}=== Step 2: Run tests (mandatory if present) ==={NC}")
+    tests_dir = plugin_root / "tests"
+    has_test_files = tests_dir.exists() and any(tests_dir.rglob("test_*.py"))
+    if has_test_files:
+        run(["python3", "-m", "pytest", "tests/", "-x", "-q", "--tb=short"], cwd=plugin_root)
+        print(f"{GREEN}ok All tests passed{NC}")
     else:
-        print(f"\n{YELLOW}=== Step 2: Tests skipped (--skip-tests) ==={NC}")
+        print(
+            f"{YELLOW}! No tests found (no tests/ dir or no test_*.py files). "
+            f"Step is a no-op for this release, but this plugin SHOULD grow "
+            f"a test suite — consider adding one before the next version.{NC}"
+        )
 
-    # ── Step 3: Lint via CPV remote launcher ──
-    print(f"\n{BLUE}=== Step 3: Lint files (via cpv-remote-validate) ==={NC}")
+    # ── Step 3: Lint (MANDATORY, zero errors) ──
+    # Uses cpv-remote-validate lint which runs markdownlint/ruff/mypy/yamllint
+    # etc. Any non-zero exit fails the pipeline. NO bypass.
+    print(f"\n{BLUE}=== Step 3: Lint files via cpv-remote-validate (mandatory) ==={NC}")
     run([
         "uvx", "--from", "git+https://github.com/Emasoft/claude-plugins-validation",
         "--with", "pyyaml", "cpv-remote-validate", "lint", str(plugin_root),
     ], cwd=git_root)
-    print(f"{GREEN}ok Linting passed{NC}")
+    print(f"{GREEN}ok Linting passed with zero errors{NC}")
 
-    # ── Step 4: Full CPV validation via remote launcher (--strict) ──
-    print(f"\n{BLUE}=== Step 4: CPV Validate plugin (--strict) ==={NC}")
+    # ── Step 4: Full CPV strict validation (MANDATORY) ──
+    # Runs the full plugin validator in --strict mode. NO bypass. NO skip.
+    # If the strict ruleset flags something, fix the plugin — do not lower
+    # the strictness or work around the validator.
+    print(f"\n{BLUE}=== Step 4: CPV strict validate plugin (mandatory) ==={NC}")
     run([
         "uvx", "--from", "git+https://github.com/Emasoft/claude-plugins-validation",
         "--with", "pyyaml", "cpv-remote-validate", "plugin", str(plugin_root), "--strict",
     ], cwd=git_root)
-    print(f"{GREEN}ok CPV validation passed (--strict){NC}")
+    print(f"{GREEN}ok CPV strict validation passed{NC}")
 
     # ── Step 5: Version consistency ──
     print(f"\n{BLUE}=== Step 5: Check version consistency ==={NC}")
