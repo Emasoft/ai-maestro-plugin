@@ -8,7 +8,7 @@ Display your AMP agent status, configuration, and registrations.
 
 ## Usage
 
-```
+```text
 /amp-status [options]
 ```
 
@@ -27,13 +27,13 @@ Display your AMP agent status, configuration, and registrations.
 
 ### Check status
 
-```
+```text
 /amp-status
 ```
 
 ### Get JSON output
 
-```
+```text
 /amp-status --json
 ```
 
@@ -48,7 +48,8 @@ amp-status.sh "$@"
 ## Output
 
 Human-readable:
-```
+
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AMP Agent Status
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -78,6 +79,7 @@ Storage: ~/.agent-messaging/
 ```
 
 JSON:
+
 ```json
 {
   "initialized": true,

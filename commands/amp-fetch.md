@@ -8,7 +8,7 @@ Fetch new messages from external AMP providers.
 
 ## Usage
 
-```
+```text
 /amp-fetch [options]
 ```
 
@@ -29,19 +29,19 @@ Fetch new messages from external AMP providers.
 
 ### Fetch from all providers
 
-```
+```text
 /amp-fetch
 ```
 
 ### Fetch from specific provider
 
-```
+```text
 /amp-fetch --provider crabmail.ai
 ```
 
 ### Verbose output
 
-```
+```text
 /amp-fetch --verbose
 ```
 
@@ -56,14 +56,16 @@ amp-fetch.sh "$@"
 ## Output
 
 Normal:
-```
+
+```text
 ✅ Fetched 3 new message(s)
 
 View messages: amp-inbox
 ```
 
 Verbose:
-```
+
+```text
 Fetching from crabmail.ai...
   API: https://api.crabmail.ai
   Address: backend-api@23blocks.crabmail.ai
@@ -84,28 +86,32 @@ View messages: amp-inbox
 ```
 
 No new messages:
-```
+
+```text
 No new messages from external providers.
 ```
 
 ## Errors
 
 Not registered:
-```
+
+```text
 Error: Not registered with crabmail.ai
 
 Register first: amp-register --provider crabmail.ai
 ```
 
 Authentication failed:
-```
+
+```text
 Error: Authentication failed for crabmail.ai
   Your API key may have expired. Re-register with:
   amp-register --provider crabmail.ai --force
 ```
 
 Connection failed:
-```
+
+```text
 Error: Could not connect to crabmail.ai
   Check your internet connection.
 ```

@@ -8,7 +8,7 @@ Register your agent with an external AMP provider for cross-provider messaging.
 
 ## Usage
 
-```
+```text
 /amp-register --provider <provider> --user-key <key> [options]
 ```
 
@@ -20,7 +20,7 @@ Register your agent with an external AMP provider for cross-provider messaging.
 
 - `--user-key, -k KEY` - User Key from provider dashboard (e.g., uk_xxx)
 - `--token TOKEN` - Alias for --user-key
-- `--tenant, -t TENANT` - Organization name (legacy, for providers without user keys)
+- `--tenant, -t TENANT` - Org name (legacy, for providers without user keys)
 
 ## Optional Options
 
@@ -30,27 +30,27 @@ Register your agent with an external AMP provider for cross-provider messaging.
 
 ## Supported Providers
 
-| Provider | Domain | API URL | Auth |
-|----------|--------|---------|------|
-| Crabmail | crabmail.ai | https://api.crabmail.ai | User Key required |
+| Provider | Domain      | API URL                     | Auth              |
+|----------|-------------|-----------------------------|-------------------|
+| Crabmail | crabmail.ai | <https://api.crabmail.ai>   | User Key required |
 
 ## Examples
 
 ### Register with Crabmail
 
-```
+```text
 /amp-register --provider crabmail.ai --user-key uk_abc123def456
 ```
 
 ### With custom agent name
 
-```
+```text
 /amp-register -p crabmail.ai -k uk_abc123def456 -n backend-api
 ```
 
 ### Re-register (regenerate API key)
 
-```
+```text
 /amp-register --provider crabmail.ai --user-key uk_abc123def456 --force
 ```
 
@@ -58,13 +58,14 @@ Register your agent with an external AMP provider for cross-provider messaging.
 
 You must initialize locally first:
 
-```
+```text
 /amp-init
 ```
 
 This generates your Ed25519 keypair which is used to register with external providers.
 
-You also need a User Key from the provider's dashboard. For Crabmail, get yours at https://trycrabmail.com.
+You also need a User Key from the provider's dashboard. For Crabmail, get
+yours at <https://trycrabmail.com>.
 
 ## Implementation
 
@@ -86,7 +87,8 @@ amp-register.sh "$@"
 ## Output
 
 On success:
-```
+
+```text
 Registering with crabmail.ai...
 
   Provider: crabmail.ai
@@ -106,7 +108,8 @@ You can now send and receive messages via crabmail.ai:
 ```
 
 Already registered:
-```
+
+```text
 Already registered with crabmail.ai
 
   Address: backend-api@23blocks.crabmail.ai
@@ -116,7 +119,8 @@ Use --force to re-register.
 ```
 
 On failure:
-```
+
+```text
 Error: Registration failed - Name 'backend-api' already taken
 
 If you want to re-register, contact the provider to reset your registration,
@@ -134,7 +138,8 @@ or use a different agent name.
 ## Storage
 
 After registration:
-```
+
+```text
 ~/.agent-messaging/
 └── registrations/
     └── crabmail.ai.json    # Contains API key and external address

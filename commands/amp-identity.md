@@ -4,11 +4,12 @@ description: Quick identity check for AMP context recovery
 ---
 # /amp-identity
 
-Quick identity check for context recovery. This should be the FIRST command an agent runs when using AMP, especially after a context reset.
+Quick identity check for context recovery. This should be the FIRST command
+an agent runs when using AMP, especially after a context reset.
 
 ## Usage
 
-```
+```text
 /amp-identity [options]
 ```
 
@@ -28,19 +29,19 @@ Quick identity check for context recovery. This should be the FIRST command an a
 
 ### Check identity (human-readable)
 
-```
+```text
 /amp-identity
 ```
 
 ### Get JSON output
 
-```
+```text
 /amp-identity --json
 ```
 
 ### One-line summary
 
-```
+```text
 /amp-identity --brief
 ```
 
@@ -55,7 +56,8 @@ amp-identity.sh "$@"
 ## Output
 
 Human-readable:
-```
+
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AMP Identity
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -69,11 +71,13 @@ AMP Identity
 ```
 
 Brief:
-```
+
+```text
 AMP: backend-api@23blocks.aimaestro.local (a1b2c3d4e5f6...)
 ```
 
 JSON:
+
 ```json
 {
   "initialized": true,

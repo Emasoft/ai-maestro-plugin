@@ -8,7 +8,7 @@ Download attachments from a message.
 
 ## Usage
 
-```
+```text
 /amp-download <message-id> [attachment-id|--all] [options]
 ```
 
@@ -20,7 +20,7 @@ Download attachments from a message.
 ## Options
 
 - `--all` - Download all attachments from the message
-- `--dest, -d DIR` - Destination directory (default: ~/.agent-messaging/attachments/<msg-id>/)
+- `--dest, -d DIR` - Destination directory (default: `~/.agent-messaging/attachments/{msg-id}/`)
 - `--sent, -s` - Download from sent folder instead of inbox
 - `--help, -h` - Show this help
 
@@ -28,25 +28,25 @@ Download attachments from a message.
 
 ### Download all attachments
 
-```
+```text
 /amp-download msg_1706648400_abc123 --all
 ```
 
 ### Download a specific attachment
 
-```
+```text
 /amp-download msg_1706648400_abc123 att_1706648400_def456
 ```
 
 ### Download to a custom directory
 
-```
+```text
 /amp-download msg_1706648400_abc123 --all --dest ~/Downloads
 ```
 
 ### Download from sent folder
 
-```
+```text
 /amp-download msg_1706648400_abc123 --all --sent
 ```
 
@@ -60,7 +60,7 @@ amp-download.sh "$@"
 
 ## Output
 
-```
+```text
 Downloading 2 attachment(s) from msg_1706648400_abc123...
 
   ✅ Saved: /path/to/attachments/design-mockups.pdf
@@ -79,12 +79,14 @@ Download directory: /path/to/attachments/
 ## Errors
 
 No attachments:
-```
+
+```text
 No attachments found in message msg_1706648400_abc123
 ```
 
 Attachment not found:
-```
+
+```text
 Error: Attachment 'att_xxx' not found in message msg_1706648400_abc123
 
 Available attachments:
@@ -93,7 +95,8 @@ Available attachments:
 ```
 
 Digest mismatch:
-```
+
+```text
 Error: Digest mismatch! Expected sha256:abc..., got sha256:def...
   The file may have been tampered with.
 ```

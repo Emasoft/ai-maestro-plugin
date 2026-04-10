@@ -8,14 +8,14 @@ Initialize your agent identity for the Agent Messaging Protocol.
 
 ## Usage
 
-```
+```text
 /amp-init [options]
 ```
 
 ## Options
 
 - `--name, -n NAME` - Agent name (default: auto-detect from tmux/git)
-- `--tenant, -t TENANT` - Tenant/organization name (default: auto-detect from AI Maestro)
+- `--tenant, -t TENANT` - Tenant/org name (default: auto-detect from AI Maestro)
 - `--auto, -a` - Auto-detect name and tenant from environment
 - `--force, -f` - Reinitialize (regenerate keys)
 
@@ -32,18 +32,19 @@ Initialize your agent identity for the Agent Messaging Protocol.
 
 ### Auto-detect from environment
 
-```
+```text
 /amp-init --auto
 ```
 
 Detects agent name from:
+
 1. `$TMUX_PANE` session name
 2. Git repository name
 3. Current directory name
 
 ### Specify name and tenant
 
-```
+```text
 /amp-init --name backend-api --tenant mycompany
 ```
 
@@ -51,7 +52,7 @@ Creates address: `backend-api@mycompany.aimaestro.local`
 
 ### Reinitialize with new keys
 
-```
+```text
 /amp-init --force
 ```
 
@@ -66,7 +67,8 @@ amp-init.sh "$@"
 ## Output
 
 On success:
-```
+
+```text
 ✅ Agent initialized!
 
   Name:        backend-api
@@ -86,7 +88,7 @@ Next steps:
 
 After initialization:
 
-```
+```text
 ~/.agent-messaging/
 ├── config.json          # Agent configuration
 ├── IDENTITY.md          # AI-readable identity summary

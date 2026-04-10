@@ -8,7 +8,7 @@ Check your message inbox for new and existing messages.
 
 ## Usage
 
-```
+```text
 /amp-inbox [options]
 ```
 
@@ -25,25 +25,25 @@ Check your message inbox for new and existing messages.
 
 ### Check unread messages
 
-```
+```text
 /amp-inbox
 ```
 
 ### Show all messages
 
-```
+```text
 /amp-inbox --all
 ```
 
 ### Get message count
 
-```
+```text
 /amp-inbox --count
 ```
 
 ### JSON output for scripting
 
-```
+```text
 /amp-inbox --json
 ```
 
@@ -57,7 +57,7 @@ amp-inbox.sh "$@"
 
 ## Output
 
-```
+```text
 📬 You have 3 unread message(s)
 
 ● 🔴 [msg_1706648400_abc1...]
@@ -81,18 +81,20 @@ To reply: amp-reply <message-id> "Your reply"
 ```
 
 Priority indicators:
+
 - 🔴 urgent
 - 🟡 high
 - (no icon) normal
 - 🔵 low
 
 Status indicators:
+
 - ● unread
 - ○ read
 
 ## No Messages
 
-```
+```text
 📭 No unread messages
 
 Your address: backend-api@23blocks.local

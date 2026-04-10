@@ -8,7 +8,7 @@ Reply to a message in your inbox.
 
 ## Usage
 
-```
+```text
 /amp-reply <message-id> <reply-message> [options]
 ```
 
@@ -35,19 +35,19 @@ Reply to a message in your inbox.
 
 ### Simple reply
 
-```
+```text
 /amp-reply msg_1706648400_abc123 "Got it, I'll review the PR today."
 ```
 
 ### Reply with attachment
 
-```
+```text
 /amp-reply msg_1706648400_abc123 "Here's the fix." --attach ./bugfix.patch
 ```
 
 ### Urgent reply
 
-```
+```text
 /amp-reply msg_1706648400_abc123 "Found a critical bug!" --priority urgent
 ```
 
@@ -61,7 +61,7 @@ amp-reply.sh "$@"
 
 ## Output
 
-```
+```text
 Sending reply to alice@acme.crabmail.ai...
 
 ✅ Message sent (via crabmail.ai)
@@ -77,7 +77,8 @@ Sending reply to alice@acme.crabmail.ai...
 ## Errors
 
 Message not found:
-```
+
+```text
 Error: Message not found: msg_invalid_id
 
 Make sure the message ID is correct. Use 'amp-inbox' to list messages.

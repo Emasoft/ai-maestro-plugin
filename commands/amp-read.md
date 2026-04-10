@@ -8,7 +8,7 @@ Read a specific message from your inbox.
 
 ## Usage
 
-```
+```text
 /amp-read <message-id> [options]
 ```
 
@@ -26,25 +26,25 @@ Read a specific message from your inbox.
 
 ### Read a message
 
-```
+```text
 /amp-read msg_1706648400_abc123
 ```
 
 ### Read without marking as read
 
-```
+```text
 /amp-read msg_1706648400_abc123 --no-mark-read
 ```
 
 ### Get JSON output
 
-```
+```text
 /amp-read msg_1706648400_abc123 --json
 ```
 
 ### Read a sent message
 
-```
+```text
 /amp-read msg_1706648400_abc123 --sent
 ```
 
@@ -58,7 +58,7 @@ amp-read.sh "$@"
 
 ## Output
 
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MESSAGE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -102,7 +102,8 @@ Actions:
 ## Message Not Found
 
 If the message ID doesn't exist:
-```
+
+```text
 Error: Message not found: msg_invalid_id
 
 Make sure the message ID is correct. Use 'amp-inbox' to list messages.
