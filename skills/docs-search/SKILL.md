@@ -53,6 +53,7 @@ If no docs exist for a topic, proceed with direct code analysis instead.
 # Search for a service
 /docs-search PaymentService
 ```
+
 Returns matching class/function docs.
 
 ```bash

@@ -24,9 +24,11 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 ## Instructions
 
 1. **Verify role** before any operation:
+
    ```bash
    curl -s "http://localhost:23000/api/governance" | jq .
    ```
+
    If not MANAGER or COS, STOP and inform the user.
 
 2. **API operations**:
@@ -37,6 +39,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    - **Assign COS**: `POST /api/teams/{id}/chief-of-staff` (MANAGER + governance password)
 
 3. **Auth header** for protected operations:
+
    ```bash
    curl -s -X POST "http://localhost:23000/api/teams" \
      -H "Content-Type: application/json" \
@@ -45,6 +48,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    ```
 
 4. **COS assignment** — ask user for governance password (never cache it):
+
    ```bash
    curl -s -X POST "http://localhost:23000/api/teams/<id>/chief-of-staff" \
      -H "Content-Type: application/json" -H "X-Agent-Id: <id>" \
@@ -52,6 +56,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    ```
 
 5. **Broadcasts** — message all team agents via AMP:
+
    ```bash
    AGENTS=$(curl -s "http://localhost:23000/api/teams/<id>" | jq -r '.agentIds[]')
    for AID in $AGENTS; do
@@ -83,11 +88,13 @@ On `agent_already_in_closed_team`, use MANAGER cross-team transfer.
 ```
 /team-governance create a closed team called "security-core"
 ```
+
 Creates team with type "closed", returns team ID.
 
 ```
 /team-governance assign agent backend-dev to security-core
 ```
+
 Adds agent to team's agentIds array.
 
 ## Checklist

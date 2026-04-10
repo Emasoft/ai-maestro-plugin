@@ -1,6 +1,7 @@
 # MCP Discovery Reference
 
 ## Table of Contents
+
 - [Plugin-Based Discovery (mcp-discover.sh)](#plugin-based-discovery-mcp-discoversh)
 - [Output Formats](#output-formats)
 - [Advanced Methods](#advanced-methods)
@@ -67,6 +68,7 @@ mcp-discover.sh --plugin <plugin-name> <server-name> \
 ```
 
 Example -- list Chrome pages:
+
 ```bash
 mcp-discover.sh --plugin chromedev-tools cdt \
   --method tools/call \
@@ -110,6 +112,7 @@ uv run scripts_dev/mcp_discovery.py --url https://mcp.example.com/sse
 ```
 
 With authentication:
+
 ```bash
 uv run scripts_dev/mcp_discovery.py --url https://mcp.example.com/sse --bearer-token sk-abc123
 ```
@@ -121,6 +124,7 @@ uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y <package-name>
 ```
 
 Examples:
+
 ```bash
 # Check chrome-devtools-mcp tools
 uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y chrome-devtools-mcp@latest --headless
@@ -136,6 +140,7 @@ uv run scripts_dev/mcp_discovery.py --transport stdio -- /path/to/mcp-server --a
 ```
 
 Or with explicit command:
+
 ```bash
 uv run scripts_dev/mcp_discovery.py --command node --command-arg /path/to/server.js
 ```

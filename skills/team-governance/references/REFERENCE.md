@@ -1,6 +1,7 @@
 # Team Governance Reference
 
 ## Table of Contents
+
 - [Governance API Endpoints](#governance-api-endpoints)
 - [Team Management](#team-management)
 - [Agent Assignment](#agent-assignment)
@@ -199,6 +200,7 @@ done
 **Note:** AMP messaging between agents is governed by the title-based communication graph (see below). Normal agents (ARCHITECT, INTEGRATOR, MEMBER) can only reach COS and ORCHESTRATOR.
 
 **Membership constraints:**
+
 - A COS agent can lead **one closed team only** — cannot be COS of multiple teams simultaneously.
 - A normal agent can belong to at most **one team** at any time.
 - MANAGER can belong to **unlimited** teams.
@@ -269,13 +271,17 @@ Go through the team's Chief-of-Staff:
 ## Troubleshooting
 
 ### "Access denied" on team operations
+
 Verify role: `curl -s "http://localhost:23000/api/governance" | jq .` -- must be MANAGER or COS of target team.
 
 ### "Agent already in closed team"
+
 Agent can only belong to one closed team. Use MANAGER cross-team transfer.
 
 ### "Invalid governance password"
+
 Ask user to re-provide password. Passwords are never stored or cached.
 
 ### COS cannot manage other teams
+
 COS authority is scoped to assigned team only. Cross-team ops require MANAGER.

@@ -21,11 +21,13 @@ Creates and manages 3 persistent markdown files (task_plan.md, findings.md, prog
 ## Instructions
 
 1. **Set output directory**:
+
    ```bash
    PLAN_DIR="${AIMAESTRO_PLANNING_DIR:-docs_dev}" && mkdir -p "$PLAN_DIR"
    ```
 
 2. **Copy templates**:
+
    ```bash
    cat <skill-path>/templates/task_plan.md > "$PLAN_DIR/task_plan.md"
    cat <skill-path>/templates/findings.md > "$PLAN_DIR/findings.md"
@@ -54,9 +56,11 @@ Creates and manages 3 persistent markdown files (task_plan.md, findings.md, prog
 - **Templates not found**: Check `ls <skill-path>/templates/`
 - **Dir not writable**: Set `AIMAESTRO_PLANNING_DIR` to writable path
 - **Lost track**: Check task_plan.md checkboxes:
+
   ```bash
   grep -E "^\s*-\s*\[" "$PLAN_DIR/task_plan.md"
   ```
+
 - **3 consecutive failures**: Stop, document all attempts, escalate to user
 
 ## Examples
@@ -64,11 +68,13 @@ Creates and manages 3 persistent markdown files (task_plan.md, findings.md, prog
 ```
 /planning "Build JWT authentication system"
 ```
+
 Creates 3 files in docs_dev/, task_plan.md populated with goal broken into phases.
 
 ```
 /planning "Migrate database from Postgres to SQLite"
 ```
+
 Creates planning files with migration-specific phases.
 
 ## Checklist

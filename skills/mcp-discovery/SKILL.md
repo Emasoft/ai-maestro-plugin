@@ -21,6 +21,7 @@ Discover and inspect tools, resources, and prompts from any MCP server. Works wi
 ## Instructions
 
 1. **For installed plugins** — use `mcp-discover.sh`:
+
    ```bash
    mcp-discover.sh --plugin <plugin-name> <server-name>
    mcp-discover.sh --plugin <plugin-name> <server-name> --format text
@@ -28,17 +29,20 @@ Discover and inspect tools, resources, and prompts from any MCP server. Works wi
    ```
 
 2. **For standalone/remote servers** — use `mcp_discovery.py`:
+
    ```bash
    uv run scripts_dev/mcp_discovery.py --url https://mcp.example.com/sse
    uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y <package>
    ```
 
 3. **Find server name** if unknown:
+
    ```bash
    jq 'keys[]' < ~/.claude/plugins/cache/<marketplace>/<plugin>/<ver>/.mcp.json
    ```
 
 4. **Advanced** — call tools, list resources/prompts:
+
    ```bash
    mcp-discover.sh --plugin <name> <server> --method tools/call --tool-name <t> --tool-arg k=v
    mcp-discover.sh --plugin <name> <server> --method resources/list
@@ -66,11 +70,13 @@ Discover and inspect tools, resources, and prompts from any MCP server. Works wi
 /mcp-discovery
 mcp-discover.sh --plugin chromedev-tools cdt --format text
 ```
+
 Expected: list of tool names with descriptions.
 
 ```bash
 uv run scripts_dev/mcp_discovery.py --transport stdio -- npx -y chrome-devtools-mcp@latest
 ```
+
 Expected: JSON with tools array.
 
 ## Checklist

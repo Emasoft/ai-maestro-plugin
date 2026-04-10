@@ -66,16 +66,19 @@ Closed-team endpoints require: `-H 'Authorization: Bearer <key>' -H 'X-Agent-Id:
 ```
 /team-kanban create a task "Fix login bug" with priority 1 in team abc-123
 ```
+
 Creates task via POST, returns task object with generated ID.
 
 ```
 /team-kanban show blocked tasks in team abc-123
 ```
+
 Lists tasks where `isBlocked == true`.
 
 ```
 /team-kanban link team abc-123 to GitHub project 23blocks-OS/ai-maestro #5
 ```
+
 Connects team to GitHub Projects v2.
 
 ## Checklist

@@ -1,6 +1,7 @@
 # GitHub Projects v2 Integration
 
 ## Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
   - [Link a Team to a GitHub Project](#link-a-team-to-a-github-project)
@@ -44,6 +45,7 @@ kanban-sync.py link <team-id> <owner/repo> <project-number>
 | `project-number` | Project number from the GitHub URL |
 
 **What happens:**
+
 1. Verifies the team exists in AI Maestro
 2. Verifies the GitHub Project exists and has a Status field
 3. Sets `githubProject` on the team (`{ owner, repo, number }`)
@@ -85,6 +87,7 @@ UI action → API route → teams-service → github-project.ts
 ### Column Config (GET/PUT /api/teams/{id}/kanban-config)
 
 Columns = GitHub Project Status field options. No local storage.
+
 - GET: reads Status field options via GraphQL
 - PUT: updates Status field options via `updateProjectV2Field` mutation
 
@@ -135,12 +138,14 @@ Additional single-select and text fields in the GitHub Project (beyond Status an
 ### Dependency Resolution
 
 `resolveTaskDeps()` converts `blockedBy` references (which may be issue numbers like `#42`) into actual task IDs by matching against `externalRef` URLs. It also computes:
+
 - `blocks[]` — reverse dependency (which tasks does this one block)
 - `isBlocked` — true if any dependency is not in a completed status
 
 ## Status Column ID Conversion
 
 GitHub Status option names are converted to column IDs:
+
 - `"In Progress"` → `in_progress`
 - `"To Do"` → `to_do`
 - `"AI Review"` → `ai_review`

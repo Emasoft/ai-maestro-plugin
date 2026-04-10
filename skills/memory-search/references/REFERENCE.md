@@ -1,6 +1,7 @@
 # Memory Search Reference
 
 ## Table of Contents
+
 - [Memory Pipeline](#memory-pipeline)
 - [CLI Reference](#cli-reference)
 - [Search Modes](#search-modes)
@@ -122,17 +123,20 @@ Always start with memory search. If memory has no results, fall back to docs.
 ### No results found
 
 1. **Try different wording:**
+
    ```bash
    memory-search.sh "auth" --mode term
    memory-search.sh "login system" --mode semantic
    ```
 
 2. **Broaden the search** — remove specific qualifiers:
+
    ```bash
    memory-search.sh "authentication error"
    ```
 
 3. **Increase the limit:**
+
    ```bash
    memory-search.sh "deployment" --limit 20
    ```
@@ -144,21 +148,25 @@ Always start with memory search. If memory has no results, fall back to docs.
 If searches consistently return nothing for topics you know were discussed:
 
 1. **Check subconscious is running:**
+
    ```bash
    curl -s http://localhost:23000/api/agents/{agentId}/subconscious/status | jq .
    ```
 
 2. **Verify script is installed:**
+
    ```bash
    which memory-search.sh
    ```
 
 3. **Re-install if missing:**
+
    ```bash
    ./install-memory-tools.sh
    ```
 
 4. **Trigger manual indexing:**
+
    ```bash
    curl -s -X POST http://localhost:23000/api/agents/{agentId}/subconscious/index-delta
    ```

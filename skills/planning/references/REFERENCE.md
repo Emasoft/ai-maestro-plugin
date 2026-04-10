@@ -1,6 +1,7 @@
 # Planning Skill Reference
 
 ## Table of Contents
+
 - [Core Principle](#core-principle)
 - [The 3-File Pattern](#the-3-file-pattern)
 - [Output Directory Resolution](#output-directory-resolution)
@@ -70,6 +71,7 @@ Do NOT write planning files to the project root.
 **NEVER start a complex task without creating task_plan.md.**
 
 Before writing any code or making any changes:
+
 1. Create task_plan.md with clear goal
 2. Break work into phases
 3. List key questions to answer
@@ -87,6 +89,7 @@ This refreshes your goals in the context window, preventing drift.
 ### Rule 3: Update After Act
 
 After completing any phase:
+
 - Mark phase as `[x]` complete
 - Update status section
 - Log any errors encountered
@@ -126,21 +129,25 @@ After a failure, CHANGE your approach. Don't retry the exact same thing.
 ## The 3-Strike Protocol
 
 **Attempt 1: Diagnose & Fix**
+
 - Read error carefully
 - Identify root cause
 - Apply targeted fix
 
 **Attempt 2: Alternative Approach**
+
 - Same error? Try different method
 - Consider different tools/libraries
 - NEVER repeat exact failing action
 
 **Attempt 3: Broader Rethink**
+
 - Question assumptions
 - Search for similar issues
 - Update task plan with learnings
 
 **After 3 Failures: Escalate**
+
 - Explain all approaches tried
 - Share specific error messages
 - Ask user for guidance
@@ -177,6 +184,7 @@ Lost? Answer these questions:
 ## When to Use This Skill
 
 **USE for:**
+
 - Multi-step tasks (3+ steps)
 - Research projects
 - Building features
@@ -184,6 +192,7 @@ Lost? Answer these questions:
 - Anything needing organization
 
 **SKIP for:**
+
 - Simple questions
 - Single-file edits
 - Quick lookups
@@ -214,6 +223,7 @@ Planning and Memory solve **different problems**:
 | **Planning** | "What am I supposed to do next?" | Minutes/hours |
 
 Use BOTH for complex work:
+
 1. **Memory** - Search for past decisions and context
 2. **Planning** - Stay focused during execution
 
@@ -228,6 +238,7 @@ Templates are in the skill's `templates/` directory:
 - `progress.md` - Session logging
 
 **Note:** The template path depends on how the skill was installed:
+
 - **User scope** (global): `~/.claude/skills/planning/templates/`
 - **Plugin scope**: `<plugin-cache>/skills/planning/templates/`
 - **Project scope** (local): `<project>/.claude/skills/planning/templates/`
@@ -269,18 +280,23 @@ User: "Build a new authentication system"
 ## Troubleshooting
 
 **Templates not found:**
+
 ```bash
 ls ~/.claude/skills/planning/templates/
 ```
+
 If missing, reinstall the skill or copy from AI Maestro plugin.
 
 **Forgot the goal:**
+
 ```bash
 cat "${AIMAESTRO_PLANNING_DIR:-docs_dev}/task_plan.md" | head -20
 ```
 
 **Lost track of progress:**
+
 ```bash
 grep -E "^\s*-\s*\[" "${AIMAESTRO_PLANNING_DIR:-docs_dev}/task_plan.md"
 ```
+
 Shows all checkboxes and their status.

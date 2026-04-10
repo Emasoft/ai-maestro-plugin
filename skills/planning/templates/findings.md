@@ -68,16 +68,13 @@ Important realizations that affect the approach:
 ## Resources
 
 ### URLs
-- [URL 1]: [Description]
-- [URL 2]: [Description]
 
 ### Files
+
 - `[filepath]`: [What it contains]
 - `[filepath]`: [What it contains]
 
 ### API References
-- [API 1]: [Endpoint/usage]
-- [API 2]: [Endpoint/usage]
 
 ---
 
@@ -87,14 +84,17 @@ Important realizations that affect the approach:
 > After viewing images, PDFs, or browser results, immediately write findings here.
 
 ### Screenshot Analysis
+
 - [What you observed]
 - [Key information extracted]
 
 ### PDF Content
+
 - [Extracted information]
 - [Key points]
 
 ### Browser Results
+
 - [What the page showed]
 - [Important data captured]
 

@@ -1,6 +1,7 @@
 # Network Security Reference
 
 ## Table of Contents
+
 - [IP Filter Implementation](#ip-filter-implementation)
 - [Tailscale CGNAT Range Detail](#tailscale-cgnat-range-detail)
 - [Server Bind Modes](#server-bind-modes)
@@ -57,6 +58,7 @@ Tailscale assigns addresses from `100.64.0.0/10` (the CGNAT shared address space
 ## Port 23000
 
 AI Maestro uses port 23000 (configured in PM2). This port is:
+
 - Not a well-known port (no conflicts with standard services)
 - Must be allowed in Tailscale ACLs (default ACLs allow all ports between tailnet devices)
 - Blocked by `isAllowedSource()` for non-Tailscale IPs even when listening on `0.0.0.0`
@@ -66,6 +68,7 @@ AI Maestro uses port 23000 (configured in PM2). This port is:
 Terminal WebSocket connections (`/term?name=<session>&host=<hostId>`) go through the same TCP-level IP filter. A connection from a non-allowed IP is destroyed before the WebSocket upgrade happens.
 
 For remote host terminal access (proxied via `handleRemoteWorker`):
+
 1. Client connects to local server (must pass IP filter)
 2. Local server opens a WebSocket to the remote host's Tailscale IP
 3. Remote host's IP filter allows the connection (both hosts are in the same tailnet)
@@ -74,6 +77,7 @@ For remote host terminal access (proxied via `handleRemoteWorker`):
 ## AMP Message Security
 
 AMP (Agent Messaging Protocol) messages between hosts use HTTP POST to `/api/v1/route`. These requests:
+
 1. Must come from a Tailscale IP (IP filter)
 2. Must include a valid Bearer token (AMP API key)
 3. Are signed with Ed25519 host keys for governance operations

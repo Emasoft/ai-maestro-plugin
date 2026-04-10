@@ -1,6 +1,7 @@
 # Graph Query Reference
 
 ## Table of Contents
+
 - [Graph Commands](#graph-commands)
   - [graph-describe.sh](#graph-describesh)
   - [graph-find-callers.sh](#graph-find-callerssh)
@@ -31,6 +32,7 @@ graph-describe.sh <symbol>
 ```
 
 **Examples:**
+
 ```bash
 graph-describe.sh User
 graph-describe.sh process_payment
@@ -50,6 +52,7 @@ graph-find-callers.sh <function>
 ```
 
 **Examples:**
+
 ```bash
 graph-find-callers.sh process_payment
 graph-find-callers.sh validate_token
@@ -68,6 +71,7 @@ graph-find-callees.sh <function>
 ```
 
 **Examples:**
+
 ```bash
 graph-find-callees.sh handle_request
 graph-find-callees.sh create_order
@@ -86,6 +90,7 @@ graph-find-path.sh <from> <to>
 ```
 
 **Examples:**
+
 ```bash
 graph-find-path.sh handle_request save_to_db
 graph-find-path.sh LoginController UserModel
@@ -104,6 +109,7 @@ graph-find-related.sh <symbol>
 ```
 
 **Examples:**
+
 ```bash
 graph-find-related.sh BaseController    # child classes, mixins
 ```
@@ -121,6 +127,7 @@ graph-find-associations.sh <symbol>
 ```
 
 **Examples:**
+
 ```bash
 graph-find-associations.sh User         # has_many :posts, belongs_to :org
 ```
@@ -140,6 +147,7 @@ graph-find-by-type.sh <type>
 **Supported types:** `model`, `serializer`, `controller`, `service`, `job`, `concern`, `component`, `hook`, `module`, `class`, `function`
 
 **Examples:**
+
 ```bash
 graph-find-by-type.sh model
 graph-find-by-type.sh controller
@@ -159,6 +167,7 @@ graph-find-serializers.sh [model]
 ```
 
 **Examples:**
+
 ```bash
 graph-find-serializers.sh           # list all serializers
 graph-find-serializers.sh User      # serializers for User model
@@ -177,12 +186,14 @@ graph-index-delta.sh [project-path]
 ```
 
 **Examples:**
+
 ```bash
 graph-index-delta.sh                    # index current project
 graph-index-delta.sh /path/to/project   # index a specific project
 ```
 
 **Behavior:**
+
 - **First run:** Full index, initializes file-tracking metadata (30-120s for 1000+ files)
 - **Subsequent runs:** Delta mode, only re-indexes changed files (1-5s for 5-10 files)
 
@@ -235,19 +246,24 @@ docs-search.sh "payment processing"
 ## Troubleshooting
 
 **Scripts not found:**
+
 ```bash
 which graph-describe.sh
 ls -la ~/.local/bin/graph-*.sh
 ```
+
 If missing, run: `~/ai-maestro/install-graph-tools.sh`
 
 **API connection fails:**
+
 - Verify AI Maestro is running: `curl http://127.0.0.1:23000/api/hosts/identity`
 - Verify your agent is registered (scripts auto-detect from tmux session)
 - Symbol names are case-sensitive
 
 **Graph returns stale results:**
+
 - Re-index: `graph-index-delta.sh`
 
 **Graph is unavailable:**
+
 - Inform the user: "Graph unavailable, proceeding with manual analysis -- increased risk of missing dependencies."

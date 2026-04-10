@@ -1,6 +1,7 @@
 # Debug Hooks Reference
 
 ## Table of Contents
+
 - [Hook Event Reference](#hook-event-reference)
 - [PreToolUse Permission Decisions](#pretooluse-permission-decisions)
 - [Testing Hooks Manually](#testing-hooks-manually)
@@ -224,6 +225,7 @@ cat ~/.claude/plugins/cache/*/ai-maestro/*/hooks/hooks.json 2>/dev/null | jq .
 ```
 
 **Common registration issues:**
+
 - Hook type misspelled (case-sensitive: `PostToolUse` not `posttooluse`)
 - `command` path is relative (must be absolute or on PATH)
 - Missing `matcher` when needed (tool-specific hooks)

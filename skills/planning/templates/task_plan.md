@@ -25,6 +25,7 @@
 ## Phases
 
 ### Phase 1: Requirements & Discovery
+
 **Status:** `in_progress` | `pending` | `complete`
 
 - [ ] Understand what the user wants
@@ -33,6 +34,7 @@
 - [ ] Document key questions
 
 ### Phase 2: Research & Planning
+
 **Status:** `pending`
 
 - [ ] Research approaches (docs, web, codebase)
@@ -41,6 +43,7 @@
 - [ ] Define implementation approach
 
 ### Phase 3: Implementation
+
 **Status:** `pending`
 
 - [ ] Create/modify files
@@ -49,6 +52,7 @@
 - [ ] Log any errors encountered
 
 ### Phase 4: Testing & Verification
+
 **Status:** `pending`
 
 - [ ] Test the implementation
@@ -57,6 +61,7 @@
 - [ ] Fix any issues found
 
 ### Phase 5: Delivery & Documentation
+
 **Status:** `pending`
 
 - [ ] Final review

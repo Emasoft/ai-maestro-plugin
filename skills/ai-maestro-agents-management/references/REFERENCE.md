@@ -110,6 +110,7 @@ aimaestro-agent.sh create debug-agent --dir /Users/dev/projects/debug -- --verbo
 **What it does:** Checks name uniqueness, creates folder, inits git, creates CLAUDE.md, registers in AI Maestro, creates tmux session.
 
 **API:**
+
 ```bash
 curl -X POST http://localhost:23000/api/agents \
   -H "Content-Type: application/json" \
@@ -140,6 +141,7 @@ aimaestro-agent.sh update backend-api --model opus
 Options: `-t/--task`, `-m/--model`, `--tags`, `--add-tag`, `--remove-tag`, `--args`.
 
 **API (additional fields: label, name, workingDirectory, avatar, role, team):**
+
 ```bash
 curl -X PATCH http://localhost:23000/api/agents/{id} \
   -H "Content-Type: application/json" \
@@ -154,6 +156,7 @@ aimaestro-agent.sh rename old-name new-name --rename-session --rename-folder -y
 ```
 
 **API:**
+
 ```bash
 curl -X PATCH http://localhost:23000/api/agents/{id} \
   -H "Content-Type: application/json" \
@@ -168,6 +171,7 @@ aimaestro-agent.sh delete my-api --confirm --keep-folder --keep-data
 ```
 
 **API (soft-delete default, `?hard=true` for permanent):**
+
 ```bash
 curl -X DELETE http://localhost:23000/api/agents/{id}
 curl -X DELETE "http://localhost:23000/api/agents/{id}?hard=true"
@@ -222,6 +226,7 @@ aimaestro-agent.sh import backup.agent.json --name new-agent --dir /Users/dev/pr
 ```
 
 **API:**
+
 ```bash
 curl -X POST http://localhost:23000/api/agents/import \
   -H "Content-Type: application/json" -d @agent-backup.json
@@ -314,6 +319,7 @@ aimaestro-agent.sh skill remove my-api custom-skill
 **Custom role-plugins** — Created by Haephestos from `.agent.toml` profiles. Stored in `~/agents/role-plugins/` local marketplace.
 
 **Key principles:**
+
 1. **On-demand install** — Role-plugins are NOT pre-installed. Downloaded when user selects from dropdown or governance title is assigned. Uses `claude plugin install <name> --scope local`.
 2. **Always local scope** — All role-plugins use `--scope local` (agent's working directory only).
 3. **One at a time** — An agent can have at most one active role-plugin. Installing a new one replaces the previous.
@@ -327,6 +333,7 @@ aimaestro-agent.sh skill remove my-api custom-skill
 | MEMBER | Any role-plugin | No (user choice) | No |
 
 **Auto-install triggers:**
+
 - `POST /api/governance/manager` — assigns MANAGER → installs manager plugin
 - `POST /api/teams/{id}/chief-of-staff` — assigns COS → installs COS plugin
 - `POST /api/teams` with `type: "closed"` + `chiefOfStaffId` — creates team + auto-installs COS plugin
@@ -365,6 +372,7 @@ aimaestro-agent.sh plugin disable my-api my-plugin
 ```
 
 Per-project control with `--scope local`:
+
 ```bash
 claude plugin disable plugin-name@marketplace-name --scope local
 claude plugin enable plugin-name@marketplace-name --scope local
@@ -604,6 +612,7 @@ All modules in `~/.local/bin/` (installed) or `scripts/` (source).
 ## Scenarios
 
 ### Set Up New Development Environment
+
 ```bash
 aimaestro-agent.sh create backend-api --dir ~/projects/my-app/backend \
   --task "Build REST API" --tags "api,typescript"
@@ -613,23 +622,27 @@ aimaestro-agent.sh list
 ```
 
 ### End of Day
+
 ```bash
 aimaestro-agent.sh hibernate frontend-ui
 aimaestro-agent.sh hibernate data-processor
 ```
 
 ### Resume Work
+
 ```bash
 aimaestro-agent.sh wake frontend-ui --attach
 ```
 
 ### Backup and Restore
+
 ```bash
 aimaestro-agent.sh export backend-api -o backups/backend-$(date +%Y%m%d).json
 aimaestro-agent.sh import backups/backend-20250201.json --name new-api --dir ~/projects/new
 ```
 
 ### Install Marketplace and Plugins
+
 ```bash
 aimaestro-agent.sh plugin marketplace add data-processor github:my-org/ai-plugins
 aimaestro-agent.sh plugin install data-processor data-analysis-tool

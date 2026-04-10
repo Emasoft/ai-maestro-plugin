@@ -1,6 +1,7 @@
 # Agent Identity (AID) Protocol — Detailed Guide
 
 ## Table of Contents
+
 - [Installation](#installation)
 - [Commands Reference](#commands-reference)
 - [How AID Authentication Works](#how-aid-authentication-works)
@@ -11,8 +12,8 @@
 - [Troubleshooting](#troubleshooting)
 - [Protocol Reference](#protocol-reference)
 
-
-Full reference for the Agent Identity protocol: Ed25519 identity documents, proof of possession, OAuth 2.0 token exchange, and scoped JWT tokens.
+Full reference for the Agent Identity protocol: Ed25519 identity documents,
+proof of possession, OAuth 2.0 token exchange, and scoped JWT tokens.
 
 ## Installation
 
@@ -25,7 +26,9 @@ npx skills add agentmessaging/agent-identity
 ### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/agentmessaging/agent-identity/main/install.sh | bash
+INSTALL_URL="https://raw.githubusercontent.com/\
+agentmessaging/agent-identity/main/install.sh"
+curl -fsSL "$INSTALL_URL" | bash
 ```
 
 ### Manual
@@ -48,13 +51,15 @@ aid-init.sh --name my-agent --force  # Overwrite existing
 ```
 
 **Parameters:**
+
 - `--auto` — Auto-detect agent name from environment
 - `--name, -n` — Specify agent name
 - `--force, -f` — Overwrite existing identity
 
 ### aid-register.sh — Register with Auth Server
 
-One-time registration linking the agent's Ed25519 identity to a tenant with a specific role.
+One-time registration linking the agent's Ed25519 identity to a tenant
+with a specific role.
 
 ```bash
 aid-register.sh --auth https://auth.23blocks.com/acme \
@@ -62,6 +67,7 @@ aid-register.sh --auth https://auth.23blocks.com/acme \
 ```
 
 **Parameters:**
+
 - `--auth, -a` — Auth server URL (required)
 - `--token, -t` — Admin JWT for authorization (required)
 - `--role-id, -r` — Role ID to assign (required)
@@ -71,6 +77,7 @@ aid-register.sh --auth https://auth.23blocks.com/acme \
 - `--lifetime, -l` — Token lifetime in seconds (default: 3600)
 
 **What it does:**
+
 1. Reads the agent's Ed25519 public key and identity
 2. POSTs the registration to the server's agent registration endpoint
 3. Stores the registration locally for future token exchanges
@@ -91,6 +98,7 @@ aid-token.sh --auth https://auth.23blocks.com/acme --scope "files:read files:wri
 ```
 
 **Parameters:**
+
 - `--auth, -a` — Auth server URL (required)
 - `--scope, -s` — Space-separated scopes (optional)
 - `--json, -j` — Output as JSON
@@ -98,10 +106,13 @@ aid-token.sh --auth https://auth.23blocks.com/acme --scope "files:read files:wri
 - `--no-cache` — Skip token cache
 
 **What it does:**
+
 1. Builds a fresh Agent Identity Document with current timestamp
-2. Creates a Proof of Possession (`aid-token-exchange\n{timestamp}\n{auth_issuer}`)
+2. Creates a Proof of Possession
+   (`aid-token-exchange\n{timestamp}\n{auth_issuer}`)
 3. Signs the proof with the agent's Ed25519 private key
-4. POSTs to the OAuth token endpoint with `grant_type=urn:aid:agent-identity`
+4. POSTs to the OAuth token endpoint with
+   `grant_type=urn:aid:agent-identity`
 5. Returns the JWT access token (cached for reuse)
 
 ### aid-status.sh — Check Identity & Registration Status
@@ -135,13 +146,13 @@ A signed JSON document proving the agent's identity:
 
 The agent signs a challenge proving it holds the private key:
 
-```
+```text
 aid-token-exchange\n{timestamp}\n{auth_server_url}
 ```
 
 ### Step 3: Token Exchange
 
-```
+```text
 POST /oauth/token
 Content-Type: application/x-www-form-urlencoded
 
@@ -152,7 +163,9 @@ grant_type=urn%3Aaid%3Aagent-identity
 
 ### Step 4: Use the JWT
 
-The server returns a standard OAuth 2.0 response with an RS256 JWT access token. Use it with any API that validates JWTs via the auth server's JWKS endpoint.
+The server returns a standard OAuth 2.0 response with an RS256 JWT access
+token. Use it with any API that validates JWTs via the auth server's JWKS
+endpoint.
 
 ## Security
 
@@ -166,20 +179,23 @@ The server returns a standard OAuth 2.0 response with an RS256 JWT access token.
 
 ## Interoperability
 
-AID shares the `~/.agent-messaging/agents/` directory with [AMP](https://agentmessaging.org) if both are installed. One identity serves both protocols. Neither requires the other.
+AID shares the `~/.agent-messaging/agents/` directory with
+[AMP](https://agentmessaging.org) if both are installed. One identity
+serves both protocols. Neither requires the other.
 
 ## Agent Lifecycle
 
 Agents have 4 lifecycle states controlled by the admin:
 
-| Status | Can get tokens? | Introspection |
-|--------|----------------|---------------|
-| `pending` | No | `active: false` |
-| `active` | Yes | `active: true` |
-| `suspended` | No (403) | `active: false, reason: agent_suspended` |
-| `deleted` | No | `active: false, reason: agent_not_found` |
+| Status      | Can get tokens? | Introspection                             |
+|-------------|-----------------|-------------------------------------------|
+| `pending`   | No              | `active: false`                           |
+| `active`    | Yes             | `active: true`                            |
+| `suspended` | No (403)        | `active: false, reason: agent_suspended`  |
+| `deleted`   | No              | `active: false, reason: agent_not_found`  |
 
 Admin commands:
+
 - Suspend: `POST /agent_registrations/:id/suspend`
 - Reactivate: `POST /agent_registrations/:id/reactivate`
 
@@ -187,27 +203,28 @@ Admin commands:
 
 Target APIs can verify agent tokens in real-time:
 
-```
+```text
 POST /:tenant/oauth/introspect
 token=eyJhbGciOiJSUz...
 ```
 
-Returns `active: true/false` with agent details. Useful for detecting suspended agents before their token expires.
+Returns `active: true/false` with agent details. Useful for detecting
+suspended agents before their token expires.
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| "Agent identity not initialized" | Run `aid-init.sh --auto` |
-| "Not registered" | Run `aid-register.sh` with auth server details |
-| "Proof expired" | Clock skew >5 minutes; sync system clock |
-| "Invalid signature" | Agent identity may be corrupted; re-init and re-register |
-| "Fingerprint mismatch" | Agent key changed since registration; re-register |
-| "Scope not allowed" | Request only scopes granted during registration |
-| "Agent suspended" | Admin has suspended this agent; contact admin for reactivation |
-| "403 on token exchange" | Agent may be suspended; run `aid-status` to check |
+| Problem                          | Solution                                  |
+|----------------------------------|-------------------------------------------|
+| "Agent identity not initialized" | Run `aid-init.sh --auto`                  |
+| "Not registered"                 | Run `aid-register.sh` with auth details   |
+| "Proof expired"                  | Clock skew > 5 min; sync system clock     |
+| "Invalid signature"              | Corrupted identity; re-init + re-register |
+| "Fingerprint mismatch"           | Key changed since registration; re-reg    |
+| "Scope not allowed"              | Request only granted scopes               |
+| "Agent suspended"                | Admin suspended; contact for reactivation |
+| "403 on token exchange"          | May be suspended; run `aid-status`        |
 
 ## Protocol Reference
 
-Full specification: https://agentids.org
-GitHub: https://github.com/agentmessaging/agent-identity
+- Full specification: <https://agentids.org>
+- GitHub: <https://github.com/agentmessaging/agent-identity>

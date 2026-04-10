@@ -53,21 +53,25 @@ CLI returns formatted tables or JSON (`--format json`). API returns JSON. On suc
 ```bash
 /ai-maestro-agents-management create my-api --dir ~/projects/api
 ```
+
 Expected: Agent created with tmux session, registered in AI Maestro.
 
 ```bash
 /ai-maestro-agents-management list --status online
 ```
+
 Expected: Table of all online agents with status and working directory.
 
 ```bash
 /ai-maestro-agents-management plugin install my-api my-plugin --scope local
 ```
+
 Expected: Plugin installed, agent gracefully restarted.
 
 ## Checklist
 
 Copy this checklist and track your progress:
+
 - [ ] Identify target agent and operation
 - [ ] Run the CLI command
 - [ ] Verify result with `show` or `list`

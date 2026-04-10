@@ -30,11 +30,13 @@ Searches AI Maestro's indexed conversation history using `memory-search.sh`. Sup
    - `symbol` — code identifiers (functions, classes, variables)
 
 3. **Run the search:**
+
    ```bash
    memory-search.sh "<query>" --mode <mode> --limit 10
    ```
 
 4. **Filter by speaker** if needed:
+
    ```bash
    memory-search.sh "<query>" --role user      # user instructions only
    memory-search.sh "<query>" --role assistant  # assistant responses only
@@ -45,6 +47,7 @@ Searches AI Maestro's indexed conversation history using `memory-search.sh`. Sup
 6. **If no results**, try: different wording, broader query, `--limit 20`, or different mode. If still nothing, the topic is genuinely new.
 
 7. **For complete context**, optionally search docs and graph too:
+
    ```bash
    docs-search.sh "<query>"
    graph-describe.sh "<query>"
@@ -66,21 +69,25 @@ Returns matching conversation excerpts with timestamps, session context, and rel
 ```
 /memory-search authentication flow
 ```
+
 Searches for past discussions about authentication using hybrid mode.
 
 ```
 /memory-search "ECONNREFUSED" --mode term
 ```
+
 Finds exact occurrences of the error message in conversation history.
 
 ```
 /memory-search MAX_RETRY_COUNT --mode symbol
 ```
+
 Locates discussions about the `MAX_RETRY_COUNT` code identifier.
 
 ## Checklist
 
 Copy this checklist and track your progress:
+
 - [ ] Identify search query from user request
 - [ ] Select appropriate search mode
 - [ ] Run memory-search.sh with chosen parameters

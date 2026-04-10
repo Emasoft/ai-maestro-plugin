@@ -21,21 +21,25 @@ Systematic workflow for debugging Claude Code hooks. Covers all 7 hook types: Pr
 ## Instructions
 
 1. **Check registration** — Verify hook in settings.json (case-sensitive event name). Check global (`~/.claude/settings.json`) and project (`.claude/settings.json`):
+
    ```bash
    cat ~/.claude/settings.json | jq '.hooks // empty'
    ```
 
 2. **Verify script** — Check path exists and is executable:
+
    ```bash
    ls -la /path/to/my-hook.sh && chmod +x /path/to/my-hook.sh
    ```
 
 3. **Test manually** — Pipe sample JSON to the hook:
+
    ```bash
    echo '{"tool_name":"Write","tool_input":{},"session_id":"test"}' | /path/to/my-hook.sh
    ```
 
 4. **Check silent failures** — Redirect stderr to log if hook uses background processes:
+
    ```bash
    nohup my-script.sh >> /tmp/hook-debug.log 2>&1 &
    ```
@@ -43,11 +47,13 @@ Systematic workflow for debugging Claude Code hooks. Covers all 7 hook types: Pr
 5. **Verify event name/matcher** — Names are case-sensitive. Tool-specific hooks need a `matcher` field.
 
 6. **Check AI Maestro hooks** — Find the hook runner:
+
    ```bash
    find ~/.claude/plugins/cache -name "ai-maestro-hook.cjs" | head -1
    ```
 
 7. **Rebuild TS hooks** — If you edited TS source, rebuild:
+
    ```bash
    npx esbuild src/my-hook.ts --bundle --platform=node --format=esm --outfile=dist/my-hook.mjs
    ```
@@ -70,11 +76,13 @@ Systematic workflow for debugging Claude Code hooks. Covers all 7 hook types: Pr
 ```
 /debug-hooks
 ```
+
 Runs full 7-step diagnosis on all registered hooks.
 
 ```
 /debug-hooks PostToolUse
 ```
+
 Focuses on PostToolUse hooks only. Returns root cause and fix command.
 
 ## Checklist

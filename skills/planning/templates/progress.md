@@ -8,14 +8,17 @@
 ## Session: [DATE]
 
 ### Phase 1: Requirements & Discovery
+
 **Status:** `in_progress` | `complete`
 **Time:** [start] - [end]
 
 **Actions Taken:**
+
 - [Action 1]
 - [Action 2]
 
 **Files Created/Modified:**
+
 - `[filepath]` - [what was done]
 
 **Outcome:**
@@ -24,14 +27,17 @@
 ---
 
 ### Phase 2: Research & Planning
+
 **Status:** `pending` | `in_progress` | `complete`
 **Time:** [start] - [end]
 
 **Actions Taken:**
+
 - [Action 1]
 - [Action 2]
 
 **Files Created/Modified:**
+
 - `[filepath]` - [what was done]
 
 **Outcome:**
@@ -40,14 +46,17 @@
 ---
 
 ### Phase 3: Implementation
+
 **Status:** `pending` | `in_progress` | `complete`
 **Time:** [start] - [end]
 
 **Actions Taken:**
+
 - [Action 1]
 - [Action 2]
 
 **Files Created/Modified:**
+
 - `[filepath]` - [what was done]
 
 **Outcome:**
@@ -56,10 +65,12 @@
 ---
 
 ### Phase 4: Testing & Verification
+
 **Status:** `pending` | `in_progress` | `complete`
 **Time:** [start] - [end]
 
 **Actions Taken:**
+
 - [Action 1]
 - [Action 2]
 
@@ -69,10 +80,12 @@
 ---
 
 ### Phase 5: Delivery
+
 **Status:** `pending` | `in_progress` | `complete`
 **Time:** [start] - [end]
 
 **Actions Taken:**
+
 - [Action 1]
 - [Action 2]
 
@@ -128,14 +141,17 @@ Use this when you feel lost:
 **Phases Completed:** [X of Y]
 
 **Key Accomplishments:**
+
 - [Accomplishment 1]
 - [Accomplishment 2]
 
 **Blockers/Issues:**
+
 - [Issue 1]
 - [Issue 2]
 
 **Next Steps:**
+
 - [Next action 1]
 - [Next action 2]
 

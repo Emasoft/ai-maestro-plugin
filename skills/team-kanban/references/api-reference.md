@@ -1,6 +1,7 @@
 # Kanban API Reference
 
 ## Table of Contents
+
 - [Endpoints](#endpoints)
   - [GET /api/teams/{id}/tasks](#get-apiteamsidtasks)
   - [POST /api/teams/{id}/tasks](#post-apiteamsidtasks)
@@ -39,6 +40,7 @@ List all tasks for a team with resolved dependency information.
 **Response:** Array of TaskWithDeps objects.
 
 Each task includes derived fields:
+
 - `blocks` — array of task IDs that this task blocks
 - `isBlocked` — boolean, true if any blockedBy task is not completed
 - `assigneeName` — display name of the assigned agent (resolved from registry)
@@ -83,6 +85,7 @@ Update an existing task. All fields optional — only provided fields are change
 | `reviewResult` | string | Review outcome notes |
 
 **Validation:**
+
 - `status` must match a column ID in the team's kanban config
 - `blockedBy` must not create circular dependencies
 - `priority` must be a finite number
@@ -105,6 +108,7 @@ Delete a task permanently.
 Get the team's kanban column configuration.
 
 **Response:**
+
 ```json
 {
   "columns": [
@@ -124,6 +128,7 @@ If no custom config is set, returns the 5 default columns.
 Set custom kanban columns for a team.
 
 **Body:**
+
 ```json
 {
   "columns": [
@@ -151,6 +156,7 @@ Set custom kanban columns for a team.
 Bulk stats for all teams (eliminates N+1 fetch pattern).
 
 **Response:**
+
 ```json
 {
   "<teamId>": { "taskCount": 12, "docCount": 3 },

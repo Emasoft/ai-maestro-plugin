@@ -1,6 +1,7 @@
 # Docs-Search Reference
 
 ## Table of Contents
+
 - [CLI Commands](#cli-commands)
 - [Search Commands](#search-commands)
 - [Indexing Commands](#indexing-commands)
@@ -143,6 +144,7 @@ graph-describe.sh ComponentName
 ```
 
 This gives you:
+
 - **Memory**: What was discussed before?
 - **Docs**: What does the documentation say?
 - **Graph**: What is the code structure?
@@ -160,21 +162,25 @@ This gives you:
 ## Troubleshooting
 
 ### Script not found
+
 - Check PATH: `which docs-search.sh`
 - Verify scripts installed: `ls -la ~/.local/bin/docs-*.sh`
 - If not found, run: `./install-doc-tools.sh`
 
 ### API connection fails
+
 - Ensure AI Maestro is running: `curl http://127.0.0.1:23000/api/hosts/identity`
 - Ensure documentation has been indexed: `docs-stats.sh`
 - If no docs indexed, run: `docs-index.sh`
 
 ### Documentation is empty
+
 - Check project has documented code (JSDoc, docstrings, comments)
 - Verify project path is correct
 - Re-index with: `docs-index.sh /path/to/project`
 
 ### No results found
+
 - Inform the user: "No documentation found for X - proceeding with code analysis, but documentation may need to be generated."
 - Try keyword search if semantic search returned nothing
 - Try broader terms or different document types

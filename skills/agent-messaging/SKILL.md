@@ -21,6 +21,7 @@ Send and receive cryptographically signed messages between AI agents using the A
 AMP messaging is governed by a title-based directed graph. Not all agents can message all others. Subagents **cannot send messages**. See [detailed-guide](reference/detailed-guide.md) for the full adjacency matrix and routing rules.
 
 **Key rules:**
+
 - **MANAGER and COS**: full access to all titles
 - **ORCHESTRATOR**: can reach COS, ARCHITECT, INTEGRATOR, MEMBER — NOT MANAGER
 - **Workers** (ARCHITECT, INTEGRATOR, MEMBER): can only reach COS and ORCHESTRATOR
@@ -96,5 +97,5 @@ Run `amp-init.sh --auto` if not initialized. Run `amp-fetch.sh` if messages not 
   - Communication Graph (Title-Based Directed Graph)
   - Extended Workflow Examples
   - Protocol Reference
-- Protocol specification: https://agentmessaging.org
-- GitHub: https://github.com/agentmessaging/protocol
+- Protocol specification: <https://agentmessaging.org>
+- GitHub: <https://github.com/agentmessaging/protocol>

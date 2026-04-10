@@ -22,6 +22,7 @@ Query the indexed code graph (CozoDB) to understand symbols, call chains, depend
 ## Instructions
 
 1. **Index the project** (if not already done):
+
    ```bash
    graph-index-delta.sh [project-path]
    ```
@@ -45,6 +46,7 @@ Query the indexed code graph (CozoDB) to understand symbols, call chains, depend
    - Tracing a bug? Run `graph-find-callees.sh` to follow data flow
 
 4. **Re-index after large refactors**:
+
    ```bash
    graph-index-delta.sh
    ```
@@ -52,6 +54,7 @@ Query the indexed code graph (CozoDB) to understand symbols, call chains, depend
 ## Output
 
 Each command returns structured text output with:
+
 - Symbol names and types
 - File paths and line numbers
 - Relationship types (calls, inherits, associates)
@@ -69,21 +72,25 @@ Each command returns structured text output with:
 ```bash
 /graph-query process_payment
 ```
+
 Runs `graph-describe.sh process_payment` then `graph-find-callers.sh process_payment` to show what the function does and who calls it.
 
 ```bash
 /graph-query User --associations
 ```
+
 Runs `graph-find-associations.sh User` to show model relationships (has_many, belongs_to).
 
 ```bash
 /graph-query handle_request save_to_db --path
 ```
+
 Runs `graph-find-path.sh handle_request save_to_db` to trace the call chain.
 
 ## Checklist
 
 Copy this checklist and track your progress:
+
 - [ ] Project is indexed (`graph-index-delta.sh`)
 - [ ] Describe the target symbol (`graph-describe.sh`)
 - [ ] Check callers before changing signatures (`graph-find-callers.sh`)

@@ -58,10 +58,10 @@ Details:
   [MINOR] Non-user-invocable skill should include 'Loaded by <agent-name>' or 'Used by <agent-name>' so it's clear which agent consumes this skill. (skills/team-kanban/SKILL.md)
   [WARNING] Link to 'api-reference.md' in a list entry of SKILL.md has 2/17 TOC headings embedded. SKILL.md must copy the COMPLETE TOC of each referenced .md file immediately after its link. Any missing TOC entry will never be discovered by the progressive discovery algorithm — that content becomes invisible to agents. If this is a reference, embed all 17 headings. If this is a TOC title, avoid using markdown links to prevent this ambiguity. (skills/team-kanban/SKILL.md)
   [WARNING] Link to 'github-sync.md' in a list entry of SKILL.md has 3/16 TOC headings embedded. SKILL.md must copy the COMPLETE TOC of each referenced .md file immediately after its link. Any missing TOC entry will never be discovered by the progressive discovery algorithm — that content becomes invisible to agents. If this is a reference, embed all 16 headings. If this is a TOC title, avoid using markdown links to prevent this ambiguity. (skills/team-kanban/SKILL.md)
-  [WARNING] Dead URL (unreachable): https://api.crabmail.ai in commands/amp-register.md (commands/amp-register.md)
-  [WARNING] Dead URL (unreachable): https://trycrabmail.com in commands/amp-register.md (commands/amp-register.md)
-  [WARNING] Dead URL (HTTP 404): https://github.com/23blocks-OS/ai-maestro/blob/main/docs/AGENT-REGISTRY.md in skills/ai-maestro-agents-management/references/REFERENCE.md (skills/ai-maestro-agents-management/references/REFERENCE.md)
-  [WARNING] Dead URL (HTTP 404): https://github.com/23blocks-OS/ai-maestro/blob/main/docs/PLUGIN-DEVELOPMENT.md in skills/ai-maestro-agents-management/references/REFERENCE.md (skills/ai-maestro-agents-management/references/REFERENCE.md)
+  [WARNING] Dead URL (unreachable): <https://api.crabmail.ai> in commands/amp-register.md (commands/amp-register.md)
+  [WARNING] Dead URL (unreachable): <https://trycrabmail.com> in commands/amp-register.md (commands/amp-register.md)
+  [WARNING] Dead URL (HTTP 404): <https://github.com/23blocks-OS/ai-maestro/blob/main/docs/AGENT-REGISTRY.md> in skills/ai-maestro-agents-management/references/REFERENCE.md (skills/ai-maestro-agents-management/references/REFERENCE.md)
+  [WARNING] Dead URL (HTTP 404): <https://github.com/23blocks-OS/ai-maestro/blob/main/docs/PLUGIN-DEVELOPMENT.md> in skills/ai-maestro-agents-management/references/REFERENCE.md (skills/ai-maestro-agents-management/references/REFERENCE.md)
   [WARNING] Possible broken backtick path: `./install-doc-tools.sh` in skills/docs-search/SKILL.md (skills/docs-search/SKILL.md)
   [WARNING] Possible broken backtick path: `./install-memory-tools.sh` in skills/memory-search/SKILL.md (skills/memory-search/SKILL.md)
   [MINOR] Broken backtick path: `scripts/setup-tailscale-serve.sh` in skills/network-security/SKILL.md — file not found in plugin (skills/network-security/SKILL.md)
@@ -70,4 +70,3 @@ Details:
 ------------------------------------------------------------
 ✗ MAJOR issues found - significant problems
 SUMMARY: CRITICAL=0 MAJOR=6 MINOR=16 NIT=2 WARNING=31
-

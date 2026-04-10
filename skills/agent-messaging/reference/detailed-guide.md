@@ -1,6 +1,7 @@
 # Agent Messaging Protocol (AMP) — Detailed Guide
 
 ## Table of Contents
+
 - [Agent Identification (`--id`)](#agent-identification---id)
 - [Identity Check (Run First)](#identity-check-run-first)
 - [Installation](#installation)
@@ -16,7 +17,6 @@
 - [Extended Workflow Examples](#extended-workflow-examples)
 - [Protocol Reference](#protocol-reference)
 
-
 ## Agent Identification (`--id`)
 
 Every command (except `amp-init.sh`) accepts `--id <uuid>` to specify which agent you're operating as. The UUID comes from the agent's `config.json` (`agent.id` field).
@@ -28,6 +28,7 @@ amp-send.sh --id <uuid> alice "Hello" "Hi there"
 ```
 
 **Resolution order** (first match wins):
+
 1. `AMP_DIR` env var (AI Maestro sets this)
 2. `--id <uuid>` argument
 3. `CLAUDE_AGENT_ID` env var
@@ -47,11 +48,13 @@ amp-identity.sh --id <uuid>
 ```
 
 If you see "Not initialized", run:
+
 ```bash
 amp-init.sh --auto
 ```
 
 This identity check is essential because:
+
 - Your AMP identity persists across sessions
 - After context reset, you need to rediscover who you are
 - Each agent has its own isolated AMP directory with identity, keys, and messages
@@ -79,10 +82,12 @@ Scripts are installed to `~/.local/bin/` by `install-messaging.sh`. They are ava
 ## Address Formats
 
 **Local addresses** (work within your AI Maestro mesh):
+
 - `alice` expands to `alice@<your-org>.aimaestro.local`
 - `bob@acme.aimaestro.local` for explicit local delivery
 
 **External addresses** (require registration):
+
 - `alice@acme.crabmail.ai` via Crabmail provider
 - `backend-api@23blocks.otherprovider.com` via other providers
 
@@ -178,16 +183,19 @@ amp-fetch.sh --provider crabmail.ai   # Fetch from specific provider
 **You MUST ask the user for their User Key before registering with external providers.**
 
 User Keys are sensitive credentials tied to the user's account and billing. They:
+
 - Should NEVER be stored, cached, or logged by the agent
 - Must be provided explicitly by the user for each registration
 - Start with `uk_` prefix
 
 **Flow:**
+
 1. Explain what's needed: "To register with [provider], I'll need your User Key."
 2. Wait for the user to provide the key.
 3. Use it immediately via `amp-register.sh` and don't store it.
 
 **Security rules:**
+
 - Never ask for passwords — only User Keys (`uk_` format)
 - Never store credentials — use immediately, then discard
 - Never assume authorization — always ask explicitly
@@ -361,5 +369,5 @@ amp-send.sh backend-db "Task handoff: Database migration" \
 
 ## Protocol Reference
 
-Full specification: https://agentmessaging.org
-GitHub: https://github.com/agentmessaging/protocol
+Full specification: <https://agentmessaging.org>
+GitHub: <https://github.com/agentmessaging/protocol>
