@@ -20,3 +20,6 @@ __pycache__/
 .pytest_cache/
 llm_externalizer_output/
 .tldr/
+
+# git-cliff scratch — ephemeral release notes between bump and push
+.git-cliff-release-notes.md
