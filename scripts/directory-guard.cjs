@@ -24,11 +24,41 @@
  *     ~/.claude/plugins/, system dirs, AI Maestro source.
  *
  * Input: JSON on stdin (PreToolUse event from Claude Code)
- * Output: JSON on stdout ({ decision: "allow" } or { decision: "deny", reason: "..." })
+ * Output: JSON on stdout in the Claude Code PreToolUse schema:
+ *   { "hookSpecificOutput": {
+ *       "hookEventName": "PreToolUse",
+ *       "permissionDecision": "allow" | "deny",
+ *       "permissionDecisionReason": "..."
+ *   }}
  */
 
 const path = require('path');
 const os = require('os');
+
+// ============================================================================
+// Output helpers — Claude Code PreToolUse hook schema
+// ============================================================================
+
+/** Build an "allow" decision envelope. */
+function allowDecision() {
+  return {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecision: 'allow',
+    },
+  };
+}
+
+/** Build a "deny" decision envelope. */
+function denyDecision(reason) {
+  return {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecision: 'deny',
+      permissionDecisionReason: reason,
+    },
+  };
+}
 
 // ============================================================================
 // Stdin → evaluate → stdout
@@ -44,10 +74,9 @@ process.stdin.on('end', () => {
     process.stdout.write(JSON.stringify(result));
   } catch (err) {
     // Parse error on input → DENY (fail-closed)
-    process.stdout.write(JSON.stringify({
-      decision: 'deny',
-      reason: 'Directory guard: failed to parse hook input — denying by default (fail-closed).'
-    }));
+    process.stdout.write(JSON.stringify(
+      denyDecision('Directory guard: failed to parse hook input — denying by default (fail-closed).')
+    ));
   }
 });
 
@@ -64,27 +93,23 @@ function evaluateAccess(event) {
   const isBash = toolName === 'Bash';
 
   if (!WRITE_TOOLS.includes(toolName) && !isBash) {
-    return { decision: 'allow' };
+    return allowDecision();
   }
 
   // ── Resolve agent work directory (ONLY from env var) ───────
   const agentWorkDir = resolveAgentWorkDir();
   if (!agentWorkDir) {
     // FAIL-CLOSED: cannot determine sandbox → block all writes
-    return {
-      decision: 'deny',
-      reason: 'Directory guard: AGENT_WORK_DIR not set — all writes blocked. AI Maestro must set this env var at agent launch.'
-    };
+    return denyDecision(
+      'Directory guard: AGENT_WORK_DIR not set — all writes blocked. AI Maestro must set this env var at agent launch.'
+    );
   }
 
   // ── Write/Edit/NotebookEdit: check file_path ──────────────
   if (WRITE_TOOLS.includes(toolName)) {
     const filePath = toolInput.file_path || toolInput.path || '';
     if (!filePath) {
-      return {
-        decision: 'deny',
-        reason: 'Directory guard: write tool called without file_path — blocked.'
-      };
+      return denyDecision('Directory guard: write tool called without file_path — blocked.');
     }
 
     // Resolve symlinks to prevent symlink-escape attacks:
@@ -107,12 +132,11 @@ function evaluateAccess(event) {
     }
 
     if (!isAllowedPath(resolved, agentWorkDir)) {
-      return {
-        decision: 'deny',
-        reason: `Directory guard: write to "${resolved}" blocked. Agent can only write to ${agentWorkDir} or /tmp/.`
-      };
+      return denyDecision(
+        `Directory guard: write to "${resolved}" blocked. Agent can only write to ${agentWorkDir} or /tmp/.`
+      );
     }
-    return { decision: 'allow' };
+    return allowDecision();
   }
 
   // ── Bash: scan command for write operations ───────────────
@@ -120,15 +144,14 @@ function evaluateAccess(event) {
     const command = toolInput.command || '';
     const violations = detectBashWriteTargets(command, agentWorkDir);
     if (violations.length > 0) {
-      return {
-        decision: 'deny',
-        reason: `Directory guard: bash command writes to forbidden path(s): ${violations.join(', ')}. Agent can only write to ${agentWorkDir} or /tmp/.`
-      };
+      return denyDecision(
+        `Directory guard: bash command writes to forbidden path(s): ${violations.join(', ')}. Agent can only write to ${agentWorkDir} or /tmp/.`
+      );
     }
-    return { decision: 'allow' };
+    return allowDecision();
   }
 
-  return { decision: 'allow' };
+  return allowDecision();
 }
 
 // ============================================================================
