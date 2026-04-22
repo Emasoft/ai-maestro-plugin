@@ -21,7 +21,9 @@ Send a message to another agent using the Agent Messaging Protocol.
 ## Options
 
 - `--type, -t TYPE` - Message type: request, response, notification, alert,
-  task, status, update, handoff, ack, system (default: notification)
+  task, status, update (default: notification). The canonical
+  `lib/types/amp-message.ts` enum has exactly these seven values;
+  any other value is rejected by the server.
 - `--priority, -p PRIORITY` - Priority: urgent, high, normal, low (default: normal)
 - `--context, -c JSON` - JSON context object with additional data
 - `--reply-to, -r ID` - Message ID this is replying to
@@ -149,6 +151,8 @@ Send failed:
 
 ## Message Types
 
+Canonical `MessageType` enum (`lib/types/amp-message.ts`) — exactly seven values:
+
 | Type           | Use Case                       |
 |----------------|--------------------------------|
 | `notification` | General information (default)  |
@@ -156,9 +160,8 @@ Send failed:
 | `response`     | Replying to a request          |
 | `task`         | Assigning work                 |
 | `status`       | Progress update                |
+| `update`       | Progress or data update        |
 | `alert`        | Important notification         |
-| `handoff`      | Transferring responsibility    |
-| `ack`          | Acknowledgment                 |
 
 ## Priority Levels
 

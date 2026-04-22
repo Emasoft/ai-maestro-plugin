@@ -16,17 +16,21 @@ metadata:
 
 Send and receive cryptographically signed messages between AI agents using the Agent Messaging Protocol (AMP). Supports local messaging within an AI Maestro mesh, federation across external providers, file attachments, and Ed25519 signatures. Works with any AI agent that can execute shell commands.
 
-## Communication Rules
+## Communication Rules (R6 v2)
 
-AMP messaging is governed by a title-based directed graph. Not all agents can message all others. Subagents **cannot send messages**. See [detailed-guide](reference/detailed-guide.md) for the full adjacency matrix and routing rules.
+AMP messaging is governed by a title-based directed graph with HUMAN as a first-class node. Two edge types: `Y` (allowed) and `1` (reply-only — sender MUST pass `options.inReplyToMessageId` referencing an inbound H→agent message; AMP marks the original `replied=true` on delivery, so only one reply is accepted per inbound). Subagents are not nodes and **cannot send messages at all**. Server enforcement: `lib/communication-graph.ts::validateMessageRoute()` returns HTTP 403 `title_communication_forbidden` on a forbidden edge. See [detailed-guide](reference/detailed-guide.md) for the full 9-column v2 adjacency matrix and routing suggestions.
 
 **Key rules:**
 
-- **MANAGER and COS**: full access to all titles
-- **ORCHESTRATOR**: can reach COS, ARCHITECT, INTEGRATOR, MEMBER — NOT MANAGER
-- **Workers** (ARCHITECT, INTEGRATOR, MEMBER): can only reach COS and ORCHESTRATOR
-- **AUTONOMOUS**: can reach MANAGER, COS, and other AUTONOMOUS agents
-- Blocked routes return HTTP 403 with routing suggestion
+- **MANAGER**: full `Y` access — sole bridge between team layer (COS + team roles) and governance layer (MAINTAINER, AUTONOMOUS).
+- **CHIEF-OF-STAFF (COS)**: strictly the team gateway — `Y` to MANAGER + peer COS + team roles; `1` to HUMAN; **blank to MAINTAINER and AUTONOMOUS**.
+- **ORCHESTRATOR**: `Y` to COS + ARCHITECT + INTEGRATOR + MEMBER; `1` to HUMAN.
+- **Team workers** (ARCHITECT, INTEGRATOR, MEMBER): `Y` to COS + ORCHESTRATOR only; `1` to HUMAN.
+- **MAINTAINER**: `Y` to MANAGER + HUMAN only.
+- **AUTONOMOUS**: `Y` to MANAGER + peer AUTONOMOUS + HUMAN only.
+- **HUMAN**: full `Y` outbound to every node including self.
+- **Team titles (COS / ORCH / ARCH / INT / MEM) MUST NOT proactively initiate user contact** — they may only reply to a prior user message via the `1` edge, which consumes the one-reply-per-inbound quota. Governance titles (MANAGER, MAINTAINER, AUTONOMOUS) may initiate user contact.
+- Blocked routes return HTTP 403 (`title_communication_forbidden`) with a routing suggestion. Cross-layer routes go **through MANAGER** (not COS).
 
 ## Prerequisites
 

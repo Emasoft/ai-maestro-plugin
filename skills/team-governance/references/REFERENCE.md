@@ -197,7 +197,7 @@ done
 | Broadcast any team | No | No | No | Yes |
 | Message via AMP | Title-restricted | Team + COS + MANAGER | Team + COS + MANAGER | Unrestricted |
 
-**Note:** AMP messaging between agents is governed by the title-based communication graph (see below). Normal agents (ARCHITECT, INTEGRATOR, MEMBER) can only reach COS and ORCHESTRATOR.
+**Note:** AMP messaging between agents is governed by the title-based communication graph (R6 v2, see below). Normal agents (ARCHITECT, INTEGRATOR, MEMBER) can only reach COS and ORCHESTRATOR directly; they can only reply to the user via the `1` (reply-only) edge.
 
 **Membership constraints:**
 
@@ -209,40 +209,72 @@ done
 
 ## Team Messaging Rules
 
-AMP messaging is governed by a **title-based directed communication graph**. Each governance title defines which other titles the agent can message directly. Connections not in the graph are blocked with HTTP 403 and a routing suggestion.
+AMP messaging is governed by the **R6 v2 title-based directed communication graph**. Two edge types: `Y` (allow) and `1` (reply-only — sender MUST pass `options.inReplyToMessageId` referencing an inbound H→agent message; AMP marks the inbound `replied=true` on delivery, so one reply per inbound). Blank = deny. The server enforces this before every delivery in `lib/communication-graph.ts::validateMessageRoute()` and returns HTTP 403 `title_communication_forbidden` on a forbidden edge.
 
 **Subagents** (spawned task helpers without their own Claude Code instance) **cannot send messages at all** — they are not nodes in the graph.
 
-### Communication Graph — Adjacency Matrix
+This section mirrors `docs/GOVERNANCE-RULES.md` §R6 (rules R6.1–R6.10) in the `Emasoft/ai-maestro` server repo. Do not drift — the server's `lib/communication-graph.ts` is the canonical source.
 
-| Sender \ Recipient | MANAGER | COS | ORCHESTRATOR | ARCHITECT | INTEGRATOR | MEMBER | AUTONOMOUS |
-|---------------------|:-------:|:---:|:------------:|:---------:|:----------:|:------:|:----------:|
-| **MANAGER**         |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
-| **CHIEF-OF-STAFF**  |    Y    |  Y  |      Y       |     Y     |     Y      |   Y    |     Y      |
-| **ORCHESTRATOR**    |         |  Y  |              |     Y     |     Y      |   Y    |            |
-| **ARCHITECT**       |         |  Y  |      Y       |           |            |        |            |
-| **INTEGRATOR**      |         |  Y  |      Y       |           |            |        |            |
-| **MEMBER**          |         |  Y  |      Y       |           |            |        |            |
-| **AUTONOMOUS**      |    Y    |  Y  |              |           |            |        |     Y      |
+### Communication Graph — Adjacency Matrix (v2)
+
+`Y` = allowed, `1` = reply-only, blank = forbidden.
+
+| Sender \ Recipient | HUMAN | MANAGER | COS | ORCH | ARCH | INT | MEM | MAINT | AUTO |
+|---------------------|:-----:|:-------:|:---:|:----:|:----:|:---:|:---:|:-----:|:----:|
+| **HUMAN**           |   Y   |    Y    |  Y  |  Y   |  Y   |  Y  |  Y  |   Y   |  Y   |
+| **MANAGER**         |   Y   |    Y    |  Y  |  Y   |  Y   |  Y  |  Y  |   Y   |  Y   |
+| **COS**             |   1   |    Y    |  Y  |  Y   |  Y   |  Y  |  Y  |       |      |
+| **ORCHESTRATOR**    |   1   |         |  Y  |      |  Y   |  Y  |  Y  |       |      |
+| **ARCHITECT**       |   1   |         |  Y  |  Y   |      |     |     |       |      |
+| **INTEGRATOR**      |   1   |         |  Y  |  Y   |      |     |     |       |      |
+| **MEMBER**          |   1   |         |  Y  |  Y   |      |     |     |       |      |
+| **MAINTAINER**      |   Y   |    Y    |     |      |      |     |     |       |      |
+| **AUTONOMOUS**      |   Y   |    Y    |     |      |      |     |     |       |  Y   |
+
+### Rules R6.1 – R6.10
+
+| ID | Rule |
+|----|------|
+| **R6.1** | Communication is defined by the matrix above. Edge types: `Y` allow, `1` reply-only, blank deny. Unlisted pairs are denied. |
+| **R6.2** | MANAGER has full `Y` access — sole bridge between team layer (COS + team roles) and governance layer (MAINTAINER, AUTONOMOUS). |
+| **R6.3** | CHIEF-OF-STAFF is strictly the team gateway — `Y` to MANAGER + peer COS + team roles; `1` to HUMAN; blank to MAINTAINER + AUTONOMOUS. |
+| **R6.4** | ORCHESTRATOR — `Y` to COS + ARCHITECT + INTEGRATOR + MEMBER; `1` to HUMAN; blank elsewhere. |
+| **R6.5** | ARCHITECT / INTEGRATOR / MEMBER — `Y` to COS + ORCHESTRATOR; `1` to HUMAN; blank elsewhere. |
+| **R6.5a** | AUTONOMOUS — `Y` to MANAGER + peer AUTONOMOUS + HUMAN; blank to COS + team roles + MAINTAINER. |
+| **R6.5b** | MAINTAINER — `Y` to MANAGER + HUMAN; blank to COS + team roles + AUTONOMOUS + peer MAINTAINER. |
+| **R6.6** | HUMAN has full `Y` outbound to every node including self. Inbound to H from team titles is `1` (reply-only). Inbound to H from governance titles is `Y`. Agents SHOULD NOT proactively initiate user contact even when persona-permitted — `1` is the hard server-enforced floor, persona is the soft floor. |
+| **R6.7** | Blocked messages MUST return HTTP 403 with a routing suggestion. Cross-layer routes go through MANAGER (not COS). |
+| **R6.8** | Three enforcement layers: (1) server `validateMessageRoute()`, (2) role-plugin main-agent `.md` listing recipients, (3) sub-agents forbidden from AMP entirely. |
+| **R6.9** | Sub-agents have no AMP identity, cannot authenticate, communicate only with their spawning main-agent. |
+| **R6.10** | Reply-only enforcement requires `options.inReplyToMessageId` referencing an inbound H→agent message. AMP inbox marks original `replied=true` on delivery, refusing a second reply. |
 
 ### Key Rules
 
-- **MANAGER and COS** can message anyone (full access row in the matrix).
-- **ORCHESTRATOR** can message COS and team workers (ARCHITECT, INTEGRATOR, MEMBER) but **NOT** MANAGER.
-- **Workers** (ARCHITECT, INTEGRATOR, MEMBER) can **ONLY** message COS and ORCHESTRATOR.
-- **AUTONOMOUS** can message MANAGER, COS, and other AUTONOMOUS agents.
-- If a connection is missing, the message is blocked with HTTP 403. The error response includes a `suggestion` field with a routing path.
+- **MANAGER** has full `Y` access — the sole cross-layer bridge between team layer (COS + team roles) and governance layer (MAINTAINER, AUTONOMOUS).
+- **CHIEF-OF-STAFF** is the team gateway only: `Y` to MANAGER + peer COS + team roles; `1` (reply-only) to HUMAN; **blank to MAINTAINER and AUTONOMOUS** (COS no longer reaches the governance layer — route via MANAGER).
+- **ORCHESTRATOR** can message COS and team workers (ARCHITECT, INTEGRATOR, MEMBER) but **NOT** MANAGER directly; `1` to HUMAN.
+- **Workers** (ARCHITECT, INTEGRATOR, MEMBER) can **ONLY** message COS and ORCHESTRATOR; `1` to HUMAN.
+- **MAINTAINER** reaches MANAGER + HUMAN only.
+- **AUTONOMOUS** reaches MANAGER + peer AUTONOMOUS + HUMAN only.
+- **Team titles (COS / ORCH / ARCH / INT / MEM) MUST NOT proactively initiate user contact** — only reply to a prior user message via the `1` edge, which consumes the one-reply-per-inbound quota.
+- Blocked connections return HTTP 403 `title_communication_forbidden` with a `suggestion` routing path. Cross-layer routes go **through MANAGER**, not COS.
 
 ### Routing Suggestions (When Blocked)
 
 | Sender Title | Blocked Recipient | Routing Suggestion |
 |-------------|-------------------|-------------------|
+| COS | MAINTAINER | Route through MANAGER |
+| COS | AUTONOMOUS | Route through MANAGER |
 | ORCHESTRATOR | MANAGER | Route through COS |
-| ORCHESTRATOR | AUTONOMOUS | Route through COS or MANAGER |
+| ORCHESTRATOR | MAINTAINER | Route through COS → MANAGER |
+| ORCHESTRATOR | AUTONOMOUS | Route through COS → MANAGER |
 | ARCHITECT / INTEGRATOR / MEMBER | MANAGER | Route through COS |
 | ARCHITECT / INTEGRATOR / MEMBER | Other workers | Route through ORCHESTRATOR or COS |
-| ARCHITECT / INTEGRATOR / MEMBER | AUTONOMOUS | Route through COS or MANAGER |
-| AUTONOMOUS | ORCHESTRATOR / workers | Route through MANAGER or COS |
+| ARCHITECT / INTEGRATOR / MEMBER | MAINTAINER | Route through COS → MANAGER |
+| ARCHITECT / INTEGRATOR / MEMBER | AUTONOMOUS | Route through COS → MANAGER |
+| MAINTAINER | COS / ORCH / workers / AUTONOMOUS / peer MAINTAINER | Route through MANAGER |
+| AUTONOMOUS | COS / ORCH / workers / MAINTAINER | Route through MANAGER |
+| Team title (COS/ORCH/ARCH/INT/MEM) | HUMAN (no prior inbound) | Wait for the user to message first; then reply with `inReplyToMessageId` |
 
 ### Contacting a Closed Team from Outside
 
