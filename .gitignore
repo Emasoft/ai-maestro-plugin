@@ -23,3 +23,11 @@ llm_externalizer_output/
 
 # git-cliff scratch — ephemeral release notes between bump and push
 .git-cliff-release-notes.md
+
+# AI Maestro runtime state (not code; do not commit)
+.janitor/
+.rechecker/
+
+# Agent report artifacts (often contain private paths / excerpts — never commit)
+/reports/
+/reports_dev/
