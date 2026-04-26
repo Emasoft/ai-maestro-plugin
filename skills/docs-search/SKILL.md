@@ -17,7 +17,7 @@ Searches auto-generated codebase documentation for function signatures, API docs
 ## Prerequisites
 
 - AI Maestro running on `localhost:23000`
-- `docs-*.sh` scripts in `~/.local/bin/` (run `./install-doc-tools.sh` if missing)
+- `docs-*.sh` scripts in `~/.local/bin/` (run `install-doc-tools.sh` from the AI Maestro repo if missing)
 - Documentation indexed (`docs-index.sh` or `docs-index-delta.sh`)
 
 ## Instructions
@@ -40,7 +40,7 @@ Searches auto-generated codebase documentation for function signatures, API docs
 
 | Problem | Solution |
 |---------|----------|
-| Script not found | Run `./install-doc-tools.sh` |
+| Script not found | Run `install-doc-tools.sh` from the AI Maestro repo |
 | API connection fails | Verify AI Maestro: `curl http://127.0.0.1:23000/api/hosts/identity` |
 | No docs indexed | Run `docs-index.sh` or `docs-index-delta.sh` |
 | Empty results | Try broader terms, keyword search, or different types |
@@ -78,4 +78,12 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - CLI Commands, Document Types, Search Patterns, Combined Search with memory-search and graph-describe, Troubleshooting
+- [Detailed Reference](references/REFERENCE.md)
+  - CLI Commands
+  - Search Commands
+  - Indexing Commands
+  - Document Types
+  - Search Patterns by User Intent
+  - Combined Search Pattern
+  - Helper Scripts
+  - Troubleshooting

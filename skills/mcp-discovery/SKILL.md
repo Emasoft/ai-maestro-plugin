@@ -90,4 +90,12 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - Plugin-based discovery, Output formats, Advanced methods, Remote/standalone discovery, AI Maestro API and UI discovery
+- [Detailed Reference](references/REFERENCE.md)
+  - Plugin-Based Discovery (mcp-discover.sh)
+  - Output Formats
+  - Advanced Methods
+  - Remote/Standalone Discovery (mcp_discovery.py)
+  - AI Maestro API Discovery
+  - UI Discovery
+  - Finding the Server Name
+  - Technical Notes

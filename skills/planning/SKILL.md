@@ -91,4 +91,17 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - The 6 Rules, 3-Strike Protocol, When to Read vs Write, 5-Question Reboot, Anti-patterns, Memory skill integration
+- [Detailed Reference](references/REFERENCE.md)
+  - Core Principle
+  - The 3-File Pattern
+  - Output Directory Resolution
+  - The 6 Rules
+  - The 3-Strike Protocol
+  - When to Read vs Write
+  - The 5-Question Reboot
+  - When to Use This Skill
+  - Anti-Patterns
+  - Integration with Memory Skill
+  - Templates
+  - Detailed Example Workflow
+  - Troubleshooting

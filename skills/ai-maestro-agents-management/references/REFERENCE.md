@@ -695,5 +695,3 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 ## References
 
 - [AI Maestro Documentation](https://github.com/23blocks-OS/ai-maestro)
-- [Agent Registry Architecture](https://github.com/23blocks-OS/ai-maestro/blob/main/docs/AGENT-REGISTRY.md)
-- [Plugin Development](https://github.com/23blocks-OS/ai-maestro/blob/main/docs/PLUGIN-DEVELOPMENT.md)

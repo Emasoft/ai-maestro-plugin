@@ -15,7 +15,7 @@ Searches AI Maestro's indexed conversation history using `memory-search.sh`. Sup
 ## Prerequisites
 
 - AI Maestro running on `localhost:23000`
-- `memory-search.sh` installed at `~/.local/bin/` (via `./install-memory-tools.sh`)
+- `memory-search.sh` installed at `~/.local/bin/` (via `install-memory-tools.sh` from the AI Maestro repo)
 - Subconscious process running and indexing conversations
 - Optional: `docs-search.sh` and `graph-describe.sh` for combined search
 
@@ -60,7 +60,7 @@ Returns matching conversation excerpts with timestamps, session context, and rel
 ## Error Handling
 
 - **No results**: Try alternate wording, broader terms, increased limit, or different mode. No results is valid — report the topic as new.
-- **Script not found**: Run `./install-memory-tools.sh` to install.
+- **Script not found**: Run `install-memory-tools.sh` from the AI Maestro repo to install.
 - **Memory not indexed**: Check subconscious status via `curl -s http://localhost:23000/api/agents/{agentId}/subconscious/status | jq .` and trigger manual indexing if needed.
 - **Connection refused**: Verify AI Maestro is running on port 23000.
 

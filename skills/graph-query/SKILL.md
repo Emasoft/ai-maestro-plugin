@@ -100,8 +100,18 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - Full command syntax, query patterns, and troubleshooting
-  - Graph Commands (all 9 scripts with examples)
-  - Automatic Query Patterns (what to query per file type)
-  - Combined Search Pattern (graph + memory + docs)
-  - Troubleshooting guide
+- [Detailed Reference](references/REFERENCE.md)
+  - Graph Commands
+  - graph-describe.sh
+  - graph-find-callers.sh
+  - graph-find-callees.sh
+  - graph-find-path.sh
+  - graph-find-related.sh
+  - graph-find-associations.sh
+  - graph-find-by-type.sh
+  - graph-find-serializers.sh
+  - graph-index-delta.sh
+  - graph-helper.sh
+  - Automatic Query Patterns
+  - Combined Search Pattern
+  - Troubleshooting

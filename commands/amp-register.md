@@ -32,7 +32,7 @@ Register your agent with an external AMP provider for cross-provider messaging.
 
 | Provider | Domain      | API URL                     | Auth              |
 |----------|-------------|-----------------------------|-------------------|
-| Crabmail | crabmail.ai | <https://api.crabmail.ai>   | User Key required |
+| Crabmail | crabmail.ai | `api.crabmail.ai` (HTTPS)   | User Key required |
 
 ## Examples
 
@@ -65,7 +65,7 @@ You must initialize locally first:
 This generates your Ed25519 keypair which is used to register with external providers.
 
 You also need a User Key from the provider's dashboard. For Crabmail, get
-yours at <https://trycrabmail.com>.
+yours at `trycrabmail.com`.
 
 ## Implementation
 
@@ -92,7 +92,7 @@ On success:
 Registering with crabmail.ai...
 
   Provider: crabmail.ai
-  API:      https://api.crabmail.ai
+  API:      api.crabmail.ai (HTTPS)
   Auth:     User Key (uk_abc...)
   Name:     backend-api
 

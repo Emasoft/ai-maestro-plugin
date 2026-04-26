@@ -80,10 +80,47 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Full CLI & API Reference](references/REFERENCE.md) — All commands, options, examples, troubleshooting
-  - CLI Quick Reference table
-  - All 25 use cases with examples
-  - Plugin vs Role Plugin comparison
-  - Claude Code configuration reference
-  - Script architecture
-  - Troubleshooting and error messages
+- [Full CLI & API Reference](references/REFERENCE.md)
+  - CLI Quick Reference
+  - Session and Data Preservation
+  - Agent Lifecycle Commands
+  - List Agents
+  - Create Agent
+  - Show Agent
+  - Update Agent
+  - Rename Agent
+  - Delete Agent
+  - Hibernate Agent
+  - Wake Agent
+  - Restart Agent
+  - Export Agent
+  - Import Agent
+  - Skill Management
+  - List Skills
+  - Install Skill
+  - Uninstall Skill
+  - Add/Remove Skills in Registry
+  - Plugin Management
+  - Normal Plugins vs Role Plugins
+  - List Plugins
+  - Install Plugin
+  - Uninstall Plugin
+  - Enable/Disable Plugin
+  - Update, Reload, Validate, Clean
+  - Manage Marketplaces
+  - MCP Servers
+  - LSP Servers
+  - Standalone Elements
+  - Session Management
+  - Claude Code Configuration Reference
+  - Scope System
+  - Configuration File Locations
+  - Element Types
+  - Element Internal Structure
+  - Plugin Structure
+  - Output Formats
+  - Script Architecture
+  - Scenarios
+  - Decision Guide
+  - Troubleshooting
+  - Error Messages

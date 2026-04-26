@@ -70,6 +70,30 @@ See the [main repo][repo] for source files and build instructions.
 | `aid-token.sh`    | Generate/exchange identity tokens        |
 | `aid-helper.sh`   | Shared helper functions for AID scripts  |
 
+## Requirements
+
+External tools the plugin's shell scripts call:
+
+- `curl` — HTTP requests to AMP providers and AI Maestro
+- `jq` — JSON parsing in shell scripts
+- `openssl` — Ed25519 keypair generation for AID
+- `base64` — message attachment encoding
+
+## Storage
+
+AMP/AID state is written under `~/.agent-messaging/`:
+
+```text
+~/.agent-messaging/
+├── config.json          # local agent config
+├── keys/                # Ed25519 keypair (private + public)
+├── messages/
+│   ├── inbox/           # received messages
+│   └── sent/            # sent messages
+├── registrations/       # external provider registrations
+└── attachments/         # downloaded attachments
+```
+
 ## License
 
 MIT

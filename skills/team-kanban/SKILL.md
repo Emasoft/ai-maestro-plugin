@@ -93,5 +93,38 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [API Reference](references/api-reference.md) — Endpoints, Task Lifecycle, Dependencies, Column Config, Velocity, Extended Fields, Error Codes
-- [GitHub Sync Reference](references/github-sync.md) — Setup, Field Mapping, Label Taxonomy, Caching
+- [API Reference](references/api-reference.md)
+  - Endpoints
+  - GET /api/teams/{id}/tasks
+  - POST /api/teams/{id}/tasks
+  - PUT /api/teams/{id}/tasks/{taskId}
+  - DELETE /api/teams/{id}/tasks/{taskId}
+  - GET /api/teams/{id}/kanban-config
+  - PUT /api/teams/{id}/kanban-config
+  - GET /api/teams/stats
+  - Task Lifecycle Examples
+  - Task Dependencies
+  - Kanban Configuration
+  - Velocity and Distribution
+  - Extended Task Fields
+  - Error Codes
+  - Task Storage
+  - Available Tailwind Colors
+  - Available Lucide Icons
+- [GitHub Sync Reference](references/github-sync.md)
+  - Prerequisites
+  - Setup
+  - Link a Team to a GitHub Project
+  - Unlink a Team
+  - Show Status
+  - How It Works
+  - Field Mapping
+  - Label Taxonomy (AMOA Convention)
+  - Custom Project Fields
+  - Dependency Resolution
+  - Status Column ID Conversion
+  - Caching
+  - Rate Limits
+  - Error Handling
+  - API Examples
+  - Legacy: kanban-sync.sh

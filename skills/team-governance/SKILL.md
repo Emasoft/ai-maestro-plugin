@@ -109,4 +109,13 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md) - Governance API endpoints, Team management, Agent assignment, COS assignment/removal, Broadcast patterns, Permission matrix, Messaging isolation, Error codes
+- [Detailed Reference](references/REFERENCE.md)
+  - Governance API Endpoints
+  - Team Management
+  - Agent Assignment
+  - Chief-of-Staff Assignment
+  - Team Broadcast Messaging
+  - Permission Matrix
+  - Team Messaging Rules
+  - Error Codes
+  - Troubleshooting
