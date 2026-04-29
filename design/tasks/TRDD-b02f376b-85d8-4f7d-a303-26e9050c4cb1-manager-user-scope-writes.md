@@ -282,7 +282,7 @@ Unit tests in this plugin (extend the inline harness already used for the auto-m
 ```js
 // Negative: no attestation → user-scope write blocked
 ['no attestation, MANAGER user-scope path',
- '/Users/x/agents/manager-1', '/Users/x/.claude/skills/foo/SKILL.md', 'deny']
+ '<AGENT_WORK_DIR>', '<HOME>/.claude/skills/foo/SKILL.md', 'deny']
 
 // Negative: expired
 // Negative: signature invalid
