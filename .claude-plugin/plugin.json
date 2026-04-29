@@ -1,7 +1,7 @@
 {
   "name": "ai-maestro-plugin",
-  "description": "AI agent orchestration — agent management, memory search, code graph, docs search, task planning, team governance, team kanban, MCP discovery, hook debugging, AMP messaging, AID identity, and network security. Requires AI Maestro server.",
-  "version": "2.5.6",
+  "description": "AI agent orchestration \u2014 agent management, memory search, code graph, docs search, task planning, team governance, team kanban, MCP discovery, hook debugging, AMP messaging, AID identity, and network security. Requires AI Maestro server.",
+  "version": "2.5.7",
   "author": {
     "name": "23blocks",
     "email": "hello@23blocks.com"
