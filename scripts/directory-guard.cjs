@@ -18,6 +18,15 @@
  *   - /tmp/** and /private/tmp/** (macOS temp)
  *   - $AGENT_WORK_DIR/.claude/** (agent's plugin config)
  *   - ~/.agent-messaging/agents/<agent-name>/** (AMP messaging)
+ *   - ~/.claude/projects/<encoded($AGENT_WORK_DIR)>/** (Claude Code per-project
+ *     state: auto-memory, transcripts, todos. Encoding: every non-alphanumeric
+ *     char in the absolute path is replaced with "-", so each agent only sees
+ *     its own slot.)
+ *
+ * NOTE: A future revision will add a MANAGER-only privilege to write to the
+ * Claude Code user-scope element tree (~/.claude/{skills,agents,commands,
+ * rules,mcp_servers,plugins,...}). The title MUST be verified via the
+ * agent's AID Ed25519 identity (env vars are spoofable) — design TBD.
  *
  * Blocked:
  *   - Everything else, including other agents' directories, ~/.aimaestro/,
@@ -204,8 +213,29 @@ function isAllowedPath(resolvedPath, agentWorkDir) {
     return true;
   }
 
+  // 5. Agent's own Claude Code per-project state directory.
+  //    Claude Code stores auto-memory, transcripts, todos, plans under
+  //    ~/.claude/projects/<encoded-abs-path>/. The encoding replaces every
+  //    non-alphanumeric char in the absolute path with "-". Each agent only
+  //    matches its own slot, so cross-agent contamination is still blocked.
+  const projectDir = path.join(home, '.claude', 'projects', encodeProjectPath(agentWorkDir));
+  if (isUnder(resolvedPath, projectDir)) {
+    return true;
+  }
+
   // Everything else → blocked
   return false;
+}
+
+/**
+ * Encode an absolute path the same way Claude Code names ~/.claude/projects/
+ * subdirectories: every non-[A-Za-z0-9-] char becomes "-". Verified against
+ * real entries (e.g. "/Users/x/Code/SVG_FBF_PROJECT/svg2fbf" →
+ * "-Users-x-Code-SVG-FBF-PROJECT-svg2fbf", "/Users/x/.claude/plugins" →
+ * "-Users-x--claude-plugins").
+ */
+function encodeProjectPath(absPath) {
+  return absPath.replace(/[^A-Za-z0-9-]/g, '-');
 }
 
 /** True if `child` is `parent` itself or a descendant of `parent`. */
