@@ -81,16 +81,9 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 | 401 | Invalid governance password |
 | 404 | Team not found |
 
-On `agent_already_in_closed_team`, use MANAGER cross-team transfer.
-
 ## Examples
 
-```
-/team-governance create a closed team called "security-core"
-```
-
-Creates team type "closed", returns ID. See REFERENCE.md for full
-flows including COS assignment and broadcasts.
+`/team-governance create a closed team` — see REFERENCE.md for full flows.
 
 ## Checklist
 
