@@ -12,7 +12,7 @@ metadata:
 
 Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the AI Maestro governance API. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
 
-**Communication graph (R6 v2):** AMP messaging is governed by a title-based directed graph with HUMAN as a first-class node and two edge types — `Y` (allow) and `1` (reply-only). Subagents are not graph nodes. Blocked routes return HTTP 403 `title_communication_forbidden`. For the full 9-column adjacency matrix, R6.1–R6.10, and routing suggestions, see the [reference](references/REFERENCE.md#team-messaging-rules) and the [bundled canonical rules](references/GOVERNANCE-RULES.md).
+**Communication graph (R6 v2):** AMP messaging is governed by a title-based directed graph with HUMAN as a first-class node and two edge types — `Y` (allow) and `1` (reply-only). Subagents are not graph nodes. Blocked routes return HTTP 403 `title_communication_forbidden`. For the full 9-column adjacency matrix, R6.1–R6.10, and routing suggestions, see the [reference](references/REFERENCE.md#team-messaging-rules); the canonical governance rules are bundled in `references/` (linked from the Resources section).
 
 ## Prerequisites
 
@@ -82,6 +82,15 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 | 404 | Team not found |
 
 On `agent_already_in_closed_team`, use MANAGER cross-team transfer.
+
+## Examples
+
+```
+/team-governance create a closed team called "security-core"
+```
+
+Creates team type "closed", returns ID. See REFERENCE.md for full
+flows including COS assignment and broadcasts.
 
 ## Checklist
 
