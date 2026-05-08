@@ -57,6 +57,35 @@ changelog:
 
 **Source:** Extracted from user instructions, audit reports, and logical inference
 
+## Table of contents
+
+- [§0. Canonical source + copies](#0-canonical-source--copies-read-this-before-editing)
+- [§TERMINOLOGY. Three-layer agent model (TITLE / ROLE / PERSONA)](#terminology-three-layer-agent-model-title--role--persona)
+- [Overview](#overview)
+- [R1. Teams and Groups](#r1-teams-and-groups)
+- [R2. Team Name Rules](#r2-team-name-rules)
+- [R3. Role Hierarchy Rules](#r3-role-hierarchy-rules)
+- [R4. Agent Membership Rules](#r4-agent-membership-rules)
+- [R5. Transfer Rules](#r5-transfer-rules)
+- [R6. Messaging Rules (Communication Graph)](#r6-messaging-rules-communication-graph)
+- [R7. UI Robustness Rules](#r7-ui-robustness-rules)
+- [R8. Data Integrity Rules](#r8-data-integrity-rules)
+- [R9. Manager Requirement](#r9-manager-requirement)
+- [R10. Agent Lifecycle Governance](#r10-agent-lifecycle-governance)
+- [R11. Title-Plugin Binding](#r11-title-plugin-binding)
+- [R12. Minimum Team Composition (CRITICAL)](#r12-minimum-team-composition-critical)
+- [R13. Role Boundaries (No Overstepping)](#r13-role-boundaries-no-overstepping)
+- [R14. Team Resilience (Auto-Recovery)](#r14-team-resilience-auto-recovery)
+- [R15. Written Orders & GitHub Trail](#r15-written-orders--github-trail)
+- [R16. Password Never Shared with Agents (CRITICAL)](#r16-password-never-shared-with-agents-critical)
+- [R17. Mandatory Core Plugin Installation (CRITICAL)](#r17-mandatory-core-plugin-installation-critical)
+- [R18. Plugin Continuity on Client Change (CRITICAL)](#r18-plugin-continuity-on-client-change-critical)
+- [R19. MAINTAINER Title](#r19-maintainer-title)
+- [R20. Marketplace Governance](#r20-marketplace-governance)
+- [Invariants (Must Never Be Violated)](#invariants-must-never-be-violated)
+- [R21. All-In-One Pipeline Architecture (CRITICAL — IRON)](#r21-all-in-one-pipeline-architecture-critical--iron)
+- [Role-Based Permission Matrix](#role-based-permission-matrix)
+
 ---
 
 ## §0. Canonical source + copies (READ THIS BEFORE EDITING)
