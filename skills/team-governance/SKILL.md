@@ -12,7 +12,9 @@ metadata:
 
 Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the AI Maestro governance API. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
 
-**Communication graph (R6 v2):** AMP messaging is governed by a title-based directed graph with HUMAN as a first-class node and two edge types — `Y` (allow) and `1` (reply-only). Subagents are not graph nodes. Blocked routes return HTTP 403 `title_communication_forbidden`. For the full 9-column adjacency matrix, R6.1–R6.10, and routing suggestions, see the [reference](references/REFERENCE.md#team-messaging-rules); the canonical governance rules are bundled in `references/` (linked from the Resources section).
+**Communication graph (R6 v3, 2026-05-04):** AMP follows a title-based directed graph; HUMAN is a first-class node. v3 made **COS the SOLE gateway** for in-team agents — MANAGER no longer reaches ORCH/ARCH/INT/MEM directly. Blocked routes return HTTP 403 `title_communication_forbidden`. See R6 + matrix in the [reference](references/REFERENCE.md#team-messaging-rules) and the bundled rules.
+
+**Minimum team composition (R12, CRITICAL):** every team has ≥5 agents — 1 COS + 1 ARCHITECT + 1 ORCHESTRATOR + 1 INTEGRATOR + 1 MEMBER. MANAGER enforces R12.6 on team creation.
 
 ## Prerequisites
 

@@ -215,14 +215,23 @@ AMP messaging is governed by the **R6 v2 title-based directed communication grap
 
 This section mirrors `docs/GOVERNANCE-RULES.md` §R6 (rules R6.1–R6.10) in the `Emasoft/ai-maestro` server repo. Do not drift — the server's `lib/communication-graph.ts` is the canonical source.
 
-### Communication Graph — Adjacency Matrix (v2)
+### Communication Graph — Adjacency Matrix (v3, 2026-05-04)
 
 `Y` = allowed, `1` = reply-only, blank = forbidden.
+
+**v2 → v3 change:** MANAGER's outbound edges to in-team non-COS titles
+(ORCHESTRATOR, ARCHITECT, INTEGRATOR, MEMBER) flipped from `Y` to **blank**.
+Real-world tests showed great confusion when MANAGER bypassed COS to issue
+directives directly to team agents — COS or ORCHESTRATOR ended up
+uninformed or issued contradictory instructions on the same task. The
+**CHIEF-OF-STAFF is now the SOLE inbound and outbound gateway for
+closed-team agents**. MANAGER still freely reaches COS, peer MANAGERs,
+MAINTAINER, AUTONOMOUS, and HUMAN.
 
 | Sender \ Recipient | HUMAN | MANAGER | COS | ORCH | ARCH | INT | MEM | MAINT | AUTO |
 |---------------------|:-----:|:-------:|:---:|:----:|:----:|:---:|:---:|:-----:|:----:|
 | **HUMAN**           |   Y   |    Y    |  Y  |  Y   |  Y   |  Y  |  Y  |   Y   |  Y   |
-| **MANAGER**         |   Y   |    Y    |  Y  |  Y   |  Y   |  Y  |  Y  |   Y   |  Y   |
+| **MANAGER**         |   Y   |    Y    |  Y  |      |      |     |     |   Y   |  Y   |
 | **COS**             |   1   |    Y    |  Y  |  Y   |  Y   |  Y  |  Y  |       |      |
 | **ORCHESTRATOR**    |   1   |         |  Y  |      |  Y   |  Y  |  Y  |       |      |
 | **ARCHITECT**       |   1   |         |  Y  |  Y   |      |     |     |       |      |
@@ -236,28 +245,29 @@ This section mirrors `docs/GOVERNANCE-RULES.md` §R6 (rules R6.1–R6.10) in the
 | ID | Rule |
 |----|------|
 | **R6.1** | Communication is defined by the matrix above. Edge types: `Y` allow, `1` reply-only, blank deny. Unlisted pairs are denied. |
-| **R6.2** | MANAGER has full `Y` access — sole bridge between team layer (COS + team roles) and governance layer (MAINTAINER, AUTONOMOUS). |
-| **R6.3** | CHIEF-OF-STAFF is strictly the team gateway — `Y` to MANAGER + peer COS + team roles; `1` to HUMAN; blank to MAINTAINER + AUTONOMOUS. |
+| **R6.2** | MANAGER has `Y` to COS + peer MANAGER + governance layer (MAINTAINER, AUTONOMOUS) + HUMAN. **In-team non-COS titles (ORCHESTRATOR, ARCHITECT, INTEGRATOR, MEMBER) are blank for MANAGER as of v3 (2026-05-04)** — MANAGER must route through COS. |
+| **R6.3** | CHIEF-OF-STAFF is the SOLE inbound/outbound gateway for closed-team agents — `Y` to MANAGER + peer COS + team roles (ORCH/ARCH/INT/MEM); `1` to HUMAN; blank to MAINTAINER + AUTONOMOUS. |
 | **R6.4** | ORCHESTRATOR — `Y` to COS + ARCHITECT + INTEGRATOR + MEMBER; `1` to HUMAN; blank elsewhere. |
 | **R6.5** | ARCHITECT / INTEGRATOR / MEMBER — `Y` to COS + ORCHESTRATOR; `1` to HUMAN; blank elsewhere. |
 | **R6.5a** | AUTONOMOUS — `Y` to MANAGER + peer AUTONOMOUS + HUMAN; blank to COS + team roles + MAINTAINER. |
 | **R6.5b** | MAINTAINER — `Y` to MANAGER + HUMAN; blank to COS + team roles + AUTONOMOUS + peer MAINTAINER. |
 | **R6.6** | HUMAN has full `Y` outbound to every node including self. Inbound to H from team titles is `1` (reply-only). Inbound to H from governance titles is `Y`. Agents SHOULD NOT proactively initiate user contact even when persona-permitted — `1` is the hard server-enforced floor, persona is the soft floor. |
-| **R6.7** | Blocked messages MUST return HTTP 403 with a routing suggestion. Cross-layer routes go through MANAGER (not COS). |
+| **R6.7** | Blocked messages MUST return HTTP 403 with a routing suggestion. Cross-team routes go through MANAGER → recipient's COS; intra-team routes from MANAGER also go through that team's COS. |
 | **R6.8** | Three enforcement layers: (1) server `validateMessageRoute()`, (2) role-plugin main-agent `.md` listing recipients, (3) sub-agents forbidden from AMP entirely. |
 | **R6.9** | Sub-agents have no AMP identity, cannot authenticate, communicate only with their spawning main-agent. |
 | **R6.10** | Reply-only enforcement requires `options.inReplyToMessageId` referencing an inbound H→agent message. AMP inbox marks original `replied=true` on delivery, refusing a second reply. |
+| **R6.11–R6.14** | Canonical agent address format (2026-05-06): single ID per host, wire form `<agent-id>@<host>` or `<host>:<agent-id>`, bare `<agent-id>` resolves to writer's host. Persona name may alias the agent-id when no collision exists; collisions return HTTP 409 `disambiguation_required`. The legacy 3-level hierarchical (`team/sub/name`) format is deprecated — see R6 in the bundled governance rules. |
 
 ### Key Rules
 
-- **MANAGER** has full `Y` access — the sole cross-layer bridge between team layer (COS + team roles) and governance layer (MAINTAINER, AUTONOMOUS).
-- **CHIEF-OF-STAFF** is the team gateway only: `Y` to MANAGER + peer COS + team roles; `1` (reply-only) to HUMAN; **blank to MAINTAINER and AUTONOMOUS** (COS no longer reaches the governance layer — route via MANAGER).
+- **MANAGER** reaches COS, peer MANAGER, MAINTAINER, AUTONOMOUS, HUMAN. v3 (2026-05-04) **removes** MANAGER's direct edges to ORCHESTRATOR/ARCHITECT/INTEGRATOR/MEMBER — route via COS.
+- **CHIEF-OF-STAFF** is the SOLE gateway for closed-team agents: `Y` to MANAGER + peer COS + team roles; `1` (reply-only) to HUMAN; blank to MAINTAINER and AUTONOMOUS.
 - **ORCHESTRATOR** can message COS and team workers (ARCHITECT, INTEGRATOR, MEMBER) but **NOT** MANAGER directly; `1` to HUMAN.
 - **Workers** (ARCHITECT, INTEGRATOR, MEMBER) can **ONLY** message COS and ORCHESTRATOR; `1` to HUMAN.
 - **MAINTAINER** reaches MANAGER + HUMAN only.
 - **AUTONOMOUS** reaches MANAGER + peer AUTONOMOUS + HUMAN only.
 - **Team titles (COS / ORCH / ARCH / INT / MEM) MUST NOT proactively initiate user contact** — only reply to a prior user message via the `1` edge, which consumes the one-reply-per-inbound quota.
-- Blocked connections return HTTP 403 `title_communication_forbidden` with a `suggestion` routing path. Cross-layer routes go **through MANAGER**, not COS.
+- Blocked connections return HTTP 403 `title_communication_forbidden` with a `suggestion` routing path. Cross-layer routes go **through MANAGER → COS**, never directly.
 
 ### Routing Suggestions (When Blocked)
 

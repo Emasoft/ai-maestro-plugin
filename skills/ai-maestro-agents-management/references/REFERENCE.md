@@ -301,22 +301,24 @@ aimaestro-agent.sh skill remove my-api custom-skill
 | Scope | User or local | Always local |
 | Per agent | Multiple | One at a time |
 | Has .agent.toml | No | Yes (required) |
-| Stored in | Any marketplace | `ai-maestro-plugins` marketplace (6 defaults) or `~/agents/role-plugins/` (custom) |
+| Stored in | Any marketplace | `ai-maestro-plugins` marketplace (8 defaults) or the local `ai-maestro-local-roles-marketplace` at `~/agents/role-plugins/marketplace/` (custom). For non-Claude clients the role-plugins container holds per-client subfolders (`marketplace-claude/`, `marketplace-codex/`, …); see R20 in the bundled governance rules. |
 
 ### Role-Plugin Installation Architecture
 
-**Default role-plugins** (6 predefined, from `Emasoft/ai-maestro-plugins` marketplace):
+**Default role-plugins** (8 predefined, from `Emasoft/ai-maestro-plugins` marketplace — one per governance title per R11):
 
 | Role Plugin | Prefix | Governance Binding |
 |-------------|--------|-------------------|
 | `ai-maestro-assistant-manager-agent` | `amama-` | Auto-installed when MANAGER title assigned |
 | `ai-maestro-chief-of-staff` | `amcos-` | Auto-installed when COS title assigned |
-| `ai-maestro-programmer-agent` | `ampa-` | User choice (MEMBER) |
-| `ai-maestro-orchestrator-agent` | `amoa-` | User choice (MEMBER) |
-| `ai-maestro-integrator-agent` | `amia-` | User choice (MEMBER) |
-| `ai-maestro-architect-agent` | `amaa-` | User choice (MEMBER) |
+| `ai-maestro-orchestrator-agent` | `amoa-` | Auto-installed when ORCHESTRATOR title assigned |
+| `ai-maestro-architect-agent` | `amaa-` | Auto-installed when ARCHITECT title assigned |
+| `ai-maestro-integrator-agent` | `amia-` | Auto-installed when INTEGRATOR title assigned |
+| `ai-maestro-programmer-agent` | `ampa-` | Auto-installed when MEMBER title assigned |
+| `ai-maestro-maintainer-agent` | `ammt-` | Auto-installed when MAINTAINER title assigned |
+| `ai-maestro-autonomous-agent` | `amau-` | Auto-installed when AUTONOMOUS title assigned (mandatory — no "no plugin" state per R11.3) |
 
-**Custom role-plugins** — Created by Haephestos from `.agent.toml` profiles. Stored in `~/agents/role-plugins/` local marketplace.
+**Custom role-plugins** — Created by Haephestos from `.agent.toml` profiles. Stored in the local `ai-maestro-local-roles-marketplace` container at `~/agents/role-plugins/marketplace/` (Claude-format) or `~/agents/role-plugins/marketplace-<client>/` for other clients. The container also has an `.abstract/` IR hub feeding all per-client emitters.
 
 **Key principles:**
 
@@ -326,19 +328,28 @@ aimaestro-agent.sh skill remove my-api custom-skill
 
 ### Governance Title → Role-Plugin Binding
 
-| Title | Required Role-Plugin | Auto-installed? | Locked? |
-|-------|---------------------|:---------------:|:-------:|
-| MANAGER | `ai-maestro-assistant-manager-agent` | Yes | Yes |
-| CHIEF-OF-STAFF | `ai-maestro-chief-of-staff` | Yes | Yes |
-| MEMBER | Any role-plugin | No (user choice) | No |
+Per R11.1 every title (including AUTONOMOUS and MAINTAINER) has a default role-plugin; there is **no "no role-plugin" state** for a persisted agent. R11.6 lets multiple plugins serve one title (UI shows a dropdown when ≥2 are compatible).
+
+| Title | Default Role-Plugin | Auto-installed? | Swap allowed? |
+|-------|---------------------|:---------------:|:-------------:|
+| MANAGER | `ai-maestro-assistant-manager-agent` | Yes | No (locked) |
+| CHIEF-OF-STAFF | `ai-maestro-chief-of-staff` | Yes | No (locked) |
+| ORCHESTRATOR | `ai-maestro-orchestrator-agent` | Yes | Yes (compatible plugin) |
+| ARCHITECT | `ai-maestro-architect-agent` | Yes | Yes (compatible plugin) |
+| INTEGRATOR | `ai-maestro-integrator-agent` | Yes | Yes (compatible plugin) |
+| MEMBER | `ai-maestro-programmer-agent` | Yes | Yes (compatible plugin) |
+| MAINTAINER | `ai-maestro-maintainer-agent` | Yes | Yes (compatible plugin) |
+| AUTONOMOUS | `ai-maestro-autonomous-agent` | Yes | Yes (compatible plugin) |
 
 **Auto-install triggers:**
 
 - `POST /api/governance/manager` — assigns MANAGER → installs manager plugin
 - `POST /api/teams/{id}/chief-of-staff` — assigns COS → installs COS plugin
 - `POST /api/teams` with `type: "closed"` + `chiefOfStaffId` — creates team + auto-installs COS plugin
+- `ChangeTitle(<title>)` (any title via `PATCH /api/agents/{id}`) — swaps to the title's default role-plugin
+- `ChangeTeam` — joining a team auto-runs `ChangeTitle('member')`; leaving auto-runs `ChangeTitle('autonomous')`
 
-Auto-installations are non-blocking: title assignment succeeds even if plugin install fails.
+Auto-installations are non-blocking: title assignment succeeds even if plugin install fails (per R17.9 the agent is flagged `corePluginMissing: true`).
 
 ### 16. List Plugins
 
