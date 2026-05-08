@@ -119,3 +119,9 @@ Copy this checklist and track your progress:
   - Team Messaging Rules
   - Error Codes
   - Troubleshooting
+- [Canonical Governance Rules (bundled mirror)](references/GOVERNANCE-RULES.md)
+  - R1-R20 — full design rules: titles, teams, transfers, messaging graph,
+    lifecycle, title-plugin binding, mandatory core plugin, marketplace
+    governance, AIO pipeline architecture
+  - §TERMINOLOGY — TITLE / ROLE / PERSONA three-layer model
+  - §0 — canonical-source index and update protocol

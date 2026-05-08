@@ -128,3 +128,6 @@ Copy this checklist and track your progress:
   - Error Handling
   - API Examples
   - Legacy: kanban-sync.sh
+- [Canonical Governance Rules (bundled mirror)](../team-governance/references/GOVERNANCE-RULES.md)
+  - R15 — written orders and GitHub trail (kanban tasks are the audit trail)
+  - R12 — minimum team composition (drives default kanban swimlanes)

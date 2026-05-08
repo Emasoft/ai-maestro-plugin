@@ -112,3 +112,7 @@ TOKEN=$(aid-token.sh \
 - GitHub repository: <https://github.com/agentmessaging/agent-identity>
 - Interoperability: AID shares `~/.agent-messaging/agents/` with AMP if
   both are installed
+- [Canonical Governance Rules (bundled mirror)](../team-governance/references/GOVERNANCE-RULES.md)
+  - §TERMINOLOGY.3 — PERSONA: name + AID + avatar + workdir as the
+    authoritative identity tuple
+  - R16 — governance password is never shared with agents (CRITICAL)

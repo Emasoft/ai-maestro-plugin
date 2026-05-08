@@ -103,3 +103,8 @@ Run `amp-init.sh --auto` if not initialized. Run `amp-fetch.sh` if messages not 
   - Protocol Reference
 - Protocol specification: <https://agentmessaging.org>
 - GitHub: <https://github.com/agentmessaging/protocol>
+- [Canonical Governance Rules (bundled mirror)](../team-governance/references/GOVERNANCE-RULES.md)
+  - R6 — communication graph: title-based directed adjacency, `Y` (allow) /
+    `1` (reply-only) / blank (forbidden) edges, R6.11–R6.14 canonical
+    address format
+  - §TERMINOLOGY — PERSONA addressing, agent-id vs persona-name aliasing

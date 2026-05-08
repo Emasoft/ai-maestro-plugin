@@ -124,3 +124,13 @@ Copy this checklist and track your progress:
   - Decision Guide
   - Troubleshooting
   - Error Messages
+- [Canonical Governance Rules (bundled mirror)](../team-governance/references/GOVERNANCE-RULES.md)
+  - R3 — eight governance titles (MANAGER, COS, ORCHESTRATOR, ARCHITECT,
+    INTEGRATOR, MEMBER, AUTONOMOUS, MAINTAINER)
+  - R10 — agent lifecycle governance (create, hibernate, wake, restart,
+    delete permission matrix)
+  - R11 — title-plugin binding and the fourfold identity rule
+  - R17 — mandatory `ai-maestro-plugin` install (`--scope local` only;
+    user-scope is forbidden); R17.B core-plugin protection
+  - R18 — plugin continuity on `ChangeClient`
+  - R20 — marketplace governance and source-vs-install-target separation
