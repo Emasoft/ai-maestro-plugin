@@ -1,7 +1,7 @@
 ---
 name: debug-hooks
 user-invocable: false
-description: "Debug Claude Code hooks (PreToolUse, PostToolUse, etc.). Use when hooks aren't firing or produce wrong output. Trigger with /debug-hooks.. Loaded by ai-maestro-plugin"
+description: "Debug Claude Code hooks (PreToolUse, PostToolUse, etc.). Use when hooks aren't firing or produce wrong output. Trigger with /debug-hooks. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(cat:*), Bash(jq:*), Bash(ls:*), Bash(chmod:*), Bash(file:*), Bash(find:*), Bash(echo:*), Bash(node:*), Bash(npx:*), Bash(tail:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"

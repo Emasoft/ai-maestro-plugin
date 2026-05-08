@@ -1,7 +1,7 @@
 ---
 name: network-security
 user-invocable: false
-description: "Network security model, Tailscale VPN access, IP filtering, and remote device connectivity. Use when configuring remote access or debugging connectivity.. Loaded by ai-maestro-plugin"
+description: "Network security model, Tailscale VPN access, IP filtering, and remote device connectivity. Use when configuring remote access or debugging connectivity. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(tailscale:*), Bash(curl:*), Bash(ping:*), Bash(lsof:*), Bash(ifconfig:*), Bash(nc:*), Read, Grep"
 metadata:
   author: "Emasoft"

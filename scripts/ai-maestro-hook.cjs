@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// canonical: scripts/ai-maestro-hook.cjs in Emasoft/ai-maestro-plugin (this repo).
+// No upstream sibling exists — this file is the source of truth for the AMP/AID
+// notification glue that ships with ai-maestro-plugin.
 /**
  * AI Maestro Claude Code Hook
  *
@@ -47,9 +50,10 @@ async function readStdin() {
     });
 }
 
-// Hash the working directory to create a unique state file
+// Hash the working directory to create a unique state file.
+// SHA-256 (truncated) — MD5 has no auth role here but flagged by SBOM scanners.
 function hashCwd(cwd) {
-    return crypto.createHash('md5').update(cwd || '').digest('hex').substring(0, 16);
+    return crypto.createHash('sha256').update(cwd || '').digest('hex').substring(0, 16);
 }
 
 // Broadcast status update via WebSocket (non-blocking)
@@ -63,9 +67,11 @@ async function broadcastStatusUpdate(cwd, state) {
         const agent = (agentsData.agents || []).find(a => {
             const agentWd = a.workingDirectory || a.session?.workingDirectory;
             if (!agentWd) return false;
+            // Match exact cwd or strict subdirectory only. A parent dir is NOT
+            // an agent's working dir — matching `agentWd.startsWith(cwd)`
+            // caused cross-session prompt-injection when cwd was $HOME.
             if (agentWd === cwd) return true;
             if (cwd.startsWith(agentWd + '/')) return true;
-            if (agentWd.startsWith(cwd + '/')) return true;
             return false;
         });
 
@@ -153,9 +159,9 @@ async function sendMessageNotification(cwd, messagePrompt) {
         const agent = (agentsData.agents || []).find(a => {
             const agentWd = a.workingDirectory || a.session?.workingDirectory;
             if (!agentWd) return false;
+            // Exact cwd or strict subdirectory only — see broadcastStatusUpdate.
             if (agentWd === cwd) return true;
             if (cwd.startsWith(agentWd + '/')) return true;
-            if (agentWd.startsWith(cwd + '/')) return true;
             return false;
         });
 
@@ -194,21 +200,15 @@ async function checkUnreadMessages(cwd) {
         const agentsData = await agentsResponse.json();
         const agents = agentsData.agents || [];
 
-        // Find agent matching this working directory
-        // Check exact match first, then check if cwd is within the agent's directory or vice versa
+        // Find agent matching this working directory.
+        // Match exact cwd or strict subdirectory only. A parent dir is NOT an
+        // agent's working dir — the dropped `agentWd.startsWith(cwd + '/')`
+        // clause caused cross-session prompt-injection when cwd was $HOME.
         const agent = agents.find(a => {
             const agentWd = a.workingDirectory || a.session?.workingDirectory;
             if (!agentWd) return false;
-
-            // Exact match
             if (agentWd === cwd) return true;
-
-            // cwd is subdirectory of agent's working directory
             if (cwd.startsWith(agentWd + '/')) return true;
-
-            // Agent's working directory is subdirectory of cwd
-            if (agentWd.startsWith(cwd + '/')) return true;
-
             return false;
         });
 
@@ -275,13 +275,17 @@ function getSubagentCount(cwd) {
 async function main() {
     const input = await readStdin();
 
-    // Log all input for debugging
-    debugLog({ event: 'hook_received', input });
-
     const hookEvent = input.hook_event_name || process.env.CLAUDE_HOOK_EVENT;
     const cwd = input.cwd || process.cwd();
     const sessionId = input.session_id;
     const transcriptPath = input.transcript_path;
+    // CC 2.1.132 exposes CLAUDE_CODE_SESSION_ID as the canonical session id —
+    // log it for cross-event correlation in hook-debug.log when input.session_id
+    // is missing (e.g. PreCompact callbacks). Falls back to input.session_id.
+    const ccSessionId = process.env.CLAUDE_CODE_SESSION_ID || sessionId;
+
+    // Log all input for debugging
+    debugLog({ event: 'hook_received', ccSessionId, input });
 
     // Handle different hook events
     switch (hookEvent) {

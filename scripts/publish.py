@@ -1449,11 +1449,40 @@ Examples:
     run(["git", "tag", "-a", f"v{new_version}", "-m", final_notes], cwd=git_root)
     print(f"{GREEN}ok Tagged v{new_version} (annotated, body = release notes){NC}")
 
+    # CC 2.1.118 introduced `claude plugin tag` which mirrors `git tag` AND
+    # nudges marketplace caches to re-fetch. Best-effort: only run for
+    # claude-plugin projects, never let a missing/old CLI fail the pipeline.
+    if _has_claude_plugin(plugin_root):
+        try:
+            subprocess.run(
+                ["claude", "plugin", "tag", f"v{new_version}"],
+                cwd=plugin_root, capture_output=True, text=True, timeout=30, check=False,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+
     # ── Step 13: Push commit + tag to origin ──
     # The pre-push hook verifies its caller via PROCESS ANCESTRY: it walks
     # the PID tree and looks for a `python.*scripts/publish.py` ancestor.
     # Because this process IS scripts/publish.py, the hook will find it and
     # allow the push. No env var needed — process trees can't be spoofed.
+    #
+    # Refuse to push from any branch other than the detected default —
+    # otherwise `git push origin HEAD` would publish a release on a feature
+    # branch and Claude Code's marketplace auto-update would happily pull it.
+    current_branch_proc = subprocess.run(
+        ["git", "symbolic-ref", "--short", "HEAD"],
+        cwd=git_root, capture_output=True, text=True, check=False,
+    )
+    current_branch = current_branch_proc.stdout.strip()
+    if current_branch != default_branch:
+        print(
+            f"{RED}✗ Refusing to push: HEAD is on '{current_branch}', "
+            f"expected default branch '{default_branch}'.{NC}\n"
+            f"  Switch to {default_branch} (or fix detect_default_branch) before publishing.",
+            file=sys.stderr,
+        )
+        return 1
     print(f"\n{BLUE}=== Step 13: Push commit + tag to origin/{default_branch} ==={NC}")
     run(["git", "push", "origin", "HEAD"], cwd=git_root)
     run(["git", "push", "origin", f"v{new_version}"], cwd=git_root)

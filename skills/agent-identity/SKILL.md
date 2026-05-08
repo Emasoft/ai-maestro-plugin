@@ -30,8 +30,8 @@ self-contained and works independently without other protocols.
 
 Copy this checklist and track your progress:
 
-- [x] `curl`, `jq`, `openssl` (3.x with Ed25519), and `base64` on PATH
-- [x] AID scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
+- [ ] `curl`, `jq`, `openssl` (3.x with Ed25519), and `base64` on PATH
+- [ ] AID scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
 - [ ] For registration: an admin JWT token and auth server URL
 - [ ] For token exchange: a prior registration with the auth server
 

@@ -17,29 +17,29 @@ metadata:
 
 Send and receive cryptographically signed messages between AI agents using the Agent Messaging Protocol (AMP). Supports local messaging within an AI Maestro mesh, federation across external providers, file attachments, and Ed25519 signatures. Works with any AI agent that can execute shell commands.
 
-## Communication Rules (R6 v2)
+## Communication Rules (R6 v3, 2026-05-04)
 
-AMP uses a title-based directed graph with HUMAN as a first-class node. Edge types: `Y` (allow), `1` (reply-only — requires `options.inReplyToMessageId` on an inbound H→agent message; one reply per inbound). Subagents are not nodes and **cannot send messages**. Server enforces via `validateMessageRoute()`; forbidden edges return HTTP 403 `title_communication_forbidden`. Full 9-column matrix + rules R6.1–R6.10 in [detailed-guide](reference/detailed-guide.md).
+AMP uses a title-based directed graph with HUMAN as a first-class node. Edge types: `Y` (allow), `1` (reply-only — requires `options.inReplyToMessageId` on an inbound H→agent message; one reply per inbound). Subagents are not nodes and **cannot send messages**. Server enforces via `validateMessageRoute()`; forbidden edges return HTTP 403 `title_communication_forbidden`. Full 9-column matrix + rules R6.1–R6.14 in [detailed-guide](reference/detailed-guide.md).
 
 **Key rules:**
 
-- **MANAGER**: full `Y` — sole bridge between team layer (COS + team roles) and governance layer (MAINTAINER, AUTONOMOUS).
-- **CHIEF-OF-STAFF (COS)**: team gateway — `Y` to MANAGER + peer COS + team roles; `1` to HUMAN; **blank to MAINTAINER/AUTONOMOUS**.
-- **ORCHESTRATOR**: `Y` to COS + ARCHITECT + INTEGRATOR + MEMBER; `1` to HUMAN.
-- **Workers** (ARCHITECT/INTEGRATOR/MEMBER): `Y` to COS + ORCHESTRATOR; `1` to HUMAN.
+- **MANAGER**: `Y` to COS + peer MANAGER + MAINTAINER + AUTONOMOUS + HUMAN; **blank to in-team non-COS titles** (route via COS).
+- **CHIEF-OF-STAFF (COS)**: team gateway — `Y` to MANAGER + peer COS + team titles; `1` to HUMAN; **blank to MAINTAINER/AUTONOMOUS**.
+- **ORCHESTRATOR**: `Y` to COS + ARCHITECT + INTEGRATOR + MEMBER; `1` to HUMAN; **blank to MANAGER**.
+- **Workers** (ARCHITECT/INTEGRATOR/MEMBER): `Y` to COS + ORCHESTRATOR; `1` to HUMAN; **blank to MANAGER**.
 - **MAINTAINER**: `Y` to MANAGER + HUMAN.
 - **AUTONOMOUS**: `Y` to MANAGER + peer AUTONOMOUS + HUMAN.
 - **HUMAN**: full `Y` outbound to every node.
 - Team titles MUST NOT proactively initiate user contact — reply-only via `1` edge. Governance titles (MANAGER/MAINTAINER/AUTONOMOUS) may initiate.
-- Cross-layer routes go **through MANAGER** (not COS).
+- In-team agents reach MANAGER **through COS** (not directly) — MANAGER sees only COS at the team boundary.
 
 ## Prerequisites
 
 Copy this checklist and track your progress:
 
-- [x] AMP scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
-- [x] Agent identity initialized (`amp-init.sh --auto`)
-- [x] CLI tools: `curl`, `jq`, `openssl`, `base64`
+- [ ] AMP scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
+- [ ] Agent identity initialized (`amp-init.sh --auto`)
+- [ ] CLI tools: `curl`, `jq`, `openssl`, `base64`
 
 ## Instructions
 

@@ -592,11 +592,17 @@ def lint_javascript(repo_root: Path, files: list[Path] | None = None) -> bool:  
         return True
 
 
-def lint_shell(repo_root: Path, files: list[Path]) -> bool:  # noqa: ARG001
+def lint_shell(repo_root: Path, files: list[Path]) -> bool:
     """Lint shell scripts with shellcheck (read-only)."""
     print(f"{BLUE}    shellcheck...{NC}")
     all_passed = True
+    repo_root_resolved = repo_root.resolve()
     for f in files:
+        # Defense in depth: refuse to shell out to shellcheck on any path that
+        # is not inside repo_root, even though the current callers only pass
+        # gitignore-filtered rglob results.
+        if not f.resolve().is_relative_to(repo_root_resolved):
+            continue
         try:
             result = subprocess.run(["shellcheck", "-x", str(f)], capture_output=True, text=True, timeout=60)
             if result.returncode != 0:

@@ -81,10 +81,17 @@ Scripts are installed to `~/.local/bin/` by `install-messaging.sh`. They are ava
 
 ## Address Formats
 
+**Canonical wire format (R6.11, 2026-05-06):** `<agent-id>@<host>` or
+`<host>:<agent-id>`. Bare `<agent-id>` resolves to the writer's host. The
+legacy `aimaestro.local` namespace below is preserved for backward
+compatibility but new code SHOULD use the R6.11 forms — see the
+[R6.11–R6.14 row in §Communication Graph](#r6.11–r6.14) and the bundled
+GOVERNANCE-RULES.md (R6 §11).
+
 **Local addresses** (work within your AI Maestro mesh):
 
-- `alice` expands to `alice@<your-org>.aimaestro.local`
-- `bob@acme.aimaestro.local` for explicit local delivery
+- `alice` expands to `alice@<your-org>.aimaestro.local` (legacy local resolution sketch — see R6.11)
+- `bob@acme.aimaestro.local` for explicit local delivery (legacy — prefer `bob@<host>` per R6.11)
 
 **External addresses** (require registration):
 

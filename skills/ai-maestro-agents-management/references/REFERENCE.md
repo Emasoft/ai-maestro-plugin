@@ -402,6 +402,15 @@ aimaestro-agent.sh plugin clean my-api
 aimaestro-agent.sh plugin clean my-api --dry-run
 ```
 
+**Prune orphaned plugin dependencies (Claude Code 2.1.121+).** Removes
+auto-installed plugins that are no longer referenced by any installed
+plugin. Safe to run periodically; the host CLI handles the cleanup, no
+AI Maestro round-trip is needed.
+
+```bash
+claude plugin prune
+```
+
 ### 21. Manage Marketplaces
 
 ```bash
