@@ -24,6 +24,7 @@
     "AID"
   ],
   "cpv": {
-    "max_chars": 6000
+    "max_chars": 6000,
+    "skill_size_severity": "info"
   }
 }
