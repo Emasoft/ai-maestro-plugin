@@ -113,6 +113,29 @@ TOKEN=$(aid-token.sh \
 - Interoperability: AID shares `~/.agent-messaging/agents/` with AMP if
   both are installed
 - [Canonical Governance Rules (bundled mirror)](../team-governance/references/GOVERNANCE-RULES.md)
-  - §TERMINOLOGY.3 — PERSONA: name + AID + avatar + workdir as the
-    authoritative identity tuple
-  - R16 — governance password is never shared with agents (CRITICAL)
+  - §0. Canonical source + copies
+  - §TERMINOLOGY. Three-layer agent model (TITLE / ROLE / PERSONA)
+  - Overview
+  - R1. Teams and Groups
+  - R2. Team Name Rules
+  - R3. Role Hierarchy Rules
+  - R4. Agent Membership Rules
+  - R5. Transfer Rules
+  - R6. Messaging Rules (Communication Graph)
+  - R7. UI Robustness Rules
+  - R8. Data Integrity Rules
+  - R9. Manager Requirement
+  - R10. Agent Lifecycle Governance
+  - R11. Title-Plugin Binding
+  - R12. Minimum Team Composition (CRITICAL)
+  - R13. Role Boundaries (No Overstepping)
+  - R14. Team Resilience (Auto-Recovery)
+  - R15. Written Orders & GitHub Trail
+  - R16. Password Never Shared with Agents (CRITICAL)
+  - R17. Mandatory Core Plugin Installation (CRITICAL)
+  - R18. Plugin Continuity on Client Change (CRITICAL)
+  - R19. MAINTAINER Title
+  - R20. Marketplace Governance
+  - Invariants (Must Never Be Violated)
+  - R21. All-In-One Pipeline Architecture (CRITICAL — IRON)
+  - Role-Based Permission Matrix
