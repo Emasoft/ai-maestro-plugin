@@ -11,7 +11,7 @@ Built at: 2026-03-30T00:00:00Z
 
 See the [main repo][repo] for source files and build instructions.
 
-[repo]: https://github.com/23blocks-OS/ai-maestro-plugins
+[repo]: https://github.com/Emasoft/ai-maestro-plugins
 
 ## Skills
 

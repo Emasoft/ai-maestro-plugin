@@ -3,8 +3,10 @@ name: agent-identity
 user-invocable: false
 description: >-
   Use when managing agent identity — Ed25519 keys, proof of possession,
-  OAuth token exchange. Trigger with /amp-identity, 'create agent identity',
-  'get API token'.. Loaded by ai-maestro-plugin
+  OAuth token exchange. Trigger with 'create agent identity', 'register
+  with auth server', 'get API token', 'check my registrations'. Loaded by
+  ai-maestro-plugin.
+allowed-tools: "Bash(aid-init.sh:*), Bash(aid-register.sh:*), Bash(aid-token.sh:*), Bash(aid-status.sh:*), Bash(curl:*), Bash(jq:*), Bash(openssl:*), Bash(base64:*), Read, Grep, Glob"
 license: MIT
 compatibility: >-
   Requires curl, jq, openssl (3.x for Ed25519), and base64 CLI tools.

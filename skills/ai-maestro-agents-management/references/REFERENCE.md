@@ -307,16 +307,16 @@ aimaestro-agent.sh skill remove my-api custom-skill
 
 **Default role-plugins** (8 predefined, from `Emasoft/ai-maestro-plugins` marketplace — one per governance title per R11):
 
-| Role Plugin | Prefix | Governance Binding |
-|-------------|--------|-------------------|
-| `ai-maestro-assistant-manager-agent` | `amama-` | Auto-installed when MANAGER title assigned |
-| `ai-maestro-chief-of-staff` | `amcos-` | Auto-installed when COS title assigned |
-| `ai-maestro-orchestrator-agent` | `amoa-` | Auto-installed when ORCHESTRATOR title assigned |
-| `ai-maestro-architect-agent` | `amaa-` | Auto-installed when ARCHITECT title assigned |
-| `ai-maestro-integrator-agent` | `amia-` | Auto-installed when INTEGRATOR title assigned |
-| `ai-maestro-programmer-agent` | `ampa-` | Auto-installed when MEMBER title assigned |
-| `ai-maestro-maintainer-agent` | `ammt-` | Auto-installed when MAINTAINER title assigned |
-| `ai-maestro-autonomous-agent` | `amau-` | Auto-installed when AUTONOMOUS title assigned (mandatory — no "no plugin" state per R11.3) |
+| Role Plugin | Governance Binding |
+|-------------|-------------------|
+| `ai-maestro-assistant-manager-agent` | Auto-installed when MANAGER title assigned |
+| `ai-maestro-chief-of-staff` | Auto-installed when COS title assigned |
+| `ai-maestro-orchestrator-agent` | Auto-installed when ORCHESTRATOR title assigned |
+| `ai-maestro-architect-agent` | Auto-installed when ARCHITECT title assigned |
+| `ai-maestro-integrator-agent` | Auto-installed when INTEGRATOR title assigned |
+| `ai-maestro-programmer-agent` | Auto-installed when MEMBER title assigned |
+| `ai-maestro-maintainer-agent` | Auto-installed when MAINTAINER title assigned |
+| `ai-maestro-autonomous-agent` | Auto-installed when AUTONOMOUS title assigned (mandatory — no "no plugin" state per R11.3) |
 
 **Custom role-plugins** — Created by Haephestos from `.agent.toml` profiles. Stored in the local `ai-maestro-local-roles-marketplace` container at `~/agents/role-plugins/marketplace/` (Claude-format) or `~/agents/role-plugins/marketplace-<client>/` for other clients. The container also has an `.abstract/` IR hub feeding all per-client emitters.
 
@@ -705,4 +705,4 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 
 ## References
 
-- [AI Maestro Documentation](https://github.com/23blocks-OS/ai-maestro)
+- [AI Maestro Documentation](https://github.com/Emasoft/ai-maestro)

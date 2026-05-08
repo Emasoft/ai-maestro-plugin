@@ -41,7 +41,7 @@ kanban-sync.py link <team-id> <owner/repo> <project-number>
 | Argument | Description |
 |----------|-------------|
 | `team-id` | AI Maestro team UUID |
-| `owner/repo` | GitHub repo (e.g., `23blocks-OS/ai-maestro`) |
+| `owner/repo` | GitHub repo (e.g., `Emasoft/ai-maestro`) |
 | `project-number` | Project number from the GitHub URL |
 
 **What happens:**

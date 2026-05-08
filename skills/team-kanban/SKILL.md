@@ -76,7 +76,7 @@ Creates task via POST, returns task object with generated ID.
 Lists tasks where `isBlocked == true`.
 
 ```
-/team-kanban link team abc-123 to GitHub project 23blocks-OS/ai-maestro #5
+/team-kanban link team abc-123 to GitHub project Emasoft/ai-maestro #5
 ```
 
 Connects team to GitHub Projects v2.
