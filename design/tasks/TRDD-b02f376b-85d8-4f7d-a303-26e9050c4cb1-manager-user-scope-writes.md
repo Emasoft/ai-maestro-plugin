@@ -3,9 +3,21 @@
 **TRDD ID:** `b02f376b-85d8-4f7d-a303-26e9050c4cb1`
 **Filename:** `design/tasks/TRDD-b02f376b-85d8-4f7d-a303-26e9050c4cb1-manager-user-scope-writes.md`
 **Tracked in:** `Emasoft/ai-maestro-plugins` → `ai-maestro-plugin/` (this repo, `design/tasks/` is git-tracked)
-**Status:** Not started — awaiting AI Maestro core API support
-**Owners:** AI Maestro core API agent (server) + ai-maestro-plugin maintainer (hook)
-**Affects:** `scripts/directory-guard.cjs` (this plugin), `aimaestro-agent.sh` CLI behavior, AI Maestro server
+**Status:** **SUPERSEDED — 2026-05-08.** The fork's `Emasoft/ai-maestro` `governance-rules` branch
+codifies R17 (Mandatory Core Plugin Installation) which **forbids** installing
+`ai-maestro-plugin` at user scope (R17.17) and **requires** every agent (including
+MANAGER) to install all plugins at `--scope local` in `~/agents/<name>/` (R17.2,
+R17.8). The architectural premise that motivated this TRDD — that MANAGER needs
+to write to `~/.claude/{skills,agents,...}/` — is invalidated: those paths are
+explicitly off-limits, and `aimaestro-agent.sh skill/plugin install` always lands
+in the *target agent's* local scope, executed by a Claude Code subprocess with
+that agent's `AGENT_WORK_DIR`. The directory-guard's existing rule #1 already
+permits that. No MANAGER user-scope privilege is needed. The auto-memory rule
+(rule #5, shipped in v2.5.7) remains the only directory-guard change derived
+from this TRDD that survived. See "§13. Supersession rationale" below.
+
+**Owners:** Closed.
+**Affects:** None (no further plugin or server work tracked here).
 
 ---
 
@@ -305,3 +317,63 @@ End-to-end: a CI scenario boots a MANAGER agent, runs all 10 commands from §3, 
 - Governance graph & titles: `ai-maestro-plugin/skills/team-governance/SKILL.md` and its references
 - AMP identity / AID: `ai-maestro-plugin/skills/agent-messaging/SKILL.md`
 - Auto-memory bug fix (rule #5 in §2.1): committed earlier in this session — see `git log -- scripts/directory-guard.cjs` for the patch
+
+---
+
+## 13. Supersession rationale (2026-05-08)
+
+The `Emasoft/ai-maestro` fork at `governance-rules@a17c01a4`
+(`docs/GOVERNANCE-RULES.md`) introduces three rules that together remove the
+need for the MANAGER user-scope feature this TRDD proposed:
+
+| Rule | What it says | Effect on this TRDD |
+|------|--------------|---------------------|
+| **R17.2** | Core plugin install command is `claude plugin install ai-maestro-plugin@ai-maestro-plugins --scope local` executed inside `~/agents/<name>/` | All core-plugin writes land in target's workdir, never `~/.claude/` |
+| **R17.8** | `--scope local` is **mandatory** because each agent has its own local config | Forecloses the user-scope install path entirely |
+| **R17.17** | The plugin **MUST NOT be installed at user scope** — server detects and disables `~/.claude/settings.local.json` enabling on startup | Makes user-scope writes by MANAGER an *anti-goal*, not just unnecessary |
+| **R11.1–R11.5** | Every TITLE has a default role-plugin; `ChangeTitle` swaps via AIO pipeline; AUTONOMOUS has its own plugin (`ai-maestro-autonomous-agent`) | Plugin-swap mechanics live in the AIO pipeline, not in user-scope file writes |
+| **R17.18** | The server **MUST NOT** run periodic enforcement loops; AIO pipelines are the only mutators | The privileged-write surface this TRDD was carving out doesn't exist on the agent side at all |
+
+**How installs actually flow under R17:**
+
+1. The MANAGER's session runs `aimaestro-agent.sh skill install <target> <skill>`
+   (or any `plugin install` / `marketplace add` variant).
+2. The CLI hits the AI Maestro server, which dispatches an AIO pipeline.
+3. The pipeline opens a Claude Code subprocess **inside the target agent's
+   workdir** (`~/agents/<target>/`) with `AGENT_WORK_DIR=~/agents/<target>`.
+4. That subprocess runs `claude plugin install ... --scope local`. Every
+   resulting Write/Edit/Bash tool call fires the directory-guard with the
+   *target's* `AGENT_WORK_DIR`, and the existing rule #1 (allow `$AGENT_WORK_DIR/**`)
+   permits the local-scope install.
+5. The MANAGER's own session never makes a `Write` tool call against another
+   agent's path. Its only visible action is the top-level
+   `bash aimaestro-agent.sh ...` invocation, whose command text contains no
+   write pattern — the bash analyzer passes it through.
+
+The MANAGER therefore never needs additional directory-guard privileges.
+
+**What survived from this TRDD:**
+
+- **Auto-memory rule (rule #5)** — `~/.claude/projects/<encoded(AGENT_WORK_DIR)>/`
+  allowlisted per agent so Claude Code's built-in memory system works. This is
+  shipped in v2.5.7 and remains correct under R17.
+- **Threat model write-up (§5)** — generally useful as documentation of why
+  env-var-based titles are insufficient, even though the specific feature this
+  enabled is no longer wanted.
+
+**What was wrong / assumed wrong:**
+
+- The proposed `~/.claude/{skills,agents,commands,rules,plugins,...}/`
+  allowlist for MANAGER would have *violated* R17.17 if implemented.
+- The 10-command CLI table in §3 listed `--scope user` variants as MANAGER-only
+  acceptance criteria. Under the fork those variants are **forbidden** for
+  the core plugin and **discouraged** for role-plugins. The correct scope is
+  `local` per-agent, which the existing guard already permits.
+- The 4 governance titles named in §3 (MANAGER, AUTONOMOUS, MAINTAINER,
+  CHIEF-OF-STAFF) are a subset of the fork's eight (R3.1: + ORCHESTRATOR,
+  ARCHITECT, INTEGRATOR, MEMBER). Any future title-aware feature must enumerate
+  all eight.
+
+**No follow-up TRDD is needed.** If a future requirement re-opens the
+"privileged user-scope writes" question, it should start by reconciling with
+R17 rather than reusing this TRDD.
