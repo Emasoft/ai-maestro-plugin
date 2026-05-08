@@ -6,7 +6,7 @@ description: >-
   OAuth token exchange. Trigger with 'create agent identity', 'register
   with auth server', 'get API token', 'check my registrations'. Loaded by
   ai-maestro-plugin.
-allowed-tools: "Bash(aid-init.sh:*), Bash(aid-register.sh:*), Bash(aid-token.sh:*), Bash(aid-status.sh:*), Bash(curl:*), Bash(jq:*), Bash(openssl:*), Bash(base64:*), Read, Grep, Glob"
+allowed-tools: "Bash(aid-*:*), Bash(curl:*), Bash(jq:*), Bash(openssl:*), Bash(base64:*), Read, Grep, Glob"
 license: MIT
 compatibility: >-
   Requires curl, jq, openssl (3.x for Ed25519), and base64 CLI tools.

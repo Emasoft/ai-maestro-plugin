@@ -2,7 +2,7 @@
 name: agent-messaging
 user-invocable: false
 description: "Use when sending or receiving inter-agent messages via AMP. Trigger with /amp-send, /amp-inbox, /amp-read. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(amp-init.sh:*), Bash(amp-identity.sh:*), Bash(amp-inbox.sh:*), Bash(amp-read.sh:*), Bash(amp-send.sh:*), Bash(amp-reply.sh:*), Bash(amp-delete.sh:*), Bash(amp-download.sh:*), Bash(amp-fetch.sh:*), Bash(amp-register.sh:*), Bash(curl:*), Bash(jq:*), Bash(openssl:*), Bash(base64:*), Read, Grep, Glob"
+allowed-tools: "Bash(amp-*:*), Bash(curl:*), Bash(jq:*), Bash(openssl:*), Bash(base64:*), Read, Grep, Glob"
 license: Apache-2.0
 compatibility: Requires curl, jq, openssl, and base64 CLI tools. macOS and Linux supported.
 metadata:
