@@ -24,8 +24,6 @@
     "AID"
   ],
   "cpv": {
-    "allow_orchestrator_traversal": [
-      "team-governance"
-    ]
+    "max_chars": 6000
   }
 }
