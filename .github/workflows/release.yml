@@ -5,49 +5,96 @@ on:
     tags:
       - 'v*.*.*'
 
-# The GitHub release itself is created by scripts/publish.py using the
-# git-cliff release notes, BEFORE the tag is pushed. This workflow runs
-# AFTER the tag push as a post-hoc safety gate — it re-runs the strict
-# CPV plugin validator and fails the workflow if the tagged state does
-# not pass. A failed gate does NOT delete the already-created release;
-# you must roll back manually.
-#
-# Rationale: publish.py already runs every validator locally before it
-# pushes anything, so this gate is redundant on the happy path. Its
-# purpose is to catch regressions where someone bypasses publish.py and
-# pushes a tag directly — CI will flag the broken release.
-
 jobs:
-  validate-tag:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v4
 
-      - name: CPV strict validation gate (post-hoc safety net)
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run full plugin validation (remote CPV, --strict)
+        # Fetches CPV from GitHub so downstream plugins do not need to
+        # vendor a local validator script. Matches publish.py's local
+        # gate and the CI validate job. --strict blocks on CRITICAL /
+        # MAJOR / MINOR / NIT (exit codes 1-4); WARNING (exit 5+) is
+        # advisory only. Issue #11: removed the local validator
+        # invocation entirely; always go through the remote uvx entry.
         run: |
           set +e
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation \
-            --with pyyaml \
-            cpv-remote-validate plugin . --strict
-          EXIT_CODE=$?
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation               --with pyyaml               cpv-remote-validate plugin . --strict               > validation-report.txt 2>&1
+          exit_code=$?
           set -e
-          # Strict mode: ANY non-zero exit fails the gate. If the tag was
-          # pushed by publish.py, this should always pass because publish.py
-          # ran the same validator locally first. A failure here means
-          # someone bypassed publish.py — investigate immediately.
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "::error::CPV strict validation failed for pushed tag $GITHUB_REF_NAME (exit $EXIT_CODE)"
-            echo "::error::This tag was likely pushed without going through scripts/publish.py"
-            echo "::error::The GitHub release (if any) should be rolled back by the release owner"
-            exit $EXIT_CODE
+          cat validation-report.txt
+          if [ $exit_code -ge 1 ] && [ $exit_code -le 4 ]; then
+            echo "::error::Validation failed with exit code $exit_code (CRITICAL/MAJOR/MINOR/NIT found)"
+            exit $exit_code
+          fi
+
+      - name: Run tests
+        run: |
+          if [ -d "tests" ]; then
+            uv run pytest tests/ -v
+          fi
+
+      - name: Lint Python scripts
+        run: uv run ruff check scripts/
+
+      - name: Type check
+        run: uv run mypy scripts/ --ignore-missing-imports
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD)
+          fi
+          # Prefer the project's CHANGELOG.md (curated, conventional-commits
+          # body) over auto-generated git log if it exists. Issue: publish.py's
+          # Gate-13 (`gh release create`) is fired locally just before the tag
+          # is pushed; that race wins, this job sees the release already
+          # exists, and `softprops/action-gh-release@v3` 422s. Falling back to
+          # CHANGELOG.md content lets us either fill in the body when the
+          # release was just-created (still empty) or skip cleanly when the
+          # body is already populated.
+          if [ -f "CHANGELOG.md" ]; then
+            cp CHANGELOG.md changelog.txt
+          else
+            echo "$CHANGELOG" > changelog.txt
+          fi
+          echo "changelog_file=changelog.txt" >> $GITHUB_OUTPUT
+
+      - name: Create or update GitHub Release (idempotent)
+        # Idempotent shell flow — replaces the `softprops/action-gh-release`
+        # action which 422s when publish.py's Gate-13 already created the
+        # release locally. Pattern: `gh release view` to detect existence,
+        # then `gh release edit` (with --notes-file fallback to existing body)
+        # OR `gh release create` (when not pre-existing). Both branches
+        # upload the validation-report artifact.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — editing in place"
+            gh release edit "$TAG"               --notes-file changelog.txt               --verify-tag
+            gh release upload "$TAG" validation-report.txt --clobber
+          else
+            echo "Release $TAG does not exist yet — creating"
+            gh release create "$TAG" validation-report.txt               --title "$TAG"               --notes-file changelog.txt               --verify-tag
           fi

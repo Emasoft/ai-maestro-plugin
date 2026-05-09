@@ -32,3 +32,7 @@ llm_externalizer_output/
 # Agent report artifacts (often contain private paths / excerpts — never commit)
 /reports/
 /reports_dev/
+
+# Added by CPV standardize
+*_dev/
+.coverage
