@@ -887,8 +887,16 @@ def _detect_layout(plugin_root: Path) -> tuple[str, dict]:
             content = notify_wf.read_text(encoding="utf-8")
         except OSError:
             content = ""
-        m_owner = re.search(r"^\\s*MARKETPLACE_OWNER:\\s*['\\\"]?([^'\\\"\\s]+)['\\\"]?\\s*$", content, re.MULTILINE)
-        m_repo = re.search(r"^\\s*MARKETPLACE_REPO:\\s*['\\\"]?([^'\\\"\\s]+)['\\\"]?\\s*$", content, re.MULTILINE)
+        # The canonical CPV 2.80.1 template ships these regexes double-escaped
+        # (`\\s*`, `[\\"...]`) — that compiles to "literal backslash + s",
+        # which can NEVER match a real YAML file. As a result every Layout-A
+        # plugin's stage-5 marketplace-registration check fails with
+        # "BLOCKED: notify-marketplace.yml has no MARKETPLACE_OWNER /
+        # MARKETPLACE_REPO" even when the YAML is correct. Using single-
+        # backslash class shortcuts (`\s`, `\"`) makes the regex actually
+        # match the YAML envelope. Upstream issue to be filed.
+        m_owner = re.search(r"^\s*MARKETPLACE_OWNER:\s*['\"]?([^'\"\s]+)['\"]?\s*$", content, re.MULTILINE)
+        m_repo = re.search(r"^\s*MARKETPLACE_REPO:\s*['\"]?([^'\"\s]+)['\"]?\s*$", content, re.MULTILINE)
         return "A", {
             "notify_workflow": notify_wf,
             "mkt_owner": m_owner.group(1) if m_owner else None,
