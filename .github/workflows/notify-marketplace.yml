@@ -16,7 +16,7 @@ on:
 
 env:
   MARKETPLACE_OWNER: 'Emasoft'
-  MARKETPLACE_REPO: 'my-plugins-marketplace'
+  MARKETPLACE_REPO: 'ai-maestro-plugins'
 
 jobs:
   notify:
