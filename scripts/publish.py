@@ -449,7 +449,7 @@ def do_bump(root: Path, new_ver: str, dry_run: bool = False) -> bool:
 
 def install_hook(root: Path) -> int:
     """Copy git-hooks/pre-push to .git/hooks/pre-push and set core.hooksPath."""
-    cprint(f"\\n{BOLD}Installing git hooks...{NC}")
+    cprint(f"\n{BOLD}Installing git hooks...{NC}")
     source = root / "git-hooks" / "pre-push"
     if not source.is_file():
         cprint(f"  {RED}git-hooks/pre-push not found{NC}")
@@ -510,7 +510,7 @@ def install_branch_rules(root: Path) -> int:
     hook alone is bypassable with `git push --no-verify`, but a ruleset is
     enforced by GitHub itself.
     """
-    cprint(f"\\n{BOLD}Installing branch-protection ruleset...{NC}")
+    cprint(f"\n{BOLD}Installing branch-protection ruleset...{NC}")
     slug = _get_origin_slug(root)
     if slug is None:
         cprint(f"  {RED}Could not read origin remote URL — skipping.{NC}")
@@ -915,7 +915,7 @@ def _gh_secret_exists(plugin_root: Path, secret_name: str) -> bool:
     if r.returncode != 0:
         return False
     for line in r.stdout.splitlines():
-        if line.split("\\t", 1)[0].strip() == secret_name:
+        if line.split("\t", 1)[0].strip() == secret_name:
             return True
     return False
 
@@ -926,7 +926,7 @@ def _current_repo_slug(plugin_root: Path) -> str | None:
                        capture_output=True, text=True, timeout=30)
     if r.returncode != 0:
         return None
-    m = re.search(r"[:/]([^/:]+)/([^/]+?)(?:\\.git)?$", r.stdout.strip())
+    m = re.search(r"[:/]([^/:]+)/([^/]+?)(?:\.git)?$", r.stdout.strip())
     return f"{m.group(1)}/{m.group(2)}" if m else None
 
 
@@ -1062,7 +1062,7 @@ def stage_marketplace_registration(root: Path) -> None:
         slug = _current_repo_slug(root)
         if not _plugin_in_remote_marketplace(mkt_json, plugin_name, slug):
             cprint(f"  {RED}BLOCKED: plugin '{plugin_name}' not registered in {mkt_owner}/{mkt_repo} marketplace.json.{NC}")
-            cprint(f"  {RED}  Add an entry: {{\\\"name\\\": \\\"{plugin_name}\\\", \\\"source\\\": {{\\\"source\\\": \\\"github\\\", \\\"repo\\\": \\\"{slug}\\\"}}}}{NC}")
+            cprint(f"  {RED}  Add an entry: {{\"name\": \"{plugin_name}\", \"source\": {{\"source\": \"github\", \"repo\": \"{slug}\"}}}}{NC}")
             sys.exit(1)
         cprint(f"  {GREEN}Plugin registered in remote marketplace.json{NC}")
         if not _remote_has_receiver_workflow(mkt_owner, mkt_repo):
@@ -1104,7 +1104,7 @@ def stage_marketplace_registration(root: Path) -> None:
             sys.exit(1)
         if not any(isinstance(e, dict) and e.get("name") == plugin_name for e in entries):
             cprint(f"  {RED}BLOCKED: plugin '{plugin_name}' not registered in {mp_path}.{NC}")
-            cprint(f"  {RED}  Add: {{\\\"name\\\": \\\"{plugin_name}\\\", \\\"source\\\": \\\"./plugins/{plugin_name}\\\"}}{NC}")
+            cprint(f"  {RED}  Add: {{\"name\": \"{plugin_name}\", \"source\": \"./plugins/{plugin_name}\"}}{NC}")
             sys.exit(1)
         cprint(f"  {GREEN}Plugin '{plugin_name}' registered in parent marketplace.json{NC}")
         cprint(f"  {GREEN}Layout B marketplace registration verified.{NC}")
