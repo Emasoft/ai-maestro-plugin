@@ -1003,12 +1003,23 @@ def _plugin_in_remote_marketplace(mkt_json: dict, plugin_name: str, expected_rep
         if entry.get("name") != plugin_name:
             continue
         source = entry.get("source")
-        if isinstance(source, dict):
-            stype = source.get("source") or source.get("type")
-            if stype != "github":
-                continue
+        if not isinstance(source, dict):
+            continue
+        stype = source.get("source") or source.get("type")
+        if stype == "github":
             if expected_repo is None or source.get("repo") == expected_repo:
                 return True
+        elif stype in ("url", "git"):
+            # marketplace.json may register the plugin via a url/git source
+            # ({"source": "url", "url": ".../OWNER/REPO.git"}) rather than the
+            # github+repo form — match by OWNER/REPO parsed from the URL.
+            url = source.get("url")
+            if expected_repo is None:
+                return True
+            if isinstance(url, str):
+                norm = url.removesuffix(".git").rstrip("/")
+                if norm.endswith("/" + expected_repo) or norm.endswith(":" + expected_repo):
+                    return True
     return False
 
 
