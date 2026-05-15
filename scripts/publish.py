@@ -1399,7 +1399,7 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
             cprint(f"  Would skip tag (already exists locally): {tag}")
         else:
             cprint(f"  Would tag: {tag}")
-        cprint("  Would push: origin HEAD --tags")
+        cprint(f"  Would push: origin HEAD {tag}")
         return
 
     if head_subject == expected_subject and tree_clean:
@@ -1457,9 +1457,14 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
     # leave the repo in a half-published state. git_with_retry tolerates
     # up to GIT_MAX_ATTEMPTS × GIT_BACKOFF_SEC of transient errors and
     # returns immediately on a permanent error (4xx, non-fast-forward).
-    cprint(f"  {BLUE}$ git push origin HEAD --tags{NC}")
+    # Push only HEAD + this release's tag — never `--tags`. `git push
+    # --tags` pushes EVERY local tag, and any pre-existing local tag that
+    # diverges from its remote counterpart is rejected, which fails the
+    # whole push (non-zero exit -> pipeline crash) even though HEAD and
+    # the new release tag were accepted.
+    cprint(f"  {BLUE}$ git push origin HEAD {tag}{NC}")
     git_with_retry(
-        ["git", "push", "origin", "HEAD", "--tags"],
+        ["git", "push", "origin", "HEAD", tag],
         cwd=str(root), capture_output=False,
     )
     cprint(f"  {GREEN}Pushed {tag}.{NC}")
