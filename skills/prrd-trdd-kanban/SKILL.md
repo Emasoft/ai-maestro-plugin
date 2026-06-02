@@ -246,6 +246,19 @@ prrd-edit.py propose silver "new wording" --target 70 \
             --proposed-by member-frontend --routed-via cos-website
 ```
 
+## MANAGER approval discipline
+
+**MANAGER approval is the DEFAULT for every significant step.** The
+[references/exempt-operations.md](references/exempt-operations.md)
+document lists the EXEMPT categories (mechanical transitions, TRDD
+intake/triage, read-only ops, within-team coordination, runtime
+evidence). Anything NOT on the exempt list is non-exempt — the agent
+MUST request MANAGER approval (via COS for team-internal agents) before
+performing the transition. Conservative default: when unsure, treat
+as non-exempt. See [exempt-operations.md](references/exempt-operations.md)
+for the canonical list, approval-request AMP template, and the
+`## Approval log` body-section format.
+
 ## Resources
 
 - [references/prrd-design-rules.md](references/prrd-design-rules.md) —
@@ -257,6 +270,10 @@ prrd-edit.py propose silver "new wording" --target 70 \
   who can move what from where to where, AMP broadcasts per transition
 - [references/trdd-frontmatter-schema.md](references/trdd-frontmatter-schema.md) —
   field-by-field frontmatter spec with types, defaults, validation
+- [references/exempt-operations.md](references/exempt-operations.md) —
+  MANAGER-approval default + EXEMPT category list (mechanical
+  transitions, intake, read-only, within-team coordination, runtime
+  evidence)
 - `${CLAUDE_PLUGIN_ROOT}/scripts/prrd-trdd/` — the five canonical
   scripts (`get-prrd.py`, `prrd-edit.py`, `findprrd.py`, `findtrdd.py`,
   `kanban.py`) plus the shared library (`prrd_lib.py`)

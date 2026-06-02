@@ -384,7 +384,7 @@ land directly on the spec file.
 ### Transitioning a TRDD between columns
 
 The full transition matrix lives in
-[references/column-transitions.md](references/column-transitions.md).
+[column-transitions.md](column-transitions.md).
 Quick reference:
 
 | Transition | Who can trigger | Side effects |
