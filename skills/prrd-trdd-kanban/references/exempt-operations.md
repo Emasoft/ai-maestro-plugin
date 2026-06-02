@@ -102,17 +102,33 @@ NON-EXEMPT and requires MANAGER approval.
 | Run janitor credential-window audit | janitor (no main agent — applies as-is) | Stale token detection |
 | Run janitor fork-PR cache audit | janitor (no main agent — applies as-is) | Cache poisoning detection |
 
-**The ratified baseline itself** is being negotiated between the
-janitor and maintainer plugins via:
+**The ratified baseline (RATIFIED 2026-06-02)** is the `baseline-*`
+pair, agreed byte-identical by both plugins via:
 
 - janitor: <https://github.com/Emasoft/ai-maestro-janitor/issues/14>
 - maintainer: <https://github.com/Emasoft/ai-maestro-maintainer-agent/issues/7>
 
-Until ratification converges, the exempt scope is each plugin's
-*current* default baseline (janitor's `janitor-baseline` ruleset;
-maintainer's `default-branch-no-force-no-delete` +
-`default-branch-required-checks` split). Once ratified, this section
-will pin the merged baseline name.
+The two ratified rulesets (both `target: branch`, `enforcement: active`,
+condition `ref_name.include: ["~DEFAULT_BRANCH"]`):
+
+- **`baseline-history-protect`** — `bypass_actors: []` (nobody, incl.
+  admin). Rules: `deletion`, `non_fast_forward`,
+  `required_linear_history`.
+- **`baseline-pr-and-checks`** — `bypass_actors:
+  [{actor_id:5, actor_type:RepositoryRole, bypass_mode:always}]`
+  (admin direct-push for `publish.py`; outside PRs still gated). Rules:
+  `pull_request` (`required_approving_review_count:1`,
+  `dismiss_stale_reviews_on_push:true`,
+  `require_code_owner_review:false`,
+  `require_last_push_approval:false`,
+  `required_review_thread_resolution:true`) and
+  `required_status_checks` (`strict_required_status_checks_policy:true`,
+  CI job ids auto-detected at apply time).
+
+Applying this `baseline-*` pair as-is is EXEMPT. The legacy names
+(`janitor-baseline`, `default-branch-no-force-no-delete`,
+`default-branch-required-checks`) are superseded — re-applying the
+ratified pair deletes the orphaned legacy rulesets by name.
 
 **Non-exempt for this category** (require MANAGER approval):
 
