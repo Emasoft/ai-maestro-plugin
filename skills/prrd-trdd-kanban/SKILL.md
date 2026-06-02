@@ -274,7 +274,9 @@ _Posted by the Claude developing **<plugin-or-role>** (via the shared @owner gh 
 
 Applies to issues, issue comments, PRs, PR comments, PR reviews,
 discussions, and release notes. Commit messages SHOULD carry an
-`Agent: <role>` trailer. This is golden rule `G1.1` in each project's
+`Agent: <plugin-slug>` trailer (the plugin's stable package slug,
+e.g. `Agent: ai-maestro-maintainer-agent` — greppable ecosystem-wide
+and rename-surviving). This is golden rule `G1.1` in each project's
 PRRD and ecosystem governance rule R22.
 
 ## Resources
