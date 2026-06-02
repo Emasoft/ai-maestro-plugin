@@ -23,6 +23,7 @@ from typing import Any, NoReturn
 
 # ───────────────── path resolution ─────────────────
 
+
 def find_project_root(start: Path | None = None) -> Path:
     """Walk up from `start` (cwd default) until we find one of:
     - design/requirements/PRRD.md (canonical PRRD home)
@@ -61,9 +62,9 @@ PRRD_RULE_RE = re.compile(
 class PRRDRule:
     number: int
     version: int
-    kind: str               # 'G' or 'S'
+    kind: str  # 'G' or 'S'
     text: str
-    line_number: int = 0    # in the PRRD file
+    line_number: int = 0  # in the PRRD file
 
     def cite(self) -> str:
         return f"PRRD {self.kind}{self.number}.{self.version}"
@@ -244,6 +245,7 @@ def list_trdds(root: Path | None = None) -> list[TRDDDoc]:
 
 # ───────────────── frontmatter parsing ─────────────────
 
+
 def _parse_frontmatter(lines: list[str]) -> tuple[dict[str, Any], int]:
     """Parse YAML frontmatter delimited by `---` lines.
 
@@ -269,7 +271,7 @@ def _parse_frontmatter(lines: list[str]) -> tuple[dict[str, Any], int]:
             break
     else:
         return {}, 0
-    for line in lines[1:end - 1]:
+    for line in lines[1 : end - 1]:
         # skip blanks and comment-only lines
         if not line.strip() or line.lstrip().startswith("#"):
             continue
@@ -305,7 +307,9 @@ def _coerce_yaml_value(val: str) -> Any:
             items.append(_coerce_yaml_value(raw))
         return items
     # quoted string
-    if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+    if (s.startswith('"') and s.endswith('"')) or (
+        s.startswith("'") and s.endswith("'")
+    ):
         return s[1:-1]
     # int?
     if re.fullmatch(r"-?\d+", s):
@@ -341,6 +345,7 @@ def _split_flow_items(inner: str) -> list[str]:
 
 
 # ───────────────── PRRD writing ─────────────────
+
 
 def write_prrd(doc: PRRDDoc, path: Path | None = None) -> None:
     """Re-emit the PRRD file with current rules and frontmatter.
@@ -383,9 +388,9 @@ def _render_prrd_preserving(doc: PRRDDoc) -> str:
     s_lines = [_render_rule_line(r) for r in silver]
     # Replace silver first to avoid index shifts when golden is earlier
     if s_start is not None and s_end is not None:
-        lines = lines[:s_start + 1] + [""] + s_lines + [""] + lines[s_end:]
+        lines = lines[: s_start + 1] + [""] + s_lines + [""] + lines[s_end:]
     if g_start is not None and g_end is not None:
-        lines = lines[:g_start + 1] + [""] + g_lines + [""] + lines[g_end:]
+        lines = lines[: g_start + 1] + [""] + g_lines + [""] + lines[g_end:]
     return "\n".join(lines) + ("\n" if lines and not lines[-1].endswith("\n") else "")
 
 
@@ -419,7 +424,7 @@ def _sync_frontmatter_dict(lines: list[str], fm: dict[str, Any]) -> list[str]:
             new_fm_lines.append(f"{k}: {_render_yaml_value(v)}")
             written.add(k)
     new_fm_lines.append("---")
-    return new_fm_lines + lines[end + 1:]
+    return new_fm_lines + lines[end + 1 :]
 
 
 def _render_yaml_value(v: Any) -> str:
@@ -433,13 +438,16 @@ def _render_yaml_value(v: Any) -> str:
         return "[" + ", ".join(_render_yaml_value(x) for x in v) + "]"
     s = str(v)
     # Quote only if the string contains characters that would confuse the parser
-    if any(ch in s for ch in (":", "#")) and not (s.startswith('"') or s.startswith("'")):
+    if any(ch in s for ch in (":", "#")) and not (
+        s.startswith('"') or s.startswith("'")
+    ):
         return f'"{s}"'
     return s
 
 
 def _render_prrd_default(doc: PRRDDoc) -> str:
     from datetime import datetime
+
     now_iso = datetime.now().astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
     now_iso = now_iso[:-2] + now_iso[-2:]  # keep ±HHMM compact
     fm = {
@@ -478,7 +486,9 @@ def _render_rule_line(r: PRRDRule) -> str:
     return f"- **{r.kind}{r.number}.{r.version}** — {r.text}"
 
 
-def _find_section_bounds(lines: list[str], section_marker: str) -> tuple[int | None, int | None]:
+def _find_section_bounds(
+    lines: list[str], section_marker: str
+) -> tuple[int | None, int | None]:
     """Find the index of the section header line containing `section_marker`,
     plus the index of the NEXT `## ` header (or EOF). Returns (start, end)
     where lines[start] is the header and lines[end] is the next header (or len).
@@ -496,9 +506,8 @@ def _find_section_bounds(lines: list[str], section_marker: str) -> tuple[int | N
     return start, len(lines)
 
 
-
-
 # ───────────────── filter / query helpers ─────────────────
+
 
 def matches_where(trdd: TRDDDoc, where: str) -> bool:
     """SQL-ish where clause: 'column=blocked AND priority<3'.
@@ -567,6 +576,7 @@ def _eval_clause(trdd: TRDDDoc, clause: str) -> bool:
 
 # ───────────────── authority check ─────────────────
 
+
 def caller_is_manager() -> bool:
     """Cheap, conservative check. Returns True if AID_AUTH resolves to
     a MANAGER title via the AI Maestro server, OR if --user override is
@@ -581,15 +591,22 @@ def caller_is_manager() -> bool:
     if not aid:
         return False
     import subprocess
+
     try:
         r = subprocess.run(
             [
-                "curl", "-fsS",
-                "-H", f"Authorization: Bearer {aid}",
-                "--max-time", "3",
+                "curl",
+                "-fsS",
+                "-H",
+                f"Authorization: Bearer {aid}",
+                "--max-time",
+                "3",
                 f"{api}/api/governance",
             ],
-            capture_output=True, text=True, timeout=5, check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
         )
         if r.returncode != 0:
             return False
@@ -604,6 +621,7 @@ def caller_is_manager() -> bool:
 
 
 # ───────────────── error helpers ─────────────────
+
 
 def die(msg: str, code: int = 1) -> NoReturn:
     print(f"error: {msg}", file=sys.stderr)

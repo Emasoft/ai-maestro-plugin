@@ -59,9 +59,9 @@ def cmd_cited_in(target: str) -> int:
             for line in f.read_text(encoding="utf-8").splitlines():
                 for m in rule_ref_re.finditer(line):
                     cited.add(int(m.group(1)))
-                m = frontmatter_re.match(line.strip())
-                if m:
-                    inner = m.group(1)
+                fm = frontmatter_re.match(line.strip())
+                if fm:
+                    inner = fm.group(1)
                     for part in inner.split(","):
                         part = part.strip().strip("'\"")
                         if not part:
@@ -73,7 +73,9 @@ def cmd_cited_in(target: str) -> int:
                             pass
         except OSError:
             continue
-    for r in sorted([r for r in doc.rules if r.number in cited], key=lambda r: r.number):
+    for r in sorted(
+        [r for r in doc.rules if r.number in cited], key=lambda r: r.number
+    ):
         print(f"{r.cite()}\t{r.text}")
     return 0
 
@@ -93,9 +95,9 @@ def cmd_unused() -> int:
                 for line in f.read_text(encoding="utf-8").splitlines():
                     for m in rule_ref_re.finditer(line):
                         cited.add(int(m.group(1)))
-                    m = frontmatter_re.match(line.strip())
-                    if m:
-                        inner = m.group(1)
+                    fm = frontmatter_re.match(line.strip())
+                    if fm:
+                        inner = fm.group(1)
                         for part in inner.split(","):
                             part = part.strip().strip("'\"")
                             ref = part.split(".")[0] if part else ""
@@ -105,7 +107,9 @@ def cmd_unused() -> int:
                                 pass
             except OSError:
                 continue
-    for r in sorted([r for r in doc.rules if r.number not in cited], key=lambda r: r.number):
+    for r in sorted(
+        [r for r in doc.rules if r.number not in cited], key=lambda r: r.number
+    ):
         print(f"{r.cite()}\t{r.text}")
     return 0
 
@@ -126,17 +130,27 @@ def cmd_count() -> int:
         expected = set(range(min(nums), max(nums) + 1))
         gaps = sorted(expected - set(nums))
         if gaps:
-            print(f"Retired:       {len(gaps)}  ({gaps[:10]}{'...' if len(gaps) > 10 else ''})")
+            print(
+                f"Retired:       {len(gaps)}  ({gaps[:10]}{'...' if len(gaps) > 10 else ''})"
+            )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--kind", choices=["golden", "silver", "G", "S", "g", "s"], help="list by kind")
+    g.add_argument(
+        "--kind", choices=["golden", "silver", "G", "S", "g", "s"], help="list by kind"
+    )
     g.add_argument("--grep", metavar="REGEX", help="search rule text")
-    g.add_argument("--cited-in", metavar="PATH", help="list rules cited by any TRDD in path")
-    g.add_argument("--unused", action="store_true", help="list rules not cited anywhere")
+    g.add_argument(
+        "--cited-in", metavar="PATH", help="list rules cited by any TRDD in path"
+    )
+    g.add_argument(
+        "--unused", action="store_true", help="list rules not cited anywhere"
+    )
     g.add_argument("--count", action="store_true", help="summary stats")
     args = ap.parse_args(argv)
 

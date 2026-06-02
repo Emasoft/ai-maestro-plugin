@@ -32,27 +32,55 @@ import prrd_lib as plib  # noqa: E402
 
 
 KNOWN_COLUMNS = {
-    "backburner", "todo", "design", "dispatch", "dev", "testing",
-    "ai_review", "human_review", "complete", "publish", "published",
-    "deploy", "live", "live_auditing", "blocked", "failed", "superseded",
+    "backburner",
+    "todo",
+    "design",
+    "dispatch",
+    "dev",
+    "testing",
+    "ai_review",
+    "human_review",
+    "complete",
+    "publish",
+    "published",
+    "deploy",
+    "live",
+    "live_auditing",
+    "blocked",
+    "failed",
+    "superseded",
 }
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("uid", nargs="?", help="partial UUID (8+ hex chars) or 'TRDD-<prefix>'")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "uid", nargs="?", help="partial UUID (8+ hex chars) or 'TRDD-<prefix>'"
+    )
     ap.add_argument("--column", help="filter by column")
     ap.add_argument("--assignee", help="filter by assignee session name")
     ap.add_argument("--blocked-by", metavar="REF", help="all TRDDs blocked by this ref")
-    ap.add_argument("--blocks", metavar="REF", help="inverse — all TRDDs blocking this ref")
-    ap.add_argument("--relevant-rule", metavar="N", type=int, help="all TRDDs citing PRRD rule N")
+    ap.add_argument(
+        "--blocks", metavar="REF", help="inverse — all TRDDs blocking this ref"
+    )
+    ap.add_argument(
+        "--relevant-rule", metavar="N", type=int, help="all TRDDs citing PRRD rule N"
+    )
     ap.add_argument("--grep", metavar="REGEX", help="regex search over title + body")
     ap.add_argument("--where", help="SQL-ish filter: 'column=dev AND priority<3'")
     ap.add_argument("--task-type", help="filter by task-type")
     ap.add_argument("--release-via", choices=["publish", "deploy", "none"])
-    ap.add_argument("--validate", metavar="PATH", help="validate a single TRDD's frontmatter")
+    ap.add_argument(
+        "--validate", metavar="PATH", help="validate a single TRDD's frontmatter"
+    )
     ap.add_argument("--format", choices=["paths", "json", "table"], default="paths")
-    ap.add_argument("--sort", choices=["updated", "created", "priority", "column"], default="updated")
+    ap.add_argument(
+        "--sort",
+        choices=["updated", "created", "priority", "column"],
+        default="updated",
+    )
     args = ap.parse_args(argv)
 
     if args.validate:
@@ -62,14 +90,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.uid:
         prefix = args.uid.lower().removeprefix("trdd-").removeprefix("#")
-        docs = [d for d in docs if d.uid8.startswith(prefix) or d.uid.lower().startswith(prefix)]
+        docs = [
+            d
+            for d in docs
+            if d.uid8.startswith(prefix) or d.uid.lower().startswith(prefix)
+        ]
     if args.column:
         docs = [d for d in docs if d.column == args.column]
     if args.assignee:
         docs = [d for d in docs if d.assignee == args.assignee]
     if args.blocked_by:
         ref = _normalize_trdd_ref(args.blocked_by)
-        docs = [d for d in docs if any(ref in b or b.endswith(ref) for b in d.blocked_by)]
+        docs = [
+            d for d in docs if any(ref in b or b.endswith(ref) for b in d.blocked_by)
+        ]
     if args.blocks:
         ref = _normalize_trdd_ref(args.blocks)
         # All TRDDs whose ref appears in some other TRDD's blocked-by — but we
@@ -147,15 +181,17 @@ def _emit(docs: list[plib.TRDDDoc], fmt: str) -> None:
     if fmt == "json":
         out = []
         for d in docs:
-            out.append({
-                "trdd-id": d.uid,
-                "uid8": d.uid8,
-                "title": d.title,
-                "column": d.column,
-                "assignee": d.assignee,
-                "priority": d.priority,
-                "path": str(d.path) if d.path else None,
-            })
+            out.append(
+                {
+                    "trdd-id": d.uid,
+                    "uid8": d.uid8,
+                    "title": d.title,
+                    "column": d.column,
+                    "assignee": d.assignee,
+                    "priority": d.priority,
+                    "path": str(d.path) if d.path else None,
+                }
+            )
         print(json.dumps(out, indent=2))
         return
     if fmt == "table":
@@ -164,7 +200,9 @@ def _emit(docs: list[plib.TRDDDoc], fmt: str) -> None:
             return
         # Compact table
         col_uid, col_col, col_pri, col_ass, col_title = 10, 14, 4, 18, 60
-        print(f"{'UID':<{col_uid}} {'COLUMN':<{col_col}} {'PRI':<{col_pri}} {'ASSIGNEE':<{col_ass}} TITLE")
+        print(
+            f"{'UID':<{col_uid}} {'COLUMN':<{col_col}} {'PRI':<{col_pri}} {'ASSIGNEE':<{col_ass}} TITLE"
+        )
         print("-" * (col_uid + col_col + col_pri + col_ass + col_title + 4))
         for d in docs:
             uid = d.uid8[:col_uid]
@@ -172,7 +210,9 @@ def _emit(docs: list[plib.TRDDDoc], fmt: str) -> None:
             pri = str(d.priority)[:col_pri]
             ass = (d.assignee or "-")[:col_ass]
             title = d.title[:col_title]
-            print(f"{uid:<{col_uid}} {col:<{col_col}} {pri:<{col_pri}} {ass:<{col_ass}} {title}")
+            print(
+                f"{uid:<{col_uid}} {col:<{col_col}} {pri:<{col_pri}} {ass:<{col_ass}} {title}"
+            )
 
 
 def cmd_validate(path_str: str) -> int:

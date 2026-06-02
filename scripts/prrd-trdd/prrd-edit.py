@@ -98,11 +98,17 @@ def cmd_revise(args: argparse.Namespace) -> int:
         text=args.text.strip(),
     )
     # Remove old, append new
-    doc.rules = [r for r in doc.rules if not (r.number == latest.number and r.version == latest.version)]
+    doc.rules = [
+        r
+        for r in doc.rules
+        if not (r.number == latest.number and r.version == latest.version)
+    ]
     doc.rules.append(new_rule)
     _bump_prrd_version(doc, new_rule.kind)
     plib.write_prrd(doc)
-    print(f"✓ revised {latest.kind}{latest.number}.{latest.version} → {new_rule.cite()}: {new_rule.text}")
+    print(
+        f"✓ revised {latest.kind}{latest.number}.{latest.version} → {new_rule.cite()}: {new_rule.text}"
+    )
     _warn_mirrors(doc)
     return 0
 
@@ -138,7 +144,9 @@ def cmd_promote(args: argparse.Namespace) -> int:
     latest.kind = "G"
     _bump_prrd_version(doc, "G")
     plib.write_prrd(doc)
-    print(f"✓ promoted S{latest.number}.{latest.version} → G{latest.number}.{latest.version}")
+    print(
+        f"✓ promoted S{latest.number}.{latest.version} → G{latest.number}.{latest.version}"
+    )
     _warn_mirrors(doc)
     return 0
 
@@ -155,7 +163,9 @@ def cmd_demote(args: argparse.Namespace) -> int:
     latest.kind = "S"
     _bump_prrd_version(doc, "G")
     plib.write_prrd(doc)
-    print(f"✓ demoted G{latest.number}.{latest.version} → S{latest.number}.{latest.version}")
+    print(
+        f"✓ demoted G{latest.number}.{latest.version} → S{latest.number}.{latest.version}"
+    )
     _warn_mirrors(doc)
     return 0
 
@@ -177,8 +187,8 @@ proposal-id: {pid}
 proposes: {args.proposes}
 target-rule: {target}
 target-kind: {kind}
-proposed-by: {args.proposed_by or 'unknown'}
-routed-via: {args.routed_via or 'null'}
+proposed-by: {args.proposed_by or "unknown"}
+routed-via: {args.routed_via or "null"}
 status: open
 created: {now_iso()}
 updated: {now_iso()}
@@ -202,7 +212,7 @@ updated: {now_iso()}
 """
     fpath.write_text(body, encoding="utf-8")
     print(f"✓ proposal filed: {fpath.relative_to(root)}")
-    print(f"  Routed via COS for MANAGER review.")
+    print("  Routed via COS for MANAGER review.")
     return 0
 
 
@@ -210,8 +220,8 @@ def _bump_prrd_version(doc: plib.PRRDDoc, kind: str) -> None:
     """Major bump on golden changes; minor bump on silver."""
     v = str(doc.frontmatter.get("prrd-version", "0.1"))
     try:
-        major, minor = v.split(".", 1)
-        major, minor = int(major), int(minor)
+        major_str, minor_str = v.split(".", 1)
+        major, minor = int(major_str), int(minor_str)
     except ValueError:
         major, minor = 0, 1
     if kind == "G":
@@ -233,14 +243,19 @@ def _warn_mirrors(doc: plib.PRRDDoc) -> None:
 
 def _slugify(text: str) -> str:
     import re
+
     s = text.lower()
     s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
     return s or "proposal"
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--user", action="store_true", help="bypass MANAGER auth (solo / no AI Maestro)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--user", action="store_true", help="bypass MANAGER auth (solo / no AI Maestro)"
+    )
     ap.add_argument("--force", action="store_true", help="bypass sanity checks")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -264,7 +279,11 @@ def main(argv: list[str] | None = None) -> int:
     p_prop = sub.add_parser("propose", help="file a proposal (anyone can propose)")
     p_prop.add_argument("kind", choices=["golden", "silver", "G", "S", "g", "s"])
     p_prop.add_argument("text")
-    p_prop.add_argument("--proposes", default="revise", choices=["add", "revise", "delete", "promote", "demote"])
+    p_prop.add_argument(
+        "--proposes",
+        default="revise",
+        choices=["add", "revise", "delete", "promote", "demote"],
+    )
     p_prop.add_argument("--target", type=int, default=None)
     p_prop.add_argument("--proposed-by", default=None, help="agent session name")
     p_prop.add_argument("--routed-via", default=None, help="COS session name")

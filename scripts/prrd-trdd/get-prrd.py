@@ -75,12 +75,17 @@ def cmd_get(args: argparse.Namespace) -> int:
         plib.die(f"no rule {args.ref} found in {doc.path}", code=3)
     assert rule is not None
     if args.json:
-        print(json.dumps({
-            "number": rule.number,
-            "version": rule.version,
-            "kind": rule.kind,
-            "text": rule.text,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "number": rule.number,
+                    "version": rule.version,
+                    "kind": rule.kind,
+                    "text": rule.text,
+                },
+                indent=2,
+            )
+        )
         return 0
     if args.cite:
         print(f"{rule.cite()} — {rule.text}")
@@ -90,13 +95,21 @@ def cmd_get(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("ref", nargs="?", help="rule reference (e.g. 64, 64.134, G64.134)")
     ap.add_argument("--list", action="store_true", help="list all rules")
-    ap.add_argument("--kind", choices=["G", "S", "g", "s", "golden", "silver"], help="filter list by kind")
+    ap.add_argument(
+        "--kind",
+        choices=["G", "S", "g", "s", "golden", "silver"],
+        help="filter list by kind",
+    )
     ap.add_argument("--cite", action="store_true", help="format result as a citation")
     ap.add_argument("--json", action="store_true", help="emit JSON")
-    ap.add_argument("--init", action="store_true", help="create an empty PRRD if missing")
+    ap.add_argument(
+        "--init", action="store_true", help="create an empty PRRD if missing"
+    )
     args = ap.parse_args(argv)
 
     if args.init:

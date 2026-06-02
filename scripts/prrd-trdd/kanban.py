@@ -31,32 +31,51 @@ import prrd_lib as plib  # noqa: E402
 
 # Column ordering for visual layout
 COLUMN_GROUPS = [
-    ("ENTRY",   ["backburner", "todo", "live_auditing"]),
-    ("DESIGN",  ["design", "dispatch"]),
-    ("WORK",    ["dev", "testing", "ai_review", "human_review"]),
-    ("READY",   ["complete"]),
-    ("SHIP-tools",    ["publish", "published"]),
+    ("ENTRY", ["backburner", "todo", "live_auditing"]),
+    ("DESIGN", ["design", "dispatch"]),
+    ("WORK", ["dev", "testing", "ai_review", "human_review"]),
+    ("READY", ["complete"]),
+    ("SHIP-tools", ["publish", "published"]),
     ("SHIP-services", ["deploy", "live"]),
-    ("RED",     ["blocked"]),
-    ("DEAD",    ["failed", "superseded"]),
+    ("RED", ["blocked"]),
+    ("DEAD", ["failed", "superseded"]),
 ]
 
 ALL_COLUMNS = [c for _, cols in COLUMN_GROUPS for c in cols]
 
 WORKING_COLUMNS = {
-    "backburner", "todo", "design", "dispatch", "dev", "testing",
-    "ai_review", "human_review", "complete", "publish", "deploy",
+    "backburner",
+    "todo",
+    "design",
+    "dispatch",
+    "dev",
+    "testing",
+    "ai_review",
+    "human_review",
+    "complete",
+    "publish",
+    "deploy",
     "live_auditing",
 }
 TERMINAL_COLUMNS = {"published", "live", "failed", "superseded"}
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--view", choices=["compact", "wide"], default="compact")
-    ap.add_argument("--group-by", choices=["column", "assignee", "priority"], default="column")
-    ap.add_argument("--check-drift", action="store_true", help="show only drift signals")
-    ap.add_argument("--red", action="store_true", help="show only the blocked column + priority ranking")
+    ap.add_argument(
+        "--group-by", choices=["column", "assignee", "priority"], default="column"
+    )
+    ap.add_argument(
+        "--check-drift", action="store_true", help="show only drift signals"
+    )
+    ap.add_argument(
+        "--red",
+        action="store_true",
+        help="show only the blocked column + priority ranking",
+    )
     ap.add_argument("--column", help="render only one column")
     ap.add_argument("--json", action="store_true", help="emit JSON")
     args = ap.parse_args(argv)
@@ -181,18 +200,34 @@ def collect_drift(docs: list[plib.TRDDDoc]) -> dict[str, list[plib.TRDDDoc]]:
             # gate: every eht must be in terminal column
             for eht_ref in d.eht:
                 eht = docs_by_ref.get(eht_ref)
-                if eht and eht.column not in ("complete", "published", "live", "superseded"):
+                if eht and eht.column not in (
+                    "complete",
+                    "published",
+                    "live",
+                    "superseded",
+                ):
                     sigs["drift-eht-gate"].append(d)
                     break
         if col == "published" and not d.frontmatter.get("published-version"):
             sigs["drift-publish-missing"].append(d)
         if col == "live" and not d.frontmatter.get("live-since"):
             sigs["drift-live-missing"].append(d)
-        if col in ("publish", "deploy") and d.frontmatter.get("last-test-result") != "pass":
+        if (
+            col in ("publish", "deploy")
+            and d.frontmatter.get("last-test-result") != "pass"
+        ):
             sigs["drift-ship-untested"].append(d)
-        if d.release_via == "publish" and not d.frontmatter.get("publish-target") and col == "publish":
+        if (
+            d.release_via == "publish"
+            and not d.frontmatter.get("publish-target")
+            and col == "publish"
+        ):
             sigs["drift-publish-target-missing"].append(d)
-        if d.release_via == "deploy" and not d.frontmatter.get("deploy-target") and col == "deploy":
+        if (
+            d.release_via == "deploy"
+            and not d.frontmatter.get("deploy-target")
+            and col == "deploy"
+        ):
             sigs["drift-deploy-target-missing"].append(d)
     return dict(sigs)
 
@@ -200,31 +235,41 @@ def collect_drift(docs: list[plib.TRDDDoc]) -> dict[str, list[plib.TRDDDoc]]:
 def emit_json(docs: list[plib.TRDDDoc]) -> int:
     by_col: dict[str, list[dict]] = defaultdict(list)
     for d in docs:
-        by_col[d.column or "(unknown)"].append({
-            "uid8": d.uid8,
-            "trdd-id": d.uid,
-            "title": d.title,
-            "assignee": d.assignee,
-            "priority": d.priority,
-            "task-type": d.task_type,
-            "release-via": d.release_via,
-            "blocked-by": d.blocked_by,
-            "npt": d.npt,
-            "eht": d.eht,
-        })
-    print(json.dumps({
-        "columns": by_col,
-        "drift": {k: [d.short_ref() for d in v] for k, v in collect_drift(docs).items()},
-        "red_priority": [
+        by_col[d.column or "(unknown)"].append(
             {
-                "trdd": entry["trdd"].short_ref(),
-                "unblocks": entry["unblocks_count"],
-                "currently_in": entry["currently_in"],
-                "assignee": entry["assignee"],
+                "uid8": d.uid8,
+                "trdd-id": d.uid,
+                "title": d.title,
+                "assignee": d.assignee,
+                "priority": d.priority,
+                "task-type": d.task_type,
+                "release-via": d.release_via,
+                "blocked-by": d.blocked_by,
+                "npt": d.npt,
+                "eht": d.eht,
             }
-            for entry in compute_red_priority(docs)
-        ],
-    }, indent=2))
+        )
+    print(
+        json.dumps(
+            {
+                "columns": by_col,
+                "drift": {
+                    k: [d.short_ref() for d in v]
+                    for k, v in collect_drift(docs).items()
+                },
+                "red_priority": [
+                    {
+                        "trdd": entry["trdd"].short_ref(),
+                        "unblocks": entry["unblocks_count"],
+                        "currently_in": entry["currently_in"],
+                        "assignee": entry["assignee"],
+                    }
+                    for entry in compute_red_priority(docs)
+                ],
+            },
+            indent=2,
+        )
+    )
     return 0
 
 
@@ -242,12 +287,14 @@ def compute_red_priority(docs: list[plib.TRDDDoc]) -> list[dict]:
         if not blocker_doc:
             # The blocker may be an external ref or not yet authored.
             continue
-        ranking.append({
-            "trdd": blocker_doc,
-            "unblocks_count": unblocks,
-            "currently_in": blocker_doc.column,
-            "assignee": blocker_doc.assignee or "(unassigned)",
-        })
+        ranking.append(
+            {
+                "trdd": blocker_doc,
+                "unblocks_count": unblocks,
+                "currently_in": blocker_doc.column,
+                "assignee": blocker_doc.assignee or "(unassigned)",
+            }
+        )
     ranking.sort(key=lambda r: r["unblocks_count"], reverse=True)
     return ranking
 
@@ -262,8 +309,10 @@ def _emit_red_priority(indent: str) -> None:
     print(f"{indent}🔓 BLOCK-CLEARING PRIORITY (orchestrator: bump these)")
     for entry in ranking[:5]:
         t = entry["trdd"]
-        print(f"{indent}  {t.short_ref():<14} unblocks {entry['unblocks_count']}   "
-              f"currently in {entry['currently_in']:<14} assignee: {entry['assignee']}")
+        print(
+            f"{indent}  {t.short_ref():<14} unblocks {entry['unblocks_count']}   "
+            f"currently in {entry['currently_in']:<14} assignee: {entry['assignee']}"
+        )
     print()
 
 
