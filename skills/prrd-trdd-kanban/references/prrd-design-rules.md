@@ -12,6 +12,30 @@ There is NO substitute for the PRRD. Skills, personas, plugin rules, and
 even this file describe **how PRRDs work**; the PRRD itself describes
 **what is required of THIS project**.
 
+## Recommended baseline golden rule G1 — GitHub authorship self-identification
+
+Every AI Maestro project PRRD SHOULD carry, as its first golden rule
+(`G1.1`), the GitHub authorship self-identification rule:
+
+> Every agent that writes to GitHub (issue, issue comment, PR, PR
+> comment, PR review, discussion, release note) MUST begin the body
+> with a one-line self-identification of which agent/role/plugin
+> authored it, because all AI Maestro agents share the single
+> human-owner GitHub identity (the owner's `gh` CLI auth). Recommended
+> leading line: `_Posted by the Claude developing **<plugin-or-role>**
+> (via the shared @owner gh auth)._` Commit messages SHOULD carry an
+> `Agent: <role>` trailer.
+
+This is GOLDEN (user-set, immutable to MANAGER) because it is a
+clarity/anti-impersonation convention the MANAGER must not be able to
+weaken. It mirrors the ecosystem-wide governance rule (R22 in
+`GOVERNANCE-RULES.md`). Bootstrap it into a new project's PRRD via:
+
+```bash
+get-prrd.py --init
+prrd-edit.py --user add golden "<the rule text above>"
+```
+
 ## Location and shape
 
 **Canonical path:** `<project-root>/design/requirements/PRRD.md`

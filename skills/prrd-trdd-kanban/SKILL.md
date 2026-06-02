@@ -259,6 +259,24 @@ as non-exempt. See [exempt-operations.md](references/exempt-operations.md)
 for the canonical list, approval-request AMP template, and the
 `## Approval log` body-section format.
 
+## GitHub authorship self-identification (PRRD G1 / governance R22)
+
+All AI Maestro agents share the single human-owner GitHub identity
+(the owner's `gh` CLI auth), so a comment from "the orchestrator"
+and one from "the maintainer" both appear as the same `@owner`
+account. To prevent confusion, **every agent that writes to GitHub
+MUST begin the body with a one-line self-identification** of which
+agent/role/plugin authored it. Recommended leading line:
+
+```
+_Posted by the Claude developing **<plugin-or-role>** (via the shared @owner gh auth)._
+```
+
+Applies to issues, issue comments, PRs, PR comments, PR reviews,
+discussions, and release notes. Commit messages SHOULD carry an
+`Agent: <role>` trailer. This is golden rule `G1.1` in each project's
+PRRD and ecosystem governance rule R22.
+
 ## Resources
 
 - [references/prrd-design-rules.md](references/prrd-design-rules.md) —
