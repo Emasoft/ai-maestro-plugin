@@ -83,6 +83,48 @@ body, and AMP-broadcasts the status change up the chain for visibility
 | Set `feature-branch:` when starting work | MEMBER (assignee) | Branch tracking |
 | Append to `audit-evidence:` during live_auditing investigation | INTEGRATOR / AUTONOMOUS | Evidence log |
 
+### F. GitHub-repo hardening — apply the ratified baseline as-is
+
+These operations are EXEMPT only when they apply the **ratified
+unified baseline** without deviation. Any deviation (loosening a rule,
+adding a bypass actor, downgrading a check, disabling a ruleset) is
+NON-EXEMPT and requires MANAGER approval.
+
+| Operation | Owner | Reference |
+|---|---|---|
+| Apply baseline branch rulesets (no-force/no-delete/linear + PR/checks split) | INTEGRATOR / MAINTAINER (via `workflow-protect-branch`) / janitor (Tier 1 + Tier 2) | Ratified baseline |
+| SHA-pin third-party GitHub Actions | INTEGRATOR / MAINTAINER (via `workflow-pin-actions`) | Standard hardening |
+| Lint config files (JSON/YAML/TOML/.env/Dockerfile) | INTEGRATOR / MAINTAINER (via `maintainer-config-lint`) | Drift detection |
+| Run secret scans on the working tree + git history | INTEGRATOR / MAINTAINER (via `maintainer-secrets-scan`) | TruffleHog with public-info allowlist |
+| Apply workflow bootstrap / safe-fix patterns | INTEGRATOR / MAINTAINER (via `workflow-bootstrap`, `workflow-fix-safe`) | Standard CI scaffolding |
+| Restore drifted branch rules back to the ratified baseline | INTEGRATOR / MAINTAINER | Idempotent re-apply |
+| Run janitor supply-chain watcher | janitor (no main agent — applies as-is) | Dependency monitoring |
+| Run janitor credential-window audit | janitor (no main agent — applies as-is) | Stale token detection |
+| Run janitor fork-PR cache audit | janitor (no main agent — applies as-is) | Cache poisoning detection |
+
+**The ratified baseline itself** is being negotiated between the
+janitor and maintainer plugins via:
+
+- janitor: <https://github.com/Emasoft/ai-maestro-janitor/issues/14>
+- maintainer: <https://github.com/Emasoft/ai-maestro-maintainer-agent/issues/7>
+
+Until ratification converges, the exempt scope is each plugin's
+*current* default baseline (janitor's `janitor-baseline` ruleset;
+maintainer's `default-branch-no-force-no-delete` +
+`default-branch-required-checks` split). Once ratified, this section
+will pin the merged baseline name.
+
+**Non-exempt for this category** (require MANAGER approval):
+
+- Adding / removing a `bypass_actor` from a ratified ruleset.
+- Loosening a rule's parameters (e.g. lowering
+  `required_approving_review_count`).
+- Disabling required status checks.
+- Switching enforcement from `active` to `evaluate` or `disabled`.
+- Adding a new ruleset that affects the default branch.
+- Granting a new admin role on the repo.
+- Modifying secrets / tokens / OIDC bindings.
+
 ## NON-EXEMPT operations (MANAGER approval REQUIRED)
 
 The agent composes an approval-request AMP message (template below),
