@@ -5,6 +5,16 @@ column Y, what frontmatter mutations the transition triggers, and what
 AMP messages the move broadcasts. This is the machine-readable
 specification consumed by `kanban.py` and by per-role skills.
 
+**Approval discipline:** MANAGER approval is the DEFAULT for every
+significant transition. The
+[exempt-operations.md](exempt-operations.md) reference defines which
+transitions are EXEMPT (the agent may perform them directly) versus
+NON-EXEMPT (the agent MUST request MANAGER approval via COS before
+performing). Conservative default: when unsure, treat as non-exempt.
+See [exempt-operations.md](exempt-operations.md) for the canonical
+list, AMP approval-request template, and `## Approval log` body
+section format.
+
 ## Reading the table
 
 - **From / To** are `column:` enum values from
