@@ -294,6 +294,11 @@ PRRD and ecosystem governance rule R22.
   MANAGER-approval default + EXEMPT category list (mechanical
   transitions, intake, read-only, within-team coordination, runtime
   evidence)
+- [references/cos-delegation-authority.md](references/cos-delegation-authority.md) —
+  COS two-tier filter (COS-AUTONOMOUS vs COS-ESCALATE): which team
+  requests the COS decides itself vs forwards to MANAGER. The team-boundary
+  filter that sits one layer below exempt-operations.md (the
+  governance-boundary filter)
 - `${CLAUDE_PLUGIN_ROOT}/scripts/prrd-trdd/` — the five canonical
   scripts (`get-prrd.py`, `prrd-edit.py`, `findprrd.py`, `findtrdd.py`,
   `kanban.py`) plus the shared library (`prrd_lib.py`)
