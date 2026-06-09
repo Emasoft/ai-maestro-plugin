@@ -121,11 +121,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Build into $RUNNER_TEMP (not the checkout's scripts/memgrep/target/):
+      # the artifact dir only exists at CI time, so a repo-relative literal
+      # path here would dangle for anyone reading the workflow against the
+      # tree, and keeping build output outside the checkout avoids polluting
+      # later steps that scan the workspace.
       - name: Build memgrep (release, locked)
         run: |
           rustup update --no-self-update stable
           rustup default stable
-          cargo build --release --locked --manifest-path scripts/memgrep/Cargo.toml
+          cargo build --release --locked --manifest-path scripts/memgrep/Cargo.toml --target-dir "$RUNNER_TEMP/memgrep-target"
 
       - name: Package + checksum
         env:
@@ -133,7 +138,7 @@ jobs:
         run: |
           set -e
           ASSET="memgrep-${PLATFORM}.tar.gz"
-          tar -czf "$ASSET" -C scripts/memgrep/target/release memgrep
+          tar -czf "$ASSET" -C "$RUNNER_TEMP/memgrep-target/release" memgrep
           if command -v sha256sum >/dev/null 2>&1; then
             sha256sum "$ASSET" > "$ASSET.sha256"
           else

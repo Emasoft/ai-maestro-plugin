@@ -30,7 +30,6 @@ if str(_HERE) not in sys.path:
 
 import prrd_lib as plib  # noqa: E402
 
-
 KNOWN_COLUMNS = {
     "backburner",
     "todo",

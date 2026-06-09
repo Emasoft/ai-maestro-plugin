@@ -28,7 +28,6 @@ if str(_HERE) not in sys.path:
 
 import prrd_lib as plib  # noqa: E402
 
-
 # Column ordering for visual layout
 COLUMN_GROUPS = [
     ("ENTRY", ["backburner", "todo", "live_auditing"]),
