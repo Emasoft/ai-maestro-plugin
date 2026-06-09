@@ -105,3 +105,16 @@ jobs:
           else
             echo "No test files found, skipping"
           fi
+
+  test-memgrep:
+    name: Test memgrep (Rust)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run memgrep test suite
+        run: |
+          rustup update --no-self-update stable
+          rustup default stable
+          cargo test --locked --manifest-path scripts/memgrep/Cargo.toml

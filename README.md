@@ -23,11 +23,35 @@ See the [main repo][repo] for source files and build instructions.
 | `graph-query`                   | Code graph querying                  |
 | `mcp-discovery`                 | MCP server discovery                 |
 | `memory-search`                 | Conversation memory search           |
+| `memory-recall`                 | Curated-note memory recall (memgrep) |
+| `memory-write`                  | Curated-note memory authoring        |
 | `planning`                      | Task planning (persistent files)     |
 | `team-governance`               | Team governance and COS management   |
 | `team-kanban`                   | Team kanban boards and tasks         |
 | `agent-messaging`               | AMP inter-agent messaging            |
 | `agent-identity`                | AID agent identity (Ed25519)         |
+
+## Memory: transcripts vs curated notes (two complementary systems)
+
+The plugin ships TWO memory surfaces — they answer different questions:
+
+| System | Skill(s) | Corpus | Question it answers |
+|--------|----------|--------|---------------------|
+| Conversation memory | `memory-search` | AI Maestro's indexed conversation transcripts | "what did we SAY / discuss / decide?" |
+| Markdown note memory | `memory-recall` + `memory-write` | curated, symptom-indexed markdown notes | "what did we LEARN that must not be re-derived?" |
+
+The note memory is the **canonical home of the AI-Maestro memory protocol**
+(`rules/memory-protocol.md`): notes are recalled from the SYMPTOM with
+[`memgrep`](scripts/memgrep/SKILL.md), a markdown-aware search engine whose
+source ships in `scripts/memgrep/`. Install it with:
+
+```bash
+scripts/install-memgrep.sh    # prebuilt sha256-verified binary (macOS arm64/x64, linux x64);
+                              # cargo-build fallback; recall degrades to plain grep without it
+```
+
+Prebuilt binaries are attached to each GitHub release as
+`memgrep-<platform>.tar.gz` + `.sha256` — end-users need no Rust toolchain.
 
 ## AMP Commands (Agent Messaging Protocol)
 

@@ -12,6 +12,8 @@ metadata:
 
 Searches AI Maestro's indexed conversation history using `memory-search.sh`. Supports semantic, keyword, term, and symbol search modes. Conversations are automatically indexed by the subconscious process, creating a searchable memory across all sessions.
 
+**This is NOT the curated-note memory.** This skill searches conversation *transcripts* ("what did we SAY"); the COMPLEMENTARY `/memory-recall` + `/memory-write` skills (also in this plugin) work on curated, symptom-indexed markdown *notes* ("what did we LEARN"). A debugging session often uses both: recall the note for the known gotcha, search the transcript for the discussion that produced it. See `rules/memory-protocol.md`.
+
 ## Prerequisites
 
 - AI Maestro running on `localhost:23000`
@@ -98,6 +100,7 @@ Copy this checklist and track your progress:
 
 ## Resources
 
+- `/memory-recall`, `/memory-write` — the COMPLEMENTARY curated-note memory (symptom-indexed markdown notes; see `rules/memory-protocol.md`)
 - [Detailed Reference](references/REFERENCE.md) - Full CLI reference and search patterns
   - Memory Pipeline
   - CLI Reference and Options
