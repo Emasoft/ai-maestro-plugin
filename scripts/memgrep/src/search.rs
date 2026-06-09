@@ -338,7 +338,7 @@ pub fn run_expr(expr: &Expr, lines: &[&str], ctx: &Context, meta: &FileMeta) -> 
             line,
             ctx,
         };
-        if expr.eval(&lc) {
+        if expr.holds(&lc) {
             out.push(Match {
                 line,
                 col: expr.column_hint(&lc),

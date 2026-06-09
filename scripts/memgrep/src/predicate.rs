@@ -163,7 +163,10 @@ pub enum Pred {
 
 impl Pred {
     /// Does this predicate hold for the given line?
-    pub fn eval(&self, lc: &LineCtx) -> bool {
+    // Named `holds` (not the conventional `eval`) so the AST-walker is never
+    // mistaken for dynamic code evaluation — it only tests a parsed predicate
+    // against a line of text.
+    pub fn holds(&self, lc: &LineCtx) -> bool {
         let idx = lc.idx;
         let ctx = lc.ctx;
         match self {
@@ -271,12 +274,14 @@ pub enum Expr {
 
 impl Expr {
     /// Is the whole expression true for this line?
-    pub fn eval(&self, lc: &LineCtx) -> bool {
+    // Named `holds` (not `eval`) for the same reason as `Pred::holds`: this
+    // is a pure boolean walk over an already-parsed AST, never code execution.
+    pub fn holds(&self, lc: &LineCtx) -> bool {
         match self {
-            Expr::Leaf(p) => p.eval(lc),
-            Expr::Not(e) => !e.eval(lc),
-            Expr::And(v) => v.iter().all(|e| e.eval(lc)),
-            Expr::Or(v) => v.iter().any(|e| e.eval(lc)),
+            Expr::Leaf(p) => p.holds(lc),
+            Expr::Not(e) => !e.holds(lc),
+            Expr::And(v) => v.iter().all(|e| e.holds(lc)),
+            Expr::Or(v) => v.iter().any(|e| e.holds(lc)),
         }
     }
 
@@ -336,12 +341,12 @@ mod tests {
         };
         let pat = |s: &str| Expr::Leaf(Pred::Pattern(Regex::new(s).unwrap()));
 
-        assert!(Expr::Or(vec![pat("alpha"), pat("zzz")]).eval(&lc)); // one branch true
-        assert!(!Expr::Or(vec![pat("yyy"), pat("zzz")]).eval(&lc)); // neither true
-        assert!(Expr::And(vec![pat("alpha"), pat("beta")]).eval(&lc)); // both true
-        assert!(!Expr::And(vec![pat("alpha"), pat("zzz")]).eval(&lc)); // one false
-        assert!(Expr::Not(Box::new(pat("zzz"))).eval(&lc)); // negate a false
-        assert!(!Expr::Not(Box::new(pat("alpha"))).eval(&lc)); // negate a true
+        assert!(Expr::Or(vec![pat("alpha"), pat("zzz")]).holds(&lc)); // one branch true
+        assert!(!Expr::Or(vec![pat("yyy"), pat("zzz")]).holds(&lc)); // neither true
+        assert!(Expr::And(vec![pat("alpha"), pat("beta")]).holds(&lc)); // both true
+        assert!(!Expr::And(vec![pat("alpha"), pat("zzz")]).holds(&lc)); // one false
+        assert!(Expr::Not(Box::new(pat("zzz"))).holds(&lc)); // negate a false
+        assert!(!Expr::Not(Box::new(pat("alpha"))).holds(&lc)); // negate a true
 
         // column_hint walks to the first matching content leaf (here "beta" starts at col 7).
         assert_eq!(Expr::Or(vec![pat("zzz"), pat("beta")]).column_hint(&lc), 7);

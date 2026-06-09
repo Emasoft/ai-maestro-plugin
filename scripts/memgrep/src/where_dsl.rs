@@ -367,35 +367,37 @@ mod tests {
         }
     }
 
-    fn eval(where_str: &str, line: &str) -> bool {
+    // Parse-then-test helper; named `holds` to match `Expr::holds` (a pure
+    // boolean AST walk — nothing here evaluates code).
+    fn holds(where_str: &str, line: &str) -> bool {
         let expr = parse_where(where_str, false).expect("parse");
         let text = format!("{line}\n");
         let ctx = build_context(&text, 1);
         let fm = HashMap::new();
         let links = LinkSets::new();
         let lc = mk_lc("x.md", "x.md", &fm, &links, line, &ctx);
-        expr.eval(&lc)
+        expr.holds(&lc)
     }
 
     #[test]
     fn or_and_not_grouping() {
-        assert!(eval(r#"text "alpha" or text "zzz""#, "alpha beta"));
-        assert!(!eval(r#"text "yyy" or text "zzz""#, "alpha beta"));
-        assert!(eval(r#"text "alpha" and text "beta""#, "alpha beta"));
-        assert!(!eval(r#"text "alpha" and text "zzz""#, "alpha beta"));
-        assert!(eval(r#"not text "zzz""#, "alpha beta"));
-        assert!(eval(r#"! text "zzz""#, "alpha beta"));
+        assert!(holds(r#"text "alpha" or text "zzz""#, "alpha beta"));
+        assert!(!holds(r#"text "yyy" or text "zzz""#, "alpha beta"));
+        assert!(holds(r#"text "alpha" and text "beta""#, "alpha beta"));
+        assert!(!holds(r#"text "alpha" and text "zzz""#, "alpha beta"));
+        assert!(holds(r#"not text "zzz""#, "alpha beta"));
+        assert!(holds(r#"! text "zzz""#, "alpha beta"));
         // grouping changes precedence: (a or b) and c
-        assert!(eval(
+        assert!(holds(
             r#"(text "alpha" or text "x") and text "beta""#,
             "alpha beta"
         ));
-        assert!(!eval(
+        assert!(!holds(
             r#"(text "x" or text "y") and text "beta""#,
             "alpha beta"
         ));
         // implicit AND (juxtaposition)
-        assert!(eval(r#"text "alpha" text "beta""#, "alpha beta"));
+        assert!(holds(r#"text "alpha" text "beta""#, "alpha beta"));
     }
 
     #[test]
@@ -407,14 +409,14 @@ mod tests {
         let links = LinkSets::new();
         let hit = mk_lc("a/b.md", "b.md", &fm, &links, "x", &ctx);
         let miss = mk_lc("a/b.rs", "b.rs", &fm, &links, "x", &ctx);
-        assert!(expr.eval(&hit));
-        assert!(!expr.eval(&miss));
+        assert!(expr.holds(&hit));
+        assert!(!expr.holds(&miss));
 
         let p = parse_where(r#"path "**/memory/*.md""#, false).unwrap();
         let m1 = mk_lc("x/memory/n.md", "n.md", &fm, &links, "x", &ctx);
         let m2 = mk_lc("x/tasks/n.md", "n.md", &fm, &links, "x", &ctx);
-        assert!(p.eval(&m1));
-        assert!(!p.eval(&m2));
+        assert!(p.holds(&m1));
+        assert!(!p.holds(&m2));
     }
 
     #[test]
@@ -426,7 +428,7 @@ mod tests {
             let c = build_context("x\n", 1);
             let links = LinkSets::new();
             let l = mk_lc("p", "p", &fm, &links, "x", &c);
-            parse_where(w, false).unwrap().eval(&l)
+            parse_where(w, false).unwrap().holds(&l)
         };
         // regex form (the default)
         assert!(run(r#"fm column "de""#)); // "de" regex matches "dev"
