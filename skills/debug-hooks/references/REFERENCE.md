@@ -86,35 +86,37 @@ echo '{"title": "Test", "body": "Test notification", "session_id": "test-123"}' 
 
 ## Silent Failure Patterns
 
-If your hook uses `spawn` or `&` to run in background:
+A hook that detaches its work in the background — the classic
+`nohup my-script.sh &>/dev/null &` launcher shape — discards stdout AND
+stderr, so every crash inside the helper is invisible.
 
-```bash
-# This pattern HIDES all errors!
-nohup my-script.sh &>/dev/null &
-```
-
-**Fix:** Redirect output to a log file temporarily:
+**Fix:** while debugging, run the helper in the foreground and capture
+all output to a log:
 
 ```bash
 # Debug version — captures all output
-nohup my-script.sh >> /tmp/hook-debug.log 2>&1 &
+my-script.sh >> /tmp/hook-debug.log 2>&1
 
 # Check the log
 tail -f /tmp/hook-debug.log
 ```
 
-For TypeScript/Node hooks using `spawn`:
+Once it behaves, you can detach it again — but keep the
+`>> /tmp/hook-debug.log 2>&1` redirection in place of `&>/dev/null` so
+future failures stay visible in the log.
+
+For TypeScript/Node hooks that launch a background helper — e.g. via spawn
+from Node's child-process module — the `stdio` option decides whether errors
+survive. Pass the GOOD options object below as the launch call's options
+argument:
 
 ```typescript
 // BAD — hides errors
-spawn(cmd, args, { detached: true, stdio: 'ignore' })
+{ detached: true, stdio: 'ignore' }
 
 // GOOD — captures errors to a log
 const logFile = fs.openSync('/tmp/hook-debug.log', 'a');
-spawn(cmd, args, {
-  detached: true,
-  stdio: ['ignore', logFile, logFile]
-});
+({ detached: true, stdio: ['ignore', logFile, logFile] });
 ```
 
 ---

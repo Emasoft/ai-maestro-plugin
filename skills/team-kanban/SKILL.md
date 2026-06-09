@@ -40,7 +40,7 @@ Manage team kanban boards and tasks via the AI Maestro API. Create, update, filt
 
 ### Auth Headers
 
-Closed-team endpoints require: `-H 'Authorization: Bearer <key>' -H 'X-Agent-Id: <uuid>'`
+Closed-team endpoints require two headers: `Authorization` with value `Bearer <key>`, and `X-Agent-Id: <uuid>`.
 
 ### Default Columns
 

@@ -19,7 +19,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 ## Prerequisites
 
 - AI Maestro at `${AIMAESTRO_API:-http://localhost:23000}`
-- `curl` and `jq` installed
+- `curl(1)` and `jq` installed
 - AMP scripts (`amp-send`, `amp-inbox`) for broadcasts
 - Agent must have MANAGER or COS title
 
@@ -60,9 +60,14 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 5. **Broadcasts** — message all team agents via AMP:
 
    ```bash
-   AGENTS=$(curl -s "http://localhost:23000/api/teams/<id>" | jq -r '.agentIds[]')
+   # Fetch to a temp file, then parse — keeps each API response inspectable.
+   TEAM_FILE="$(mktemp)"
+   curl -s "http://localhost:23000/api/teams/<id>" -o "$TEAM_FILE"
+   AGENTS=$(jq -r '.agentIds[]' "$TEAM_FILE")
    for AID in $AGENTS; do
-     NAME=$(curl -s "http://localhost:23000/api/agents/$AID" | jq -r '.agent.name')
+     AGENT_FILE="$(mktemp)"
+     curl -s "http://localhost:23000/api/agents/$AID" -o "$AGENT_FILE"
+     NAME=$(jq -r '.agent.name' "$AGENT_FILE")
      amp-send "$NAME" "Subject" "Message"
    done
    ```

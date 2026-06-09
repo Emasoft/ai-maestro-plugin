@@ -92,7 +92,7 @@ aimaestro-agent.sh list --status online
 
 Status filters: `offline`, `hibernated`, `all` (default). Output formats: `--format table` (default), `--format json`, `--format names`, `--json`, `-q` (quiet).
 
-**API:** `curl http://localhost:23000/api/agents`
+**API:** `GET http://localhost:23000/api/agents`
 
 ### 2. Create Agent
 
@@ -125,7 +125,7 @@ aimaestro-agent.sh show my-api
 
 JSON output: `--format json`. Shows: ID, persona name, title, role, working directory, model, tags, task, session status, plugins, skills.
 
-**API:** `curl http://localhost:23000/api/agents/{id}`
+**API:** `GET http://localhost:23000/api/agents/{id}`
 
 ### 4. Update Agent
 
@@ -185,7 +185,7 @@ aimaestro-agent.sh hibernate my-api
 
 Kills tmux session, preserves data/registry/memory/plugins. Agent can be woken later.
 
-**API:** `curl -X POST http://localhost:23000/api/agents/{id}/hibernate`
+**API:** `POST http://localhost:23000/api/agents/{id}/hibernate`
 
 ### 8. Wake Agent
 
@@ -196,7 +196,7 @@ aimaestro-agent.sh wake my-api --attach
 
 Restores hibernated agent: creates tmux session, launches `claude`.
 
-**API:** `curl -X POST http://localhost:23000/api/agents/{id}/wake`
+**API:** `POST http://localhost:23000/api/agents/{id}/wake`
 
 ### 9. Restart Agent
 
@@ -216,7 +216,7 @@ aimaestro-agent.sh export my-api -o /tmp/my-api-backup.agent.json
 
 Default output: `<agent>.agent.json` in current directory.
 
-**API:** `curl http://localhost:23000/api/agents/{id}/export -o agent-backup.json`
+**API:** `GET http://localhost:23000/api/agents/{id}/export` (save the response body to `agent-backup.json`)
 
 ### 11. Import Agent
 
@@ -242,7 +242,7 @@ curl -X POST http://localhost:23000/api/agents/import \
 aimaestro-agent.sh skill list my-api
 ```
 
-**API:** `curl http://localhost:23000/api/agents/{id}/skills`
+**API:** `GET http://localhost:23000/api/agents/{id}/skills`
 
 ### 13. Install Skill
 
@@ -357,7 +357,7 @@ Auto-installations are non-blocking: title assignment succeeds even if plugin in
 aimaestro-agent.sh plugin list my-api
 ```
 
-**API:** `curl http://localhost:23000/api/agents/{id}/local-plugins`
+**API:** `GET http://localhost:23000/api/agents/{id}/local-plugins`
 
 ### 17. Install Plugin
 
@@ -689,7 +689,7 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 
 **CLI not found:** `which aimaestro-agent.sh` — should be in `~/.local/bin`
 
-**API not running:** `curl http://localhost:23000/api/hosts/identity` then `pm2 restart ai-maestro`
+**API not running:** request `http://localhost:23000/api/hosts/identity` with curl; if it does not answer, `pm2 restart ai-maestro`
 
 **Agent stuck:** `aimaestro-agent.sh restart my-api`
 

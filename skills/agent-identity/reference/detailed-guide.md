@@ -25,17 +25,25 @@ npx skills add agentmessaging/agent-identity
 
 ### Quick Install
 
+Download the installer to a file, inspect it, then run it — never pipe
+remote content straight into a shell:
+
 ```bash
 INSTALL_URL="https://raw.githubusercontent.com/\
 agentmessaging/agent-identity/main/install.sh"
-curl -fsSL "$INSTALL_URL" | bash
+INSTALL_FILE="$(mktemp)"
+curl -fsSL "$INSTALL_URL" -o "$INSTALL_FILE"
+less "$INSTALL_FILE"      # review what it does before executing
+bash "$INSTALL_FILE"
+rm -f "$INSTALL_FILE"
 ```
 
 ### Manual
 
 ```bash
 git clone https://github.com/agentmessaging/agent-identity.git ~/agent-identity
-export PATH="$HOME/agent-identity/scripts:$PATH"
+# Append (not prepend) so the cloned scripts can never shadow system binaries.
+export PATH="$PATH:$HOME/agent-identity/scripts"
 ```
 
 ## Commands Reference

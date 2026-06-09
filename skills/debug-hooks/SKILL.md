@@ -38,10 +38,10 @@ Systematic workflow for debugging Claude Code hooks. Covers all 7 hook types: Pr
    echo '{"tool_name":"Write","tool_input":{},"session_id":"test"}' | /path/to/my-hook.sh
    ```
 
-4. **Check silent failures** — Redirect stderr to log if hook uses background processes:
+4. **Check silent failures** — A hook that detaches background work (e.g. a `nohup … &` launcher) loses its stderr, so failures vanish. To debug, run the script in the foreground and capture both streams to a log:
 
    ```bash
-   nohup my-script.sh >> /tmp/hook-debug.log 2>&1 &
+   my-script.sh >> /tmp/hook-debug.log 2>&1
    ```
 
 5. **Verify event name/matcher** — Names are case-sensitive. Tool-specific hooks need a `matcher` field.

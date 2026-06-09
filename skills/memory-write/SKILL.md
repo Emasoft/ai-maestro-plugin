@@ -1,6 +1,6 @@
 ---
 name: memory-write
-description: "Capture a durable, reusable fact as a markdown memory note so a future session recalls it from the SYMPTOM. Use after solving a non-trivial bug (a bug-autopsy gotcha), learning a project constraint not derivable from code, a confirmed user preference, or any 'we should remember this' moment — or when the user says 'remember this', 'save a memory', 'capture this gotcha', 'note that for next time'. Writes a schema-valid note (name/description/metadata + body) with the description indexed by question/symptom vocabulary, and appends the MEMORY.md index line. Canonical home of the AI-Maestro memory-write protocol."
+description: "Capture a durable, reusable fact as a markdown memory note so a future session recalls it from the SYMPTOM. Use after solving a non-trivial bug (a bug-autopsy gotcha), learning a project constraint not derivable from code, a confirmed user preference, or any 'we should remember this' moment — or when the user says 'remember this', 'save a memory', 'capture this gotcha', 'note that for next time'. Authors a schema-valid note (name/description/metadata + body) with the description indexed by question/symptom vocabulary, and keeps the MEMORY.md index line current. Canonical home of the AI-Maestro memory-write protocol."
 allowed-tools: "Bash(memgrep:*), Bash(grep:*), Bash(command:*), Bash(mkdir:*), Write, Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -53,8 +53,11 @@ matters to the current conversation.
    Link related notes with [[their-name]].>
    ```
 
-5. Append a one-line pointer to `"$MEMDIR/MEMORY.md"` (create if missing):
-   `- [<Title>](<note-filename>) — <one-line hook>.`
+5. Add a one-line pointer to `"$MEMDIR/MEMORY.md"` (create if missing): a list
+   bullet `- [<Title>]` immediately followed by `(<note-filename>)`, then
+   ` — <one-line hook>.` The bracket and paren parts join into one normal
+   markdown link in the real index line; they are split here only so this
+   template is not itself parsed as a link.
 
 6. Sanity-check: would a future session, having only the SYMPTOM, find this note
    by searching `description`? If the description reads like the *answer*, rewrite

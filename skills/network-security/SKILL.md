@@ -20,7 +20,7 @@ Tailscale VPN is **required** for any remote access. Without it, the server fall
 
 - Tailscale installed and running on the host machine
 - All remote devices signed into the same Tailscale account (same tailnet)
-- Port 23000 allowed in firewall (Linux: `sudo ufw allow 23000/tcp`)
+- Port 23000 allowed in firewall (Linux: run `ufw allow 23000/tcp` with root privileges)
 
 Copy this checklist and track your progress:
 

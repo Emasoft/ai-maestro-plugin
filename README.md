@@ -98,7 +98,7 @@ Prebuilt binaries are attached to each GitHub release as
 
 External tools the plugin's shell scripts call:
 
-- `curl` — HTTP requests to AMP providers and AI Maestro
+- `curl(1)` — HTTP requests to AMP providers and AI Maestro
 - `jq` — JSON parsing in shell scripts
 - `openssl` — Ed25519 keypair generation for AID
 - `base64` — message attachment encoding

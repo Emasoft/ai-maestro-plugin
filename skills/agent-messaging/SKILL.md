@@ -39,7 +39,7 @@ Copy this checklist and track your progress:
 
 - [ ] AMP scripts installed to `~/.local/bin/` (via `install-messaging.sh`)
 - [ ] Agent identity initialized (`amp-init.sh --auto`)
-- [ ] CLI tools: `curl`, `jq`, `openssl`, `base64`
+- [ ] CLI tools: `curl(1)`, `jq`, `openssl`, `base64`
 
 ## Instructions
 
