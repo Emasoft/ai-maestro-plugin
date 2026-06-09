@@ -12,6 +12,25 @@ There is NO substitute for the PRRD. Skills, personas, plugin rules, and
 even this file describe **how PRRDs work**; the PRRD itself describes
 **what is required of THIS project**.
 
+## Contents
+
+- Recommended baseline golden rule G1 — GitHub authorship self-identification
+- Location and shape
+- File anatomy
+- Rule identity, versioning, and promote/demote
+- Citation grammar
+- Mutation rules
+- Proposal queue
+- Scripts
+- Cross-reference with TRDDs
+- Mirror discipline (§0 pattern)
+- Bootstrap — projects without a PRRD
+- Grep cheat-sheet
+- Anti-patterns
+- Why this exists
+- Does NOT apply to
+- Migration from no-PRRD projects
+
 ## Recommended baseline golden rule G1 — GitHub authorship self-identification
 
 Every AI Maestro project PRRD SHOULD carry, as its first golden rule

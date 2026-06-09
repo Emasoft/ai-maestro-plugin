@@ -19,6 +19,17 @@ TRDD-id and a one-line request — the TRDD itself is the canonical
 record (R15.4). MANAGER is exempt from the written-form requirement
 (R15.6) — MANAGER's approval reply may be direct AMP.
 
+## Contents
+
+- EXEMPT operations (no MANAGER approval required)
+- NON-EXEMPT operations (MANAGER approval REQUIRED)
+- Approval-request AMP message template
+- MANAGER's approval / rejection reply
+- Recording the decision
+- Crisis cross-reference
+- R15 compatibility notes
+- When to revise this list
+
 ## EXEMPT operations (no MANAGER approval required)
 
 The agent performs the operation, updates the TRDD frontmatter and

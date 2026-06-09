@@ -4,6 +4,17 @@ The five scripts (+ shared `prrd_lib.py`) live at
 `${CLAUDE_PLUGIN_ROOT}/scripts/prrd-trdd/`. Every script accepts
 `--help`. All write to STDOUT, errors to STDERR, exit 0 on success.
 
+## Contents
+
+- get-prrd.py — read PRRD rules
+- prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation)
+- findprrd.py — search PRRD rules
+- findtrdd.py — find TRDDs
+- kanban.py — render the board (READ-ONLY)
+- Authoring a new TRDD (canonical skeleton)
+- Exit codes
+- Per-role quick examples
+
 ## get-prrd.py — read PRRD rules
 
 ```bash

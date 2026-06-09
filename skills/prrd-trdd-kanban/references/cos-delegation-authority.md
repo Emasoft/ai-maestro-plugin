@@ -7,6 +7,18 @@ absorbing routine team load — instead of an unfiltered relay that
 forwards everything upstream (which nullifies the reason the COS
 exists).
 
+## Contents
+
+- The two-tier model
+- How escalation composes with presence (the full chain)
+- COS-AUTONOMOUS — the COS decides, no upstream
+- COS-ESCALATE — forward to MANAGER
+- Consolidation — the COS batches, it doesn't flood
+- The COS escalation message (to MANAGER)
+- User-presence — where it lives, and the janitor fallback
+- Why this exists
+- Relationship to exempt-operations.md
+
 ## The two-tier model
 
 Governance R6 forces every team-internal agent (ORCHESTRATOR,

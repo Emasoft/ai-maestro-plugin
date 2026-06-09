@@ -40,7 +40,9 @@ TOC per A11.6).
 
 Create a single file at `references/skill-graph.md` with a table of all
 governance-tier skills and their relationships. Each SKILL.md adds one
-prose pointer: "Sibling skills: see [skill-graph](../references/skill-graph.md)."
+prose pointer: "Sibling skills: see `[skill-graph](../references/skill-graph.md)`."
+(The pointer is shown as inline code here because the target file is
+proposed by this approach and does not exist yet.)
 
 Cost: ~30-50 chars per skill (cheaper). Con: indirection — the LLM
 auto-loader reads SKILL.md, sees the prose pointer, and may not follow

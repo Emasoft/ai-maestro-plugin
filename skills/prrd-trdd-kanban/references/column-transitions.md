@@ -15,6 +15,17 @@ See [exempt-operations.md](exempt-operations.md) for the canonical
 list, AMP approval-request template, and `## Approval log` body
 section format.
 
+## Contents
+
+- Reading the table
+- Master matrix
+- Reverse moves NOT in the matrix
+- EHT gate for `complete`
+- Drift signals
+- Red column auto-priority ranking
+- AMP routing — who hears about each transition
+- Authority enforcement
+
 ## Reading the table
 
 - **From / To** are `column:` enum values from

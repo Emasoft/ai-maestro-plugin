@@ -6,6 +6,16 @@ The schema is **open** — agents may add project-specific fields without
 breaking the canonical set, but the canonical set MUST be respected
 verbatim.
 
+## Contents
+
+- Schema invariants (grep-friendliness)
+- Field schema
+- Type forms
+- Schema extension
+- Validation
+- Migration from v1
+- Anti-patterns
+
 ## Schema invariants (grep-friendliness)
 
 Every field is engineered to answer a real grep question in one line.

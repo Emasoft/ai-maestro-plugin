@@ -1,5 +1,28 @@
 # TRDD: Task Requirement Design Documents (v2)
 
+## Contents
+
+- The rule
+- What's new in v2
+- Location
+- Filename format
+- Frontmatter — the v2 spec
+- Column enum (the 14-stage kanban + blocked)
+- Design-column 1→N split / N→1 group semantics
+- NPT vs EHT semantics
+- The 8-char hash reference syntax
+- STATE head section (mandatory once a TRDD spans >1 session)
+- Reports are evidence; decisions become TRDDs
+- Todo list cross-reference
+- Workflow
+- Migration from v1
+- Grep cheat-sheet (extended)
+- Why this exists
+- Anti-patterns
+- Does NOT apply to
+
+## The rule
+
 **Rule:** Every non-trivial feature spec, backlog item, or deferred-work
 design note MUST be saved as a **Task Requirement Design Document (TRDD)**
 in `<project-root>/design/tasks/`. TRDDs are git-tracked artifacts of the
