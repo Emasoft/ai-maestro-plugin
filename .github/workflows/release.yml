@@ -108,12 +108,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14        # Apple Silicon runner
+          - os: macos-14        # Apple Silicon runner, native build
             platform: darwin-arm64
-          - os: macos-13        # last Intel macOS runner
+            target: aarch64-apple-darwin
+          # darwin-x64 is CROSS-COMPILED on the arm64 runner: GitHub retired
+          # the Intel macos-13 pool (jobs queue forever), and Xcode's clang
+          # cross-compiles x86_64 natively, including rusqlite's bundled
+          # SQLite C sources.
+          - os: macos-14
             platform: darwin-x64
+            target: x86_64-apple-darwin
           - os: ubuntu-latest
             platform: linux-x64
+            target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -125,20 +132,26 @@ jobs:
       # the artifact dir only exists at CI time, so a repo-relative literal
       # path here would dangle for anyone reading the workflow against the
       # tree, and keeping build output outside the checkout avoids polluting
-      # later steps that scan the workspace.
+      # later steps that scan the workspace. The --target triple is always
+      # explicit (a no-op for the host triple) so the output path is uniform
+      # across native and cross builds.
       - name: Build memgrep (release, locked)
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           rustup update --no-self-update stable
           rustup default stable
-          cargo build --release --locked --manifest-path scripts/memgrep/Cargo.toml --target-dir "$RUNNER_TEMP/memgrep-target"
+          rustup target add "$TARGET"
+          cargo build --release --locked --manifest-path scripts/memgrep/Cargo.toml --target "$TARGET" --target-dir "$RUNNER_TEMP/memgrep-target"
 
       - name: Package + checksum
         env:
           PLATFORM: ${{ matrix.platform }}
+          TARGET: ${{ matrix.target }}
         run: |
           set -e
           ASSET="memgrep-${PLATFORM}.tar.gz"
-          tar -czf "$ASSET" -C "$RUNNER_TEMP/memgrep-target/release" memgrep
+          tar -czf "$ASSET" -C "$RUNNER_TEMP/memgrep-target/$TARGET/release" memgrep
           if command -v sha256sum >/dev/null 2>&1; then
             sha256sum "$ASSET" > "$ASSET.sha256"
           else

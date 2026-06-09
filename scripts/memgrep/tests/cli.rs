@@ -624,15 +624,19 @@ fn where_parse_errors_are_clean_failures() {
 
 #[test]
 fn where_deep_nesting_exits_cleanly_not_via_signal() {
-    // H1: a pathological --where (100k `!` or 100k `(`) must be rejected by the parser's depth guard
+    // H1: a pathological --where (50k `!` or 50k `(`) must be rejected by the parser's depth guard
     // as a normal non-zero EXIT, never a stack-overflow SIGSEGV/abort (which catch_unwind can't
     // catch). run_fail_clean asserts status.code().is_some() so a signal-kill can't pass as success.
-    let bangs = format!("{}text \"code\"", "!".repeat(100_000));
+    // Depth is 50k (not 100k) so the parens variant stays under Linux's 128 KiB per-argument
+    // exec limit (MAX_ARG_STRLEN) — at 100k the argv element is ~200 KB and the OS rejects it
+    // with E2BIG before memgrep even runs (the CI failure mode on ubuntu runners). 50k still
+    // exceeds MAX_WHERE_DEPTH (256) by ~195x, so the depth guard is fully exercised.
+    let bangs = format!("{}text \"code\"", "!".repeat(50_000));
     run_fail_clean(&["--where", &bangs, FX]);
     let parens = format!(
         "{}text \"code\"{}",
-        "(".repeat(100_000),
-        ")".repeat(100_000)
+        "(".repeat(50_000),
+        ")".repeat(50_000)
     );
     run_fail_clean(&["--where", &parens, FX]);
 }
