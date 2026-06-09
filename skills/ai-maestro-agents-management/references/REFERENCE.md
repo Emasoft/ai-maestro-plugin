@@ -97,12 +97,12 @@ Status filters: `offline`, `hibernated`, `all` (default). Output formats: `--for
 ### 2. Create Agent
 
 ```bash
-aimaestro-agent.sh create my-api --dir /Users/dev/projects/my-api
+aimaestro-agent.sh create my-api --dir ~/projects/my-api
 aimaestro-agent.sh create backend-service \
-  --dir /Users/dev/projects/backend \
+  --dir ~/projects/backend \
   --task "Implement user authentication with JWT" \
   --tags "api,auth,security"
-aimaestro-agent.sh create debug-agent --dir /Users/dev/projects/debug -- --verbose --debug
+aimaestro-agent.sh create debug-agent --dir ~/projects/debug -- --verbose --debug
 ```
 
 **`--dir` is required.** Options: `-p/--program`, `-m/--model`, `--no-session`, `--no-folder`, `--force-folder`.
@@ -114,7 +114,7 @@ aimaestro-agent.sh create debug-agent --dir /Users/dev/projects/debug -- --verbo
 ```bash
 curl -X POST http://localhost:23000/api/agents \
   -H "Content-Type: application/json" \
-  -d '{"name":"my-api","workingDirectory":"/Users/dev/projects/my-api"}'
+  -d '{"name":"my-api","workingDirectory":"/path/to/projects/my-api"}'
 ```
 
 ### 3. Show Agent
@@ -222,7 +222,7 @@ Default output: `<agent>.agent.json` in current directory.
 
 ```bash
 aimaestro-agent.sh import my-api.agent.json
-aimaestro-agent.sh import backup.agent.json --name new-agent --dir /Users/dev/projects/new
+aimaestro-agent.sh import backup.agent.json --name new-agent --dir ~/projects/new
 ```
 
 **API:**
@@ -592,8 +592,8 @@ plugin-dir/
 +--------------------+----------+---------------------------------+--------------+
 | Agent              | Status   | Working Directory               | Tags         |
 +--------------------+----------+---------------------------------+--------------+
-| backend-api        | online   | /Users/dev/projects/backend     | api, prod    |
-| frontend-dev       | online   | /Users/dev/projects/frontend    | ui           |
+| backend-api        | online   | ~/projects/backend              | api, prod    |
+| frontend-dev       | online   | ~/projects/frontend             | ui           |
 +--------------------+----------+---------------------------------+--------------+
 ```
 
@@ -606,7 +606,7 @@ Agent: backend-api
   Program:     claude-code
   Model:       sonnet
   Created:     2025-01-15T10:30:00Z
-  Working Directory: /Users/dev/projects/backend
+  Working Directory: ~/projects/backend
   Sessions (1): [0] backend-api (online)
   Task: Implement REST API endpoints
   Skills (2): git-workflow, agent-messaging
