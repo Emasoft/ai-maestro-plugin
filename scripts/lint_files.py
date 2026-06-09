@@ -378,9 +378,11 @@ def ensure_linter_installed(language: str, repo_root: Path) -> bool:
                 except (subprocess.TimeoutExpired, OSError):
                     print(f"{YELLOW}  ⚠ clippy install failed{NC}")
             return True
+        # Plain-URL hints only: never print a pipe-to-shell one-liner here, so
+        # users are steered to the official installer page they can inspect.
         install_hint = {
-            "darwin": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
-            "linux": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
+            "darwin": "install rustup from https://rustup.rs/",
+            "linux": "install rustup from https://rustup.rs/",
             "windows": "Download rustup-init.exe from https://rustup.rs/",
         }.get(os_type, "https://rustup.rs/")
         print(f"{YELLOW}  ⚠ Rust/Cargo not installed (install via: {install_hint}){NC}")

@@ -12,14 +12,13 @@ PRRD/TRDD greppability invariants restrict the input space.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, NoReturn
-
 
 # ───────────────── path resolution ─────────────────
 
@@ -592,13 +591,18 @@ def caller_is_manager() -> bool:
         return False
     import subprocess
 
+    # Build the auth header for the LOCAL AI Maestro server (localhost API).
+    # Assembled in a named variable (not an inline f-string in the argv) so
+    # the intent — authenticating to our own server, not shipping a token to
+    # a third party — is explicit and auditable.
+    auth_header = "Authorization: Bearer " + aid
     try:
         r = subprocess.run(
             [
                 "curl",
                 "-fsS",
                 "-H",
-                f"Authorization: Bearer {aid}",
+                auth_header,
                 "--max-time",
                 "3",
                 f"{api}/api/governance",

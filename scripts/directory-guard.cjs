@@ -230,9 +230,10 @@ function isAllowedPath(resolvedPath, agentWorkDir) {
 /**
  * Encode an absolute path the same way Claude Code names ~/.claude/projects/
  * subdirectories: every non-[A-Za-z0-9-] char becomes "-". Verified against
- * real entries (e.g. "/Users/x/Code/SVG_FBF_PROJECT/svg2fbf" →
- * "-Users-x-Code-SVG-FBF-PROJECT-svg2fbf", "/Users/x/.claude/plugins" →
- * "-Users-x--claude-plugins").
+ * real entries (e.g. "<home>/Code/SVG_FBF_PROJECT/svg2fbf" →
+ * "-Users-x-Code-SVG-FBF-PROJECT-svg2fbf", "<home>/.claude/plugins" →
+ * "-Users-x--claude-plugins", where <home> is the user's home directory,
+ * /Users/x in these encoded outputs).
  */
 function encodeProjectPath(absPath) {
   return absPath.replace(/[^A-Za-z0-9-]/g, '-');
@@ -264,13 +265,25 @@ function detectBashWriteTargets(command, agentWorkDir) {
   const redirectRegex = /(?:&>>?|[12]?>>?)\s*([^\s;|&"']+)/g;
   checkMatches(redirectRegex, command, 1, agentWorkDir, violations);
 
+  // NOTE on regex shape (ReDoS hygiene): every repeated group below is
+  // written so that the group's LAST element is a single char-class or a
+  // BOUNDED repeat — never an unbounded plus/star directly under an outer
+  // quantifier. Dash-flag loops were refactored to lead with the whitespace
+  // instead of trailing it, and the old flags-loop-then-args-loop double
+  // loop (whose overlapping token classes allowed exponential backtracking
+  // on crafted input) was collapsed into one token loop wherever flags are
+  // a subset of the args class. Behavioral equivalence is pinned by node
+  // tests on real command shapes; the bounds (4096-char tokens, 16-letter
+  // flags) exceed anything a legitimate command line uses.
+
   // 2. tee: tee [-a] file [file...]
-  const teeRegex = /\btee\s+(?:-[ai]\s+)*([^\s;|&"']+)/g;
+  const teeRegex = /\btee(?:\s+-[ai])*\s+([^\s;|&"']+)/g;
   checkMatches(teeRegex, command, 1, agentWorkDir, violations);
 
   // 3. cp/mv: cp [-rfp] source target, mv source target
-  //    Last argument is the destination
-  const cpMvRegex = /\b(?:cp|mv)\s+(?:-[a-zA-Z]+\s+)*(?:[^\s;|&]+\s+)+([^\s;|&"']+)/g;
+  //    Last argument is the destination. Flags match the token loop too,
+  //    so no separate flags loop is needed.
+  const cpMvRegex = /\b(?:cp|mv)(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&"']+)/g;
   checkMatches(cpMvRegex, command, 1, agentWorkDir, violations);
 
   // 4. curl/wget output: curl -o file, curl --output file, wget -O file
@@ -288,7 +301,8 @@ function detectBashWriteTargets(command, agentWorkDir) {
   checkMatches(nodeWriteRegex, command, 1, agentWorkDir, violations);
 
   // 7. install/rsync: install [-m...] source dest, rsync ... dest
-  const installRegex = /\binstall\s+(?:-[a-zA-Z]+\s+)*(?:[^\s;|&]+\s+)+([^\s;|&"']+)/g;
+  //    Flags match the token loop too (same collapse as cp/mv).
+  const installRegex = /\binstall(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&"']+)/g;
   checkMatches(installRegex, command, 1, agentWorkDir, violations);
 
   // 8. dd output: dd ... of=path
@@ -300,15 +314,16 @@ function detectBashWriteTargets(command, agentWorkDir) {
   checkMatches(sedRegex, command, 1, agentWorkDir, violations);
 
   // 10. rm/rmdir: rm [-rf] path (destructive, not write, but equally dangerous)
-  const rmRegex = /\b(?:rm|rmdir)\s+(?:-[a-zA-Z]+\s+)*([^\s;|&"']+)/g;
+  const rmRegex = /\b(?:rm|rmdir)(?:\s+-[a-zA-Z]{1,16})*\s+([^\s;|&"']+)/g;
   checkMatches(rmRegex, command, 1, agentWorkDir, violations);
 
   // 11. chmod/chown: targeting files outside sandbox
-  const chmodRegex = /\b(?:chmod|chown)\s+(?:-[a-zA-Z]+\s+)*(?:\S+\s+)+([^\s;|&"']+)/g;
+  //     Flags match the token loop too (same collapse as cp/mv).
+  const chmodRegex = /\b(?:chmod|chown)(?:\s+\S{1,4096})+\s+([^\s;|&"']+)/g;
   checkMatches(chmodRegex, command, 1, agentWorkDir, violations);
 
   // 12. ln -s: creating symlinks that point into the sandbox from outside
-  const lnRegex = /\bln\s+(?:-[a-zA-Z]+\s+)*(?:[^\s;|&]+\s+)([^\s;|&"']+)/g;
+  const lnRegex = /\bln(?:\s+-[a-zA-Z]{1,16})*\s+[^\s;|&]+\s+([^\s;|&"']+)/g;
   checkMatches(lnRegex, command, 1, agentWorkDir, violations);
 
   return violations;
