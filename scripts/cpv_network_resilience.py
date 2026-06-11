@@ -24,6 +24,7 @@ spikes (DNS hiccup, AWS edge restart, rate-limit window). For git
 pushes the 60×4=240s budget plus the lowSpeedTime tolerance handles
 slow uploads on flaky transit (Fastweb, mobile tethering).
 """
+
 from __future__ import annotations
 
 import os
@@ -47,7 +48,7 @@ GH_HTTP_TIMEOUT_SEC: int = 300
 GIT_MAX_ATTEMPTS: int = 60
 GIT_BACKOFF_SEC: float = 4.0
 GIT_LOW_SPEED_LIMIT: int = 100  # bytes/sec floor below which transfer is "stalled"
-GIT_LOW_SPEED_TIME: int = 300   # seconds to tolerate stalled before aborting
+GIT_LOW_SPEED_TIME: int = 300  # seconds to tolerate stalled before aborting
 
 DEFAULT_TIMEOUT_SEC: float = 600.0  # per-attempt subprocess timeout
 
@@ -74,6 +75,15 @@ _TRANSIENT_SUBPROCESS_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"openssl ssl_read.* error", re.IGNORECASE),
     re.compile(r"network is unreachable", re.IGNORECASE),
     re.compile(r"transient .* failure", re.IGNORECASE),
+    # Go net package errors (gh CLI is Go-built; transient on flaky links).
+    # Examples seen in the wild:
+    #   `dial tcp 140.82.121.6:443: i/o timeout`
+    #   `read tcp 192.168.1.5:55432->140.82.121.6:443: i/o timeout`
+    #   `Get "https://api.github.com/...": context deadline exceeded`
+    re.compile(r"\bi/o timeout\b", re.IGNORECASE),
+    re.compile(r"\bcontext deadline exceeded\b", re.IGNORECASE),
+    re.compile(r"\bdial tcp\b.*\btimeout\b", re.IGNORECASE),
+    re.compile(r"\bno such host\b", re.IGNORECASE),  # transient DNS hiccup
 ]
 
 # These signatures indicate a permanent failure — NEVER retry. Permanent
@@ -90,8 +100,7 @@ _PERMANENT_SUBPROCESS_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b404\s+not\s+found\b", re.IGNORECASE),
     re.compile(r"name already exists on this account", re.IGNORECASE),
     re.compile(r"refusing to (?:overwrite|update)", re.IGNORECASE),
-    re.compile(r"unable to access .* the requested url returned error: 4\d\d",
-               re.IGNORECASE),
+    re.compile(r"unable to access .* the requested url returned error: 4\d\d", re.IGNORECASE),
 ]
 
 
@@ -177,22 +186,56 @@ def run_with_retry(
     `print_cmd=True` prints the command before the FIRST attempt (handy
     when wrapping a previously-print-and-run helper).
     """
+    # Fail fast on a nonsensical budget rather than silently returning None.
+    # A bare `assert` at the tail would vanish under `python -O` and let the
+    # function return None (violating the declared CompletedProcess return),
+    # so validate explicitly — matching git_with_retry's ValueError idiom.
+    if max_attempts < 1:
+        raise ValueError(f"max_attempts must be >= 1, got {max_attempts}")
     if timeout is None:
         timeout = DEFAULT_TIMEOUT_SEC
     if print_cmd:
         print(f"  $ {' '.join(cmd)}")
 
     last_result: subprocess.CompletedProcess[str] | None = None
+    # A per-attempt timeout is the canonical symptom of a stalled network
+    # transfer (hung git push / stuck gh API call) — exactly what this module
+    # exists to survive. subprocess.run raises TimeoutExpired instead of
+    # returning a non-zero CompletedProcess, so without this handling a single
+    # stall would escape uncaught and burn ZERO of the retry budget. Treat it
+    # as a transient failure: retry up to max_attempts, then re-raise the
+    # timeout (fail-fast — never swallow it into a fake "success").
     for attempt in range(1, max_attempts + 1):
-        result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            env=env,
-            check=False,
-            capture_output=capture_output,
-            text=text,
-            timeout=timeout,
-        )
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=cwd,
+                env=env,
+                check=False,
+                capture_output=capture_output,
+                text=text,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            if attempt < max_attempts:
+                if on_retry is not None:
+                    # No CompletedProcess exists on timeout; synthesize a
+                    # placeholder (returncode 124 = the conventional SIGTERM-
+                    # by-timeout code) so the callback signature still holds.
+                    on_retry(
+                        attempt,
+                        subprocess.CompletedProcess(cmd, 124, stdout=None, stderr=None),
+                    )
+                else:
+                    print(
+                        f"  [retry {attempt}/{max_attempts}] transient: timed out after {timeout:g}s",
+                        file=sys.stderr,
+                    )
+                time.sleep(backoff)
+                continue
+            # Budget exhausted on a timeout — propagate the real cause so the
+            # caller sees TimeoutExpired, not a swallowed/fake result.
+            raise
         if result.returncode == 0:
             return result
         last_result = result
@@ -217,15 +260,22 @@ def run_with_retry(
                 )
             time.sleep(backoff)
 
-    if check and last_result is not None and last_result.returncode != 0:
-        raise subprocess.CalledProcessError(
-            last_result.returncode,
-            cmd,
-            output=last_result.stdout,
-            stderr=last_result.stderr,
-        )
-    assert last_result is not None
-    return last_result
+    # If the loop ended on a non-zero CompletedProcess, handle it here.
+    if last_result is not None:
+        if check and last_result.returncode != 0:
+            raise subprocess.CalledProcessError(
+                last_result.returncode,
+                cmd,
+                output=last_result.stdout,
+                stderr=last_result.stderr,
+            )
+        return last_result
+    # Unreachable: with max_attempts >= 1 the loop either returns a result,
+    # breaks with last_result set, or re-raises TimeoutExpired on the final
+    # attempt. Raise explicitly (not a bare `assert`, which `-O` strips) so any
+    # future refactor that breaks this invariant fails loudly instead of
+    # returning None against the declared CompletedProcess return type.
+    raise AssertionError("run_with_retry produced no result despite max_attempts >= 1")
 
 
 # ── gh / git convenience wrappers ────────────────────────────────────────────
@@ -282,8 +332,10 @@ def git_with_retry(
         raise ValueError("git_with_retry requires cmd[0] == 'git'")
     augmented = [
         cmd[0],
-        "-c", f"http.lowSpeedLimit={GIT_LOW_SPEED_LIMIT}",
-        "-c", f"http.lowSpeedTime={GIT_LOW_SPEED_TIME}",
+        "-c",
+        f"http.lowSpeedLimit={GIT_LOW_SPEED_LIMIT}",
+        "-c",
+        f"http.lowSpeedTime={GIT_LOW_SPEED_TIME}",
         *cmd[1:],
     ]
     return run_with_retry(
