@@ -21,13 +21,15 @@ ENABLE_LINTERS:
   - REPOSITORY_GITLEAKS
   - REPOSITORY_TRIVY
 
-# Exclude paths — _dev/ scratch trees, Claude/TLDR caches, llm-externalizer
-# output. Single-quoted so YAML does not interpret `\.` as an escape (the
-# template's double-quoted form is invalid YAML). Must stay on one line:
-# mega-linter feeds this verbatim to grep, and YAML block-scalar folding
-# would inject spaces inside the alternation.
+# Exclude paths — single-quoted YAML scalar so regex \. is read literally
+# (double-quoted YAML treats \. as an invalid escape and yamllint rejects it).
+# Test FIXTURES are excluded for EVERY language Mega-Linter runs: fixtures are
+# deliberately-malformed sample data used to exercise the plugin's own
+# validators/tests, so linting them would "fix" the very defects the tests rely
+# on. Covers tests/fixtures, test/fixtures, spec/fixtures, __fixtures__ (JS),
+# testdata (Go), and a bare fixtures/ dir.
 # yamllint disable-line rule:line-length
-FILTER_REGEX_EXCLUDE: '(tests_dev/|docs_dev/|scripts_dev/|samples_dev/|examples_dev/|builds_dev/|downloads_dev/|libs_dev/|llm_externalizer_output/|\.claude/|\.tldr/)'
+FILTER_REGEX_EXCLUDE: '(tests_dev/|docs_dev/|scripts_dev/|samples_dev/|examples_dev/|builds_dev/|downloads_dev/|libs_dev/|llm_externalizer_output/|\.claude/|\.tldr/|tests?/fixtures/|spec/fixtures/|__fixtures__/|testdata/|fixtures/)'
 
 # Python settings
 PYTHON_RUFF_ARGUMENTS: "--select=E,F,W,I --ignore=E501"
@@ -40,12 +42,14 @@ COPYPASTE_JSCPD_ARGUMENTS: "--threshold 5"
 REPOSITORY_CHECKOV_ARGUMENTS: "--skip-check CKV2_GHA_1"
 
 # Markdown settings — allow long lines in README (badges).
-# Single-quoted so YAML does not interpret `\.` as an escape sequence.
+# Single-quoted so the regex \. is read literally by yamllint.
 MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: 'CHANGELOG\.md'
 
-# Spell check — exclude lockfiles + JSON (single-quoted for YAML safety).
+# Spell check — single-quoted so the regex \. is read literally by yamllint.
 SPELL_CSPELL_FILTER_REGEX_EXCLUDE: '(uv\.lock|\.json)'
 
-# Disable reporters that create PR comments (we handle that ourselves)
-DISABLE_REPORTERS:
-  - GITHUB_COMMENT_REPORTER
+# Disable reporters that create PR comments (we handle that ourselves).
+# Issue #29 (v2.97.0): the deprecated DISABLE_REPORTERS list form fails
+# Mega-Linter v8+ JSON Schema validation — the v8+ schema uses one
+# boolean key per reporter. Keep the boolean form below.
+GITHUB_COMMENT_REPORTER: false
