@@ -1,6 +1,17 @@
+---
+trdd-id: 71a2239a-4d06-42af-b083-588954385fdc
+title: Hash-pin the pre-push hook template
+column: backburner
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: security
+severity: HIGH
+relevant-rules: []
+---
+
 # TRDD-71a2239a-4d06-42af-b083-588954385fdc — Hash-pin the pre-push hook template
 
-**TRDD ID:** `71a2239a-4d06-42af-b083-588954385fdc`
 **Filename:** `design/tasks/TRDD-71a2239a-4d06-42af-b083-588954385fdc-aegis-pre-push-hook-integrity.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/aegis-security.md` (HIGH-05)

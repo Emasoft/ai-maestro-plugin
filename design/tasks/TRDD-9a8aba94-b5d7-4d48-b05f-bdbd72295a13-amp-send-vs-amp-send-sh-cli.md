@@ -1,6 +1,17 @@
+---
+trdd-id: 9a8aba94-b5d7-4d48-b05f-bdbd72295a13
+title: Reconcile amp-send vs amp-send.sh CLI naming
+column: backburner
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: docs
+severity: HIGH
+relevant-rules: []
+---
+
 # TRDD-9a8aba94-b5d7-4d48-b05f-bdbd72295a13 — Reconcile `amp-send` vs `amp-send.sh` CLI naming
 
-**TRDD ID:** `9a8aba94-b5d7-4d48-b05f-bdbd72295a13`
 **Filename:** `design/tasks/TRDD-9a8aba94-b5d7-4d48-b05f-bdbd72295a13-amp-send-vs-amp-send-sh-cli.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/skill-content-audit.md` (A11.2)

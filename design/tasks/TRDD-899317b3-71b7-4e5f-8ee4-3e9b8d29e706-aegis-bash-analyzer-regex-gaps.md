@@ -1,6 +1,17 @@
+---
+trdd-id: 899317b3-71b7-4e5f-8ee4-3e9b8d29e706
+title: Strengthen directory-guard bash analyzer
+column: backburner
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: security
+severity: HIGH
+relevant-rules: []
+---
+
 # TRDD-899317b3-71b7-4e5f-8ee4-3e9b8d29e706 — Strengthen directory-guard bash analyzer
 
-**TRDD ID:** `899317b3-71b7-4e5f-8ee4-3e9b8d29e706`
 **Filename:** `design/tasks/TRDD-899317b3-71b7-4e5f-8ee4-3e9b8d29e706-aegis-bash-analyzer-regex-gaps.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/aegis-security.md` (HIGH-01)

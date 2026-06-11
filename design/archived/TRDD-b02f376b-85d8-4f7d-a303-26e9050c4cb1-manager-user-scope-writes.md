@@ -1,9 +1,20 @@
+---
+trdd-id: b02f376b-85d8-4f7d-a303-26e9050c4cb1
+title: Tamper-proof title verification for the directory-guard hook
+column: cancelled
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: security
+severity: HIGH
+relevant-rules: []
+---
+
 # TRDD-b02f376b — Tamper-proof title verification for the directory guard hook (MANAGER user-scope writes)
 
-**TRDD ID:** `b02f376b-85d8-4f7d-a303-26e9050c4cb1`
-**Filename:** `design/tasks/TRDD-b02f376b-85d8-4f7d-a303-26e9050c4cb1-manager-user-scope-writes.md`
-**Tracked in:** `Emasoft/ai-maestro-plugins` → `ai-maestro-plugin/` (this repo, `design/tasks/` is git-tracked)
-**Status:** **SUPERSEDED — 2026-05-08.** The fork's `Emasoft/ai-maestro` `governance-rules` branch
+**Filename:** `design/archived/TRDD-b02f376b-85d8-4f7d-a303-26e9050c4cb1-manager-user-scope-writes.md`
+**Tracked in:** `Emasoft/ai-maestro-plugins` → `ai-maestro-plugin/` (this repo, `design/archived/` is git-tracked)
+**Status:** **CANCELLED — 2026-05-08** (v2 `column: cancelled` — the premise was invalidated, with no replacement TRDD). The fork's `Emasoft/ai-maestro` `governance-rules` branch
 codifies R17 (Mandatory Core Plugin Installation) which **forbids** installing
 `ai-maestro-plugin` at user scope (R17.17) and **requires** every agent (including
 MANAGER) to install all plugins at `--scope local` in `~/agents/<name>/` (R17.2,

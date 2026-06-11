@@ -1,6 +1,17 @@
+---
+trdd-id: 9e80e484-221a-4b2c-a252-b5820af4ea19
+title: Sibling-skill prose-pointer weakness
+column: backburner
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: docs
+severity: LOW
+relevant-rules: []
+---
+
 # TRDD-9e80e484-221a-4b2c-a252-b5820af4ea19 — Sibling-skill prose-pointer weakness
 
-**TRDD ID:** `9e80e484-221a-4b2c-a252-b5820af4ea19`
 **Filename:** `design/tasks/TRDD-9e80e484-221a-4b2c-a252-b5820af4ea19-sibling-skill-prose-pointer-weakness.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/skeptical-review.md` (SR-002)

@@ -1,6 +1,17 @@
+---
+trdd-id: 9f10ed97-cd63-4160-adf4-48362f1015e2
+title: Expand team-governance Examples section
+column: backburner
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: docs
+severity: HIGH
+relevant-rules: []
+---
+
 # TRDD-9f10ed97-cd63-4160-adf4-48362f1015e2 — Expand team-governance Examples section
 
-**TRDD ID:** `9f10ed97-cd63-4160-adf4-48362f1015e2`
 **Filename:** `design/tasks/TRDD-9f10ed97-cd63-4160-adf4-48362f1015e2-team-governance-examples-thin.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/skill-content-audit.md` (A11.1)

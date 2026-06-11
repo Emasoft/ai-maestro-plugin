@@ -30,6 +30,7 @@ import prrd_lib as plib  # noqa: E402
 
 # Column ordering for visual layout
 COLUMN_GROUPS = [
+    ("APPROVAL", ["proposal", "planned"]),
     ("ENTRY", ["backburner", "todo", "live_auditing"]),
     ("DESIGN", ["design", "dispatch"]),
     ("WORK", ["dev", "testing", "ai_review", "human_review"]),
@@ -37,12 +38,14 @@ COLUMN_GROUPS = [
     ("SHIP-tools", ["publish", "published"]),
     ("SHIP-services", ["deploy", "live"]),
     ("RED", ["blocked"]),
-    ("DEAD", ["failed", "superseded"]),
+    ("DEAD", ["failed", "refused", "cancelled", "superseded"]),
 ]
 
 ALL_COLUMNS = [c for _, cols in COLUMN_GROUPS for c in cols]
 
 WORKING_COLUMNS = {
+    "proposal",
+    "planned",
     "backburner",
     "todo",
     "design",
@@ -56,7 +59,17 @@ WORKING_COLUMNS = {
     "deploy",
     "live_auditing",
 }
-TERMINAL_COLUMNS = {"published", "live", "failed", "superseded"}
+# refused/cancelled are terminal alongside published/live/failed/superseded.
+# `failed` is RETRYABLE (stays in design/tasks/) but is terminal for board
+# layout purposes; it is NOT archived. See approval-tiers-and-zones.md.
+TERMINAL_COLUMNS = {
+    "published",
+    "live",
+    "failed",
+    "refused",
+    "cancelled",
+    "superseded",
+}
 
 
 def main(argv: list[str] | None = None) -> int:

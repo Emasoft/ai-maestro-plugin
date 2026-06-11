@@ -1,6 +1,17 @@
+---
+trdd-id: 4b298890-2cf2-4828-a06f-46c4a8580c82
+title: Strengthen pre-push gate against bash -c / exec -a ancestor spoofing
+column: backburner
+created: 2026-05-08T00:00:00+0200
+updated: 2026-06-11T11:35:00+0200
+current-owner: null
+task-type: security
+severity: HIGH
+relevant-rules: []
+---
+
 # TRDD-4b298890-2cf2-4828-a06f-46c4a8580c82 — Strengthen pre-push gate against `bash -c` / `exec -a` ancestor spoofing
 
-**TRDD ID:** `4b298890-2cf2-4828-a06f-46c4a8580c82`
 **Filename:** `design/tasks/TRDD-4b298890-2cf2-4828-a06f-46c4a8580c82-aegis-pre-push-gate-bash-c-bypass.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/aegis-security.md` (HIGH-02)

@@ -31,6 +31,10 @@ if str(_HERE) not in sys.path:
 import prrd_lib as plib  # noqa: E402
 
 KNOWN_COLUMNS = {
+    # approval lifecycle (4-zone model — see approval-tiers-and-zones.md)
+    "proposal",
+    "planned",
+    # entry / design / work / ready / ship / operate
     "backburner",
     "todo",
     "design",
@@ -45,8 +49,11 @@ KNOWN_COLUMNS = {
     "deploy",
     "live",
     "live_auditing",
+    # exceptions / terminal
     "blocked",
     "failed",
+    "refused",
+    "cancelled",
     "superseded",
 }
 
