@@ -1487,7 +1487,7 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
             cprint(f"  Would skip tag (already exists locally): {tag}")
         else:
             cprint(f"  Would tag: {tag}")
-        cprint(f"  Would push: origin HEAD {tag}")
+        cprint(f"  Would push (atomic): origin HEAD {tag}")
         return
 
     if head_subject == expected_subject and tree_clean:
