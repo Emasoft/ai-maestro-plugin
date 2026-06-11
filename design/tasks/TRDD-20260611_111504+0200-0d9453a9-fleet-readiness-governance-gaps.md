@@ -1,9 +1,9 @@
 ---
 trdd-id: 0d9453a9-aa39-488b-a404-ccea7fa005fc
 title: Fleet-readiness governance gaps — close M1-M13 audit findings (GH issue #5)
-column: dev
+column: published
 created: 2026-06-11T11:15:04+0200
-updated: 2026-06-11T11:15:04+0200
+updated: 2026-06-11T12:10:00+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 1
@@ -20,12 +20,22 @@ test-requirements: [unit, lint]
 review-requirements: [human-review]
 runtime-targets: [macos, linux]
 impacts: [public-api]
+published-version: 2.7.0
+published-at: 2026-06-11T12:08:00+0200
+implementation-commits: [93373fd, d67370c, 3db0ef0, 5f96859, d6ab99d, 2a58501]
 external-refs: ["github.com/Emasoft/ai-maestro-plugin/issues/5"]
 ---
 
 # TRDD-0d9453a9 — Fleet-readiness governance gaps (GH issue #5)
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-06-11
+
+**DONE — published as v2.7.0** (release: https://github.com/Emasoft/ai-maestro-plugin/releases/tag/v2.7.0).
+All M1-M13 ✗/PARTIAL findings addressed; CPV `--strict` exits 0 (0 blocking,
+12 advisory WARNINGs); 93 tests pass. CI runs for 2a58501 being monitored to green.
+**Remaining:** reply on issue #5 with the per-finding resolution + published version
+(once CI confirmed green). Cosmetic carry-forward: local commit 84a56b7 syncs
+uv.lock editable→2.7.0, lands on next publish (pre-push hook needs publish.py ancestry).
 
 **Source work order:** GitHub issue #5 (MANAGER fleet-readiness audit). The user
 explicitly authorized "read the github issues and implement/fix all pending."
