@@ -391,6 +391,8 @@ claude plugin enable plugin-name@marketplace-name --scope local
 
 **Note:** Only plugins support per-project enable/disable. Standalone elements can only be shadowed by local elements with the same name.
 
+A plugin may declare `"defaultEnabled": false` in `plugin.json` (2.1.154+) so it installs disabled; users opt in via `/plugin` or `claude plugin enable`. Dependency-aware (2.1.147+): `disable` refuses when another enabled plugin depends on the target, and `enable` force-enables transitive dependencies.
+
 ### 20. Update, Reload, Validate, Clean
 
 ```bash
@@ -410,6 +412,13 @@ AI Maestro round-trip is needed.
 ```bash
 claude plugin prune
 ```
+
+**Reload skills without restart (2.1.152+).** `/reload-skills` re-scans skill
+directories live; a `SessionStart` hook may return `reloadSkills: true` to do the
+same automatically. **Scaffold a new plugin (2.1.157+):** `claude plugin init
+<name>` creates the skeleton under `.claude/skills`. Plugin-bundled stdio MCP
+servers receive `CLAUDE_PROJECT_DIR` (2.1.157+) and `CLAUDE_CODE_SESSION_ID`
+(2.1.169+) in their environment, matching hooks and Bash.
 
 ### 21. Manage Marketplaces
 
@@ -551,13 +560,13 @@ tmux attach-session -t my-api
 
 ### Element Internal Structure
 
-**Skills** — Folder with `SKILL.md` + optional YAML frontmatter. Fields: `description`, `name`, `version`, `author`, `tags`, `globs`.
+**Skills** — Folder with `SKILL.md` + optional YAML frontmatter. Fields: `description`, `name`, `version`, `author`, `tags`, `globs`, `allowed-tools`, `disallowed-tools`. `disallowed-tools` (Claude Code 2.1.152+) removes the named tools from the model while the skill is active — the inverse of `allowed-tools`.
 
-**Agents** — `.md` file with optional frontmatter. Fields: `name`, `description`, `model`.
+**Agents** — `.md` file with optional frontmatter. Fields: `name`, `description`, `model` (optional — omit to inherit the session model; pin only when a specific tier is required). A dispatched sub-agent may itself spawn sub-agents, nested up to 5 levels deep (2.1.172+); `subagent_type` matching is case- and separator-insensitive (2.1.140+, e.g. `"Code Reviewer"` resolves to `code-reviewer`).
 
 **Rules** — `.md` file. First non-heading line used as preview.
 
-**Commands** — `.md` file. Triggered with `/<filename>`. Field: `description`.
+**Commands** — `.md` file. Triggered with `/<filename>`. Fields: `description`, `argument-hint`, `allowed-tools`, `disallowed-tools` (2.1.152+). Quote any frontmatter value that starts with `[` (e.g. `argument-hint: "[path] [--flag]"`) so YAML does not parse it as a flow sequence.
 
 **Hooks** — In `hooks/hooks.json` (plugins) or settings files. Fields: `event`, `matcher`, `command`, `type`, `sync`.
 
