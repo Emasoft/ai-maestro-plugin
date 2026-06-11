@@ -16,12 +16,9 @@ or exits non-zero with a diagnostic. Role plugins call it instead of hard-coding
 a path:
 
 ```bash
-DIR="$(sh "$CLAUDE_PLUGIN_ROOT/scripts/prrd-trdd/resolve_pillar_scripts.sh" 2>/dev/null \
-       || sh "$AI_MAESTRO_PRRD_SCRIPTS_DIR/resolve_pillar_scripts.sh")" 2>/dev/null
-# Simplest form, when the role plugin bundles a copy of the resolver OR relies on
-# the env override / cache search:
-DIR="$(sh resolve_pillar_scripts.sh)" || {
-  echo "ai-maestro-plugin base not installed; see its README" >&2; exit 1; }
+# The role plugin invokes the resolver (bundled or found on PATH) and uses the
+# directory it prints. If the resolver exits non-zero, the base is not installed.
+DIR=$(sh resolve_pillar_scripts.sh) || { echo "ai-maestro-plugin base not installed; see its README" >&2; exit 1; }
 python3 "$DIR/get-prrd.py" --list
 ```
 
@@ -34,6 +31,11 @@ Resolution order (first hit wins):
 3. **`~/.claude/plugins/cache/*/ai-maestro-plugin/*/scripts/prrd-trdd`** — the
    highest installed version (`sort -V`). This is how a SEPARATE role plugin
    reaches the base after both are installed from the marketplace.
+
+## Contents
+
+- Two supported delivery models
+- Why a resolver, not a hard-coded path
 
 ## Two supported delivery models
 

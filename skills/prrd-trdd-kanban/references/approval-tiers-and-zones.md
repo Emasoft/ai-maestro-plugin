@@ -8,6 +8,14 @@ executed. Role plugins defer to this file. It is a unifying layer over
 [trdd-design-tasks.md](trdd-design-tasks.md) (the `column:` pipeline), and
 [prrd-design-rules.md](prrd-design-rules.md) (GOLDEN/SILVER).
 
+## Contents
+
+- A. The four design zones
+- B. The `proposal → planned` lifecycle
+- C. The four-tier approval ladder
+- D. Single-writer-per-domain (collision avoidance)
+- Batch approval syntax (the fast path)
+
 ## A. The four design zones
 
 A TRDD lives in exactly one of four folders, by lifecycle state:

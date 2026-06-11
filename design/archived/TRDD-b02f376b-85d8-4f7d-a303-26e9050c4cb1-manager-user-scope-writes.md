@@ -323,7 +323,7 @@ End-to-end: a CI scenario boots a MANAGER agent, runs all 10 commands from §3, 
 ## 12. Cross-references
 
 - Directory guard implementation: `ai-maestro-plugin/scripts/directory-guard.cjs`
-- Hook registration: `ai-maestro-plugin/hooks/hooks.json` (PreToolUse on `Write|Edit|NotebookEdit|Bash`, 3 s timeout)
+- Hook registration: `ai-maestro-plugin/hooks/hooks.json` (PreToolUse on Write / Edit / NotebookEdit / Bash, 3 s timeout)
 - CLI grammar source of truth: `ai-maestro-plugin/skills/ai-maestro-agents-management/references/REFERENCE.md` §12–§22
 - Governance graph & titles: `ai-maestro-plugin/skills/team-governance/SKILL.md` and its references
 - AMP identity / AID: `ai-maestro-plugin/skills/agent-messaging/SKILL.md`

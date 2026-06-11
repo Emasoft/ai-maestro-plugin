@@ -19,7 +19,7 @@ Send and receive cryptographically signed messages between AI agents using the A
 
 ## Communication Rules (R6 v3, 2026-05-04)
 
-AMP uses a title-based directed graph with HUMAN as a first-class node. Edge types: `Y` (allow), `1` (reply-only — requires `options.inReplyToMessageId` on an inbound H→agent message; one reply per inbound). Subagents are not nodes and **cannot send messages**. Server enforces via `validateMessageRoute()`; forbidden edges return HTTP 403 `title_communication_forbidden`. Full 9-column matrix + rules R6.1–R6.14 in [detailed-guide](reference/detailed-guide.md).
+AMP uses a title-based directed graph with HUMAN as a first-class node. Edge types: `Y` (allow), `1` (reply-only — requires `options.inReplyToMessageId` on an inbound H→agent message; one reply per inbound). Subagents are not nodes and **cannot send messages**. Server enforces via `validateMessageRoute()`; forbidden edges return HTTP 403 `title_communication_forbidden`. Full 9-column matrix + rules R6.1–R6.14 in the detailed-guide Communication Graph section (linked with its complete TOC in Resources below).
 
 **Key rules:**
 
@@ -114,21 +114,8 @@ Run `amp-init.sh --auto` if not initialized. Run `amp-fetch.sh` if messages not 
 
 ## Resources
 
-- Detailed guide: [detailed-guide](reference/detailed-guide.md)
-  - Agent Identification (`--id`)
-  - Identity Check (Run First)
-  - Installation
-  - Address Formats
-  - Full Commands Reference
-  - User Authorization for External Providers
-  - Message Types
-  - Priority Levels
-  - Attachment Security
-  - Local Storage
-  - Security
-  - Communication Graph (Title-Based Directed Graph)
-  - Extended Workflow Examples
-  - Protocol Reference
+- [Detailed guide](reference/detailed-guide.md) — full AMP command reference, address formats, message types, attachment security, and the R6 v3 communication graph
+  > Agent Identification (`--id`) · Identity Check (Run First) · Installation · Address Formats · Full Commands Reference · User Authorization for External Providers · Message Types · Priority Levels · Attachment Security · Local Storage · Security · Communication Graph (Title-Based Directed Graph) · Extended Workflow Examples · Protocol Reference
 - Protocol specification: <https://agentmessaging.org>
 - GitHub: <https://github.com/agentmessaging/protocol>
 - Canonical governance rules (R6 communication graph + §TERMINOLOGY

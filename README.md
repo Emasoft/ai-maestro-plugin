@@ -16,6 +16,37 @@ See the [main repo][repo] for the wider ecosystem.
 
 [repo]: https://github.com/Emasoft/ai-maestro-plugins
 
+## Installation
+
+Install from the `Emasoft/ai-maestro-plugins` marketplace inside Claude Code:
+
+```text
+/plugin marketplace add Emasoft/ai-maestro-plugins
+/plugin install ai-maestro-plugin
+```
+
+The PRRD/TRDD/Kanban pillar scripts need Python 3.10+ on `PATH`. The AMP/AID
+shell scripts need the `curl, jq, openssl, base64` CLI tools. The optional `memgrep`
+note-recall engine installs from a prebuilt release binary via
+`scripts/install-memgrep.sh` (cargo-build fallback; recall degrades to plain
+grep without it). Most messaging features also require a running AI Maestro
+server on `http://localhost:23000`.
+
+## Usage
+
+The plugin loads its skills automatically; invoke a workflow with its slash
+command or by describing the task:
+
+```text
+/prrd-trdd-kanban          # read/mutate PRRD rules, author/find TRDDs, render the board
+/team-governance           # team governance and COS management
+/amp-inbox                 # check the inter-agent message inbox
+/amp-send <to> <subj> <msg>  # send a message to another agent
+```
+
+Per-skill usage and examples live in each skill's `SKILL.md`; the AMP commands
+are documented in the table below.
+
 ## Skills
 
 | Skill                           | Description                                  |

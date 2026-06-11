@@ -28,6 +28,14 @@ The fleet workflow has **three dialog loops** and **one ownership rule**:
 
 ---
 
+## Contents
+
+- Loop (a) — Task-comprehension handshake (BEFORE coding starts)
+- Loop (b) — In-dev issue dialog (DURING coding, any time)
+- Loop (c) — Pre-PR gate (BEFORE the PR opens)
+- Ownership rule — INTEGRATOR owns the column → `completed` flip
+- Why this exists
+
 ## Loop (a) — Task-comprehension handshake (BEFORE coding starts)
 
 **When:** the instant a MEMBER is assigned a TRDD (`dispatch → dev`), before
