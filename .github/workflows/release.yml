@@ -27,8 +27,12 @@ jobs:
       - name: Run full plugin validation (remote CPV, --strict)
         # Bound the remote uvx CPV fetch so a transient git-fetch stall fails
         # fast (rerunnable) instead of hanging the release — see
-        # Emasoft/claude-plugins-validation#90.
-        timeout-minutes: 12
+        # Emasoft/claude-plugins-validation#90. 25 min (not 12): a COLD CI
+        # runner pays for the uvx CPV build PLUS the whole-repo 15-language
+        # lint (each linter installed on demand); on this plugin that
+        # legitimately exceeds 12 min cold (≈7 s locally with warm caches).
+        # 25 min bounds a genuine infinite stall well below the 6-hour default.
+        timeout-minutes: 25
         # Fetches CPV from GitHub so downstream plugins do not need to
         # vendor a local validator script. Matches publish.py's local
         # gate and the CI validate job. --strict blocks on CRITICAL /
