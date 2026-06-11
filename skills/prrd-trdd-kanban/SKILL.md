@@ -1,7 +1,7 @@
 ---
 name: prrd-trdd-kanban
 description: "Universal PRRD / TRDD / Kanban workflow skill. Use when reading or mutating project rules (PRRD), authoring/finding/editing task design documents (TRDDs), or rendering the kanban board. Trigger with /prrd-trdd-kanban or whenever a project under design/ needs structured task or rule operations."
-allowed-tools: "Bash(python3:*), Bash(get-prrd.py:*), Bash(prrd-edit.py:*), Bash(findprrd.py:*), Bash(findtrdd.py:*), Bash(kanban.py:*), Read, Edit, Grep, Glob"
+allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(get-prrd.py:*), Bash(prrd-edit.py:*), Bash(findprrd.py:*), Bash(findtrdd.py:*), Bash(kanban.py:*), Bash(bootstrap_design.py:*), Bash(amama_proposal_approvals.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
   version: "1.1.0"
@@ -18,12 +18,15 @@ common mechanics. Three ingredients:
   `design/requirements/PRRD.md`. Silver = MANAGER-mutable, golden =
   USER-only. Citation `PRRD G64.134` (lookup by bare number; G/S is
   annotation).
-- **TRDD** — atomic task docs at
+- **TRDD** — atomic task docs that move through four `design/` zones
+  (`proposals/` → `tasks/` → `refused/`/`archived/`); the OPEN zone is
   `design/tasks/TRDD-<ts>-<uid8>-<slug>.md` (YAML frontmatter + body).
-  Short ref `TRDD-9a8aba94`.
-- **Kanban** — 17 columns rendered as a VIEW over the TRDD pile (the
-  TRDDs ARE the kanban). The **blocked column** (RED) is the chief
-  source of delays, owned by ORCHESTRATOR.
+  Short ref `TRDD-9a8aba94`. Approval tier + zone lifecycle:
+  [approval-tiers-and-zones.md](references/approval-tiers-and-zones.md).
+- **Kanban** — the column pipeline rendered as a VIEW over the TRDD pile (the
+  TRDDs ARE the kanban). The work columns are wrapped by the three
+  [dialog-loops.md](references/dialog-loops.md). The **blocked column** (RED) is
+  the chief source of delays, owned by ORCHESTRATOR.
 
 ## Prerequisites
 
@@ -63,13 +66,58 @@ table in [scripts-usage.md](references/scripts-usage.md).
 See [scripts-usage.md](references/scripts-usage.md) "Per-role quick
 examples" for AMAMA / ORCH / ARCH / INT / MEM one-liners.
 
+## Workflow dialog loops + INT-owns-completed (CANONICAL)
+
+The three back-and-forth loops that prevent wasted tokens are defined
+canonically in [dialog-loops.md](references/dialog-loops.md); every role plugin
+defers here:
+
+1. **Task-comprehension handshake** (ORCH ⇄ MEMBER, BEFORE coding) — MEMBER
+   restates the task, names files/domains, raises ambiguities + risks +
+   anticipated NPT/EHT; design flaws route back to ARCH via ORCH.
+2. **In-dev issue dialog** (MEMBER ⇄ ORCH, any time) — never silently improvise
+   around a design flaw; ORCH pulls in ARCH (design) or INT (CI/merge).
+3. **Pre-PR gate** (MEMBER ⇄ ORCH, before the PR opens) — clear "done — PR now?"
+   with ORCH before notifying INT, protecting INTEGRATOR tokens.
+
+**INTEGRATOR owns the `→ complete` flip** — INT validates the merged PR actually
+satisfies the TRDD; nobody self-marks `completed` (ORCH does not own the flip).
+
+## Approval tiers + the 4-zone design folders
+
+Every TRDD carries `approval-tier:` (0 agent-independent · 1 COS · 2 MANAGER · 3
+USER) and lives in one of four zones (`proposals/` `tasks/` `refused/`
+`archived/`). Tier 0 is the default — author directly in `design/tasks/`; tiers
+1/2/3 start as a `proposal`. Full ladder, objective tier-floor, and
+`proposal → planned` lifecycle:
+[approval-tiers-and-zones.md](references/approval-tiers-and-zones.md). Bootstrap
+the zones with `bootstrap_design.py`; batch approvals with
+`amama_proposal_approvals.py`.
+
 ## MANAGER approval discipline
 
 MANAGER approval is the DEFAULT for every significant step;
 [exempt-operations.md](references/exempt-operations.md) lists the
-EXEMPT categories, and the COS filters first via
+EXEMPT categories (= Tier 0), and the COS filters first via
 [cos-delegation-authority.md](references/cos-delegation-authority.md).
-Conservative default: unsure → non-exempt (request approval).
+Conservative default: unsure → non-exempt (request approval / escalate one tier).
+
+## Single board — anti-split-brain (team-kanban vs prrd-trdd-kanban)
+
+Two kanban surfaces exist and they are NOT interchangeable — each is the SINGLE
+writer of its own domain, so there is no split brain:
+
+- **prrd-trdd-kanban** (THIS skill) — the **design/spec board**. The TRDD files
+  under `design/` ARE the board; columns are a read-only VIEW (`kanban.py`). This
+  is authoritative for *what work exists and what column each TRDD is in*.
+- **team-kanban** — the **live team-coordination board** backed by the AI Maestro
+  server (assignments, presence, real-time task state). Authoritative for *who is
+  doing what right now*.
+
+A TRDD's `column:` is the source of truth for design-pipeline state; the team
+board references TRDDs by `TRDD-<id>` but never overrides a TRDD's column. When
+they appear to disagree, the TRDD file wins for pipeline state and the server
+wins for live assignment/presence.
 
 ## GitHub authorship self-identification (PRRD G1 / governance R22)
 
@@ -81,9 +129,15 @@ trailer. Golden rule `G1.1` in each PRRD; ecosystem governance R22.
 
 ## Resources
 
+- [references/dialog-loops.md](references/dialog-loops.md) — CANONICAL: the three dialog loops (comprehension handshake / in-dev dialog / pre-PR gate) + INTEGRATOR-owns-completed
+  > Loop (a) task-comprehension handshake · Loop (b) in-dev issue dialog · Loop (c) pre-PR gate · Ownership rule — INT owns the → complete flip · Why this exists
+- [references/approval-tiers-and-zones.md](references/approval-tiers-and-zones.md) — CANONICAL: 4-zone design folders + proposal→planned lifecycle + Tier 0/1/2/3 ladder + single-writer-per-domain + batch approvals
+  > The four design zones · The proposal → planned lifecycle · The four-tier approval ladder · Objective tier-floor · Async enforcement · Single-writer-per-domain · Batch approval syntax
 - [references/scripts-usage.md](references/scripts-usage.md) — full script usage + TRDD skeleton + exit codes + per-role examples
-  > get-prrd.py — read PRRD rules · prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation) · findprrd.py — search PRRD rules
-  > · findtrdd.py — find TRDDs · kanban.py — render the board (READ-ONLY) · Authoring a new TRDD (canonical skeleton) · Exit codes · Per-role quick examples
+  > resolve_pillar_scripts.sh — cross-plugin delivery · get-prrd.py — read PRRD rules · prrd-edit.py — mutate the PRRD (MANAGER-only) · findprrd.py — search PRRD rules
+  > · findtrdd.py — find TRDDs · kanban.py — render the board (READ-ONLY) · bootstrap_design.py — 4-zone folders · amama_proposal_approvals.py — batch approvals · Authoring a new TRDD · Exit codes · Per-role examples
+- [references/pillar-scripts-delivery.md](references/pillar-scripts-delivery.md) — how role plugins reach the base's pillar scripts at runtime (the resolver, env override, depend-vs-bundle)
+  > The problem · The mechanism · Two supported delivery models · Declaring the dependency · Why a resolver, not a hard-coded path
 - [references/prrd-design-rules.md](references/prrd-design-rules.md) — PRRD format, citation grammar, promote/demote, golden/silver, G1 baseline
   > Recommended baseline golden rule G1 — GitHub authorship self-identification · Location and shape · File anatomy
   > · Rule identity, versioning, and promote/demote · Citation grammar · Mutation rules · Proposal queue · Scripts · Cross-reference with TRDDs

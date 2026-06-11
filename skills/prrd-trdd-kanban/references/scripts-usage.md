@@ -1,19 +1,39 @@
 # PRRD/TRDD/Kanban scripts — full usage
 
-The five scripts (+ shared `prrd_lib.py`) live at
+The pillar scripts (+ shared `prrd_lib.py`) live at
 `${CLAUDE_PLUGIN_ROOT}/scripts/prrd-trdd/`. Every script accepts
 `--help`. All write to STDOUT, errors to STDERR, exit 0 on success.
 
+**Reaching the scripts from a ROLE plugin** (amama-/amoa-/…): a role plugin's
+own `${CLAUDE_PLUGIN_ROOT}` does NOT point at ai-maestro-plugin (the base that
+ships these scripts), so resolve the directory at runtime with
+`resolve_pillar_scripts.sh` (see below) — never hard-code a prose prerequisite.
+
 ## Contents
 
+- resolve_pillar_scripts.sh — locate the scripts from any plugin (delivery mechanism)
 - get-prrd.py — read PRRD rules
 - prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation)
 - findprrd.py — search PRRD rules
 - findtrdd.py — find TRDDs
 - kanban.py — render the board (READ-ONLY)
+- bootstrap_design.py — create the 4-zone design/ folders
+- amama_proposal_approvals.py — batch proposal approvals (list/approve/refuse/archive)
 - Authoring a new TRDD (canonical skeleton)
 - Exit codes
 - Per-role quick examples
+
+## resolve_pillar_scripts.sh — locate the scripts (cross-plugin delivery)
+
+```bash
+DIR="$(sh "$CLAUDE_PLUGIN_ROOT/scripts/prrd-trdd/resolve_pillar_scripts.sh")" || exit 1
+python3 "$DIR/get-prrd.py" --list
+```
+
+Resolution order: `$AI_MAESTRO_PRRD_SCRIPTS_DIR` override → the resolver's own
+dir (when called from the base) → highest `~/.claude/plugins/cache/*/ai-maestro-plugin/*/scripts/prrd-trdd`.
+Exit 1 + a stderr diagnostic if no installed base is found. Full rationale:
+[pillar-scripts-delivery.md](pillar-scripts-delivery.md).
 
 ## get-prrd.py — read PRRD rules
 
@@ -85,6 +105,35 @@ kanban.py --json
 `kanban.py` NEVER mutates a TRDD. Column moves are performed by editing
 the TRDD's `column:` frontmatter field (per
 [column-transitions.md](column-transitions.md)).
+
+## bootstrap_design.py — create the 4-zone design/ folders
+
+```bash
+bootstrap_design.py            # auto-detect project root
+bootstrap_design.py /path/to/project
+```
+
+Idempotent. Creates `design/{requirements,proposals,tasks,refused,archived}/`
+(with `.gitkeep` in the empty lifecycle zones) and removes a stray exact-match
+`design/` line from `.gitignore` (design/ is git-tracked). Zone semantics:
+[approval-tiers-and-zones.md](approval-tiers-and-zones.md).
+
+## amama_proposal_approvals.py — batch proposal approvals
+
+```bash
+amama_proposal_approvals.py list                       # number every pending proposal
+amama_proposal_approvals.py approve 4,6 --user         # or: approve <8-char-id>
+amama_proposal_approvals.py refuse 7,8 --approve-rest --user   # refuse named, approve the rest
+amama_proposal_approvals.py archive 9a8aba94 --state completed --user
+amama_proposal_approvals.py archive 9a8aba94 --cancel --user   # alias: --state cancelled
+```
+
+A selector is a list-NUMBER (resolved against the most recent `list`, by stable
+trdd-id) OR an 8-char id / full uuid. `approve` promotes proposal → planned
+(`git mv` proposals/ → tasks/); `refuse` → refused/; `archive` → archived/.
+Requires MANAGER authority or `--user`. Each decision appends an `## Approval
+log` line and `git mv`s the file (never deletes). See
+[approval-tiers-and-zones.md](approval-tiers-and-zones.md).
 
 ## Authoring a new TRDD (canonical skeleton)
 

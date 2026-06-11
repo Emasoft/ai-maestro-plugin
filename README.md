@@ -3,33 +3,38 @@
 <!--BADGES-START-->
 <!--BADGES-END-->
 
-Built from plugin.manifest.json with 5 sources.
+The umbrella core plugin for the AI Maestro ecosystem — shared skills, AMP
+messaging, AID identity, governance, kanban, and the universal PRRD/TRDD/Kanban
+workflow that every role plugin inherits.
 
-**Skills:** 11 | **Commands:** 12 | **Scripts:** 69
+**Skills:** 15 | **Commands:** 12 | **Scripts:** 15 Python/shell (+ the bundled
+`memgrep` Rust crate under `scripts/memgrep/`)
 
-Built at: 2026-03-30T00:00:00Z
+Last updated: 2026-06-11
 
-See the [main repo][repo] for source files and build instructions.
+See the [main repo][repo] for the wider ecosystem.
 
 [repo]: https://github.com/Emasoft/ai-maestro-plugins
 
 ## Skills
 
-| Skill                           | Description                          |
-|---------------------------------|--------------------------------------|
-| `ai-maestro-agents-management`  | Agent lifecycle management           |
-| `debug-hooks`                   | Hook debugging utilities             |
-| `docs-search`                   | Documentation search                 |
-| `graph-query`                   | Code graph querying                  |
-| `mcp-discovery`                 | MCP server discovery                 |
-| `memory-search`                 | Conversation memory search           |
-| `memory-recall`                 | Curated-note memory recall (memgrep) |
-| `memory-write`                  | Curated-note memory authoring        |
-| `planning`                      | Task planning (persistent files)     |
-| `team-governance`               | Team governance and COS management   |
-| `team-kanban`                   | Team kanban boards and tasks         |
-| `agent-messaging`               | AMP inter-agent messaging            |
-| `agent-identity`                | AID agent identity (Ed25519)         |
+| Skill                           | Description                                  |
+|---------------------------------|----------------------------------------------|
+| `ai-maestro-agents-management`  | Agent lifecycle management                   |
+| `agent-identity`                | AID agent identity (Ed25519)                 |
+| `agent-messaging`               | AMP inter-agent messaging                    |
+| `debug-hooks`                   | Hook debugging utilities                     |
+| `docs-search`                   | Documentation search                         |
+| `graph-query`                   | Code graph querying                          |
+| `mcp-discovery`                 | MCP server discovery                         |
+| `memory-search`                 | Conversation memory search                   |
+| `memory-recall`                 | Curated-note memory recall (memgrep)         |
+| `memory-write`                  | Curated-note memory authoring                |
+| `network-security`              | Network security checks                      |
+| `planning`                      | Task planning (persistent files)             |
+| `prrd-trdd-kanban`              | Universal PRRD / TRDD / Kanban workflow      |
+| `team-governance`               | Team governance and COS management           |
+| `team-kanban`                   | Team kanban boards and tasks                 |
 
 ## Memory: transcripts vs curated notes (two complementary systems)
 

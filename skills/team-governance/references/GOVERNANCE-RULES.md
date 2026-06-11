@@ -1,7 +1,7 @@
 ---
 version: "3.9.1"
 date: 2026-05-06
-branch: feature/phase6-jsonl-rebase-test
+branch: governance-rules
 note: "Bundled mirror — full changelog stripped; see canonical for history."
 ---
 
@@ -42,10 +42,12 @@ note: "Bundled mirror — full changelog stripped; see canonical for history."
 > source of truth lives in the `Emasoft/ai-maestro` fork:
 >
 > - Canonical path: `docs/GOVERNANCE-RULES.md`
-> - Stable raw URLs (byte-identical at the sync point):
+> - Stable raw URL (the long-lived `governance-rules` branch):
 >   `https://raw.githubusercontent.com/Emasoft/ai-maestro/governance-rules/docs/GOVERNANCE-RULES.md`
->   `https://raw.githubusercontent.com/Emasoft/ai-maestro/feature/phase6-jsonl-rebase-test/docs/GOVERNANCE-RULES.md`
-> - Synced from commit: `a17c01a4` (governance-rules / phase6-jsonl-rebase-test)
+> - NOTE (verified 2026-06-11): the canonical file is NOT yet on the `main`
+>   branch — it lives on `governance-rules`. Do NOT "correct" the URL to a
+>   `main` path; that path 404s until the doc is merged to main.
+> - Synced from commit: `a17c01a4` (on the `governance-rules` branch)
 > - Bundled in `ai-maestro-plugin` on: 2026-05-08
 > - Bundled-doc version: see the `version:` field in the YAML frontmatter
 >   above (3.9.1 at the time of this sync).

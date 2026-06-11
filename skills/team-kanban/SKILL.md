@@ -12,6 +12,16 @@ metadata:
 
 Manage team kanban boards and tasks via the AI Maestro API. Create, update, filter, delete tasks; configure columns; track dependencies; compute metrics; sync with GitHub Projects v2.
 
+**Single board — anti-split-brain (team-kanban vs prrd-trdd-kanban).** Two kanban
+surfaces exist and are NOT interchangeable — each is the SINGLE writer of its own
+domain, so there is no split brain. THIS skill is the **live team-coordination
+board** (server-backed: who is assigned what, presence, real-time task state).
+The `prrd-trdd-kanban` skill is the **design/spec board** where the TRDD files
+under `design/` ARE the board and `column:` is the source of truth for
+design-pipeline state. A team task references a TRDD by `TRDD-<id>` but never
+overrides its `column:`. When they appear to disagree: the TRDD file wins for
+pipeline state; this server board wins for live assignment/presence.
+
 ## Prerequisites
 
 - AI Maestro on `http://localhost:23000`

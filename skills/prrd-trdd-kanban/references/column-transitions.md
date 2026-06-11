@@ -15,10 +15,21 @@ See [exempt-operations.md](exempt-operations.md) for the canonical
 list, AMP approval-request template, and `## Approval log` body
 section format.
 
+**Dialog discipline:** the WORK columns (`dev` → `testing` → `ai_review`)
+are wrapped by the three dialog loops in
+[dialog-loops.md](dialog-loops.md) — the comprehension handshake before
+`dev`, the in-dev issue dialog throughout, and the **pre-PR gate** before
+the PR opens. The move INTO `complete` is owned by **INTEGRATOR** after it
+validates the merged PR actually satisfies the TRDD — nobody self-marks
+`completed`. Those loops are governance preconditions on the mechanical
+moves below.
+
 ## Contents
 
 - Reading the table
 - Master matrix
+- Pre-PR gate (dialog loop c)
+- INTEGRATOR owns the `→ complete` flip
 - Reverse moves NOT in the matrix
 - EHT gate for `complete`
 - Drift signals
@@ -50,14 +61,14 @@ section format.
 | 5 | `design` | `superseded` | ARCH | ARCH 1→N split (or N→1 group) | `superseded-by: [...new children...]`; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> split into <N>: <ids>" |
 | 5b | (new) | `dispatch` | ARCH | ARCH emits new child TRDDs from split | each child: `parent-trdd: <T_parent>`, `supersedes: [<T_parent>]`, `column: dispatch` | (covered by #5's broadcast) |
 | 6 | `dispatch` | `dev` | ORCH | ORCH assigns to an agent | `assignee: <session>`; bump `updated:`; `feature-branch:` if `delivery: pull-request` | AMP → assignee (via COS): "TRDD-<id> assigned; please implement" |
-| 7 | `dev` | `testing` | assignee (MEM/INT/AUTO) | assignee signals "code ready for tests" | bump `updated:`; record commit SHAs in `implementation-commits:` | AMP → ORCH (via COS): "TRDD-<id> code ready; running tests" |
+| 7 | `dev` | `testing` | assignee (MEM/INT/AUTO) | assignee signals "code ready for tests" **after the pre-PR gate clears with ORCH** (dialog loop c — no PR/INT notification before ORCH's "go") | bump `updated:`; record commit SHAs in `implementation-commits:` | AMP → ORCH (via COS): "TRDD-<id> code ready; running tests" |
 | 8 | `testing` | `ai_review` | test runner (assignee triggers) | All `test-requirements:` + `audit-requirements:` PASSED | `last-test-result: pass`; `last-test-at:`; bump `updated:` | AMP → AI-reviewer: "TRDD-<id> awaiting AI review" |
 | 9 | `testing` | `dev` | test runner | Any required test FAILED | `last-test-result: fail`; `last-test-at:`; `test-failures: +=1`; append failure post-mortem to body; bump `updated:` | AMP → assignee (via COS): "TRDD-<id> test failed; please fix" |
 | 10 | `testing` | `failed` | ORCH or AMAMA | `test-failures >= project-threshold` (default 5) | `column: failed`; body grows "## Abandonment post-mortem" section | AMP → AMAMA → USER: "TRDD-<id> abandoned after <N> test failures" |
 | 11 | `ai_review` | `human_review` | AI reviewer | `review-requirements:` includes `human-review` or `human-evaluation`; AI review passed | bump `updated:`; review notes in body | AMP → AMAMA → USER: "TRDD-<id> needs human review" |
-| 12 | `ai_review` | `complete` | AI reviewer | `review-requirements:` does NOT include any `human-*`; AI review passed | bump `updated:`; gate on EHTs (see below) | AMP → ORCH (via COS): "TRDD-<id> reviews complete; ready to ship" |
+| 12 | `ai_review` | `complete` | **INT** | `review-requirements:` does NOT include any `human-*`; AI review passed; PR merged; **INT validated the merged PR satisfies the TRDD** | bump `updated:`; gate on EHTs (see below) | AMP → ORCH (via COS): "TRDD-<id> validated against TRDD; complete" |
 | 13 | `ai_review` | `dev` | AI reviewer | AI review FOUND ISSUES | bump `updated:`; review notes in body | AMP → assignee (via COS): "TRDD-<id> review found issues" |
-| 14 | `human_review` | `complete` | USER (via AMAMA) | USER approves | bump `updated:`; gate on EHTs | AMP → ORCH (via COS): "TRDD-<id> human-approved" |
+| 14 | `human_review` | `complete` | **INT** | USER approved the human review; PR merged; **INT validated the merged PR satisfies the TRDD** | bump `updated:`; gate on EHTs | AMP → ORCH (via COS): "TRDD-<id> human-approved + validated; complete" |
 | 15 | `human_review` | `dev` | USER (via AMAMA) | USER requests changes | bump `updated:`; USER notes in body | AMP → assignee (via COS): "TRDD-<id> needs changes per USER feedback" |
 | 16 | `complete` | `publish` | INT | `release-via: publish` AND all EHTs terminal | bump `updated:` | AMP → INT: "spawn RELEASER subagent for TRDD-<id>" |
 | 17 | `complete` | `deploy` | INT | `release-via: deploy` AND all EHTs terminal | bump `updated:` | AMP → INT: "spawn DEPLOYER subagent for TRDD-<id>" |
@@ -75,6 +86,28 @@ section format.
 | 29 | `blocked` | `<pre-block-column>` | owner of TRDD | `blocked-by:` empties | restore `column: <pre-block-column>`; `pre-block-column: null`; bump `updated:` | AMP → ORCH: "TRDD-<id> unblocked; resumed" |
 | 30 | `<any non-terminal>` | `failed` | AMAMA or USER | USER decides to abandon | body: "## Abandonment decision" + rationale; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> abandoned per USER decision" |
 | 31 | `<any non-terminal>` | `superseded` | ARCH | ARCH retroactively splits or groups | `superseded-by:` populated | AMP → ORCH (via COS): "TRDD-<id> superseded" |
+
+## Pre-PR gate (dialog loop c)
+
+Transition #7 (`dev → testing`) is the point where the PR opens / INTEGRATOR is
+notified. It MUST NOT happen until the MEMBER clears **"I believe it's done — PR
+now?"** with ORCHESTRATOR. This pre-PR gate is ORCH's cheap sanity check (all
+acceptance criteria addressed? all EHTs terminal? tests green locally?) that
+stops an obviously-incomplete PR from burning an INTEGRATOR review cycle. ORCH
+says "go" → the PR opens and #7 fires; ORCH says "not yet" → back to in-dev
+dialog (loop b). Full definition: [dialog-loops.md](dialog-loops.md) loop (c).
+
+## INTEGRATOR owns the `→ complete` flip
+
+**Nobody self-marks a TRDD `completed`** — not the MEMBER who wrote the code, not
+the ORCHESTRATOR who coordinated it, not the reviewer who passed the review. The
+move INTO `complete` (rows #12 and #14) is performed by **INTEGRATOR** after it
+validates the **merged PR actually satisfies the TRDD**: every acceptance
+criterion met, every EHT terminal, tests green in CI. The reviewer columns
+(`ai_review`/`human_review`) decide pass/fail of the review; INT's flip is the
+separate post-merge acceptance check. This is the author-cannot-approve-own-work
+principle applied to the completed-state. Full definition:
+[dialog-loops.md](dialog-loops.md) "INTEGRATOR owns the column → completed flip".
 
 ## Reverse moves NOT in the matrix
 

@@ -37,7 +37,7 @@ Every field is engineered to answer a real grep question in one line.
 |---|---|---|---|
 | `trdd-id` | UUID | — | RFC 4122 UUIDv4, full form. The 8-char prefix derives from this. Generate: `python3 -c "import uuid; print(uuid.uuid4())"` |
 | `title` | string | — | Single line, ≤80 chars, no colons. The TRDD's headline. |
-| `column` | enum | — | Current kanban column. See [column-transitions.md](column-transitions.md) for the 17-value enum. Mandatory. |
+| `column` | enum | — | Current kanban column. See [column-transitions.md](column-transitions.md) for the transition matrix and [trdd-design-tasks.md](trdd-design-tasks.md) for the full enum (incl. the proposal-lifecycle values `proposal`/`planned`/`refused`/`cancelled` — see [approval-tiers-and-zones.md](approval-tiers-and-zones.md)). Mandatory. |
 | `created` | datetime | — | When this TRDD was authored. Never changes after creation. |
 | `updated` | datetime | — | Last modification time. Bump on EVERY edit. |
 
@@ -45,7 +45,7 @@ Every field is engineered to answer a real grep question in one line.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `current-owner` | string \| null | null | Session name of the agent with write-lock on the body. Coordination fields (`column:`, `assignee:`) can be mutated by MANAGER / ORCH regardless. |
+| `current-owner` | string \| null | null | Session name of the agent with write-lock on the body. **Single-writer-per-domain:** this is the ONE owner of every mutable surface the TRDD touches; a task needing a domain it does not own delegates to that owner or takes a documented claim (DERIVED NPT/EHT tasks must avoid colliding on a shared surface — see [approval-tiers-and-zones.md](approval-tiers-and-zones.md) §D). Coordination fields (`column:`, `assignee:`) can be mutated by MANAGER / ORCH regardless. |
 | `assignee` | string \| null | null | Session name responsible for execution. Set by ORCH on dispatch → dev. |
 | `priority` | int | 5 | 0 = highest, 9 = lowest. ORCH bumps priorities of red-column blockers. |
 | `severity` | enum \| null | null | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NIT`. Optional; usually set for bugfix / security TRDDs. |
@@ -58,6 +58,7 @@ Every field is engineered to answer a real grep question in one line.
 |---|---|---|---|
 | `task-type` | enum | — | `feature`, `bugfix`, `refactor`, `docs`, `infra`, `security`, `artifact`, `spike`, `audit`. Mandatory once the TRDD leaves `backburner`. |
 | `artifact-kinds` | list[string] | `[]` | Only when `task-type=artifact`. Values like `icon`, `sound`, `html`, `animation`, `video`, `font`, `document`. |
+| `approval-tier` | int | 0 | Approval authority needed before this TRDD may execute: `0` agent-independent (default; authored directly in `design/tasks/`), `1` CHIEF-OF-STAFF, `2` MANAGER, `3` USER. A tier-1/2/3 TRDD starts as a `proposal` in `design/proposals/`. Self-classified but audited against the objective tier-floor — see [approval-tiers-and-zones.md](approval-tiers-and-zones.md) §C. |
 
 ### 4. Relationships
 

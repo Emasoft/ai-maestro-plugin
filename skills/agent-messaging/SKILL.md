@@ -33,6 +33,33 @@ AMP uses a title-based directed graph with HUMAN as a first-class node. Edge typ
 - Team titles MUST NOT proactively initiate user contact — reply-only via `1` edge. Governance titles (MANAGER/MAINTAINER/AUTONOMOUS) may initiate.
 - In-team agents reach MANAGER **through COS** (not directly) — MANAGER sees only COS at the team boundary.
 
+## Inbox-first discipline (the STOP rule) + AMP-body self-id
+
+**Inbox-first STOP rule.** When an unread-inbox notification arrives, the agent
+MUST, before continuing its current task:
+
+1. **STOP** the current task at the next safe point.
+2. **READ** all unread messages (`amp-inbox.sh` → `amp-read.sh <id>`).
+3. **PROCESS** them in priority order: **URGENT > HIGH > NORMAL**.
+4. **RESPOND** to any message that requires acknowledgment (`amp-reply.sh`).
+5. **RESUME** the prior task only after the inbox is drained.
+
+Messages take priority because they carry real-time coordination that can change
+what the agent should be doing — corrections, bug reports, completions it is
+waiting on, or blockers. Continuing to work while unread messages sit in the
+inbox risks doing the wrong thing.
+
+**Self-id in the AMP body (G1.1 extended).** Because all AI Maestro agents share
+the single human-owner identity, every AMP message body MUST begin with a
+one-line self-identification of the sending role/plugin — the same G1.1
+discipline applied to GitHub posts, extended to AMP. Recommended leading line:
+
+```
+[from: <role-or-plugin> @ <team-or-host>] — <one-line intent>
+```
+
+so the recipient can tell which Claude sent it without inspecting headers.
+
 ## Prerequisites
 
 Copy this checklist and track your progress:

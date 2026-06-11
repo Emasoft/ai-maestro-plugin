@@ -1,7 +1,8 @@
 ---
-prrd-version: 1.0
-updated: 2026-06-02T14:17:45+0200
+prrd-version: 1.5
+updated: "2026-06-11T11:29:10+0200"
 project: ai-maestro-plugin
+project-id: ai-maestro-plugin
 canonical-source: design/requirements/PRRD.md
 mirrors: []
 ---
@@ -29,4 +30,10 @@ spec: `~/.claude/rules/prrd-design-rules.md`.
 - **G1.1** — Every agent that writes to GitHub (issue, issue comment, PR, PR comment, PR review, discussion, release note) MUST begin the body with a one-line self-identification of which agent/role/plugin authored it, because all AI Maestro agents share the single human-owner GitHub identity (the owner's gh CLI auth). Recommended leading line: _Posted by the Claude developing **<plugin-or-role>** (via the shared @owner gh auth)._ Commit messages SHOULD carry an `Agent: <role>` trailer.
 
 ## 🥈 SILVER — MANAGER-mutable (agents propose via COS)
+
+- **S2.1** — Every skill, command, and hook ships real (no-mock) tests, and the bundled test runner exits 0 on all-pass and non-zero on any failure
+- **S3.1** — Bundled governance and rules references are MIRRORS of their canonical sources (the team-governance GOVERNANCE-RULES doc and the user-level ~/.claude/rules); when a canonical source changes, the bundled copy is re-synced in the same release
+- **S4.1** — The PRRD/TRDD/Kanban pillar scripts are Python-stdlib-only (no third-party runtime dependency) so they run wherever Python 3.10+ is present
+- **S5.1** — A role plugin reaches the base pillar scripts through resolve_pillar_scripts.sh (or the AI_MAESTRO_PRRD_SCRIPTS_DIR override), never a hard-coded plugin-cache path
+- **S6.1** — The README skill/command/script counts and the Built-at date reflect the actual repository tree at publish time
 

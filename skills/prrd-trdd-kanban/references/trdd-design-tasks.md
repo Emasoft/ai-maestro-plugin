@@ -219,6 +219,8 @@ without breaking old TRDDs.
 
 | Group | Column | TRDD lives here when… |
 |---|---|---|
+| **APPROVAL** | `proposal` | authored, awaiting approval (lives in `design/proposals/`; needs its `approval-tier:` authority to advance) |
+| | `planned` | approved/authorized; the entry column of the OPEN-work zone (`design/tasks/`) |
 | **ENTRY** | `backburner` | proto-TRDD parking lot |
 | | `todo` | promoted by MANAGER, awaiting design |
 | | `live_auditing` (entry mode) | investigation task (audit-trigger set) |
@@ -235,8 +237,22 @@ without breaking old TRDDs.
 | | `live` | terminal: real traffic reaches this TRDD's code |
 | **OPERATE** | `live_auditing` (soak mode) | post-deploy monitoring window |
 | **EXCEPTIONS** | `blocked` 🔴 | RED — `blocked-by:` is non-empty |
-| | `failed` | terminal: abandoned with post-mortem |
-| | `superseded` | terminal: replaced by split/group children |
+| | `failed` | RETRYABLE — abandoned-but-retried; stays in `design/tasks/`, never archived |
+| | `refused` | terminal: a proposal NEVER approved (lives in `design/refused/`) |
+| | `cancelled` | terminal: once-approved work now withdrawn (lives in `design/archived/`) |
+| | `superseded` | terminal: replaced by split/group children (lives in `design/archived/`) |
+
+> **`failed` is NOT terminal.** It is a retryable in-dev state — the owner fixes
+> the cause (often via other TRDDs) and retries. Giving up is an explicit
+> `cancel` (`failed → cancelled → design/archived/`), never a silent archive.
+
+**The four design zones** a TRDD moves through —
+`design/proposals/` (`proposal`) → `design/tasks/` (`planned`…`failed`, the OPEN
+zone) → `design/refused/` (never-approved) / `design/archived/`
+(`completed`/`cancelled`/`superseded`) — plus the `proposal → planned` approval
+lifecycle and the Tier 0/1/2/3 ladder are defined in
+[approval-tiers-and-zones.md](approval-tiers-and-zones.md). Every decision
+`git mv`s the file between zones (never deletes it).
 
 **Pipeline flows by `release-via:`:**
 

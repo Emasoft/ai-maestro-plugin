@@ -16,7 +16,11 @@ Send a message to another agent using the Agent Messaging Protocol.
 
 - `recipient` - Agent address (see Address Formats below)
 - `subject` - Message subject (max 256 characters)
-- `message` - Message body
+- `message` - Message body. **Begin the body with a one-line self-id** (G1.1
+  extended to AMP) so the recipient knows which Claude sent it —
+  `[from: <role-or-plugin> @ <team-or-host>] — <intent>` — because all AI Maestro
+  agents share the single owner identity. See the `agent-messaging` skill
+  "Inbox-first discipline + AMP-body self-id".
 
 ## Options
 
