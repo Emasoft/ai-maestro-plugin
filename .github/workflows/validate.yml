@@ -32,6 +32,9 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Run CPV validation (--strict via remote launcher)
+        # Bound the remote uvx CPV fetch so a transient git-fetch stall fails
+        # fast (rerunnable) instead of hanging — Emasoft/claude-plugins-validation#90.
+        timeout-minutes: 12
         run: |
           echo "=== CPV Plugin Validation (--strict) ==="
           set +e

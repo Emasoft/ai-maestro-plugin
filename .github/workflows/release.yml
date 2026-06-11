@@ -25,6 +25,10 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run full plugin validation (remote CPV, --strict)
+        # Bound the remote uvx CPV fetch so a transient git-fetch stall fails
+        # fast (rerunnable) instead of hanging the release — see
+        # Emasoft/claude-plugins-validation#90.
+        timeout-minutes: 12
         # Fetches CPV from GitHub so downstream plugins do not need to
         # vendor a local validator script. Matches publish.py's local
         # gate and the CI validate job. --strict blocks on CRITICAL /
