@@ -1,5 +1,9 @@
 name: CI
 
+# Job display names below MUST stay exactly Lint / Validate / Test —
+# cpv-setup-branch-rules reads them verbatim when wiring the branch
+# ruleset (TRDD-bbff5bc5).
+
 on:
   push:
     branches: [master, main]
@@ -27,8 +31,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Cheap-fail-first: workflow-syntax errors before mega-linter.
+      - name: Lint workflow YAML (actionlint)
+        uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
+
       - name: Mega-Linter
-        uses: oxsecurity/megalinter@v8
+        uses: oxsecurity/megalinter@e08c2b05e3dbc40af4c23f41172ef1e068a7d651 # v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
@@ -42,22 +50,54 @@ jobs:
             megalinter-reports/
             mega-linter.log
 
+  commitlint:
+    name: Commitlint
+    runs-on: ubuntu-latest
+    # PRs only — push events on main don't need conventional-commit
+    # enforcement (the commits are already merged).
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Conventional-commits gate
+        uses: wagoid/commitlint-github-action@6cf16efdf4da5277c791d335142c03a0bdf1766e # v6.2.1
+
   validate:
     name: Validate
     runs-on: ubuntu-latest
     steps:
+      # Plain checkout — this plugin ships NO submodules; asking the
+      # checkout action to recurse occasionally flakes with "could not read
+      # Username" auth errors against non-existent submodule URLs, taking
+      # the Validate job down with a misleading 'process git failed exit
+      # code 128'. Drop the recurse to remove the moot enumeration step.
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@e4db8464a088ece1b920f60402e813ea4de65b8f # v4
 
       - name: Set up Python
         run: uv python install 3.12
 
       - name: Install dependencies
         run: uv sync --extra dev
+
+      # Cross-run CPV scan-cache (optional, big win for fix loops).
+      # The cache key includes the hash of .cpv-self-hashes.json so any
+      # change to the validator's own source busts the cache automatically;
+      # the restore-keys fallback still hits a same-OS warm cache on the
+      # first run after a CPV bump so we don't pay the full cold-scan cost.
+      # actions/cache@v4.3.0 is the latest v4.x SHA at scaffold time —
+      # pinact-compatible (the `# v4.3.0` comment is kept in sync on `uv
+      # lock`). gh-actions.md §"Pin third-party actions to a full commit SHA".
+      - name: Restore CPV scan-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/cpv
+          key: cpv-scan-cache-${{ runner.os }}-${{ hashFiles('**/.cpv-self-hashes.json') }}
+          restore-keys: |
+            cpv-scan-cache-${{ runner.os }}-
 
       - name: Run plugin validation (remote CPV, --strict)
         # Bound the remote uvx CPV fetch so a transient git-fetch stall fails
@@ -89,12 +129,20 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    # macOS matrix added v2.86.0 (issue #22) — catches darwin-specific
+    # regressions that ubuntu-only runs miss (pathlib casing, mtime
+    # resolution, BSD `ps` vs procps-ng output). fail-fast: false so
+    # each OS reports its own failure.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@e4db8464a088ece1b920f60402e813ea4de65b8f # v4
 
       - name: Set up Python
         run: uv python install 3.12

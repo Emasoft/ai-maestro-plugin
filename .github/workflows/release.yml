@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@e4db8464a088ece1b920f60402e813ea4de65b8f # v4
 
       - name: Set up Python
         run: uv python install 3.12
@@ -60,27 +60,48 @@ jobs:
 
       - name: Generate changelog
         id: changelog
+        # v2.86.0 hardening (issue #22): extract ONLY the matching
+        # ``## [X.Y.Z] — YYYY-MM-DD`` block from CHANGELOG.md instead of
+        # uploading the entire file. The release body should be the
+        # release-specific notes, not the whole project history.
+        # Fallback chain:
+        #   1. CHANGELOG.md ## [version] section (curated, em-dash separator)
+        #   2. CHANGELOG.md ## [version] section (legacy hyphen separator)
+        #   3. Full CHANGELOG.md (when no section header matches)
+        #   4. Auto-generated git log (when no CHANGELOG.md at all)
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
+          set -e
+          # Strip leading 'v' so v1.2.3 matches ## [1.2.3] — ...
+          VERSION="${TAG#v}"
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -z "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+            GITLOG=$(git log --pretty=format:"- %s (%h)" HEAD)
           else
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD)
+            GITLOG=$(git log --pretty=format:"- %s (%h)" "$PREV_TAG..HEAD")
           fi
-          # Prefer the project's CHANGELOG.md (curated, conventional-commits
-          # body) over auto-generated git log if it exists. Issue: publish.py's
-          # Gate-13 (`gh release create`) is fired locally just before the tag
-          # is pushed; that race wins, this job sees the release already
-          # exists, and `softprops/action-gh-release@v3` 422s. Falling back to
-          # CHANGELOG.md content lets us either fill in the body when the
-          # release was just-created (still empty) or skip cleanly when the
-          # body is already populated.
           if [ -f "CHANGELOG.md" ]; then
-            cp CHANGELOG.md changelog.txt
+            # Extract the section header through the next ## or EOF. Try
+            # em-dash (canonical) first, then legacy hyphen. awk prints
+            # the block bounded by the matching header and the NEXT
+            # `## ` at column 0 (or EOF).
+            SECTION=$(awk -v ver="$VERSION" '
+              $0 ~ "^## \\[" ver "\\] [—-] " {found=1; print; next}
+              found && /^## / {exit}
+              found {print}
+            ' CHANGELOG.md)
+            if [ -n "$SECTION" ]; then
+              printf '%s\n' "$SECTION" > changelog.txt
+              echo "::notice::Release body extracted from CHANGELOG.md section for $VERSION"
+            else
+              echo "::warning::No CHANGELOG.md section matched ## [$VERSION] — falling back to full CHANGELOG.md"
+              cp CHANGELOG.md changelog.txt
+            fi
           else
-            echo "$CHANGELOG" > changelog.txt
+            echo "$GITLOG" > changelog.txt
           fi
-          echo "changelog_file=changelog.txt" >> $GITHUB_OUTPUT
+          echo "changelog_file=changelog.txt" >> "$GITHUB_OUTPUT"
 
       - name: Create or update GitHub Release (idempotent)
         # Idempotent shell flow — replaces the `softprops/action-gh-release`
