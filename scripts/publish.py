@@ -342,6 +342,74 @@ def update_pyproject_toml(root: Path, new_ver: str) -> tuple[bool, str]:
     except OSError as e:
         return False, f"pyproject.toml update failed: {e}"
 
+# uv.lock carries an editable entry for THIS package (``source = { editable =
+# "." }``) whose ``version`` mirrors pyproject.toml's ``[project].version``.
+# Bumping pyproject without syncing uv.lock leaves the lock one version behind,
+# which surfaces as a dirty tree on the very next ``uv`` invocation and forced a
+# manual follow-up commit (e.g. ad7303e "sync uv.lock editable version"). This
+# closes that gap deterministically — no network, no dependency re-resolution:
+# rewrite ONLY the editable self-package's version line, matched by the
+# block-local ``source = { editable = "." }`` marker. Returns (changed, msg);
+# a missing uv.lock or a lock without an editable self-entry is a no-op success
+# (not every plugin is a uv project / vendors a lockfile).
+_UV_LOCK_EDITABLE_VERSION_RE = re.compile(
+    r'(?ms)'
+    r'(^\[\[package\]\]\n'          # start of a [[package]] block
+    r'(?:(?!^\[\[package\]\]).)*?'  # any block-internal lines (not crossing into the next block)
+    r'^version\s*=\s*")'            # the version key we will rewrite
+    r'[^"\n]*'                      # current version value (captured-out / replaced)
+    r'("\n'                         # close quote + newline
+    r'(?:(?!^\[\[package\]\]).)*?'  # more block-internal lines up to ...
+    r'^source\s*=\s*\{\s*editable\s*=\s*"\."\s*\})'  # ... the editable-self marker
+)
+
+# Read-only companion to the rewrite regex above: captures the editable
+# self-entry's version VALUE (group 1) for the consistency gate. Same
+# block-local anchoring on ``source = { editable = "." }`` so it never reports a
+# dependency's version by mistake.
+_UV_LOCK_EDITABLE_VERSION_VALUE_RE = re.compile(
+    r'(?ms)'
+    r'^\[\[package\]\]\n'
+    r'(?:(?!^\[\[package\]\]).)*?'
+    r'^version\s*=\s*"([^"\n]*)"\n'
+    r'(?:(?!^\[\[package\]\]).)*?'
+    r'^source\s*=\s*\{\s*editable\s*=\s*"\."\s*\}'
+)
+
+def update_uv_lock(root: Path, new_ver: str) -> tuple[bool, str]:
+    """Sync the editable self-package version in uv.lock to ``new_ver``.
+
+    No-op success when uv.lock is absent or has no ``source = { editable =
+    "." }`` entry. Surgical (single ``version`` line, anchored on the editable
+    marker) — never re-resolves dependencies, so it can run offline in the
+    publish gate without changing anything but the version.
+    """
+    lock = root / "uv.lock"
+    if not lock.is_file():
+        return True, "uv.lock not present — skipped"
+    try:
+        content = lock.read_text(encoding="utf-8")
+    except OSError as e:
+        return False, f"uv.lock read failed: {e}"
+    if 'editable = "."' not in content:
+        return True, "uv.lock has no editable self-entry — skipped"
+
+    def _swap(m: "re.Match[str]") -> str:
+        return f"{m.group(1)}{new_ver}{m.group(2)}"
+
+    updated, n = _UV_LOCK_EDITABLE_VERSION_RE.subn(_swap, content, count=1)
+    if n == 0:
+        # The editable marker exists but the regex did not bind the version —
+        # surface it rather than silently leaving uv.lock stale (fail-fast).
+        return False, "uv.lock: editable self-entry found but version line not matched"
+    if updated == content:
+        return True, f"uv.lock already at {new_ver}"
+    try:
+        lock.write_text(updated, encoding="utf-8")
+    except OSError as e:
+        return False, f"uv.lock write failed: {e}"
+    return True, f"uv.lock (editable self-entry) -> {new_ver}"
+
 def update_python_versions(root: Path, new_ver: str) -> list[tuple[bool, str]]:
     """Update __version__ = '...' in all .py files under scripts/."""
     results: list[tuple[bool, str]] = []
@@ -403,6 +471,20 @@ def check_version_consistency(root: Path) -> tuple[bool, str]:
         m = re.search(r'^version\s*=\s*"([^"]*)"', pp.read_text(encoding="utf-8"), re.MULTILINE)
         versions["pyproject.toml"] = m.group(1) if m else None
 
+    # uv.lock editable self-entry — only checked when the lock vendors one, so a
+    # stale lock (bumped pyproject but un-synced lock) is caught here rather than
+    # surfacing as a dirty tree on the next `uv` call.
+    lock = root / "uv.lock"
+    if lock.is_file():
+        try:
+            lock_text = lock.read_text(encoding="utf-8")
+        except OSError:
+            lock_text = ""
+        if 'editable = "."' in lock_text:
+            m_lock = _UV_LOCK_EDITABLE_VERSION_VALUE_RE.search(lock_text)
+            if m_lock:
+                versions["uv.lock:editable"] = m_lock.group(1)
+
     found = {k: v for k, v in versions.items() if v is not None}
     if not found:
         return False, "No version sources found"
@@ -424,6 +506,7 @@ def do_bump(root: Path, new_ver: str, dry_run: bool = False) -> bool:
         if is_layout_c:
             cprint(f"  Would update marketplace.json (metadata + self-entry, Layout C) -> {new_ver}")
         cprint(f"  Would update pyproject.toml -> {new_ver}")
+        cprint(f"  Would update uv.lock (editable self-entry) -> {new_ver}")
         cprint(f"  Would update __version__ vars -> {new_ver}")
         return True
 
@@ -438,11 +521,16 @@ def do_bump(root: Path, new_ver: str, dry_run: bool = False) -> bool:
     ok2, msg2 = update_pyproject_toml(root, new_ver)
     cprint(f"  {'OK' if ok2 else 'FAIL'}: {msg2}")
 
+    # Keep uv.lock's editable self-entry in lockstep with pyproject (closes the
+    # stale-lock gap that previously needed a manual follow-up commit).
+    ok3, msg3 = update_uv_lock(root, new_ver)
+    cprint(f"  {'OK' if ok3 else 'FAIL'}: {msg3}")
+
     py_results = update_python_versions(root, new_ver)
     for ok, msg in py_results:
         cprint(f"  {'OK' if ok else 'FAIL'}: {msg}")
 
-    return ok1 and ok2 and ok_mp
+    return ok1 and ok2 and ok3 and ok_mp
 
 
 # -- Hook installer ------------------------------------------------------------
@@ -1453,21 +1541,26 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
     # gh-auth precheck — fail fast with actionable error if gh missing/unauthed.
     owner, repo = _resolve_owner_repo(root)
     _ensure_gh_auth(owner, repo)
-    # Retry-wrap the push: a single transient github.com hiccup used to
-    # leave the repo in a half-published state. git_with_retry tolerates
-    # up to GIT_MAX_ATTEMPTS × GIT_BACKOFF_SEC of transient errors and
-    # returns immediately on a permanent error (4xx, non-fast-forward).
-    # Push only HEAD + this release's tag — never `--tags`. `git push
-    # --tags` pushes EVERY local tag, and any pre-existing local tag that
-    # diverges from its remote counterpart is rejected, which fails the
-    # whole push (non-zero exit -> pipeline crash) even though HEAD and
-    # the new release tag were accepted.
-    cprint(f"  {BLUE}$ git push origin HEAD {tag}{NC}")
+    # Atomic push: commit + tag land together or not at all. `--atomic` is a
+    # single transaction in the wire protocol; if any ref update is rejected
+    # the server rolls back ALL of them, eliminating the half-published-state
+    # failure mode where the commit pushed but the tag failed (rejected/network)
+    # and the remote was left with an unreleased commit and no tag.
+    # Retry-wrap the push: a single transient github.com hiccup used to leave
+    # the repo half-published. git_with_retry tolerates up to GIT_MAX_ATTEMPTS ×
+    # GIT_BACKOFF_SEC of transient errors and returns immediately on a permanent
+    # error (4xx, non-fast-forward).
+    # Push only HEAD + this release's tag — never `--tags`. `git push --tags`
+    # pushes EVERY local tag, and any pre-existing local tag that diverges from
+    # its remote counterpart is rejected, which fails the whole push (non-zero
+    # exit -> pipeline crash) even though HEAD and the new release tag were
+    # accepted.
+    cprint(f"  {BLUE}$ git push --atomic origin HEAD {tag}{NC}")
     git_with_retry(
-        ["git", "push", "origin", "HEAD", tag],
+        ["git", "push", "--atomic", "origin", "HEAD", tag],
         cwd=str(root), capture_output=False,
     )
-    cprint(f"  {GREEN}Pushed {tag}.{NC}")
+    cprint(f"  {GREEN}Pushed {tag} atomically.{NC}")
 
 def stage_gh_release(root: Path, new_ver: str, dry_run: bool) -> None:
     """Step 10: Create GitHub release via gh CLI.
@@ -1503,10 +1596,25 @@ def stage_gh_release(root: Path, new_ver: str, dry_run: bool) -> None:
         cprint(result.stdout.strip())
     if result.stderr and result.stderr.strip():
         print(result.stderr.strip(), file=sys.stderr)
-    if result.returncode != 0:
-        cprint(f"  {RED}Failed to create release (exit code {result.returncode}).{NC}")
-    else:
+    if result.returncode == 0:
         cprint(f"  {GREEN}Release created.{NC}")
+        return
+    # `gh release create` returns an "already_exists" / "already exists"
+    # validation error when a release for this tag is already present. On a
+    # re-run or interrupted-publish recovery that is the idempotent-success
+    # outcome (the release IS there), so it must NOT abort — match either
+    # spelling gh emits, case-insensitively.
+    combined_err = f"{result.stdout or ''}\n{result.stderr or ''}"
+    if re.search(r"already[ _]exists", combined_err, re.IGNORECASE):
+        cprint(f"  {YELLOW}Release {tag} already exists — treating as success (idempotent re-run).{NC}")
+        return
+    # Any other non-zero exit is a genuine failure (auth revoked mid-pipeline,
+    # malformed notes file, network exhausted all retries). The tag is already
+    # pushed, but the documented final stage did NOT complete — abort so the
+    # pipeline does not falsely report success (fail-fast invariant).
+    cprint(f"  {RED}Failed to create release (exit code {result.returncode}).{NC}")
+    cprint(f"  {RED}  The tag {tag} is pushed; create the release manually or re-run after fixing the cause.{NC}")
+    sys.exit(1)
 
 
 # -- Main ----------------------------------------------------------------------
