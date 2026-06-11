@@ -1,6 +1,8 @@
 # AI Maestro Plugin
 
 <!--BADGES-START-->
+![version](https://img.shields.io/badge/version-2.6.1-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
 <!--BADGES-END-->
 
 The umbrella core plugin for the AI Maestro ecosystem — shared skills, AMP
