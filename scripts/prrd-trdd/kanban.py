@@ -109,10 +109,26 @@ def main(argv: list[str] | None = None) -> int:
     return render_full_board(docs, args.view)
 
 
+def _display_column(d: plib.TRDDDoc) -> str:
+    """Resolve a TRDD's board column for DISPLAY at read-time (no file mutation).
+
+    `d.column` already returns an explicit v2 `column:`, or maps a v1 `status:`
+    via prrd_lib._V1_TO_V2. Per the MANAGER ruling (issue #7), a TRDD with neither
+    `column:` nor `status:` is grandfathered as authorized -> `planned` (the
+    approval-tiers rule); an explicit value we cannot place on the board ->
+    `(unknown)`; otherwise the resolved column. Render-only — the file is never
+    mutated.
+    """
+    col = d.column
+    if not col:
+        return "planned"
+    return col if col in ALL_COLUMNS else "(unknown)"
+
+
 def render_full_board(docs: list[plib.TRDDDoc], view: str) -> int:
     by_col: dict[str, list[plib.TRDDDoc]] = defaultdict(list)
     for d in docs:
-        by_col[d.column or "(unknown)"].append(d)
+        by_col[_display_column(d)].append(d)
     for group_name, cols in COLUMN_GROUPS:
         any_in_group = any(by_col.get(c) for c in cols)
         if not any_in_group:
@@ -247,7 +263,7 @@ def collect_drift(docs: list[plib.TRDDDoc]) -> dict[str, list[plib.TRDDDoc]]:
 def emit_json(docs: list[plib.TRDDDoc]) -> int:
     by_col: dict[str, list[dict]] = defaultdict(list)
     for d in docs:
-        by_col[d.column or "(unknown)"].append(
+        by_col[_display_column(d)].append(
             {
                 "uid8": d.uid8,
                 "trdd-id": d.uid,

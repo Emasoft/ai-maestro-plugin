@@ -103,21 +103,27 @@ def _write_trdd(
     directory: Path,
     *,
     uid8: str,
-    column: str,
+    column: str | None = None,
     title: str,
     extra: dict[str, str] | None = None,
     body: str = "Body.",
     ts: str = "20260101_000000+0000",
     iso: str = "2026-01-01T00:00:00+0000",
 ) -> Path:
-    """Write a minimal-but-real TRDD-*.md fixture and return its path."""
+    """Write a minimal-but-real TRDD-*.md fixture and return its path.
+
+    ``column=None`` omits the ``column:`` frontmatter entirely — used to fixture a
+    grandfathered TRDD (no column, no status) or a v1-only TRDD (set ``status:``
+    via ``extra``).
+    """
     fm = {
         "trdd-id": f"{uid8}-1111-2222-3333-444444444444",
         "title": title,
-        "column": column,
         "created": iso,
         "updated": iso,
     }
+    if column is not None:
+        fm["column"] = column
     if extra:
         fm.update(extra)
     lines = ["---"]
@@ -398,6 +404,41 @@ class TestKanban:
         assert "BLOCKED" in res.stdout
         assert "TRDD-33334444" in res.stdout
         assert "blocked-by: TRDD-11112222" in res.stdout
+
+    def test_grandfathered_missing_column_renders_as_planned(self, project: Path) -> None:
+        """MANAGER ruling (#7): a TRDD with neither column: nor status: renders as
+        `planned` (grandfathered-as-authorized), not `(unknown)`, without mutating it."""
+        tasks = project / "design" / "tasks"
+        src = _write_trdd(tasks, uid8="55556666", title="Grandfathered task")
+        before = src.read_text(encoding="utf-8")
+        res = _run(str(KANBAN), "--json", cwd=project)
+        assert res.returncode == 0, res.stderr
+        data = json.loads(res.stdout)
+        assert "planned" in data["columns"]
+        assert "(unknown)" not in data["columns"]
+        assert any(e["uid8"] == "55556666" for e in data["columns"]["planned"])
+        assert src.read_text(encoding="utf-8") == before  # read-time only
+
+    def test_v1_status_maps_to_v2_column(self, project: Path) -> None:
+        """MANAGER ruling (#7): a v1 `status:` (no column:) maps to its v2 column."""
+        tasks = project / "design" / "tasks"
+        _write_trdd(tasks, uid8="77778888", title="Legacy task",
+                    extra={"status": "in-progress"})
+        res = _run(str(KANBAN), "--json", cwd=project)
+        assert res.returncode == 0, res.stderr
+        data = json.loads(res.stdout)
+        assert "dev" in data["columns"]  # in-progress -> dev
+        assert any(e["uid8"] == "77778888" for e in data["columns"]["dev"])
+
+    def test_invalid_column_is_unknown(self, project: Path) -> None:
+        """MANAGER ruling (#7): `(unknown)` is reserved for an unrecognized column value."""
+        tasks = project / "design" / "tasks"
+        _write_trdd(tasks, uid8="9999aaaa", column="bogus", title="Weird task")
+        res = _run(str(KANBAN), "--json", cwd=project)
+        assert res.returncode == 0, res.stderr
+        data = json.loads(res.stdout)
+        assert "(unknown)" in data["columns"]
+        assert any(e["uid8"] == "9999aaaa" for e in data["columns"]["(unknown)"])
 
 
 # ═════════════════════════ amama_proposal_approvals.py ═════════════════════════
