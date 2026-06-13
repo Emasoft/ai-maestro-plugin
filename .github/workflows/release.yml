@@ -9,7 +9,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write       # create/edit the GitHub Release + attach assets
+      actions: read         # anchore/sbom-action needs this to attach the SBOM as a release asset
     steps:
       - uses: actions/checkout@v4
         with:
@@ -145,6 +146,22 @@ jobs:
             gh release create "$TAG" validation-report.txt               --title "$TAG"               --notes-file changelog.txt               --verify-tag
           fi
 
+      # Software Bill of Materials (provenance-audit MAJOR fix): syft scans the
+      # repo and emits a CycloneDX-JSON SBOM, then attaches it to the release
+      # this tag-push created above. upload-release-assets defaults true and
+      # targets the release for the current tag, so this MUST run AFTER the
+      # release exists. The SBOM lists every dependency that went into the
+      # shipped artifacts, enabling downstream CVE/license auditing.
+      # Third-party action → SHA-pinned (anchore/sbom-action v0.24.0).
+      - name: Generate SBOM and attach to release
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: ai-maestro-plugin.cyclonedx.json
+          artifact-name: ai-maestro-plugin.cyclonedx.json
+          upload-release-assets: true
+
   # Prebuilt memgrep binaries (issue #4): one tarball + sha256 checksum per
   # platform, attached to the release so install-memgrep.sh can download a
   # verified binary without requiring end-users to have a Rust toolchain.
@@ -169,7 +186,9 @@ jobs:
             target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: write
+      contents: write       # upload the memgrep tarball + sha256 to the release
+      id-token: write       # attest-build-provenance: mint the OIDC token for the signed attestation
+      attestations: write   # attest-build-provenance: persist the build-provenance attestation
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -204,6 +223,19 @@ jobs:
             shasum -a 256 "$ASSET" > "$ASSET.sha256"
           fi
           cat "$ASSET.sha256"
+
+      # Build-provenance attestation (provenance-audit MAJOR fix): cryptographically
+      # attest the memgrep tarball this matrix leg just built, so consumers can run
+      # `gh attestation verify memgrep-<platform>.tar.gz --repo Emasoft/ai-maestro-plugin`
+      # to prove it was built by THIS workflow on THIS commit (SLSA provenance).
+      # subject-path is a glob matching the single per-leg tarball in the workspace
+      # root (where Package+checksum wrote it). First-party actions/ action → pinned
+      # to the major tag v4 (kept current by Dependabot). Requires id-token: write +
+      # attestations: write (set at job level above). Runs on both macOS and Linux.
+      - name: Attest build provenance for memgrep binary
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: 'memgrep-${{ matrix.platform }}.tar.gz'
 
       - name: Upload to release
         env:
