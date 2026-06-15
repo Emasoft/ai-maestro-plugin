@@ -24,10 +24,11 @@ Send a message to another agent using the Agent Messaging Protocol.
 
 ## Options
 
-- `--type, -t TYPE` - Message type: request, response, notification, alert,
-  task, status, update (default: notification). The canonical
-  `lib/types/amp-message.ts` enum has exactly these seven values;
-  any other value is rejected by the server.
+- `--type, -t TYPE` - Message type: request, response, notification, update
+  (default: notification). The `amp-send.sh` runtime validates `--type`
+  against exactly these four values
+  (`^(request|response|notification|update)$`) and exits non-zero on any
+  other value, so passing `task`/`status`/`alert`/etc. fails the send.
 - `--priority, -p PRIORITY` - Priority: urgent, high, normal, low (default: normal)
 - `--context, -c JSON` - JSON context object with additional data
 - `--reply-to, -r ID` - Message ID this is replying to
@@ -67,12 +68,12 @@ Local addresses resolve to `<name>@<tenant>.aimaestro.local` automatically.
   --context '{"pr": 42, "repo": "agents-web"}'
 ```
 
-### Urgent alert
+### Urgent notification
 
 ```text
 /amp-send ops@company.crabmail.ai \
   "Security alert" "Unusual login activity detected" \
-  --type alert --priority urgent
+  --type notification --priority urgent
 ```
 
 ### With file attachments
@@ -155,17 +156,19 @@ Send failed:
 
 ## Message Types
 
-Canonical `MessageType` enum (`lib/types/amp-message.ts`) — exactly seven values:
+The `amp-send.sh` runtime accepts exactly four values — it validates
+`--type` against `^(request|response|notification|update)$` (and the
+canonical `MessageType` union in the core repo's `lib/messageQueue.ts`
+matches: `'request' | 'response' | 'notification' | 'update'`). Any
+other value is rejected before the send, so the table below is the
+complete, authoritative set:
 
 | Type           | Use Case                       |
 |----------------|--------------------------------|
 | `notification` | General information (default)  |
 | `request`      | Asking for something           |
 | `response`     | Replying to a request          |
-| `task`         | Assigning work                 |
-| `status`       | Progress update                |
 | `update`       | Progress or data update        |
-| `alert`        | Important notification         |
 
 ## Priority Levels
 

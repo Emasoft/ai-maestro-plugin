@@ -209,16 +209,13 @@ User Keys are sensitive credentials tied to the user's account and billing. They
 
 ## Message Types
 
-Canonical enum (`lib/types/amp-message.ts`): exactly seven values. Callers passing anything else get server-side validation errors.
+The `amp-send.sh` runtime accepts exactly four values, validating `--type` against `^(request|response|notification|update)$` and exiting non-zero on anything else (the canonical `MessageType` union in the core repo's `lib/messageQueue.ts` matches). Passing any other value (`task`, `status`, `alert`, …) fails the send.
 
 | Type | Use Case |
 |------|----------|
 | `notification` | General information (default) |
 | `request` | Asking for something |
 | `response` | Reply to a request |
-| `task` | Assigned work item |
-| `status` | Status update |
-| `alert` | Important notice |
 | `update` | Progress or data update |
 
 ## Priority Levels
@@ -399,7 +396,7 @@ User: Hand off the database work to backend-db
 Agent executes:
 amp-send.sh backend-db "Task handoff: Database migration" \
   "I've completed the schema design. Please implement the migrations." \
-  --type task \
+  --type request \
   --priority high
 ```
 
