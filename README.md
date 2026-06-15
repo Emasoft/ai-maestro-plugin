@@ -1,7 +1,7 @@
 # AI Maestro Plugin
 
 <!--BADGES-START-->
-![version](https://img.shields.io/badge/version-2.7.6-blue)
+![version](https://img.shields.io/badge/version-2.7.7-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 <!--BADGES-END-->
 
