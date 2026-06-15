@@ -209,7 +209,7 @@ User Keys are sensitive credentials tied to the user's account and billing. They
 
 ## Message Types
 
-The `amp-send.sh` runtime accepts exactly four values, validating `--type` against `^(request|response|notification|update)$` and exiting non-zero on anything else (the canonical `MessageType` union in the core repo's `lib/messageQueue.ts` matches). Passing any other value (`task`, `status`, `alert`, …) fails the send.
+The installed `amp-send.sh` runtime validates `--type` against `^(request|response|notification|task|status|alert|update|handoff|ack|system)$` (L152) and exits non-zero on anything else — these ten are the authoritative set the command accepts:
 
 | Type | Use Case |
 |------|----------|
@@ -217,6 +217,14 @@ The `amp-send.sh` runtime accepts exactly four values, validating `--type` again
 | `request` | Asking for something |
 | `response` | Reply to a request |
 | `update` | Progress or data update |
+| `task` | Assigning a task / work item |
+| `status` | Status / progress report |
+| `alert` | Urgent condition needing attention |
+| `handoff` | Handing a task off to another agent |
+| `ack` | Acknowledging receipt of a message |
+| `system` | System / control message |
+
+> **Divergence flag:** the core repo's canonical `MessageType` union (`lib/messageQueue.ts`) currently lists only four (`request | response | notification | update`) while the installed `amp-send.sh` accepts the ten above. This guide tracks the installed runtime so no fixer "corrects" a valid `--type handoff`/`ack`/… into a silent failure (see ai-maestro-plugin#10).
 
 ## Priority Levels
 
@@ -396,7 +404,7 @@ User: Hand off the database work to backend-db
 Agent executes:
 amp-send.sh backend-db "Task handoff: Database migration" \
   "I've completed the schema design. Please implement the migrations." \
-  --type request \
+  --type handoff \
   --priority high
 ```
 

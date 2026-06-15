@@ -24,11 +24,11 @@ Send a message to another agent using the Agent Messaging Protocol.
 
 ## Options
 
-- `--type, -t TYPE` - Message type: request, response, notification, update
-  (default: notification). The `amp-send.sh` runtime validates `--type`
-  against exactly these four values
-  (`^(request|response|notification|update)$`) and exits non-zero on any
-  other value, so passing `task`/`status`/`alert`/etc. fails the send.
+- `--type, -t TYPE` - Message type: request, response, notification, task,
+  status, alert, update, handoff, ack, system (default: notification). The
+  installed `amp-send.sh` runtime validates `--type` against
+  `^(request|response|notification|task|status|alert|update|handoff|ack|system)$`
+  (L152) and exits non-zero on any other value.
 - `--priority, -p PRIORITY` - Priority: urgent, high, normal, low (default: normal)
 - `--context, -c JSON` - JSON context object with additional data
 - `--reply-to, -r ID` - Message ID this is replying to
@@ -156,19 +156,31 @@ Send failed:
 
 ## Message Types
 
-The `amp-send.sh` runtime accepts exactly four values — it validates
-`--type` against `^(request|response|notification|update)$` (and the
-canonical `MessageType` union in the core repo's `lib/messageQueue.ts`
-matches: `'request' | 'response' | 'notification' | 'update'`). Any
-other value is rejected before the send, so the table below is the
-complete, authoritative set:
+The installed `amp-send.sh` runtime validates `--type` against
+`^(request|response|notification|task|status|alert|update|handoff|ack|system)$`
+(L152) and exits non-zero on any other value — so these ten are the
+complete, authoritative set the `/amp-send` command accepts:
 
-| Type           | Use Case                       |
-|----------------|--------------------------------|
-| `notification` | General information (default)  |
-| `request`      | Asking for something           |
-| `response`     | Replying to a request          |
-| `update`       | Progress or data update        |
+| Type           | Use Case                                  |
+|----------------|-------------------------------------------|
+| `notification` | General information (default)             |
+| `request`      | Asking for something                      |
+| `response`     | Replying to a request                     |
+| `update`       | Progress or data update                   |
+| `task`         | Assigning a task / work item              |
+| `status`       | Status / progress report                  |
+| `alert`        | Urgent condition needing attention        |
+| `handoff`      | Handing a task off to another agent       |
+| `ack`          | Acknowledging receipt of a message        |
+| `system`       | System / control message                  |
+
+> **Divergence flag (fleet-readiness):** the core repo's canonical
+> `MessageType` union (`lib/messageQueue.ts`) currently lists only four
+> (`request | response | notification | update`), while the **installed**
+> `amp-send.sh` runtime accepts the ten above. This doc tracks the installed
+> runtime the command actually invokes — so a fixer never "corrects" a valid
+> `--type handoff`/`ack`/… into a silent-failure (the trap #10 warned about).
+> The binary-vs-canonical mismatch is being reconciled fleet-wide (see #10).
 
 ## Priority Levels
 
