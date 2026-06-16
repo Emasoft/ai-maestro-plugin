@@ -1,9 +1,10 @@
 ---
 trdd-id: 90c8ad35-f7c9-4576-8ad4-2b72a82d047a
 title: Decouple the core plugin from the ai-maestro server API — repoint /api/* to the frozen CLI layer
-column: dev
+column: blocked
 created: 2026-06-17T00:28:54+0200
-updated: 2026-06-17T00:28:54+0200
+updated: 2026-06-17T00:36:58+0200
+pre-block-column: dev
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 1
@@ -36,14 +37,26 @@ api-part → a CLI verb that lands in the `ai-maestro` project (NOT mine to
 build — ai-maestro#36); non-api part stays here. This plugin calls ONLY the
 frozen CLI. **GitHub API (`gh`, `api.github.com`) is OUT OF SCOPE — keep it.**
 
-### NEXT ACTION
-Phase 1 (do now, safe): tag `prrd_lib.py:608` `# DECOUPLE-BLOCKED ai-maestro#36`
-(its target `aid-governance`/`aid-whoami` CLIs are MISSING). Then Phase 2: read
-`~/.local/bin/aimaestro-agent.sh` + `amp-inbox` SOURCE for their frozen
-interfaces, repoint the hook's `/api/agents`→`aimaestro-agent.sh list` and
-`/api/messages`→`amp-inbox`; tag the two `/api/sessions/*` hook calls
-DECOUPLE-BLOCKED unless a frozen `aimaestro-agent.sh session` verb covers them.
-**commit-not-publish** each phase.
+### NEXT ACTION (BLOCKED on ai-maestro#36 deploy — external)
+All committable code work is DONE (Phases 1-3 below). The TRDD is now **blocked**
+on **ai-maestro#36** landing the frozen verbs (`aimaestro-agent.sh resolve --cwd`,
+the session-activity + send-command verbs, `aid-governance`/`aid-whoami`). When #36
+deploys: (1) flip each `DECOUPLE-BLOCKED ai-maestro#36` tag → the real CLI call,
+(2) re-verify `grep -rn '/api/'` shows zero real call sites, (3) publish (MANAGER
+verify-acks). Also pending: MANAGER ruling on whether skill-doc `curl /api/…`
+examples are in-scope (asked on #11). `blocked-by` is the EXTERNAL issue
+ai-maestro#36 (not a local TRDD), so the frontmatter list stays empty by
+construction; restore to `pre-block-column: dev` when #36 deploys.
+
+### DONE (2026-06-17, commit-not-publish)
+- **Phase 1** ✅ `prrd_lib.py` `/api/governance` (caller_is_manager) tagged
+  DECOUPLE-BLOCKED (aid-* verbs MISSING). py_compile clean. commit.
+- **Phase 2** ✅ `ai-maestro-hook.cjs` — all 3 functions tagged DECOUPLE-BLOCKED
+  (resolve-by-cwd + session-activity + send-command verbs all absent; comment-only
+  change → runtime byte-identical; `node --check` + Stop smoke-test pass). commit.
+- **Phase 3** ✅ verified: the ONLY executable `/api/` (ai-maestro server) call
+  sites are those 2 files (6 in the hook + 1 in prrd_lib), ALL DECOUPLE-BLOCKED-
+  tagged + functional. Zero untagged real call sites. GitHub API untouched.
 
 ### Load-bearing facts / gotchas
 - **commit-not-publish** until ai-maestro#36 deploys the missing verbs — the
