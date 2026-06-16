@@ -1,4 +1,4 @@
-"""Tests for the memory-protocol components shipped per issue #4.
+"""Tests for the memgrep memory-hosting components this plugin ships.
 
 Real tests only (no mocks, per this project's no-mock rule):
 
@@ -7,13 +7,17 @@ Real tests only (no mocks, per this project's no-mock rule):
   that publishes the assets — see release.yml `build-memgrep`); instead we
   test the deterministic paths: idempotency when a memgrep binary is on
   PATH, argument validation, and bash syntax.
-- The canonical skills (`memory-recall`, `memory-write`), the rule
-  (`rules/memory-protocol.md`), and the vendored crate (`scripts/memgrep/`)
-  are verified structurally — files exist, frontmatter parses, the
-  cross-references they promise actually resolve.
+- The vendored crate (`scripts/memgrep/`) is verified structurally — files
+  exist, the release workflow attaches checksummed binaries.
 - The memgrep crate's own behavior is covered by its bundled Rust suite
   (`cargo test --manifest-path scripts/memgrep/Cargo.toml`, run by CI's
   test-memgrep job), not duplicated here.
+
+Note: the curated-note memory protocol itself (recall/write/update) was
+retired from this plugin in favor of the janitor's GLOBAL wiki-memory skills
+(`/janitor-memory-{recall,write,update}`); this plugin now only HOSTS the
+memgrep engine those skills depend on. The transcript-search skill
+(`memory-search`) stays and points at the global skills as its complement.
 """
 
 from __future__ import annotations
@@ -22,8 +26,6 @@ import os
 import stat
 import subprocess
 from pathlib import Path
-
-import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 INSTALL_SCRIPT = PLUGIN_ROOT / "scripts" / "install-memgrep.sh"
@@ -90,26 +92,7 @@ class TestInstallScript:
 
 
 class TestCanonicalArtifacts:
-    """The protocol artifacts issue #4 requires this plugin to host."""
-
-    def test_memory_recall_skill_exists_with_valid_frontmatter(self) -> None:
-        """skills/memory-recall/SKILL.md exists and its YAML frontmatter parses."""
-        fm = self._frontmatter(PLUGIN_ROOT / "skills" / "memory-recall" / "SKILL.md")
-        assert fm["name"] == "memory-recall"
-        assert "symptom" in fm["description"].lower()
-
-    def test_memory_write_skill_exists_with_valid_frontmatter(self) -> None:
-        """skills/memory-write/SKILL.md exists and its YAML frontmatter parses."""
-        fm = self._frontmatter(PLUGIN_ROOT / "skills" / "memory-write" / "SKILL.md")
-        assert fm["name"] == "memory-write"
-        assert "symptom" in fm["description"].lower()
-
-    def test_memory_protocol_rule_exists(self) -> None:
-        """rules/memory-protocol.md exists and covers recall, fallback, and the disambiguation."""
-        rule = (PLUGIN_ROOT / "rules" / "memory-protocol.md").read_text()
-        assert "memgrep recall" in rule
-        assert "grep -rliE" in rule  # the degrade-never-break fallback
-        assert "/memory-search" in rule  # transcripts-vs-notes disambiguation
+    """The memgrep memory-hosting artifacts this plugin ships for the ecosystem."""
 
     def test_memgrep_crate_is_vendored_complete(self) -> None:
         """scripts/memgrep ships Cargo.toml + Cargo.lock + sources + its own tests."""
@@ -120,16 +103,11 @@ class TestCanonicalArtifacts:
         assert (crate / "src" / "main.rs").is_file()
         assert (crate / "tests" / "cli.rs").is_file()
 
-    def test_skills_reference_the_installer_not_bare_cargo(self) -> None:
-        """memory-recall points users at install-memgrep.sh (the no-toolchain path)."""
-        text = (PLUGIN_ROOT / "skills" / "memory-recall" / "SKILL.md").read_text()
-        assert "install-memgrep.sh" in text
-
-    def test_memory_search_disambiguates_from_note_recall(self) -> None:
-        """memory-search names /memory-recall + /memory-write as the complementary system."""
+    def test_memory_search_disambiguates_from_global_wiki_recall(self) -> None:
+        """memory-search points at the janitor GLOBAL wiki-memory skills as its complement."""
         text = (PLUGIN_ROOT / "skills" / "memory-search" / "SKILL.md").read_text()
-        assert "/memory-recall" in text
-        assert "/memory-write" in text
+        assert "/janitor-memory-recall" in text
+        assert "/janitor-memory-write" in text
 
     def test_release_workflow_builds_checksummed_binaries(self) -> None:
         """release.yml has the build-memgrep matrix attaching tarball + sha256 per platform."""
@@ -138,13 +116,3 @@ class TestCanonicalArtifacts:
         for platform in ("darwin-arm64", "darwin-x64", "linux-x64"):
             assert platform in wf
         assert ".sha256" in wf
-
-    @staticmethod
-    def _frontmatter(path: Path) -> dict:
-        """Parse the YAML frontmatter block of a SKILL.md."""
-        text = path.read_text()
-        assert text.startswith("---\n"), f"{path} missing frontmatter"
-        block = text.split("---\n", 2)[1]
-        data = yaml.safe_load(block)
-        assert isinstance(data, dict)
-        return data

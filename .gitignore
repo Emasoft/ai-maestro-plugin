@@ -14,7 +14,12 @@ coverage/
 venv/
 __pycache__/
 *.pyc
-.claude/
+.claude/**
+# The PROJECT memory scope lives in-repo under .claude/ and MUST be tracked +
+# pushed (the shared, cross-dev wiki memory). Re-include it via these exceptions.
+!.claude/project/
+!.claude/project/memory/
+!.claude/project/memory/**
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/

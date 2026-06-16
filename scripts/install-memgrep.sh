@@ -11,7 +11,7 @@
 #
 # If every path fails the script exits non-zero, but the memory-recall
 # protocol still works: recall degrades to plain `grep` over the notes
-# (see rules/memory-protocol.md). Degrade, never break.
+# (see ~/.claude/rules/markdown-memory-recall.md). Degrade, never break.
 #
 # Usage:
 #   install-memgrep.sh [--force] [--version vX.Y.Z]

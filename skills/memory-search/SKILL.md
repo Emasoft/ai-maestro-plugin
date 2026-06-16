@@ -12,7 +12,7 @@ metadata:
 
 Searches AI Maestro's indexed conversation history using `memory-search.sh`. Supports semantic, keyword, term, and symbol search modes. Conversations are automatically indexed by the subconscious process, creating a searchable memory across all sessions.
 
-**This is NOT the curated-note memory.** This skill searches conversation *transcripts* ("what did we SAY"); the COMPLEMENTARY `/memory-recall` + `/memory-write` skills (also in this plugin) work on curated, symptom-indexed markdown *notes* ("what did we LEARN"). A debugging session often uses both: recall the note for the known gotcha, search the transcript for the discussion that produced it. See `rules/memory-protocol.md`.
+**This is NOT the curated-note memory.** This skill searches conversation *transcripts* ("what did we SAY"); the COMPLEMENTARY janitor global skills `/janitor-memory-recall` + `/janitor-memory-write` + `/janitor-memory-update` work on curated, symptom-indexed wiki-memory *pages* ("what did we LEARN"). A debugging session often uses both: recall the wiki page for the known gotcha, search the transcript for the discussion that produced it. See `~/.claude/rules/markdown-memory-recall.md`.
 
 ## Prerequisites
 
@@ -100,7 +100,7 @@ Copy this checklist and track your progress:
 
 ## Resources
 
-- `/memory-recall`, `/memory-write` — the COMPLEMENTARY curated-note memory (symptom-indexed markdown notes; see `rules/memory-protocol.md`)
+- `/janitor-memory-recall`, `/janitor-memory-write`, `/janitor-memory-update` — the COMPLEMENTARY curated-note memory (the janitor's global wiki-memory; symptom-indexed pages; see `~/.claude/rules/markdown-memory-recall.md`)
 - [Detailed Reference](references/REFERENCE.md) - Full CLI reference and search patterns
   - Memory Pipeline
   - CLI Reference and Options

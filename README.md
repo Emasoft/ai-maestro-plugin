@@ -9,10 +9,10 @@ The umbrella core plugin for the AI Maestro ecosystem — shared skills, AMP
 messaging, AID identity, governance, kanban, and the universal PRRD/TRDD/Kanban
 workflow that every role plugin inherits.
 
-**Skills:** 15 | **Commands:** 12 | **Scripts:** 15 Python/shell (+ the bundled
+**Skills:** 22 | **Commands:** 12 | **Scripts:** 15 Python/shell (+ the bundled
 `memgrep` Rust crate under `scripts/memgrep/`)
 
-Last updated: 2026-06-11
+Last updated: 2026-06-16
 
 See the [main repo][repo] for the wider ecosystem.
 
@@ -63,8 +63,6 @@ are documented in the table below.
 | `graph-query`                   | Code graph querying                          |
 | `mcp-discovery`                 | MCP server discovery                         |
 | `memory-search`                 | Conversation memory search                   |
-| `memory-recall`                 | Curated-note memory recall (memgrep)         |
-| `memory-write`                  | Curated-note memory authoring                |
 | `network-security`              | Network security checks                      |
 | `planning`                      | Task planning (persistent files)             |
 | `ama-prrd-get`                  | Read a PRRD rule by number (any role)        |
@@ -82,17 +80,23 @@ are documented in the table below.
 
 ## Memory: transcripts vs curated notes (two complementary systems)
 
-The plugin ships TWO memory surfaces — they answer different questions:
+Two memory surfaces answer different questions:
 
 | System | Skill(s) | Corpus | Question it answers |
 |--------|----------|--------|---------------------|
-| Conversation memory | `memory-search` | AI Maestro's indexed conversation transcripts | "what did we SAY / discuss / decide?" |
-| Markdown note memory | `memory-recall` + `memory-write` | curated, symptom-indexed markdown notes | "what did we LEARN that must not be re-derived?" |
+| Conversation memory | `memory-search` (this plugin) | AI Maestro's indexed conversation transcripts | "what did we SAY / discuss / decide?" |
+| Wiki note memory | `/janitor-memory-{recall,write,update}` (janitor global) | curated, symptom-indexed wiki pages | "what did we LEARN that must not be re-derived?" |
 
-The note memory is the **canonical home of the AI-Maestro memory protocol**
-(`rules/memory-protocol.md`): notes are recalled from the SYMPTOM with
-[`memgrep`](scripts/memgrep/SKILL.md), a markdown-aware search engine whose
-source ships in `scripts/memgrep/`. Install it with:
+The curated-note memory is now the **janitor's GLOBAL wiki-memory system**
+(`/janitor-memory-recall`, `/janitor-memory-write`, `/janitor-memory-update`,
+governed by `~/.claude/rules/markdown-memory-recall.md`). This plugin's own
+note-memory skills were retired in favor of it; `memory-search`
+(transcript search) stays and names the global skills as its complement.
+
+This plugin still **HOSTS the `memgrep` engine** the wiki recall depends on —
+[`memgrep`](scripts/memgrep/SKILL.md) is a markdown-aware search engine whose
+source ships in `scripts/memgrep/` and is consumed across the ecosystem. Install
+it with:
 
 ```bash
 scripts/install-memgrep.sh    # prebuilt sha256-verified binary (macOS arm64/x64, linux x64);
