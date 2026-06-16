@@ -39,8 +39,9 @@ moves below.
 
 ## Reading the table
 
-- **From / To** are `column:` enum values from
-  [trdd-design-tasks.md](trdd-design-tasks.md#column-enum-the-14-stage-kanban--blocked).
+- **From / To** are `column:` enum values from the canonical TRDD rule
+  `${CLAUDE_PLUGIN_ROOT}/rules/trdd-design-tasks.md` (section "Column enum") — see
+  also the local pointer [trdd-design-tasks.md](trdd-design-tasks.md).
 - **Mover** is the role (governance title) authorised to trigger the
   transition. AMAMA = MANAGER. COS = CHIEF-OF-STAFF. ORCH =
   ORCHESTRATOR. ARCH = ARCHITECT. INT = INTEGRATOR. MEM = MEMBER

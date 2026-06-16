@@ -40,7 +40,9 @@ The plugin loads its skills automatically; invoke a workflow with its slash
 command or by describing the task:
 
 ```text
-/prrd-trdd-kanban          # read/mutate PRRD rules, author/find TRDDs, render the board
+/ama-prrd-get              # read a PRRD rule by number (every role)
+/ama-trdd-write            # author a TRDD; /ama-trdd-transition moves columns
+/ama-kanban-render         # render the design/spec board (read-only)
 /team-governance           # team governance and COS management
 /amp-inbox                 # check the inter-agent message inbox
 /amp-send <to> <subj> <msg>  # send a message to another agent
@@ -65,7 +67,16 @@ are documented in the table below.
 | `memory-write`                  | Curated-note memory authoring                |
 | `network-security`              | Network security checks                      |
 | `planning`                      | Task planning (persistent files)             |
-| `prrd-trdd-kanban`              | Universal PRRD / TRDD / Kanban workflow      |
+| `ama-prrd-get`                  | Read a PRRD rule by number (any role)        |
+| `ama-prrd-find`                 | Search PRRD rules by content / metadata      |
+| `ama-prrd-edit`                 | Mutate a SILVER PRRD rule (MANAGER-gated)    |
+| `ama-prrd-propose`              | Propose a PRRD change (any role; non-binding)|
+| `ama-trdd-find`                 | Find TRDD task-design docs (read-only)       |
+| `ama-trdd-write`                | Author a new TRDD (tier-aware zone)          |
+| `ama-trdd-update`               | Edit an existing TRDD's body / evidence      |
+| `ama-trdd-transition`           | Move a TRDD between columns (matrix-enforced)|
+| `ama-kanban-render`             | Render the design/spec board (read-only)     |
+| `ama-proposal-approvals`        | Batch approve/refuse/archive (MANAGER-gated) |
 | `team-governance`               | Team governance and COS management           |
 | `team-kanban`                   | Team kanban boards and tasks                 |
 

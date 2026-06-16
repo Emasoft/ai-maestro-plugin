@@ -4,7 +4,7 @@ amama_proposal_approvals.py — batch proposal approval tool for the 4-zone
 design folders (proposals / tasks / refused / archived).
 
 Operationalizes the proposal → planned lifecycle from
-skills/prrd-trdd-kanban/references/approval-tiers-and-zones.md:
+skills/ama-trdd-transition/references/approval-tiers-and-zones.md:
 
   list                         — number every pending proposal, one line each
   approve  <selector...>       — promote proposal(s): proposal → planned,
