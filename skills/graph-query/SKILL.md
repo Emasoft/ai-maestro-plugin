@@ -63,7 +63,7 @@ Each command returns structured text output with:
 ## Error Handling
 
 - **Scripts not found**: Run `~/ai-maestro/install-graph-tools.sh` to install
-- **API connection fails**: Verify AI Maestro is running with `curl http://127.0.0.1:23000/api/hosts/identity`
+- **API connection fails**: Verify AI Maestro is running with `aimaestro-agent.sh list` — a clean exit (no connection error) means the server is reachable; no direct server call needed (decoupled per ai-maestro#11)
 - **Stale results**: Re-index with `graph-index-delta.sh`
 - **Graph unavailable**: Inform user: "Graph unavailable, proceeding with manual analysis"
 

@@ -169,7 +169,7 @@ This gives you:
 
 ### API connection fails
 
-- Ensure AI Maestro is running — request `http://127.0.0.1:23000/api/hosts/identity` with curl and expect a JSON identity response
+- Ensure AI Maestro is running — run `docs-stats.sh`; a clean exit (no connection error) means the server is reachable (no direct server call — decoupled per ai-maestro#11)
 - Ensure documentation has been indexed: `docs-stats.sh`
 - If no docs indexed, run: `docs-index.sh`
 

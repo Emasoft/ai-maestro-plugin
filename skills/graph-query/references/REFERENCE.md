@@ -256,7 +256,7 @@ If missing, run: `~/ai-maestro/install-graph-tools.sh`
 
 **API connection fails:**
 
-- Verify AI Maestro is running: `curl http://127.0.0.1:23000/api/hosts/identity`
+- Verify AI Maestro is running: `aimaestro-agent.sh list` (a clean exit ⇒ the server is reachable; no direct server call — decoupled per ai-maestro#11)
 - Verify your agent is registered (scripts auto-detect from tmux session)
 - Symbol names are case-sensitive
 
