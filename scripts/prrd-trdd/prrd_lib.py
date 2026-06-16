@@ -591,6 +591,12 @@ def caller_is_manager() -> bool:
         return False
     import subprocess
 
+    # DECOUPLE-BLOCKED ai-maestro#36 — per MANAGER core#11 (no plugin calls the
+    # server /api/* directly), this MANAGER-title check must repoint to the frozen
+    # CLI (aid-governance / aid-whoami). Those verbs are NOT yet installed (they
+    # land via ai-maestro#36); until then this direct /api/governance call stays
+    # functional. Flip to the CLI once the verb lands — do NOT patch installed
+    # scripts (FROZEN-interface invariant, assistant-manager#16).
     # Build the auth header for the LOCAL AI Maestro server (localhost API).
     # Assembled in a named variable (not an inline f-string in the argv) so
     # the intent — authenticating to our own server, not shipping a token to
