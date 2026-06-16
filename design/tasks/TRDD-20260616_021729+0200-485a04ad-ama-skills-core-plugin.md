@@ -1,9 +1,9 @@
 ---
 trdd-id: 485a04ad-e2df-4393-81d3-70e9cbe0686b
 title: Build the granular governance-enforcing ama-* pillar skills in the core plugin (Build #8 Phase A)
-column: dev
+column: published
 created: 2026-06-16T02:17:29+0200
-updated: 2026-06-16T02:41:15+0200
+updated: 2026-06-16T05:43:02+0200
 current-owner: general-purpose
 assignee: general-purpose
 priority: 1
@@ -20,6 +20,8 @@ target-branch: main
 review-requirements: [human-review]
 impacts: [public-api]
 implementation-commits: [306c7e8]
+published-version: 2.7.9
+published-at: 2026-06-16T02:44:14+0200
 external-refs: ["github.com/Emasoft/ai-maestro-plugin"]
 ---
 
@@ -104,3 +106,14 @@ route to `ama-prrd-propose`; `ama-kanban-render` is read-only by construction;
 - `prrd-trdd-kanban` retired; its references folded (no duplicated rule text;
   governance rules point to `rules/`).
 - CPV `--strict` clean. Published v2.7.9 (carries Phase B).
+
+## Approval log
+
+- 2026-06-16T05:43:02+0200 — `column: dev → published` (bookkeeping). All
+  acceptance criteria met and the work shipped in **v2.7.9** (8 assets, Release
+  green, published 2026-06-16T02:44:14+0200, impl commit `306c7e8`). This records
+  the already-executed, user-authorized publish — NOT a newly-initiated release —
+  so the kanban reflects shipped reality. The column had been left stale at `dev`
+  after the publish; the janitor `[trdd-reminder]` surfaced it. Parent
+  TRDD-f5883dcc (#8) stays open for its gated follow-up (rule-installer
+  overwrite-on-bump, awaiting MANAGER's rule-ownership confirmation).
