@@ -45,10 +45,23 @@ deploys: flip every `DECOUPLE-BLOCKED ai-maestro#36` tag (code + the 9 doc banne
 the EXTERNAL ai-maestro#36 (not a local TRDD) → frontmatter list stays empty;
 restore to `pre-block-column: dev` on deploy.
 
-**Session-verb request SENT (#11):** verified `agent-session.sh cmd_session` only
-`tmux attach`es → asked MANAGER to add `session activity-update` + `session command`
-to the #36 build list (+ confirmed the hook also needs `resolve --cwd`, already on
-#36). Hook flips once #36 ships resolve--cwd + those 2 session verbs.
+**Hook flip target — CORRECTED by MANAGER (#11, comment 4):** my session-verb
+"missing" finding was the **stale-deployed-copy trap** — I read deployed
+`~/.local/bin/agent-session.sh` (353 lines, only `tmux attach`); SOURCE is 495
+lines and already has `cmd_session_command`, `cmd_session_activity_update`, and
+`resolve --cwd`. So they're **deployed-stale, NOT missing** (no new verbs to
+build; #36 refreshes the modules). Better still, the ai-maestro Claude already
+built **`aimaestro-hook.sh`** (source-only today, added to #36's deploy list)
+whose subcommands map 1:1 to my hook's 3 functions and resolve cwd→agent
+INTERNALLY:
+- `aimaestro-hook.sh activity --cwd <dir> [--status …]` ← `broadcastStatusUpdate`
+- `aimaestro-hook.sh notify --cwd <dir> --message <text>` ← `sendMessageNotification`
+- `aimaestro-hook.sh check-messages --cwd <dir> [--json]` ← `checkUnreadMessages`
+**FLIP PLAN (when #36 deploys `aimaestro-hook.sh`):** `ai-maestro-hook.cjs` becomes
+a thin stdin-parser that shells out to those 3 subcommands — the 3 `GET /api/agents`
+cwd-resolutions collapse into the wrapper; zero `fetch`, zero `:23000`, zero `/api/`.
+(See LOCAL memory `deployed-cli-copy-is-stale-vs-source`.) `prrd_lib.py` →
+`aid-governance` stays a genuine #36 verb.
 
 ### DONE (2026-06-17, commit-not-publish)
 - **Phase 1** ✅ `prrd_lib.py` `/api/governance` (caller_is_manager) tagged

@@ -59,10 +59,10 @@ function hashCwd(cwd) {
 // Broadcast status update via WebSocket (non-blocking)
 // DECOUPLE-BLOCKED ai-maestro#36 (MANAGER core#11): the two /api/ calls below
 // (GET /api/agents to resolve the agent by cwd; POST /api/sessions/activity/update
-// to push the 8-state status) have NO frozen CLI verb yet — `aimaestro-agent.sh`
-// has no `resolve --cwd` and no session-activity verb (cmd_session only attaches).
-// Left functional per the directive; flip to the CLI once those verbs land via #36.
-// Do NOT patch installed scripts (FROZEN-interface invariant, assistant-manager#16).
+// to push the 8-state status) flip to `aimaestro-hook.sh activity --cwd <dir>` once
+// ai-maestro#36 deploys that wrapper (source-only today; resolves cwd→agent + posts
+// activity internally). Underlying verbs exist in SOURCE, deployed-stale. Functional
+// until then. Do NOT patch installed scripts (FROZEN invariant, assistant-manager#16).
 async function broadcastStatusUpdate(cwd, state) {
     try {
         // Find the session name for this working directory
@@ -158,10 +158,10 @@ function debugLog(data) {
 // Send message notification to agent via tmux
 // DECOUPLE-BLOCKED ai-maestro#36 (MANAGER core#11): the two /api/ calls below
 // (GET /api/agents to resolve by cwd; POST /api/sessions/{name}/command to type the
-// wake-up prompt into the agent's tmux) have NO frozen CLI verb yet —
-// `aimaestro-agent.sh` has no `resolve --cwd` and cmd_session only `tmux attach`es
-// (no send-command verb). Left functional; flip to the CLI once the verbs land (#36).
-// Do NOT patch installed scripts (FROZEN-interface invariant, assistant-manager#16).
+// wake-up prompt into the agent's tmux) flip to `aimaestro-hook.sh notify --cwd <dir>
+// --message <text>` once ai-maestro#36 deploys that wrapper (resolves cwd→agent +
+// relays the command internally; verbs exist in SOURCE, deployed-stale today).
+// Functional until then. Do NOT patch installed scripts (FROZEN invariant, #16).
 async function sendMessageNotification(cwd, messagePrompt) {
     try {
         const agentsResponse = await fetch('http://localhost:23000/api/agents');
@@ -204,11 +204,10 @@ async function sendMessageNotification(cwd, messagePrompt) {
 
 // Check for unread messages for this agent
 // DECOUPLE-BLOCKED ai-maestro#36 (MANAGER core#11): GET /api/agents (resolve by cwd)
-// + GET /api/messages (unread count) below. `amp-inbox --count` is the frozen verb for
-// the inbox count, but it needs the agent id from the resolve-by-cwd step, and
-// `aimaestro-agent.sh` has no `resolve --cwd` verb yet. Left functional; flip the whole
-// resolve→count chain to the CLI once the resolve verb lands via #36.
-// Do NOT patch installed scripts (FROZEN-interface invariant, assistant-manager#16).
+// + GET /api/messages (unread count) below flip to `aimaestro-hook.sh check-messages
+// --cwd <dir> [--json]` once ai-maestro#36 deploys that wrapper (resolves cwd→agent +
+// counts the inbox internally; verbs exist in SOURCE, deployed-stale today).
+// Functional until then. Do NOT patch installed scripts (FROZEN invariant, #16).
 async function checkUnreadMessages(cwd) {
     try {
         // Find agent by working directory
