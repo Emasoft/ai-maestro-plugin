@@ -118,7 +118,7 @@ installed — set `$AI_MAESTRO_PRRD_SCRIPTS_DIR` or install the base.
 
 - `${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md` — canonical PRRD format, mutation-authority table, GOLDEN/SILVER.
 - [../ama-trdd-transition/references/prrd-design-rules.md](../ama-trdd-transition/references/prrd-design-rules.md) — the one fact every ama-prrd-* skill enforces (pointer).
-  > Why this is a pointer, not a copy · The one fact every `ama-prrd-*` skill enforces
+  > Contents · Why this is a pointer, not a copy · The one fact every `ama-prrd-*` skill enforces
 - `/ama-prrd-propose` — the proposal path for every non-MANAGER (and for GOLDEN changes).
 - [../ama-trdd-transition/references/scripts-usage.md](../ama-trdd-transition/references/scripts-usage.md) — full script usage + exit codes.
   > resolve_pillar_scripts.sh — locate the scripts from any plugin (delivery mechanism) · get-prrd.py — read PRRD rules · prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation) · findprrd.py — search PRRD rules · findtrdd.py — find TRDDs · kanban.py — render the board (READ-ONLY) · bootstrap_design.py — create the 4-zone design/ folders · amama_proposal_approvals.py — batch proposal approvals (list/approve/refuse/archive) · Authoring a new TRDD (canonical skeleton) · Exit codes · Per-role quick examples

@@ -1,5 +1,10 @@
 # PRRD format — pointer to the canonical rule
 
+## Contents
+
+- Why this is a pointer, not a copy
+- The one fact every `ama-prrd-*` skill enforces
+
 > **Single source of truth.** The full PRRD specification — the GOLDEN (USER-only)
 > vs SILVER (MANAGER-mutable) split, the `<letter><number>.<version>` rule
 > identity, promote/demote semantics, the `PRRD G64.134` citation grammar, the

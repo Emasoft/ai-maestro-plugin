@@ -1,5 +1,10 @@
 # TRDD v2 format — pointer to the canonical rule
 
+## Contents
+
+- Why this is a pointer, not a copy
+- What lives WHERE (so you don't go looking in the wrong file)
+
 > **Single source of truth.** The full TRDD v2 specification — filename format,
 > the complete `column:` enum (the 14-stage kanban + `blocked` + the
 > proposal-lifecycle overlay `proposal`/`planned`/`refused`/`cancelled`/
