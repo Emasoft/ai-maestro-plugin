@@ -38,15 +38,18 @@ build — ai-maestro#36); non-api part stays here. This plugin calls ONLY the
 frozen CLI. **GitHub API (`gh`, `api.github.com`) is OUT OF SCOPE — keep it.**
 
 ### NEXT ACTION (BLOCKED on ai-maestro#36 deploy — external)
-All committable code work is DONE (Phases 1-3 below). The TRDD is now **blocked**
-on **ai-maestro#36** landing the frozen verbs (`aimaestro-agent.sh resolve --cwd`,
-the session-activity + send-command verbs, `aid-governance`/`aid-whoami`). When #36
-deploys: (1) flip each `DECOUPLE-BLOCKED ai-maestro#36` tag → the real CLI call,
-(2) re-verify `grep -rn '/api/'` shows zero real call sites, (3) publish (MANAGER
-verify-acks). Also pending: MANAGER ruling on whether skill-doc `curl /api/…`
-examples are in-scope (asked on #11). `blocked-by` is the EXTERNAL issue
-ai-maestro#36 (not a local TRDD), so the frontmatter list stays empty by
-construction; restore to `pre-block-column: dev` when #36 deploys.
+Code (Phases 1-3) DONE. **Phase 4 (doc wave) is now ACTIVE** per the MANAGER's
+ruling (#11, 2026-06-16): executable skill-`curl /api/…` IS in scope; inert refs
+exempt. Do Phase 4 now (commit-not-publish), then HOLD the whole TRDD blocked on
+**ai-maestro#36** for the tag→CLI flip + publish. When #36 deploys: flip every
+`DECOUPLE-BLOCKED ai-maestro#36` tag → the real CLI call, re-verify grep, publish
+(MANAGER verify-acks). `blocked-by` is the EXTERNAL ai-maestro#36 (not a local
+TRDD) → frontmatter list stays empty; restore to `pre-block-column: dev` on deploy.
+
+**Session-verb request SENT (#11):** verified `agent-session.sh cmd_session` only
+`tmux attach`es → asked MANAGER to add `session activity-update` + `session command`
+to the #36 build list (+ confirmed the hook also needs `resolve --cwd`, already on
+#36). Hook flips once #36 ships resolve--cwd + those 2 session verbs.
 
 ### DONE (2026-06-17, commit-not-publish)
 - **Phase 1** ✅ `prrd_lib.py` `/api/governance` (caller_is_manager) tagged
@@ -130,6 +133,27 @@ code-repoint on it.
 5. **Hold at commit-not-publish** until ai-maestro#36 lands the missing verbs;
    then flip the DECOUPLE-BLOCKED tags to the CLI and publish (MANAGER verify-ack).
 
+## Phase 4 — skill-doc wave (MANAGER ruling #11, 2026-06-16; the tracked tail)
+
+Line: **executable** agent-facing `curl /api/…` in a SKILL = in scope (the agent
+RUNS it at skill-load → plugin calls the API). **Inert** refs exempt: response-shape
+samples, "is the server up" health-probes the agent isn't told to act on, changelog
+mentions, test fixtures. Judge each by "is the agent meant to RUN this against the
+server?".
+
+Per-skill (verb-availability decides repoint-now vs tag-blocked):
+- `/api/agents` → `aimaestro-agent.sh list` (NOW) · `/api/messages` → `amp-inbox` (NOW).
+- `team-kanban` → `aimaestro-teams` (#36 → tag) · `team-governance` → `aimaestro-governance`
+  (#36 → tag) · `ama-trdd-transition` presence ref → its #36 verb (tag).
+- `graph-query`/`memory-search` health-probe `curl …/identity|/subconscious/status`:
+  classify (probe vs instruction) — likely EXEMPT health-checks; `mcp-discovery`
+  `POST /api/settings/mcp-discover` → assess for a verb or tag.
+- `network-security` `/api/v1/route` = protocol DOC describing AMP transport, not an
+  instruction → EXEMPT.
+
+Skill docs are NOT executable code, so a broken edit can't crash anything; still
+commit-not-publish. Code wave already done — this does not block it.
+
 ## Acceptance criteria
 - Zero UNTAGGED real `/api/*` (ai-maestro server) call sites in executable code.
 - Every still-functional server call carries `# DECOUPLE-BLOCKED ai-maestro#36`.
@@ -144,3 +168,9 @@ code-repoint on it.
   Tier: directive is Tier-2/3 by nature but PRE-AUTHORIZED + commit-not-publish
   (no outward-facing act until the gated publish, which the MANAGER verify-acks).
   Authored directly in design/tasks/ per that pre-authorization.
+- 2026-06-17T00:37+0200 — Phases 1-3 (code) committed; replied #11 with the
+  session-verb finding (cmd_session only tmux-attaches → requested `session
+  activity-update` + `session command` added to #36). Column → blocked (ai-maestro#36).
+- 2026-06-17T00:40+0200 — MANAGER ruled (#11): executable skill-`curl` IN SCOPE,
+  inert EXEMPT; code-first, docs as tracked tail. Phase 4 (doc wave) added + made
+  active. Still commit-not-publish; MANAGER verify-acks at the gated publish.
