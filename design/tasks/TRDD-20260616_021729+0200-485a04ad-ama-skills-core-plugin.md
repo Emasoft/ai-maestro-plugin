@@ -3,7 +3,7 @@ trdd-id: 485a04ad-e2df-4393-81d3-70e9cbe0686b
 title: Build the granular governance-enforcing ama-* pillar skills in the core plugin (Build #8 Phase A)
 column: dev
 created: 2026-06-16T02:17:29+0200
-updated: 2026-06-16T02:17:29+0200
+updated: 2026-06-16T02:41:15+0200
 current-owner: general-purpose
 assignee: general-purpose
 priority: 1
@@ -19,7 +19,7 @@ release-via: publish
 target-branch: main
 review-requirements: [human-review]
 impacts: [public-api]
-implementation-commits: []
+implementation-commits: [306c7e8]
 external-refs: ["github.com/Emasoft/ai-maestro-plugin"]
 ---
 
