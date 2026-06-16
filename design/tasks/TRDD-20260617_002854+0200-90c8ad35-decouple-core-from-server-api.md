@@ -38,7 +38,11 @@ build — ai-maestro#36); non-api part stays here. This plugin calls ONLY the
 frozen CLI. **GitHub API (`gh`, `api.github.com`) is OUT OF SCOPE — keep it.**
 
 ### NEXT ACTION (BLOCKED on ai-maestro#36 deploy — external)
-Code (Phases 1-3) DONE. **Phase 4 (doc wave) DONE** (commit-not-publish). HOLD the
+Code (Phases 1-3) DONE. **Phase 4 (doc wave) DONE** (commit-not-publish): 9 docs
+tagged (DECOUPLE/-BLOCKED banners), **2 repointed** (graph-query → `aimaestro-agent.sh
+list`, docs-search → `docs-stats.sh` — the liveness probes the MANAGER flagged as
+wrongly-exempt in #11; now zero `/api/`), inert-exempt = network-security AMP-protocol
+spec + GOVERNANCE-RULES policy + ama-trdd-transition presence-ref. HOLD the
 whole TRDD blocked on **ai-maestro#36** for the tag→CLI flip + publish. When #36
 deploys: flip every `DECOUPLE-BLOCKED ai-maestro#36` tag (code + the 9 doc banners)
 → the real CLI call, re-verify grep, publish (MANAGER verify-acks). `blocked-by` is
