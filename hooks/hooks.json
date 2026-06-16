@@ -47,6 +47,12 @@
             "command": "node",
             "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/ai-maestro-hook.cjs"],
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/install-governance-rules.cjs"],
+            "timeout": 5
           }
         ]
       }
