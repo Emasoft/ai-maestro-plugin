@@ -1,5 +1,7 @@
 # AI Maestro Agent Management — Full Reference
 
+<!-- DECOUPLE ai-maestro#36 (per core#11, TRDD-90c8ad35): agents MUST use the `aimaestro-agent.sh` CLI verbs (the primary surface, documented above each example) — never raw `curl .../api/...`. The `**API:**` annotations and `curl` blocks below are protocol-equivalent REFERENCE only, kept to document what each CLI verb maps to. The `aimaestro-agent.sh` verbs (list/show/create/update/delete/hibernate/wake/export/import/plugin/skill) exist and are FROZEN. The governance/title `aid-*` bits in "Auto-install triggers" (`/api/governance/manager`, `/api/teams/.../chief-of-staff`, `ChangeTitle`) flip to their `aimaestro-governance` / `aid-*` CLI verbs once ai-maestro#36 lands them; they describe server-side behaviour, not an agent curl instruction. -->
+
 ## Table of Contents
 
 - [CLI Quick Reference](#cli-quick-reference)

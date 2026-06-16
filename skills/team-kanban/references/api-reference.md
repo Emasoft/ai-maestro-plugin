@@ -1,5 +1,7 @@
 # Kanban API Reference
 
+<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/teams/...` examples in this reference will teach the `aimaestro-teams` CLI once ai-maestro#36 lands the verb (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. -->
+
 ## Table of Contents
 
 - [Endpoints](#endpoints)

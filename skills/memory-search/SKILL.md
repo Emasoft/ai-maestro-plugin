@@ -8,6 +8,8 @@ metadata:
   version: "2.0.0"
 ---
 
+<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/agents/{id}/subconscious/status` and `.../subconscious/index-delta` examples below (subconscious-status check + manual re-index) will teach a frozen CLI verb once ai-maestro#36 lands one (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. `memory-search.sh` itself already uses the CLI. -->
+
 ## Overview
 
 Searches AI Maestro's indexed conversation history using `memory-search.sh`. Supports semantic, keyword, term, and symbol search modes. Conversations are automatically indexed by the subconscious process, creating a searchable memory across all sessions.

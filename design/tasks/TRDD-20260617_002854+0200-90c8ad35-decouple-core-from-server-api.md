@@ -3,7 +3,7 @@ trdd-id: 90c8ad35-f7c9-4576-8ad4-2b72a82d047a
 title: Decouple the core plugin from the ai-maestro server API — repoint /api/* to the frozen CLI layer
 column: blocked
 created: 2026-06-17T00:28:54+0200
-updated: 2026-06-17T00:36:58+0200
+updated: 2026-06-17T00:52:05+0200
 pre-block-column: dev
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
@@ -38,13 +38,12 @@ build — ai-maestro#36); non-api part stays here. This plugin calls ONLY the
 frozen CLI. **GitHub API (`gh`, `api.github.com`) is OUT OF SCOPE — keep it.**
 
 ### NEXT ACTION (BLOCKED on ai-maestro#36 deploy — external)
-Code (Phases 1-3) DONE. **Phase 4 (doc wave) is now ACTIVE** per the MANAGER's
-ruling (#11, 2026-06-16): executable skill-`curl /api/…` IS in scope; inert refs
-exempt. Do Phase 4 now (commit-not-publish), then HOLD the whole TRDD blocked on
-**ai-maestro#36** for the tag→CLI flip + publish. When #36 deploys: flip every
-`DECOUPLE-BLOCKED ai-maestro#36` tag → the real CLI call, re-verify grep, publish
-(MANAGER verify-acks). `blocked-by` is the EXTERNAL ai-maestro#36 (not a local
-TRDD) → frontmatter list stays empty; restore to `pre-block-column: dev` on deploy.
+Code (Phases 1-3) DONE. **Phase 4 (doc wave) DONE** (commit-not-publish). HOLD the
+whole TRDD blocked on **ai-maestro#36** for the tag→CLI flip + publish. When #36
+deploys: flip every `DECOUPLE-BLOCKED ai-maestro#36` tag (code + the 9 doc banners)
+→ the real CLI call, re-verify grep, publish (MANAGER verify-acks). `blocked-by` is
+the EXTERNAL ai-maestro#36 (not a local TRDD) → frontmatter list stays empty;
+restore to `pre-block-column: dev` on deploy.
 
 **Session-verb request SENT (#11):** verified `agent-session.sh cmd_session` only
 `tmux attach`es → asked MANAGER to add `session activity-update` + `session command`
@@ -174,3 +173,13 @@ commit-not-publish. Code wave already done — this does not block it.
 - 2026-06-17T00:40+0200 — MANAGER ruled (#11): executable skill-`curl` IN SCOPE,
   inert EXEMPT; code-first, docs as tracked tail. Phase 4 (doc wave) added + made
   active. Still commit-not-publish; MANAGER verify-acks at the gated publish.
+- 2026-06-17T00:52+0200 — **Phase 4 DONE** (commit-not-publish). 9 skill docs
+  tagged with one DECOUPLE banner each (team-kanban ×3, team-governance ×2,
+  memory-search ×2, mcp-discovery, ai-maestro-agents-management); 0 inline
+  repoints (no target verb installed → all #36-blocked); 8 files left EXEMPT
+  (graph-query/docs-search `/api/hosts/identity` health-probes,
+  network-security `/api/sessions` connectivity-test + `/api/v1/route` AMP
+  protocol doc, GOVERNANCE-RULES.md policy text, cos-delegation presence
+  architecture-description). Additions-only diff (19+/1-, the 1 a comment
+  enhancement). Report: reports/decouple-doc-wave/20260617_005205+0200-phase4.md.
+  TRDD stays blocked on ai-maestro#36 for the tag→CLI flip + publish.

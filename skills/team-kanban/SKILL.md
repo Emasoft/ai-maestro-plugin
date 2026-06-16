@@ -8,6 +8,8 @@ metadata:
   version: "2.0.0"
 ---
 
+<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/teams/...` task/board examples below will teach the `aimaestro-teams` CLI once ai-maestro#36 lands the verb (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE. -->
+
 ## Overview
 
 Manage team kanban boards and tasks via the AI Maestro API. Create, update, filter, delete tasks; configure columns; track dependencies; compute metrics; sync with GitHub Projects v2.

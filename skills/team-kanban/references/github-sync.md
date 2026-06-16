@@ -68,6 +68,8 @@ kanban-sync.py list  # All teams
 
 ## How It Works
 
+<!-- DECOUPLE-BLOCKED ai-maestro#36: the `GET/POST/PUT .../api/teams/...` server-side flow descriptions and `curl` examples below will teach the `aimaestro-teams` CLI once ai-maestro#36 lands the verb (per core#11, TRDD-90c8ad35). The `kanban-sync.py` / `gh` GitHub-sync surface is OUT OF SCOPE. -->
+
 ### Read Flow (GET /api/teams/{id}/tasks)
 
 ```

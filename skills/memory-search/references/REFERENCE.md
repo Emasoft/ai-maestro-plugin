@@ -1,5 +1,7 @@
 # Memory Search Reference
 
+<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/agents/{id}/subconscious/status` and `.../subconscious/index-delta` examples in this reference will teach a frozen CLI verb once ai-maestro#36 lands one (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. -->
+
 ## Table of Contents
 
 - [Memory Pipeline](#memory-pipeline)

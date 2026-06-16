@@ -8,6 +8,8 @@ metadata:
   version: "2.0.0"
 ---
 
+<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/governance` and `curl .../api/teams/...` examples below will teach the `aimaestro-governance` / `aimaestro-teams` CLI once ai-maestro#36 lands the verbs (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. AMP scripts (`amp-send`/`amp-inbox`) already use the CLI. -->
+
 ## Overview
 
 Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the AI Maestro governance API. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
