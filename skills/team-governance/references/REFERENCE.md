@@ -1,6 +1,6 @@
 # Team Governance Reference
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/governance` and `curl .../api/teams/...` examples in this reference will teach the `aimaestro-governance` / `aimaestro-teams` CLI once ai-maestro#36 lands the verbs (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. Residuals with no frozen verb yet (assign-COS-to-existing-team, change-team-type, Groups) are marked DECOUPLE-BLOCKED inline, re-targeted to an ai-maestro follow-up. -->
 
 ## Table of Contents
 
@@ -16,21 +16,22 @@
 
 ---
 
-## Governance API Endpoints
+## Governance CLI Commands
 
-Base URL: `${AIMAESTRO_API:-http://localhost:23000}`
+All operations go through the frozen CLIs (`aimaestro-governance.sh`,
+`aimaestro-teams.sh`, `aimaestro-agent.sh`), which resolve the API base + your
+agent identity internally — no base URL and no `X-Agent-Id` header to set by hand.
 
-All authenticated operations require `X-Agent-Id: <your-agent-id>` header.
-
-| Operation | Method | Endpoint | Auth Required |
-|-----------|--------|----------|---------------|
-| Check own governance role | GET | `/api/governance` | None |
-| List all teams | GET | `/api/teams` | None |
-| Get team details | GET | `/api/teams/{id}` | None |
-| Create team | POST | `/api/teams` | MANAGER for closed teams |
-| Update team | PUT | `/api/teams/{id}` | MANAGER or COS |
-| Delete team | DELETE | `/api/teams/{id}` | MANAGER |
-| Assign/remove COS | POST | `/api/teams/{id}/chief-of-staff` | MANAGER + password |
+| Operation | CLI command | Auth Required |
+|-----------|-------------|---------------|
+| Check own governance role | `aimaestro-governance.sh whoami` | None |
+| List all teams | `aimaestro-teams.sh list` | None |
+| Get team details | `aimaestro-teams.sh show <team-id>` | None |
+| Create team | `aimaestro-teams.sh create --name <n> --type closed [--cos <id>]` | MANAGER for closed teams |
+| Update team | `aimaestro-teams.sh update <team-id> [--name\|--description\|--agents\|--orchestrator]` | MANAGER or COS |
+| Delete team | `aimaestro-teams.sh delete <team-id> [--password <pw>]` | MANAGER |
+| Add / remove agent | `aimaestro-teams.sh add-agent\|remove-agent <team-id> <agent>` | MANAGER or COS |
+| Assign COS to existing team | _no frozen verb yet — DECOUPLE-BLOCKED #36 (set `--cos` at create)_ | MANAGER + password |
 
 ---
 
@@ -39,7 +40,7 @@ All authenticated operations require `X-Agent-Id: <your-agent-id>` header.
 ### Check Your Governance Role (Run First)
 
 ```bash
-curl -s "http://localhost:23000/api/governance" | jq .
+aimaestro-governance.sh whoami | jq .
 ```
 
 Returns your agent's governance permissions. **If not MANAGER or COS, STOP** -- governance operations require elevated privileges.
@@ -47,47 +48,33 @@ Returns your agent's governance permissions. **If not MANAGER or COS, STOP** -- 
 ### List All Teams
 
 ```bash
-curl -s "http://localhost:23000/api/teams" | jq .
+aimaestro-teams.sh list | jq .
 ```
 
 ### Create a Team (MANAGER Only)
 
-All teams are closed (isolated messaging with COS gateway). For lightweight unstructured agent collections, use Groups instead (`/api/groups`).
+All teams are closed (isolated messaging with COS gateway). For lightweight unstructured agent collections, use Groups instead. <!-- DECOUPLE-BLOCKED ai-maestro#36: Groups (was `/api/groups`) have no frozen-CLI verb yet — pending a follow-up. Do NOT call `/api/*` directly (core#11). -->
 
 ```bash
-curl -s -X POST "http://localhost:23000/api/teams" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"name": "security-team", "type": "closed"}' | jq .
+aimaestro-teams.sh create --name security-team --type closed | jq .
 ```
 
 ```bash
-# With COS — auto-assigns COS title and auto-installs ai-maestro-chief-of-staff role-plugin
-curl -s -X POST "http://localhost:23000/api/teams" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <manager-agent-id>" \
-  -d '{"name": "security-team", "type": "closed", "chiefOfStaffId": "<cos-agent-id>"}' | jq .
+# With COS — auto-assigns the COS title and auto-installs ai-maestro-chief-of-staff (--scope local)
+aimaestro-teams.sh create --name security-team --type closed --cos <cos-agent-id> | jq .
 ```
 
-**Auto-COS chain:** When `chiefOfStaffId` is provided, the `ai-maestro-chief-of-staff` role-plugin is automatically installed on the designated COS agent (`--scope local`). If no `chiefOfStaffId` is provided, the response includes `needsChiefOfStaff: true` — a COS must be assigned separately via `POST /api/teams/{id}/chief-of-staff`.
+**Auto-COS chain:** When `--cos` is provided, the `ai-maestro-chief-of-staff` role-plugin is automatically installed on the designated COS agent (`--scope local`). If no `--cos` is provided, the team is created without a COS. <!-- DECOUPLE-BLOCKED ai-maestro#36: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen verb yet (`aimaestro-teams.sh update` exposes no `--cos`); pending a follow-up. Until then set `--cos` at create time, or have the MANAGER assign via their own tooling. -->
 
 ### Delete a Closed Team (MANAGER Only)
 
 ```bash
-curl -s -X DELETE "http://localhost:23000/api/teams/<team-id>" \
-  -H "X-Agent-Id: <your-agent-id>" | jq .
+aimaestro-teams.sh delete <team-id> --password <governance-password> | jq .
 ```
 
 ### Change Team Type (MANAGER Only)
 
-```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"type": "closed"}' | jq .
-```
-
-All teams are closed. Use Groups (`/api/groups`) for open agent collections.
+All teams are closed by design; there is no open/closed toggle to set. <!-- DECOUPLE-BLOCKED ai-maestro#36: `aimaestro-teams.sh update` exposes no `--type` flag (was `PUT /api/teams/{id}` with `{type}`). Effectively a no-op since all teams are closed; pending a follow-up verb only if a type toggle is ever reintroduced. -->
 
 ---
 
@@ -96,34 +83,22 @@ All teams are closed. Use Groups (`/api/groups`) for open agent collections.
 ### Assign Agent to Closed Team (MANAGER or COS of that team)
 
 ```bash
-# Get current members first
-CURRENT=$(curl -s "http://localhost:23000/api/teams/<team-id>" | jq -r '.agentIds | join(",")')
-
-# Add new agent to the list
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"agentIds": ["existing-agent-1", "existing-agent-2", "new-agent-id"]}' | jq .
+# add-agent appends to the team's membership — no need to fetch + resend the full list.
+aimaestro-teams.sh add-agent <team-id> <new-agent-id> | jq .
 ```
 
 ### Remove Agent from Closed Team
 
 ```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"agentIds": ["remaining-agent-1", "remaining-agent-2"]}' | jq .
+aimaestro-teams.sh remove-agent <team-id> <agent-id> | jq .
 ```
 
 ### Transfer Agent Cross-Team (MANAGER Only)
 
-Assign agent to the new team -- old membership is automatically removed.
+Add the agent to the new team -- old closed-team membership is automatically removed.
 
 ```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<new-team-id>" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"agentIds": ["current-members...", "transferred-agent-id"]}' | jq .
+aimaestro-teams.sh add-agent <new-team-id> <transferred-agent-id> | jq .
 ```
 
 ---
@@ -134,21 +109,17 @@ COS is a trusted agent managing day-to-day team operations for the MANAGER. Only
 
 ### Assign COS
 
+At **create time**, pass `--cos` (supported):
+
 ```bash
-curl -s -X POST "http://localhost:23000/api/teams/<team-id>/chief-of-staff" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"agentId": "<cos-agent-id>", "password": "<governance-password>"}' | jq .
+aimaestro-teams.sh create --name <team-name> --type closed --cos <cos-agent-id> --password <governance-password> | jq .
 ```
+
+<!-- DECOUPLE-BLOCKED ai-maestro#36: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. Same gov-password residual class flagged on ai-maestro#36; pending a follow-up verb. Until then: set `--cos` at create, or the MANAGER assigns through their own tooling. Do NOT call `/api/*` directly (core#11). -->
 
 ### Remove COS
 
-```bash
-curl -s -X POST "http://localhost:23000/api/teams/<team-id>/chief-of-staff" \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Id: <your-agent-id>" \
-  -d '{"agentId": null, "password": "<governance-password>"}' | jq .
-```
+<!-- DECOUPLE-BLOCKED ai-maestro#36: removing a COS from a team (was `POST /api/teams/{id}/chief-of-staff` with `agentId:null`) has no frozen-CLI verb yet — pending the same follow-up as assign-COS. Do NOT call `/api/*` directly (core#11). -->
 
 **Never store, cache, or log the governance password.** Ask the user each time.
 
@@ -164,9 +135,9 @@ Use AMP to broadcast to all agents in a team. COS broadcasts to own team; MANAGE
 
 ```bash
 TEAM_ID="<team-uuid>"
-AGENTS=$(curl -s "http://localhost:23000/api/teams/$TEAM_ID" | jq -r '.agentIds[]')
+AGENTS=$(aimaestro-teams.sh show "$TEAM_ID" | jq -r '.agentIds[]')
 for AGENT_ID in $AGENTS; do
-  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.agent.name')
+  AGENT_NAME=$(aimaestro-agent.sh show "$AGENT_ID" | jq -r '.agent.name')
   amp-send "$AGENT_NAME" "Team Update" "Your message here"
 done
 ```
@@ -175,9 +146,9 @@ done
 
 ```bash
 TEAM_ID="<team-uuid>"
-AGENTS=$(curl -s "http://localhost:23000/api/teams/$TEAM_ID" | jq -r '.agentIds[]')
+AGENTS=$(aimaestro-teams.sh show "$TEAM_ID" | jq -r '.agentIds[]')
 for AGENT_ID in $AGENTS; do
-  AGENT_NAME=$(curl -s "http://localhost:23000/api/agents/$AGENT_ID" | jq -r '.agent.name')
+  AGENT_NAME=$(aimaestro-agent.sh show "$AGENT_ID" | jq -r '.agent.name')
   amp-send "$AGENT_NAME" "Urgent: Team Update" "Your urgent message here" --priority urgent
 done
 ```
@@ -292,8 +263,8 @@ MAINTAINER, AUTONOMOUS, and HUMAN.
 
 Go through the team's Chief-of-Staff:
 
-1. Find COS ID: `curl -s "${AIMAESTRO_API:-http://localhost:23000}/api/teams/<team-id>" | jq -r '.chiefOfStaffId'`
-2. Resolve COS name: `curl -s "${AIMAESTRO_API:-http://localhost:23000}/api/agents/<cos-id>" | jq -r '.agent.name'`
+1. Find COS ID: `aimaestro-teams.sh show <team-id> | jq -r '.chiefOfStaffId'`
+2. Resolve COS name: `aimaestro-agent.sh show <cos-id> | jq -r '.agent.name'`
 3. Send message to the COS, who relays to team members
 
 ---
@@ -316,7 +287,7 @@ Go through the team's Chief-of-Staff:
 
 ### "Access denied" on team operations
 
-Verify role: `curl -s "http://localhost:23000/api/governance" | jq .` -- must be MANAGER or COS of target team.
+Verify role: `aimaestro-governance.sh whoami | jq .` -- must be MANAGER or COS of target team.
 
 ### "Agent already in closed team"
 
