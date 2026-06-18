@@ -22,6 +22,8 @@ All operations go through the frozen CLIs (`aimaestro-governance.sh`,
 `aimaestro-teams.sh`, `aimaestro-agent.sh`), which resolve the API base + your
 agent identity internally — no base URL and no `X-Agent-Id` header to set by hand.
 
+**Authorization model (R26–R40).** Agents authenticate **only** by their **AID** (the CLIs send it automatically); the server runs the **R28 three-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope — a skill **never asserts its own title**. Per **R32** agents **never** face a sudo gate: AID + title + token IS the authorization. A governance/sudo **password is requested only of the USER, only via the UI** (R16); a deployed CLI's `--password` flag is therefore a **USER/UI residual** an agent **surfaces to the user, never supplies**. Per **R29–R31** the **MANAGER** creates/deletes teams (auto-creating the COS + 5 base members) with **no user approval** (R9.11); a **COS** needs a MANAGER mandate to add extra MEMBERs (the 5-member base is invariant); an incomplete team is **frozen** until complete. Identity is **conferred, never self-assigned** (R26).
+
 | Operation | CLI command | Auth Required |
 |-----------|-------------|---------------|
 | Check own governance role | `aimaestro-governance.sh whoami` | None |
@@ -29,9 +31,9 @@ agent identity internally — no base URL and no `X-Agent-Id` header to set by h
 | Get team details | `aimaestro-teams.sh show <team-id>` | None |
 | Create team | `aimaestro-teams.sh create --name <n> --type closed [--cos <id>]` | MANAGER for closed teams |
 | Update team | `aimaestro-teams.sh update <team-id> [--name\|--description\|--agents\|--orchestrator]` | MANAGER or COS |
-| Delete team | `aimaestro-teams.sh delete <team-id> [--password <pw>]` | MANAGER |
+| Delete team | `aimaestro-teams.sh delete <team-id>` | MANAGER (by AID; R29/R32 — no agent password) |
 | Add / remove agent | `aimaestro-teams.sh add-agent\|remove-agent <team-id> <agent>` | MANAGER or COS |
-| Assign COS to existing team | _no frozen verb yet — DECOUPLE-BLOCKED #36 (set `--cos` at create)_ | MANAGER + password |
+| Assign COS to existing team | _no frozen verb yet — DECOUPLE-BLOCKED #36 (set `--cos` at create)_ | MANAGER (by AID; R29 — no user approval) |
 
 ---
 
@@ -68,8 +70,10 @@ aimaestro-teams.sh create --name security-team --type closed --cos <cos-agent-id
 
 ### Delete a Closed Team (MANAGER Only)
 
+The MANAGER deletes a team by **AID** — per **R29/R32** this needs no user approval and no agent password (R9.11). Do **not** pass `--password`; the deployed CLI's `--password` flag is a USER/UI residual (R32.3).
+
 ```bash
-aimaestro-teams.sh delete <team-id> --password <governance-password> | jq .
+aimaestro-teams.sh delete <team-id> | jq .
 ```
 
 ### Change Team Type (MANAGER Only)
@@ -105,14 +109,14 @@ aimaestro-teams.sh add-agent <new-team-id> <transferred-agent-id> | jq .
 
 ## Chief-of-Staff Assignment
 
-COS is a trusted agent managing day-to-day team operations for the MANAGER. Only a MANAGER can assign/remove COS. Requires governance password from the user.
+COS is a trusted agent managing day-to-day team operations for the MANAGER. Only a MANAGER can assign/remove COS — by **AID**, with **no user approval and no agent password** (R29/R32; R9.11). Per **R29**, creating a team auto-creates its COS; **R30** keeps the 5-member base invariant (a COS needs a MANAGER mandate to add extra MEMBERs); **R31** freezes an incomplete team (only its COS active) until all 5 base members exist.
 
 ### Assign COS
 
 At **create time**, pass `--cos` (supported):
 
 ```bash
-aimaestro-teams.sh create --name <team-name> --type closed --cos <cos-agent-id> --password <governance-password> | jq .
+aimaestro-teams.sh create --name <team-name> --type closed --cos <cos-agent-id> | jq .
 ```
 
 <!-- DECOUPLE-BLOCKED ai-maestro#36: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. Same gov-password residual class flagged on ai-maestro#36; pending a follow-up verb. Until then: set `--cos` at create, or the MANAGER assigns through their own tooling. Do NOT call `/api/*` directly (core#11). -->
@@ -121,7 +125,7 @@ aimaestro-teams.sh create --name <team-name> --type closed --cos <cos-agent-id> 
 
 <!-- DECOUPLE-BLOCKED ai-maestro#36: removing a COS from a team (was `POST /api/teams/{id}/chief-of-staff` with `agentId:null`) has no frozen-CLI verb yet — pending the same follow-up as assign-COS. Do NOT call `/api/*` directly (core#11). -->
 
-**Never store, cache, or log the governance password.** Ask the user each time.
+**Agents never handle the governance/sudo password (R16/R32).** It is a USER/UI-only secret — if an operation genuinely requires it, the server surfaces a UI popup the **user** fills in; the agent never sees, stores, caches, logs, or supplies it.
 
 **Role-plugin auto-install:** Assigning a COS automatically installs the `ai-maestro-chief-of-staff` role-plugin on the COS agent with `--scope local`. Similarly, assigning the MANAGER title auto-installs `ai-maestro-assistant-manager-agent`. These are non-blocking — title assignment succeeds even if plugin install fails.
 
@@ -277,7 +281,7 @@ Go through the team's Chief-of-Staff:
 | 403 | `title_communication_forbidden` | Sender's governance title cannot message recipient's title (see communication graph) |
 | 403 | `access_denied_closed_team` | Governance op on closed team without MANAGER or COS role |
 | 400 | `agent_already_in_closed_team` | Agent is in another closed team; use cross-team transfer |
-| 401 | `invalid_governance_password` | Incorrect governance password for COS assignment/removal |
+| 401 | `invalid_governance_password` | Sudo password rejected — a **USER/UI** path (R32.2); agent callers authenticate by AID (R28) and should never trigger this |
 | 404 | `team_not_found` | Team ID does not exist |
 | 400 | `invalid_team_type` | Invalid team configuration |
 
@@ -295,7 +299,7 @@ Agent can only belong to one closed team. Use MANAGER cross-team transfer.
 
 ### "Invalid governance password"
 
-Ask user to re-provide password. Passwords are never stored or cached.
+This is a **USER/UI** sudo path (R32.2), not an agent path — agents authenticate by AID (R28) and never supply a password. If the UI surfaced this to the user, ask the user to re-enter it in the popup. Agents never store, cache, or transmit the password (R16).
 
 ### COS cannot manage other teams
 

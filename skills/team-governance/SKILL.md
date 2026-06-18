@@ -5,7 +5,7 @@ description: "Use when managing teams or governance titles. Trigger with /team-g
 allowed-tools: "Bash(aimaestro-governance.sh:*), Bash(aimaestro-teams.sh:*), Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 <!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example below calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. AMP (`amp-send`/`amp-inbox`) already uses the CLI. The one residual — assigning a COS to an EXISTING team — has no frozen verb yet and is marked DECOUPLE-BLOCKED inline (set the COS at create time via `--cos`). -->
@@ -17,6 +17,8 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 **Communication graph (R6 v3, 2026-05-04):** AMP follows a title-based directed graph; HUMAN is a first-class node. v3 made **COS the SOLE gateway** for in-team agents — MANAGER no longer reaches ORCH/ARCH/INT/MEM directly. Blocked routes return HTTP 403 `title_communication_forbidden`. See R6 + matrix in the [reference](references/REFERENCE.md#team-messaging-rules) and the bundled rules.
 
 **Minimum team composition (R12, CRITICAL):** every team has ≥5 agents — 1 COS + 1 ARCHITECT + 1 ORCHESTRATOR + 1 INTEGRATOR + 1 MEMBER. MANAGER enforces R12.6 on team creation.
+
+**Authorization model (R26–R40, security-first):** agents authenticate **only** by their **AID** — the `aimaestro-*` CLIs send it automatically. The server runs the **R28 three-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope; a skill **never asserts its own title**. Per **R32**, agents **never** face a sudo gate — AID + title + token IS the authorization; a governance/sudo **password is requested only of the USER, only via the UI** (R16), so a `--password` flag on a deployed CLI is a **USER/UI residual you surface to the user, never supply yourself**. Per **R29–R31**, the **MANAGER** creates/deletes teams (auto-creating the COS + the 5 base members) with **no user approval** (R9.11); a **COS** needs a MANAGER mandate to add extra MEMBER agents (the 5-member base is invariant); a team missing any base member is **frozen** (only its COS active) until complete. Identity is **conferred, never self-assigned** (R26). Full text in the [bundled rules](references/GOVERNANCE-RULES.md) R26–R40.
 
 ## Prerequisites
 
@@ -40,7 +42,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    - **Show team**: `aimaestro-teams.sh show <team-id>`
    - **Create team**: `aimaestro-teams.sh create --name <name> --type closed [--cos <agent-id>]` (closed requires MANAGER)
    - **Update team**: `aimaestro-teams.sh update <team-id> [--name|--description|--agents|--orchestrator]`
-   - **Delete team**: `aimaestro-teams.sh delete <team-id> --password <pw>` (MANAGER only)
+   - **Delete team**: `aimaestro-teams.sh delete <team-id>` (MANAGER only — authenticates by AID per R29/R32; do **not** supply a password. The deployed CLI's `--password` flag is a USER/UI residual, not for agents.)
    - **Add / remove agent**: `aimaestro-teams.sh add-agent|remove-agent <team-id> <agent>`
 
 3. **Create a closed team** (the CLI sends your agent identity — no manual header):
@@ -49,9 +51,9 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    aimaestro-teams.sh create --name my-team --type closed | jq .
    ```
 
-4. **COS assignment** — ask the user for the governance password (never cache it):
-   - **At create time** (supported): `aimaestro-teams.sh create --name my-team --type closed --cos <cos-agent-id> --password <pw>`
-   <!-- DECOUPLE-BLOCKED ai-maestro#36: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. Pending a follow-up verb (same gov-password residual class flagged on ai-maestro#36). Until then: set the COS at create time via `--cos` above, or have the MANAGER assign it through their own tooling. Do NOT call `/api/*` directly (core#11). -->
+4. **COS assignment (R29/R32)** — the MANAGER assigns the COS; this needs **no user approval and no agent password** (the MANAGER authenticates by AID — R9.11). Per R29 the MANAGER creating a team auto-creates its COS + 5 base members:
+   - **At create time** (supported): `aimaestro-teams.sh create --name my-team --type closed --cos <cos-agent-id>` — assigns the COS title + auto-installs `ai-maestro-chief-of-staff`.
+   <!-- DECOUPLE-BLOCKED ai-maestro#36: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. Pending a follow-up verb. Until then: set the COS at create time via `--cos` above, or have the MANAGER assign it through their own tooling. Do NOT call `/api/*` directly (core#11). The deployed CLI's `--password` flag is a USER/UI residual (R32.3), never supplied by agents. -->
 
 5. **Broadcasts** — message all team agents via AMP:
 
@@ -77,7 +79,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 |------|---------|
 | 403 | Not MANAGER/COS, or closed team isolation blocks messaging |
 | 400 | Bad input (invalid type, agent in another closed team) |
-| 401 | Invalid governance password |
+| 401 | Sudo/governance password rejected — a **USER/UI** path (R32.2); agents authenticate by AID and should never hit this |
 | 404 | Team not found |
 
 ## Examples
@@ -90,7 +92,7 @@ Copy this checklist and track your progress:
 
 - [ ] Verified governance role via `aimaestro-governance.sh whoami`
 - [ ] Confirmed MANAGER or COS title
-- [ ] Obtained governance password from user (if COS assignment)
+- [ ] Authenticated by AID only — supplied NO password (R32; the server runs the R28 three-check)
 - [ ] Executed the frozen-CLI command (`aimaestro-teams.sh` / `aimaestro-governance.sh`)
 - [ ] Verified response; sent broadcasts if applicable
 
@@ -132,4 +134,23 @@ Copy this checklist and track your progress:
   - R20. Marketplace Governance
   - Invariants (Must Never Be Violated)
   - R21. All-In-One Pipeline Architecture (CRITICAL — IRON)
+  - R22. GitHub Authorship Self-Identification (RESERVED — see issue #33)
+  - R23. Plugin↔Server Decoupling via the Frozen CLI Layer (CRITICAL — IRON)
+  - R24. Proactive Global Memory
+  - R25. Three-Pillars Task System (TRDD / PRRD / Kanban)
+  - R26. Identity Immutability — no self-mutation of Title/Role/Name/AID (CRITICAL — IRON)
+  - R27. Self-Install Only via Core-Plugin Skills + Approval + CPV Scan (IRON)
+  - R28. Three-Check API Authorization (AID → Title → Portfolio Token) (CRITICAL — IRON)
+  - R29. MANAGER Team & Agent Lifecycle Authority (IRON)
+  - R30. COS Mandate; the 5-Member Base Is Invariant (IRON)
+  - R31. Incomplete-Team Freeze (IRON)
+  - R32. No Sudo Gates for Agents — AID Suffices; Sudo Is USER-via-UI Only (CRITICAL — IRON)
+  - R33. Signed-Ledger Recovery of Agent Auth State (IRON)
+  - R34. The Signed Ledger Is the Ultimate Source of Truth (CRITICAL — IRON)
+  - R35. Foreign Agent/User Host Approval (CRITICAL — IRON)
+  - R36. Users Have AIDs; One MAESTRO Per Host (IRON)
+  - R37. MAESTRO and the Single MAESTRO-DELEGATE (CRITICAL — IRON)
+  - R38. Non-MAESTRO User Restrictions (IRON)
+  - R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON)
+  - R40. Foreign-User Creation Approval (IRON)
   - Role-Based Permission Matrix
