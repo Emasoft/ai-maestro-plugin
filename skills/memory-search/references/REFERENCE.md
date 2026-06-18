@@ -1,6 +1,6 @@
 # Memory Search Reference
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/agents/{id}/subconscious/status` and `.../subconscious/index-delta` examples in this reference will teach a frozen CLI verb once ai-maestro#36 lands one (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. -->
+<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status / manual index-delta operations (were `curl .../api/agents/{id}/subconscious/status` and `.../subconscious/index-delta`) have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live curls are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
 
 ## Table of Contents
 
@@ -151,9 +151,7 @@ If searches consistently return nothing for topics you know were discussed:
 
 1. **Check subconscious is running:**
 
-   ```bash
-   curl -s http://localhost:23000/api/agents/{agentId}/subconscious/status | jq .
-   ```
+   <!-- DECOUPLE-BLOCKED ai-maestro#36: the subconscious-status check (was `GET /api/agents/{id}/subconscious/status`) has no frozen-CLI verb yet — pending a follow-up. Do NOT call `/api/*` directly (core#11). Indexing runs automatically; if you suspect it is stuck, ask the MANAGER/user to check server-side, or wait for the status verb. -->
 
 2. **Verify script is installed:**
 
@@ -169,9 +167,7 @@ If searches consistently return nothing for topics you know were discussed:
 
 4. **Trigger manual indexing:**
 
-   ```bash
-   curl -s -X POST http://localhost:23000/api/agents/{agentId}/subconscious/index-delta
-   ```
+   <!-- DECOUPLE-BLOCKED ai-maestro#36: manual re-index (was `POST /api/agents/{id}/subconscious/index-delta`) has no frozen-CLI verb yet — pending a follow-up. Do NOT call `/api/*` directly (core#11). Subconscious index-delta runs automatically on a schedule; a manual trigger waits for the verb. -->
 
 ---
 

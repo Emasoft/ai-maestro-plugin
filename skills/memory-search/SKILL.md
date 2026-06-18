@@ -8,7 +8,7 @@ metadata:
   version: "2.0.0"
 ---
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/agents/{id}/subconscious/status` and `.../subconscious/index-delta` examples below (subconscious-status check + manual re-index) will teach a frozen CLI verb once ai-maestro#36 lands one (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. `memory-search.sh` itself already uses the CLI. -->
+<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status-check / manual re-index operations have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live `curl .../api/agents/{id}/subconscious/...` calls are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
 
 ## Overview
 
@@ -65,7 +65,7 @@ Returns matching conversation excerpts with timestamps, session context, and rel
 
 - **No results**: Try alternate wording, broader terms, increased limit, or different mode. No results is valid — report the topic as new.
 - **Script not found**: Run `install-memory-tools.sh` from the AI Maestro repo to install.
-- **Memory not indexed**: Check subconscious status via `curl -s http://localhost:23000/api/agents/{agentId}/subconscious/status | jq .` and trigger manual indexing if needed.
+- **Memory not indexed**: Subconscious indexing runs automatically. A manual status-check / re-index has no frozen-CLI verb yet (DECOUPLE-BLOCKED ai-maestro#36, pending a follow-up) — see the reference's Troubleshooting section.
 - **Connection refused**: Verify AI Maestro is running on port 23000.
 
 ## Examples
