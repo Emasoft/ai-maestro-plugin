@@ -1,10 +1,10 @@
 ---
 trdd-id: 90c8ad35-f7c9-4576-8ad4-2b72a82d047a
 title: Decouple the core plugin from the ai-maestro server API — repoint /api/* to the frozen CLI layer
-column: blocked
+column: dev
 created: 2026-06-17T00:28:54+0200
-updated: 2026-06-17T00:52:05+0200
-pre-block-column: dev
+updated: 2026-06-18T03:09:30+0200
+pre-block-column: null
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 1
@@ -22,13 +22,13 @@ target-branch: main
 must-pass-tests-before-merge: true
 review-requirements: [human-review]
 impacts: [public-api, ci-pipeline]
-implementation-commits: []
+implementation-commits: [b6ff8d7]
 external-refs: ["github.com/Emasoft/ai-maestro-plugin/issues/11", "github.com/Emasoft/ai-maestro/issues/36", "github.com/Emasoft/ai-maestro-assistant-manager-agent/issues/16", "github.com/Emasoft/ai-maestro-chief-of-staff/issues/20"]
 ---
 
 # TRDD-90c8ad35 — Decouple core plugin from server `/api/*` → frozen CLI layer
 
-## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative) — 2026-06-17
+## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative) — 2026-06-18
 
 MANAGER directive **core#11** (cites USER 2026-06-15, ABSOLUTE/exception-free,
 PRE-AUTHORIZED — "execute, don't wait"). No ai-maestro plugin may call the
@@ -37,17 +37,39 @@ api-part → a CLI verb that lands in the `ai-maestro` project (NOT mine to
 build — ai-maestro#36); non-api part stays here. This plugin calls ONLY the
 frozen CLI. **GitHub API (`gh`, `api.github.com`) is OUT OF SCOPE — keep it.**
 
-### NEXT ACTION (BLOCKED on ai-maestro#36 deploy — external)
-Code (Phases 1-3) DONE. **Phase 4 (doc wave) DONE** (commit-not-publish): 9 docs
-tagged (DECOUPLE/-BLOCKED banners), **2 repointed** (graph-query → `aimaestro-agent.sh
-list`, docs-search → `docs-stats.sh` — the liveness probes the MANAGER flagged as
-wrongly-exempt in #11; now zero `/api/`), inert-exempt = network-security AMP-protocol
-spec + GOVERNANCE-RULES policy + ama-trdd-transition presence-ref. HOLD the
-whole TRDD blocked on **ai-maestro#36** for the tag→CLI flip + publish. When #36
-deploys: flip every `DECOUPLE-BLOCKED ai-maestro#36` tag (code + the 9 doc banners)
-→ the real CLI call, re-verify grep, publish (MANAGER verify-acks). `blocked-by` is
-the EXTERNAL ai-maestro#36 (not a local TRDD) → frontmatter list stays empty;
-restore to `pre-block-column: dev` on deploy.
+### NEXT ACTION (deploy LANDED 2026-06-18 → code FLIPPED+committed → awaiting MANAGER #11 reply)
+**ai-maestro#36 DEPLOYED** on this host: `~/.local/bin/aimaestro-hook.sh` +
+`aimaestro-governance.sh` (mtime Jun 18 02:50, SHAs match repo per #36 comments).
+**Both executable `/api/*` sites FLIPPED + committed `b6ff8d7`** (NOT pushed —
+publish pending MANAGER verify-ack):
+- `ai-maestro-hook.cjs` → `aimaestro-hook.sh activity|notify|check-messages --cwd`
+  (resolves cwd→agent + API internally; prompt-injection-safe marker kept local).
+  `node --check` ✓ · zero `fetch`/`:23000`/`/api/`.
+- `prrd_lib.py caller_is_manager` → `aimaestro-governance.sh whoami`
+  (wraps GET /api/governance; same title-scan). `py_compile`+`ruff` ✓.
+
+**REPORTED to MANAGER on #11 (comment 12, 2026-06-18).** AWAITING reply
+(monitor `#11c` → 13) on TWO questions:
+1. **Publish scope** — code-only now (doc-wave follow-up) vs hold for full doc-wave.
+2. **Fleet doc-pattern** for the teams ref-docs (COS is repointing "14 teams ref-docs"
+   — match their shape).
+
+**Doc-wave (the 9 banners) — PENDING MANAGER doc-pattern answer, do NOT touch yet:**
+- Repointable (verbs present): team-governance (`/api/governance`→`whoami`,
+  teams→`aimaestro-teams.sh`), team-kanban (→`aimaestro-teams.sh
+  list/show/create/update/delete/add-agent/...`), mcp-discovery (`mcp-discover.sh`).
+- STAY DECOUPLE-BLOCKED (no deployed verb → re-target to follow-up build):
+  memory-search `subconscious/status`+`index-delta`; AND the team-governance
+  `POST /api/teams/{id}/chief-of-staff` example (no assign-COS verb in
+  `aimaestro-teams.sh` — same gov-password residual class COS flagged on #36).
+
+**Verify-ack flag:** deployed `aimaestro-hook.sh notify` posts `addNewline:false`
+vs the old hook's `:true` — flagged on #11, NOT worked around (frozen CLI owns it).
+
+**THEN (on MANAGER reply):** do the doc repoints per the pattern → `grep -rn '/api/'`
+audit (only out-of-scope GitHub + the re-targeted residuals + `design/` docs remain)
+→ **publish via the CPV plugin-fixer agent (never hand-publish)** → MANAGER verify-ack.
+Restore complete: `column: dev`, `pre-block-column: null` (the external #36 blocker cleared).
 
 **Hook flip target — CORRECTED by MANAGER (#11, comment 4):** my session-verb
 "missing" finding was the **stale-deployed-copy trap** — I read deployed
