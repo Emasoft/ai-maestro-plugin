@@ -171,18 +171,13 @@ uv run scripts_dev/mcp_discovery.py --url https://mcp.example.com/events --trans
 
 ## AI Maestro API Discovery
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: prefer the `mcp-discover.sh --api` wrapper below; the raw `curl .../api/settings/mcp-discover` direct call will be removed in favour of a frozen CLI path once ai-maestro#36 lands one (per core#11, TRDD-90c8ad35). Until then the raw call stays functional against the server. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): discovery through the server goes via the frozen `mcp-discover.sh --api` wrapper (which resolves the API base + auth internally), never a raw `curl .../api/settings/mcp-discover`. -->
 
-For remote agents, route discovery through the AI Maestro server:
+For remote agents, route discovery through the AI Maestro server with the `--api` flag:
 
 ```bash
-# Via mcp-discover.sh with --api flag (PREFERRED — wraps the server route)
+# mcp-discover.sh --api wraps the server route (resolves base + auth internally)
 mcp-discover.sh --plugin <plugin-name> <server-name> --api
-
-# Direct API call
-curl -s -X POST http://localhost:23000/api/settings/mcp-discover \
-  -H "Content-Type: application/json" \
-  -d '{"configPath": "/path/to/.mcp.json", "serverName": "server-name"}'
 ```
 
 ## UI Discovery
