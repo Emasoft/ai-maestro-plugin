@@ -4,7 +4,6 @@ date: 2026-06-18
 branch: governance-rules
 synced-commit: 291758a4
 synced-blob: ad6159e8
-note: "Bundled mirror — full changelog stripped; see canonical for history."
 ---
 
 ## Table of contents

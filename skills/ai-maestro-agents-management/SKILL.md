@@ -14,6 +14,54 @@ Manage AI agents through the frozen `aimaestro-agent.sh` CLI (which resolves the
 
 **Authorization & identity (R26–R28, security-first).** An agent's identity — **TITLE / ROLE / NAME / AID** — is **conferred** by the USER / MANAGER / own-team COS and is **immutable to the agent itself** (R26): creating or configuring an agent CONFERS identity; an agent never self-assigns or self-changes its own title/role/name/AID (NAME/AID change only on compromise, via the proper authority). Agents **self-install ONLY through this core plugin's skills** — this skill IS that install surface — after **MANAGER** (no team) / **own-COS** (in team) approval, and the **server CPV-scans every extension before install** (R27); never install via a raw client CLI or bypass the scan. Every operation authenticates by the caller's **AID**: the CLI sends it, the **server** runs the **3-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope, and the skill **never asserts its own title** (R28). Full text: the [`team-governance`](../team-governance/references/GOVERNANCE-RULES.md) bundled rules, R26–R28.
 
+The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RULES.md) covers:
+
+- §0. Canonical source + copies
+- §TERMINOLOGY. Three-layer agent model (TITLE / ROLE / PERSONA)
+- Overview
+- R1. Teams and Groups
+- R2. Team Name Rules
+- R3. Role Hierarchy Rules
+- R4. Agent Membership Rules
+- R5. Transfer Rules
+- R6. Messaging Rules (Communication Graph)
+- R7. UI Robustness Rules
+- R8. Data Integrity Rules
+- R9. Manager Requirement
+- R10. Agent Lifecycle Governance
+- R11. Title-Plugin Binding
+- R12. Minimum Team Composition (CRITICAL)
+- R13. Role Boundaries (No Overstepping)
+- R14. Team Resilience (Auto-Recovery)
+- R15. Written Orders & GitHub Trail
+- R16. Password Never Shared with Agents (CRITICAL)
+- R17. Mandatory Core Plugin Installation (CRITICAL)
+- R18. Plugin Continuity on Client Change (CRITICAL)
+- R19. MAINTAINER Title
+- R20. Marketplace Governance
+- Invariants (Must Never Be Violated)
+- R21. All-In-One Pipeline Architecture (CRITICAL — IRON)
+- R22. GitHub Authorship Self-Identification (RESERVED — see issue #33)
+- R23. Plugin↔Server Decoupling via the Frozen CLI Layer (CRITICAL — IRON)
+- R24. Proactive Global Memory
+- R25. Three-Pillars Task System (TRDD / PRRD / Kanban)
+- R26. Identity Immutability — No Self-Mutation of Title / Role / Name / AID (CRITICAL — IRON)
+- R27. Self-Install Only via Core-Plugin Skills, With Approval + CPV Scan (IRON)
+- R28. Three-Check API Authorization (AID → Title → Portfolio Token) (CRITICAL — IRON)
+- R29. MANAGER Team & Agent Lifecycle Authority (IRON)
+- R30. COS Agent-Creation Requires a MANAGER Mandate; the 5-Member Base Is Invariant (IRON)
+- R31. Incomplete-Team Freeze (IRON)
+- R32. No Sudo Gates for Agents — AID Is Sufficient; Sudo Is USER-via-UI Only (CRITICAL — IRON)
+- R33. Signed-Ledger Recovery of Agent Auth State (IRON)
+- R34. The Signed Ledger Is the Ultimate Source of Truth (CRITICAL — IRON)
+- R35. Foreign Agent/User Host Approval (CRITICAL — IRON)
+- R36. Users Have AIDs; One MAESTRO Per Host (IRON)
+- R37. MAESTRO and the Single MAESTRO-DELEGATE (CRITICAL — IRON)
+- R38. Non-MAESTRO User Restrictions (IRON)
+- R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON)
+- R40. Foreign-User Creation Approval (IRON)
+- Role-Based Permission Matrix
+
 ## Prerequisites
 
 - AI Maestro running (the `aimaestro-agent.sh` CLI resolves the API base + auth internally)
