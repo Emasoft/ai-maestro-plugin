@@ -8,7 +8,7 @@ metadata:
   version: "2.0.0"
 ---
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status-check / manual re-index operations have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live `curl .../api/agents/{id}/subconscious/...` calls are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
+<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status-check / manual re-index operations have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live direct HTTP calls to `/api/agents/{id}/subconscious/...` are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
 
 ## Overview
 

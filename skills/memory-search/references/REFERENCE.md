@@ -1,6 +1,6 @@
 # Memory Search Reference
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status / manual index-delta operations (were `curl .../api/agents/{id}/subconscious/status` and `.../subconscious/index-delta`) have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live curls are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
+<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status / manual index-delta operations (were direct HTTP requests to `/api/agents/{id}/subconscious/status` and `/api/agents/{id}/subconscious/index-delta`) have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live curls are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
 
 ## Table of Contents
 

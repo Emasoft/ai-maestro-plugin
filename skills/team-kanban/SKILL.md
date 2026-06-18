@@ -110,13 +110,14 @@ Copy this checklist and track your progress:
 ## Resources
 
 - [API Reference](references/api-reference.md)
-  - CLI commands
-  - List tasks (`amp-kanban-list.sh`)
-  - Create task (`amp-kanban-create-task.sh`)
-  - Move task (`amp-kanban-move.sh`)
-  - Archive / delete task (`amp-kanban-archive.sh`)
-  - Get / set kanban config (`aimaestro-teams.sh kanban-config`)
-  - Team stats / metrics (residual — no verb yet)
+  - Operations
+    - List tasks
+    - Create task
+    - Update task (status move + fields)
+    - Archive / delete task
+    - Get kanban config
+    - Set kanban config
+    - Team stats (residual)
   - Task Lifecycle Examples
   - Task Dependencies
   - Kanban Configuration

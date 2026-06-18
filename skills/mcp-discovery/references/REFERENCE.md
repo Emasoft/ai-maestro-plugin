@@ -171,7 +171,7 @@ uv run scripts_dev/mcp_discovery.py --url https://mcp.example.com/events --trans
 
 ## AI Maestro API Discovery
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): discovery through the server goes via the frozen `mcp-discover.sh --api` wrapper (which resolves the API base + auth internally), never a raw `curl .../api/settings/mcp-discover`. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): discovery through the server goes via the frozen `mcp-discover.sh --api` wrapper (which resolves the API base + auth internally), never a direct HTTP request to the `/api/settings/mcp-discover` endpoint. -->
 
 For remote agents, route discovery through the AI Maestro server with the `--api` flag:
 
