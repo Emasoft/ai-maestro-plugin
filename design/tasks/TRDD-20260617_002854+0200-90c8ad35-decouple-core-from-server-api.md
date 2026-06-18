@@ -3,7 +3,7 @@ trdd-id: 90c8ad35-f7c9-4576-8ad4-2b72a82d047a
 title: Decouple the core plugin from the ai-maestro server API — repoint /api/* to the frozen CLI layer
 column: dev
 created: 2026-06-17T00:28:54+0200
-updated: 2026-06-18T03:39:08+0200
+updated: 2026-06-18T04:36:09+0200
 pre-block-column: null
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
@@ -22,7 +22,7 @@ target-branch: main
 must-pass-tests-before-merge: true
 review-requirements: [human-review]
 impacts: [public-api, ci-pipeline]
-implementation-commits: [b6ff8d7]
+implementation-commits: [a7f1c7a, b6ff8d7, 9217a5d, 56bc667, b615bbe, 7db8c1f, 1dd5410, 4e8e31e, 088f860, 59ba682, bab2fed]
 external-refs: ["github.com/Emasoft/ai-maestro-plugin/issues/11", "github.com/Emasoft/ai-maestro/issues/36", "github.com/Emasoft/ai-maestro-assistant-manager-agent/issues/16", "github.com/Emasoft/ai-maestro-chief-of-staff/issues/20"]
 ---
 
@@ -37,7 +37,21 @@ api-part → a CLI verb that lands in the `ai-maestro` project (NOT mine to
 build — ai-maestro#36); non-api part stays here. This plugin calls ONLY the
 frozen CLI. **GitHub API (`gh`, `api.github.com`) is OUT OF SCOPE — keep it.**
 
-### NEXT ACTION (deploy LANDED 2026-06-18 → code FLIPPED+committed → awaiting MANAGER #11 reply)
+### ✅ DECOUPLE COMPLETE 2026-06-18 04:36 — code + docs flipped, audit CLEAN — ONLY the CPV publish remains (gated on MANAGER #11)
+Doc-wave DONE across **10 files** (8 planned + 2 **audit-found**:
+`ai-maestro-agents-management/references/REFERENCE.md`, `network-security/SKILL.md`).
+Full `grep -rn '/api/'` audit **CLEAN** — zero runnable `/api/*` server calls in plugin
+skill/code source. Remaining `/api/` mentions are ALL inert: DECOUPLE-BLOCKED residual
+comments, CLI↔endpoint mapping tables/prose (agents-management), the `/api/v1/route` AMP
+wire-protocol spec, the GOVERNANCE-RULES anti-pattern row (a mirror — not mine to edit),
+and `design/` docs. **22 commits ahead of origin (commit-not-publish).**
+**NEXT = MANAGER #11 reply → publish via the CPV plugin-fixer agent → MANAGER verify-ack.**
+Residuals staying DECOUPLE-BLOCKED (re-targeted to an ai-maestro follow-up build):
+assign/remove-COS-on-existing-team, change-team-type, Groups, non-status kanban task
+edits (priority/blockedBy/prUrl), team `stats`, subconscious status/index-delta,
+assign-MANAGER/COS-title.
+
+### (superseded) NEXT ACTION (deploy LANDED 2026-06-18 → code FLIPPED+committed → awaiting MANAGER #11 reply)
 **ai-maestro#36 DEPLOYED** on this host: `~/.local/bin/aimaestro-hook.sh` +
 `aimaestro-governance.sh` (mtime Jun 18 02:50, SHAs match repo per #36 comments).
 **Both executable `/api/*` sites FLIPPED + committed `b6ff8d7`** (NOT pushed —
