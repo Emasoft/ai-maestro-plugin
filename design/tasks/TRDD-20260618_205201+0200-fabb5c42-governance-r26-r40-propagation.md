@@ -3,7 +3,7 @@ trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
 title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
 column: dev
 created: 2026-06-18T20:52:01+0200
-updated: 2026-06-18T20:52:01+0200
+updated: 2026-06-18T20:56:39+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 2
@@ -82,6 +82,46 @@ the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugi
 - Publish is non-exempt, but #12 explicitly instructs to publish — treat as
   authorized (like #11's publish-ack); still report completion on #37/#12.
 - Shell gotcha: `UID` is a reserved zsh/bash variable — use `TID` etc. for UUIDs.
+
+### Canonical R26-R40 — READ 2026-06-18 (GOVERNANCE-RULES.md v4.0.1, ai-maestro `governance-rules` branch, doc lines 1211-1384). Implications for THIS plugin:
+- **R26** identity immutable — persona: a title/role/name/AID is CONFERRED, never
+  self-assigned; only USER(MAESTRO)/MANAGER/own-team-COS may change them (COS scoped
+  to own team).
+- **R27** self-install ONLY via the core-plugin skills, after MANAGER (no team) /
+  own-COS (in team) approval, and the server CPV-scans every extension before
+  install. ← THIS plugin's self-install skills are that gate; never the client CLI directly.
+- **R28** every agent op authenticates with AID; the SERVER does the 3-check
+  (AID → TITLE → portfolio approval/mandate token) and never trusts a client-supplied
+  id/title/scope. Skills carry the AID; they must NOT assert their own title.
+- **R29** MANAGER creates/deletes teams with NO user approval (auto-COS + 5 base
+  members); may mandate the COS to add extra MEMBERs. **R30** COS needs a MANAGER
+  mandate to create agents (team-creation mandate covers the 5-base + extra MEMBERs;
+  5-base invariant, MEMBER-role only). **R31** a team missing any of the 5 base is
+  FROZEN (only COS active; others hibernated) until complete.
+  → **REVERSE** any "COS assignment is USER-only" / "MANAGER recommends COS" /
+  team-create-needs-user-approval text.
+- **R32** (SUPERSEDES X-Sudo-Token) agents NEVER face a sudo gate — AID+title+token
+  IS the authorization; a sudo password is requested ONLY of the USER, ONLY via the
+  UI. → drop any agent-facing sudo/`X-Sudo-Token` instruction; a deployed-CLI
+  `--password` (e.g. governance password) is a USER/UI residual the agent SURFACES to
+  the MAESTRO, never performs.
+- **R33/R34** signed ledger = ultimate identity SoT (AID with no ledger history =
+  untrusted/refused; imported-agent AID re-issue needs USER sudo via UI).
+- **R35** foreign agent/user host needs this host's MAESTRO approval (UI+sudo, ledger-
+  recorded). **R36** users have AIDs; exactly one MAESTRO per host. **R37** MANAGER
+  obeys only the MAESTRO; single MAESTRO-DELEGATE (suspends MAESTRO while active).
+- **R38** non-MAESTRO users: only MAESTRO creates/changes agents+teams; a user may
+  message only their own ASSISTANT + own-team COS + MANAGER; subordinate to MANAGER+COS.
+- **R39** users have NO terminal/client → an auto-created **ASSISTANT** agent running
+  `ai-maestro-assistant-role-agent` (MANAGER-planning + AUTONOMOUS-programming, no
+  agent/team-creation), no team, bound to the user (cascades on user delete), invisible
+  to other agents, inherits the user's kanban tasks+permissions. **R40** foreign users
+  need MAESTRO approval for every agent/team creation.
+- **Permission matrix (doc 1367-1384):** R26-R40 govern where it differs; "Assign COS /
+  Create/Delete team = MANAGER Yes (password)" — the (password) is the USER/UI sudo
+  path, not an agent sudo (R32).
+- Canonical cached at `/tmp/gov-rules-canonical.md` THIS session only (re-fetch via
+  `gh api repos/Emasoft/ai-maestro/contents/docs/GOVERNANCE-RULES.md?ref=governance-rules`).
 
 ### Plan provenance
 Issue #12 body (verbatim task) + ai-maestro#37 (canonical R26-R40 + per-plugin
