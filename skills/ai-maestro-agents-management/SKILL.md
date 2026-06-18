@@ -2,21 +2,23 @@
 name: ai-maestro-agents-management
 user-invocable: false
 description: "Manage AI agent lifecycle via CLI. Use when creating, listing, deleting, or configuring agents. Trigger with /ai-maestro-agents-management. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(aimaestro-agent.sh:*), Bash(curl:*), Bash(jq:*), Bash(tmux:*), Read, Edit, Grep, Glob"
+allowed-tools: "Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(tmux:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "3.1.0"
+  version: "3.2.0"
 ---
 
 ## Overview
 
-Manage AI agents through the `aimaestro-agent.sh` CLI and the AI Maestro REST API. Covers the full agent lifecycle: creation, configuration, hibernation, plugin/skill management, and import/export. For inter-agent messaging, use the `agent-messaging` skill instead.
+Manage AI agents through the frozen `aimaestro-agent.sh` CLI (which resolves the API base + your agent identity internally — never call `/api/*` directly, R23). Covers the full agent lifecycle: creation, configuration, hibernation, plugin/skill management, and import/export. For inter-agent messaging, use the `agent-messaging` skill instead.
+
+**Authorization & identity (R26–R28, security-first).** An agent's identity — **TITLE / ROLE / NAME / AID** — is **conferred** by the USER / MANAGER / own-team COS and is **immutable to the agent itself** (R26): creating or configuring an agent CONFERS identity; an agent never self-assigns or self-changes its own title/role/name/AID (NAME/AID change only on compromise, via the proper authority). Agents **self-install ONLY through this core plugin's skills** — this skill IS that install surface — after **MANAGER** (no team) / **own-COS** (in team) approval, and the **server CPV-scans every extension before install** (R27); never install via a raw client CLI or bypass the scan. Every operation authenticates by the caller's **AID**: the CLI sends it, the **server** runs the **3-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope, and the skill **never asserts its own title** (R28). Full text: the [`team-governance`](../team-governance/references/GOVERNANCE-RULES.md) bundled rules, R26–R28.
 
 ## Prerequisites
 
-- AI Maestro running on `http://localhost:23000`
+- AI Maestro running (the `aimaestro-agent.sh` CLI resolves the API base + auth internally)
 - `aimaestro-agent.sh` installed in `~/.local/bin/`
-- tmux 3.0+, jq, curl, Bash 4.0+
+- tmux 3.0+, jq, Bash 4.0+
 
 ## Instructions
 
@@ -126,6 +128,8 @@ Copy this checklist and track your progress:
   - Error Messages
 - Canonical governance rules (R3 titles, R10 lifecycle, R11 title-plugin
   binding, R17 mandatory `--scope local` install + R17.B core-plugin
-  protection, R18 ChangeClient continuity, R20 marketplace governance):
-  see the `team-governance` skill, which bundles the canonical rules
+  protection, R18 ChangeClient continuity, R20 marketplace governance;
+  **R26 identity immutability, R27 self-install-only-via-core-skills +
+  approval + CPV scan, R28 three-check AID authz**): see the
+  `team-governance` skill, which bundles the canonical rules
   and embeds the full TOC.

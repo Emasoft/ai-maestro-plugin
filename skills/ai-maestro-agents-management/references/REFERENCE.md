@@ -672,7 +672,7 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 
 **CLI not found:** `which aimaestro-agent.sh` — should be in `~/.local/bin`
 
-**API not running:** request `http://localhost:23000/api/hosts/identity` with curl; if it does not answer, `pm2 restart ai-maestro`
+**API not running:** run `aimaestro-agent.sh list`; if it errors or hangs, the API is down — `pm2 restart ai-maestro` (never probe `/api/*` directly, R23)
 
 **Agent stuck:** `aimaestro-agent.sh restart my-api`
 
