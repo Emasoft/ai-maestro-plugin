@@ -68,9 +68,9 @@ kanban-sync.py list  # All teams
 
 ## How It Works
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `GET/POST/PUT .../api/teams/...` server-side flow descriptions and `curl` examples below will teach the `aimaestro-teams` CLI once ai-maestro#36 lands the verb (per core#11, TRDD-90c8ad35). The `kanban-sync.py` / `gh` GitHub-sync surface is OUT OF SCOPE. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): the "How It Works" sections below describe the SERVER's internal sync flow (`teams-service` → `github-project.ts` → `gh api graphql`) — architecture notes, not agent-executable calls. The agent-facing "API Examples" use the frozen `amp-kanban-*` / `aimaestro-teams.sh` CLIs, never the server `/api/*` directly. The `kanban-sync.py` / `gh` GitHub-sync surface is OUT OF SCOPE — keep. -->
 
-### Read Flow (GET /api/teams/{id}/tasks)
+### Read Flow
 
 ```
 UI polls every 5s → API route → teams-service → github-project.ts
@@ -86,7 +86,7 @@ UI action → API route → teams-service → github-project.ts
   → invalidate task cache → next GET fetches fresh data
 ```
 
-### Column Config (GET/PUT /api/teams/{id}/kanban-config)
+### Column Config
 
 Columns = GitHub Project Status field options. No local storage.
 
@@ -181,26 +181,23 @@ Multiple browser tabs share the server-side cache.
 
 ## API Examples
 
-After linking, the standard task API works exactly the same:
+After linking, the standard task CLIs work exactly the same — the server routes
+each call to the GitHub Project backend transparently:
 
 ```bash
 TEAM="<team-id>"
 
 # List tasks (fetched live from GitHub Project)
-curl -s "http://localhost:23000/api/teams/$TEAM/tasks" | jq '.tasks'
+amp-kanban-list.sh --team "$TEAM" | jq '.tasks'
 
 # Create task (creates GitHub issue + adds to project)
-curl -s -X POST "http://localhost:23000/api/teams/$TEAM/tasks" \
-  -H "Content-Type: application/json" \
-  -d '{"subject": "Fix login bug", "status": "to_do", "priority": 1}' | jq .
+amp-kanban-create-task.sh "Fix login bug" --team "$TEAM" --status to_do --priority 1 | jq .
 
 # Move task (updates Status field on GitHub Project)
-curl -s -X PUT "http://localhost:23000/api/teams/$TEAM/tasks/<item-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"status": "in_progress"}' | jq .
+amp-kanban-move.sh <item-id> in_progress --team "$TEAM" | jq .
 
 # Get kanban columns (from GitHub Project Status field)
-curl -s "http://localhost:23000/api/teams/$TEAM/kanban-config" | jq .
+aimaestro-teams.sh kanban-config "$TEAM" --get | jq .
 ```
 
 ## Legacy: kanban-sync.sh
