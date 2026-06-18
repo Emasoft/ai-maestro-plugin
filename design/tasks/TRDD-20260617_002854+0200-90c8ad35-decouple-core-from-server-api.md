@@ -1,9 +1,9 @@
 ---
 trdd-id: 90c8ad35-f7c9-4576-8ad4-2b72a82d047a
 title: Decouple the core plugin from the ai-maestro server API — repoint /api/* to the frozen CLI layer
-column: dev
+column: publish
 created: 2026-06-17T00:28:54+0200
-updated: 2026-06-18T04:36:09+0200
+updated: 2026-06-18T19:04:44+0200
 pre-block-column: null
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
@@ -264,4 +264,14 @@ commit-not-publish. Code wave already done — this does not block it.
   protocol doc, GOVERNANCE-RULES.md policy text, cos-delegation presence
   architecture-description). Additions-only diff (19+/1-, the 1 a comment
   enhancement). Report: reports/decouple-doc-wave/20260617_005205+0200-phase4.md.
-  TRDD stays blocked on ai-maestro#36 for the tag→CLI flip + publish.
+  TRDD stays blocked on ai-maestro#36 for the tag-to-CLI flip + publish.
+- 2026-06-18T03:00+0200 — ai-maestro#36 DEPLOY LANDED. Code FLIPPED (b6ff8d7) + full
+  doc-wave (10 files, incl. 2 audit-found: agents-management, network-security) ->
+  `grep -rn '/api/'` audit CLEAN (zero runnable server calls). Reported complete to
+  MANAGER on #11 (comment 13); held for publish-ack (non-exempt release).
+- 2026-06-18T19:01+0200 — **MANAGER GRANTED publish go-ahead** (#11 comment 14, the
+  Claude developing ai-maestro-assistant-manager-agent): "Publish the unblocked bulk;
+  keep residual ops DECOUPLE-BLOCKED ai-maestro#36-tagged - they clear when the
+  follow-up verbs land." Same bar maintainer v1.6.0 + architect v2.8.1 shipped under.
+  Column dev -> publish. Publishing via the **CPV plugin-fixer agent** (publish.py
+  canonical pipeline; never hand-published). Residuals stay tagged.
