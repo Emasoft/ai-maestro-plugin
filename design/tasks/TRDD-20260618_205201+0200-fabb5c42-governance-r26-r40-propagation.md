@@ -3,7 +3,7 @@ trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
 title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
 column: dev
 created: 2026-06-18T20:52:01+0200
-updated: 2026-06-18T20:56:39+0200
+updated: 2026-06-18T21:02:04+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 2
@@ -122,6 +122,38 @@ the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugi
   path, not an agent sudo (R32).
 - Canonical cached at `/tmp/gov-rules-canonical.md` THIS session only (re-fetch via
   `gh api repos/Emasoft/ai-maestro/contents/docs/GOVERNANCE-RULES.md?ref=governance-rules`).
+
+### Inventory + refined worklist (2026-06-18)
+- **No `agents/` dir** — this CORE plugin has NO role persona. So "edit your persona"
+  (templated in #12) maps here to **skills + docs + scenarios**, per #12's own
+  emphasis ("your self-install skills are the R27 enforcement point").
+- **Bundled mirror `skills/team-governance/references/GOVERNANCE-RULES.md` is v3.9.1
+  and LACKS R26-R40** (canonical is v4.0.1, 1384 lines, R1-R40). → sync it to v4.0.1.
+  CAUTION: the bundled file carries plugin-specific framing (§0 mirror-index, a
+  plugin↔rule mapping table, server-file implementation pointers) — so MERGE
+  (append R26-R40 + bump the embedded `version:` to 4.0.1 + refresh the changed
+  R3/R6/R9/R12 wording) rather than blind-overwrite, OR verify canonical already
+  contains those framing sections before replacing. Decide by diffing structure first.
+- **team-governance SKILL.md + references/REFERENCE.md** carry OLD-model statements to
+  reframe per R28/R32: e.g. mirror R3.5 "all role changes require the governance
+  password", R3.12/R8.2 "password-protected endpoint". Reframe: **agents never sudo
+  (R32)** — they auth by AID and the server does the R28 3-check; the governance
+  password is a **USER/UI** path the agent **surfaces to the MAESTRO**, never performs.
+  Confirm R29 (MANAGER creates teams, no user approval; auto-COS + 5 base) is stated,
+  not "USER assigns COS". (Note R9.11 in the mirror already says MANAGER team-create
+  needs no password / uses AID — consistent; keep.)
+- **skills/ai-maestro-agents-management** — reflect R26 (identity immutable, conferred),
+  R27 (self-install only via core-plugin skills + approval + CPV scan), R28 (AID
+  3-check). Its agent create/update/delete docs already repointed to `aimaestro-agent.sh`
+  in #11; now add the R26/R27/R28 governance framing.
+- **NEW `tests/scenarios/governance-scenarios.md`** — mirror AMAMA v2.12.0's.
+- The `ama-*` PRRD/TRDD/kanban governance skills are a DIFFERENT governance layer
+  (3-pillars task system, not the server identity/lifecycle model) — their "USER-only"
+  (golden-rule editing) is correct + out of R26-R40 scope; leave them.
+- **NEXT CONCRETE STEP:** (a) `gh api` AMAMA repo → read its `tests/scenarios/
+  governance-scenarios.md` + the v2.12.0 persona/skills diff to mirror the shape;
+  (b) diff the bundled mirror's structure vs canonical to decide merge-vs-replace;
+  (c) execute edits skill-by-skill + add the SCEN; (d) CPV `--strict`; (e) publish; (f) reply #37/#12.
 
 ### Plan provenance
 Issue #12 body (verbatim task) + ai-maestro#37 (canonical R26-R40 + per-plugin
