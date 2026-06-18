@@ -8,7 +8,7 @@ resolution-markers = [
 
 [[package]]
 name = "ai-maestro-plugin"
-version = "2.7.10"
+version = "2.7.11"
 source = { editable = "." }
 
 [package.optional-dependencies]
