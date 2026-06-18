@@ -2,17 +2,17 @@
 name: team-kanban
 user-invocable: false
 description: "Manage team kanban boards and tasks. Use when creating, moving, or filtering tasks. Trigger with /team-kanban. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
+allowed-tools: "Bash(amp-kanban-list.sh:*), Bash(amp-kanban-create-task.sh:*), Bash(amp-kanban-move.sh:*), Bash(amp-kanban-archive.sh:*), Bash(aimaestro-teams.sh:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
   version: "2.0.0"
 ---
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/teams/...` task/board examples below will teach the `aimaestro-teams` CLI once ai-maestro#36 lands the verb (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): task/board examples call the frozen `amp-kanban-*` CLIs (list/create-task/move/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. Residuals with no frozen verb yet (non-status task edits — priority/blockedBy; team `stats`/metrics) are marked DECOUPLE-BLOCKED inline. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE — keep. -->
 
 ## Overview
 
-Manage team kanban boards and tasks via the AI Maestro API. Create, update, filter, delete tasks; configure columns; track dependencies; compute metrics; sync with GitHub Projects v2.
+Manage team kanban boards and tasks via the frozen `amp-kanban-*` CLIs + `aimaestro-teams.sh kanban-config`. Create, filter, move, archive tasks; configure columns; sync with GitHub Projects v2.
 
 **Single board — anti-split-brain (team-kanban vs the `ama-*` design board).** Two
 kanban surfaces exist and are NOT interchangeable — each is the SINGLE writer of its own
@@ -27,33 +27,36 @@ pipeline state; this server board wins for live assignment/presence.
 
 ## Prerequisites
 
-- AI Maestro on `http://localhost:23000`
-- `jq` installed
+- AI Maestro running (the `amp-kanban-*` / `aimaestro-teams.sh` CLIs resolve the API base + auth internally)
+- The `amp-kanban-*` + `aimaestro-teams.sh` CLIs on PATH; `jq` installed
 - For GitHub sync: `gh` CLI authenticated, `kanban-sync.py` at `~/.local/bin/`
 
 ## Instructions
 
-1. **Identify team**: `curl -s http://localhost:23000/api/teams | jq .`
-2. **Create task**: POST `/api/teams/{id}/tasks` with subject, status, priority, labels, assignee
-3. **List/filter**: GET `/api/teams/{id}/tasks?status=X&assignee=Y&label=Z`
-4. **Move task**: PUT `/api/teams/{id}/tasks/{taskId}` with `{"status":"<column-id>"}`
-5. **Dependencies**: PUT with `{"blockedBy":["<id>"]}`, filter blocked tasks via `isBlocked`
-6. **Configure columns**: GET/PUT `/api/teams/{id}/kanban-config`
-7. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>`
+1. **Identify team**: `aimaestro-teams.sh list | jq .`
+2. **Create task**: `amp-kanban-create-task.sh "<title>" [--status S] [--priority N] [--labels "a,b"] [--assignee <id>]`
+3. **List/filter**: `amp-kanban-list.sh [--status X] [--assignee Y] [--label Z]`
+4. **Move task**: `amp-kanban-move.sh <task-id> <status>`
+5. **Archive/delete task**: `amp-kanban-archive.sh <task-id>`
+6. **Configure columns**: `aimaestro-teams.sh kanban-config <team-id> --get | --set <columns-json>`
+7. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>` (out of #11 scope — keep)
+   <!-- DECOUPLE-BLOCKED ai-maestro#36: non-status task edits (priority / blockedBy dependencies, was `PUT /api/teams/{id}/tasks/{taskId}` with `{priority}`/`{blockedBy}`) and team metrics (was `GET /api/teams/stats`) have no frozen-CLI verb yet — pending a follow-up. `amp-kanban-move` handles status moves; `amp-kanban-create-task` sets initial priority/labels. Do NOT call `/api/*` directly (core#11). -->
 
-### Quick API Reference
+### Quick CLI Reference
 
-| Operation | Method | Endpoint |
-|-----------|--------|----------|
-| List tasks | GET | `/api/teams/{id}/tasks` |
-| Create task | POST | `/api/teams/{id}/tasks` |
-| Update task | PUT | `/api/teams/{id}/tasks/{taskId}` |
-| Delete task | DELETE | `/api/teams/{id}/tasks/{taskId}` |
-| Kanban config | GET/PUT | `/api/teams/{id}/kanban-config` |
+| Operation | CLI command |
+|-----------|-------------|
+| List / filter tasks | `amp-kanban-list.sh [--status\|--assignee\|--label\|--task-type]` |
+| Create task | `amp-kanban-create-task.sh "<title>" [--status\|--priority\|--labels\|--assignee]` |
+| Move task (status) | `amp-kanban-move.sh <task-id> <status>` |
+| Archive / delete task | `amp-kanban-archive.sh <task-id>` |
+| Kanban config | `aimaestro-teams.sh kanban-config <team-id> --get\|--set <json>` |
 
-### Auth Headers
+Each CLI auto-detects the team from your agent registration (pass `--team <id>` to override).
 
-Closed-team endpoints require two headers: `Authorization` with value `Bearer <key>`, and `X-Agent-Id: <uuid>`.
+### Authentication
+
+The `amp-kanban-*` / `aimaestro-teams.sh` CLIs resolve your agent identity + bearer token internally — no `Authorization` / `X-Agent-Id` headers to set by hand. Pass `--id <uuid>` only to act as a specific agent.
 
 ### Default Columns
 
@@ -98,8 +101,8 @@ Connects team to GitHub Projects v2.
 
 Copy this checklist and track your progress:
 
-- [ ] Identified correct team ID
-- [ ] Verified auth headers (if closed team)
+- [ ] Identified correct team ID (`aimaestro-teams.sh list`)
+- [ ] Confirmed agent identity (CLI resolves it; `--id <uuid>` to act as another agent)
 - [ ] Used valid status column IDs
 - [ ] Set dependencies without circular refs
 - [ ] Configured columns if custom workflow needed
@@ -107,14 +110,13 @@ Copy this checklist and track your progress:
 ## Resources
 
 - [API Reference](references/api-reference.md)
-  - Endpoints
-  - GET /api/teams/{id}/tasks
-  - POST /api/teams/{id}/tasks
-  - PUT /api/teams/{id}/tasks/{taskId}
-  - DELETE /api/teams/{id}/tasks/{taskId}
-  - GET /api/teams/{id}/kanban-config
-  - PUT /api/teams/{id}/kanban-config
-  - GET /api/teams/stats
+  - CLI commands
+  - List tasks (`amp-kanban-list.sh`)
+  - Create task (`amp-kanban-create-task.sh`)
+  - Move task (`amp-kanban-move.sh`)
+  - Archive / delete task (`amp-kanban-archive.sh`)
+  - Get / set kanban config (`aimaestro-teams.sh kanban-config`)
+  - Team stats / metrics (residual — no verb yet)
   - Task Lifecycle Examples
   - Task Dependencies
   - Kanban Configuration
