@@ -3,7 +3,7 @@ trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
 title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
 column: dev
 created: 2026-06-18T20:52:01+0200
-updated: 2026-06-18T21:24:09+0200
+updated: 2026-06-18T21:28:22+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 2
@@ -188,12 +188,22 @@ the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugi
   (`aimaestro-agent.sh list`); with that gone, dropped the now-dead `Bash(curl:*)`
   allowed-tool + `curl` prereq. Verified: 0 runnable curl/`/api` in the skill.
 
-- **NEXT CONCRETE STEP (remaining artifacts):**
-  (4) **NEW `tests/scenarios/governance-scenarios.md`** — mirror AMAMA's 11 SCENs
-      (`/tmp/amama-gov-scen.md`), adapted to the CORE-plugin perspective (emphasize
-      R27 self-install-gate, R28 skills-carry-AID-never-assert-title).
-  (5) CPV `--strict` clean (devitalize/remove FPs — never suppress; report to CPV).
-  (6) Publish via the canonical pipeline (CPV agent). (7) Reply #37/#12.
+- **✅ ARTIFACT 4 DONE — `tests/scenarios/governance-scenarios.md`** (commit `632cf88`).
+  306 lines, 13 scenarios: 11 mirroring AMAMA v2.12.0's SCEN-G (reframed to the CORE
+  plugin — actor = "an agent following the core skills"; PASS traces to the reframed
+  skill prose) + 2 core-emphasis adds AMAMA lacked standalone: **SCEN-G12 (R27** self-
+  install gate — this plugin IS the enforcement point) and **SCEN-G13 (R26** identity
+  conferred-not-self-mutated). Coverage map + R29 reversal note. Scenario PLAN (no
+  runnable harness); SCEN-location PENDING #37 (per-plugin vs central).
+
+- **ALL 4 CONTENT ARTIFACTS DONE.** Remaining = ship:
+  (5) **CPV `--strict`** clean — run via the CPV agent (never myself); devitalize/remove
+      any FP (never suppress); report FPs to the CPV repo. Watch for MD/skillaudit FPs on
+      the new SCEN + the long governance prose.
+  (6) **Publish** via the canonical pipeline (CPV agent) — #12 authorizes "publish via
+      your canonical pipeline." commit-not-publish until this gate.
+  (7) **Reply on #37 (or #12)** with the shipped summary (mirror sync v4.0.2 + the 3
+      skill reframes + the SCEN), per the MANAGER #37 propagation task.
 
 ### Plan provenance
 Issue #12 body (verbatim task) + ai-maestro#37 (canonical R26-R40 + per-plugin
