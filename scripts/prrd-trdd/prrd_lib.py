@@ -581,47 +581,41 @@ def caller_is_manager() -> bool:
     a MANAGER title via the AI Maestro server, OR if --user override is
     in effect (set via AMAMA_PRRD_TRUST=1 env var).
 
-    We don't import requests; we use curl via subprocess.
+    We shell out to the frozen aimaestro-governance.sh "whoami" CLI
+    (no direct server /api/* call, no requests import).
     """
     if os.environ.get("AMAMA_PRRD_TRUST") == "1":
         return True
     aid = os.environ.get("AID_AUTH", "")
-    api = os.environ.get("AIMAESTRO_API", "http://localhost:23000").rstrip("/")
     if not aid:
         return False
+    import shutil
     import subprocess
 
-    # DECOUPLE-BLOCKED ai-maestro#36 — per MANAGER core#11 (no plugin calls the
-    # server /api/* directly), this MANAGER-title check must repoint to the frozen
-    # CLI (aid-governance / aid-whoami). Those verbs are NOT yet installed (they
-    # land via ai-maestro#36); until then this direct /api/governance call stays
-    # functional. Flip to the CLI once the verb lands — do NOT patch installed
-    # scripts (FROZEN-interface invariant, assistant-manager#16).
-    # Build the auth header for the LOCAL AI Maestro server (localhost API).
-    # Assembled in a named variable (not an inline f-string in the argv) so
-    # the intent — authenticating to our own server, not shipping a token to
-    # a third party — is explicit and auditable.
-    auth_header = "Authorization: Bearer " + aid
+    # Decoupled from the server API per MANAGER core#11 (no plugin calls /api/*
+    # directly): resolve the caller's governance title through the frozen CLI
+    # `aimaestro-governance.sh whoami`, which wraps GET /api/governance and
+    # self-resolves the AID_AUTH bearer + API base internally. We do NOT build an
+    # auth header or hit the server here, and do NOT edit the installed CLI
+    # (FROZEN-interface invariant, assistant-manager#16). The CLI lives on
+    # ~/.local/bin (on PATH); prefer the explicit path, fall back to a PATH lookup.
+    cli = os.path.expanduser("~/.local/bin/aimaestro-governance.sh")
+    if not os.path.exists(cli):
+        cli = shutil.which("aimaestro-governance.sh") or "aimaestro-governance.sh"
     try:
         r = subprocess.run(
-            [
-                "curl",
-                "-fsS",
-                "-H",
-                auth_header,
-                "--max-time",
-                "3",
-                f"{api}/api/governance",
-            ],
+            [cli, "whoami"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=8,
             check=False,
         )
         if r.returncode != 0:
             return False
         data = json.loads(r.stdout or "{}")
         # Conservative: look for any field that looks like a MANAGER title.
+        # cmd_whoami returns the same /api/governance payload the old direct
+        # call parsed, so this title-scan is unchanged.
         for v in data.values():
             if isinstance(v, str) and v.lower() == "manager":
                 return True
