@@ -62,9 +62,10 @@ If Tailscale is not running, the server silently falls back to localhost-only bi
 tailscale ip -4
 # Returns: 100.x.x.x
 
-# Test connectivity from host
-curl -s -o /dev/null -w "%{http_code}" "http://$(tailscale ip -4):23000/api/sessions"
-# Expected: 200
+# Test connectivity from host (reachability only — no /api/* call, core#11)
+curl -s -o /dev/null -w "%{http_code}\n" "http://$(tailscale ip -4):23000/"
+# Any HTTP response (e.g. 200) = server up + reachable over Tailscale.
+# Port-only alternative: nc -z -w2 "$(tailscale ip -4)" 23000 && echo reachable
 
 # Check server is listening on correct address
 lsof -i :23000 -P | grep LISTEN
