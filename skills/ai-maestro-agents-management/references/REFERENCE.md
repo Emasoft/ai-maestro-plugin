@@ -1,6 +1,6 @@
 # AI Maestro Agent Management — Full Reference
 
-<!-- DECOUPLE ai-maestro#36 (per core#11, TRDD-90c8ad35): agents MUST use the `aimaestro-agent.sh` CLI verbs (the primary surface, documented above each example) — never raw `curl .../api/...`. The `**API:**` annotations and `curl` blocks below are protocol-equivalent REFERENCE only, kept to document what each CLI verb maps to. The `aimaestro-agent.sh` verbs (list/show/create/update/delete/hibernate/wake/export/import/plugin/skill) exist and are FROZEN. The governance/title `aid-*` bits in "Auto-install triggers" (`/api/governance/manager`, `/api/teams/.../chief-of-staff`, `ChangeTitle`) flip to their `aimaestro-governance` / `aid-*` CLI verbs once ai-maestro#36 lands them; they describe server-side behaviour, not an agent curl instruction. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): agents use the `aimaestro-agent.sh` CLI verbs (list/show/create/update/delete/rename/hibernate/wake/export/import/plugin/skill) — the primary surface shown in each section + the CLI Quick Reference table. The runnable `curl .../api/...` blocks have been REMOVED; each section's `**Maps to:**` line documents the endpoint the verb wraps (reference only — never call `/api/*` directly). The governance/title bits in "Auto-install triggers" (`/api/governance/manager`, `/api/teams/.../chief-of-staff`, `ChangeTitle`) describe SERVER-side behaviour, not agent curls; the assign-MANAGER/COS-title verbs stay DECOUPLE-BLOCKED (gov-password residual class, pending an ai-maestro follow-up). -->
 
 ## Table of Contents
 
@@ -111,13 +111,7 @@ aimaestro-agent.sh create debug-agent --dir ~/projects/debug -- --verbose --debu
 
 **What it does:** Checks name uniqueness, creates folder, inits git, creates CLAUDE.md, registers in AI Maestro, creates tmux session.
 
-**API:**
-
-```bash
-curl -X POST http://localhost:23000/api/agents \
-  -H "Content-Type: application/json" \
-  -d '{"name":"my-api","workingDirectory":"/path/to/projects/my-api"}'
-```
+**Maps to:** `POST /api/agents` (handled by the CLI — never call it directly, core#11).
 
 ### 3. Show Agent
 
@@ -142,13 +136,7 @@ aimaestro-agent.sh update backend-api --model opus
 
 Options: `-t/--task`, `-m/--model`, `--tags`, `--add-tag`, `--remove-tag`, `--args`.
 
-**API (additional fields: label, name, workingDirectory, avatar, role, team):**
-
-```bash
-curl -X PATCH http://localhost:23000/api/agents/{id} \
-  -H "Content-Type: application/json" \
-  -d '{"label":"Peter Bot","taskDescription":"Focus on payments"}'
-```
+**Maps to:** `PATCH /api/agents/{id}` (handled by the CLI; additional fields available server-side: label, name, workingDirectory, avatar, role, team).
 
 ### 5. Rename Agent
 
@@ -157,13 +145,7 @@ aimaestro-agent.sh rename old-name new-name
 aimaestro-agent.sh rename old-name new-name --rename-session --rename-folder -y
 ```
 
-**API:**
-
-```bash
-curl -X PATCH http://localhost:23000/api/agents/{id} \
-  -H "Content-Type: application/json" \
-  -d '{"name":"new-name"}'
-```
+**Maps to:** `PATCH /api/agents/{id}` with the `name` field (handled by the CLI).
 
 ### 6. Delete Agent
 
@@ -172,12 +154,7 @@ aimaestro-agent.sh delete my-api --confirm
 aimaestro-agent.sh delete my-api --confirm --keep-folder --keep-data
 ```
 
-**API (soft-delete default, `?hard=true` for permanent):**
-
-```bash
-curl -X DELETE http://localhost:23000/api/agents/{id}
-curl -X DELETE "http://localhost:23000/api/agents/{id}?hard=true"
-```
+**Maps to:** `DELETE /api/agents/{id}` (handled by the CLI; the `--keep-folder` / `--keep-data` flags control retention, soft-delete by default).
 
 ### 7. Hibernate Agent
 
@@ -227,12 +204,7 @@ aimaestro-agent.sh import my-api.agent.json
 aimaestro-agent.sh import backup.agent.json --name new-agent --dir ~/projects/new
 ```
 
-**API:**
-
-```bash
-curl -X POST http://localhost:23000/api/agents/import \
-  -H "Content-Type: application/json" -d @agent-backup.json
-```
+**Maps to:** `POST /api/agents/import` (handled by the CLI).
 
 ---
 
