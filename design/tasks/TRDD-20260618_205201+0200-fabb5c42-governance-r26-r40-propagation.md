@@ -3,7 +3,7 @@ trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
 title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
 column: dev
 created: 2026-06-18T20:52:01+0200
-updated: 2026-06-18T21:19:59+0200
+updated: 2026-06-18T21:24:09+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 2
@@ -178,10 +178,17 @@ the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugi
   TOC through R40 (derived task — keeps the advertised rule list in sync with the
   synced mirror). SKILL.md v2.0.0→2.1.0. Verified: 0 `--password` in any command line.
 
+- **✅ ARTIFACT 3 DONE — agents-management R26/R27/R28 framing** (commit `c397d59`).
+  Added an "Authorization & identity (R26-R28)" note (identity conferred+immutable;
+  self-install only via core-plugin skills + approval + CPV scan, THIS skill IS the
+  R27 gate; AID 3-check, never assert own title) + extended the Resources governance
+  pointer to R26/R27/R28. SKILL.md v3.1.0→3.2.0. **Derived fix:** cleaned an R23
+  residual the #11 decouple missed — Troubleshooting "API not running" told the agent
+  to `curl http://localhost:23000/api/...` directly → reframed to a CLI liveness check
+  (`aimaestro-agent.sh list`); with that gone, dropped the now-dead `Bash(curl:*)`
+  allowed-tool + `curl` prereq. Verified: 0 runnable curl/`/api` in the skill.
+
 - **NEXT CONCRETE STEP (remaining artifacts):**
-  (3) **agents-management SKILL.md + REFERENCE.md** — add R26 (identity conferred,
-      immutable) / R27 (self-install only via core-plugin skills + approval + CPV
-      scan — THIS plugin is the gate) / R28 (3-check) governance framing.
   (4) **NEW `tests/scenarios/governance-scenarios.md`** — mirror AMAMA's 11 SCENs
       (`/tmp/amama-gov-scen.md`), adapted to the CORE-plugin perspective (emphasize
       R27 self-install-gate, R28 skills-carry-AID-never-assert-title).
