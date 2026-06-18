@@ -1,9 +1,9 @@
 ---
 trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
 title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
-column: dev
+column: published
 created: 2026-06-18T20:52:01+0200
-updated: 2026-06-18T21:28:22+0200
+updated: 2026-06-18T21:45:45+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 2
@@ -22,7 +22,9 @@ must-pass-tests-before-merge: true
 review-requirements: [human-review]
 test-requirements: [lint]
 impacts: []
-implementation-commits: []
+implementation-commits: [09393df, a3057de, c397d59, 632cf88, 7fe0fd8, 8e38c32]
+published-version: "2.7.12"
+published-at: 2026-06-18T21:42:06+0200
 external-refs: ["github.com/Emasoft/ai-maestro-plugin/issues/12", "github.com/Emasoft/ai-maestro/issues/37"]
 ---
 
@@ -196,14 +198,23 @@ the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugi
   conferred-not-self-mutated). Coverage map + R29 reversal note. Scenario PLAN (no
   runnable harness); SCEN-location PENDING #37 (per-plugin vs central).
 
-- **ALL 4 CONTENT ARTIFACTS DONE.** Remaining = ship:
-  (5) **CPV `--strict`** clean — run via the CPV agent (never myself); devitalize/remove
-      any FP (never suppress); report FPs to the CPV repo. Watch for MD/skillaudit FPs on
-      the new SCEN + the long governance prose.
-  (6) **Publish** via the canonical pipeline (CPV agent) — #12 authorizes "publish via
-      your canonical pipeline." commit-not-publish until this gate.
-  (7) **Reply on #37 (or #12)** with the shipped summary (mirror sync v4.0.2 + the 3
-      skill reframes + the SCEN), per the MANAGER #37 propagation task.
+- **✅ SHIPPED — published v2.7.12 (2026-06-18). TRDD TERMINAL (column: published).** All 7 steps complete:
+  (5/6) **CPV `--strict` + publish via the CPV agent** (never hand-run): 3 real MINOR
+      TOC-embedding findings fixed via plugin-fixer (commit `7fe0fd8`), re-validated clean
+      (0 CRIT/MAJ/MIN/NIT); **0 FPs devitalized, 0 rules suppressed, `--strict` never relaxed,
+      0 CPV issues needed** (the predicted FP spots produced zero findings). Published v2.7.12
+      (bump `8e38c32`); GitHub Release workflow #27784798747 green — SBOM + 3 memgrep binaries
+      + validation-report. Mirror body verified intact post-fix (15 R26-R40 sections present).
+  (7) **Replied** on #12 (`issuecomment-4745573123`, primary directive) + #37 fleet cross-ref
+      (`issuecomment-4745573364`). #12 left OPEN for the MANAGER to verify-ack + close
+      (consistent with the #11 pattern).
+  CPV-publish report: `reports/cpv-publish/20260618_214206+0200-issue12-r26-r40-publish.md`.
+
+### Approval log
+- 2026-06-18 — `complete → publish → published` (non-exempt release transition) was
+  **authorized by the MANAGER** via the issue **#12** directive ("publish via your canonical
+  pipeline") + the ai-maestro#37 propagation task. Executed via the CPV agent (never hand-run);
+  shipped v2.7.12. Completion reported on #12 + #37.
 
 ### Plan provenance
 Issue #12 body (verbatim task) + ai-maestro#37 (canonical R26-R40 + per-plugin
