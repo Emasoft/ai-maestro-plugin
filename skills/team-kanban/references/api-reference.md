@@ -1,17 +1,17 @@
 # Kanban API Reference
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/teams/...` examples in this reference will teach the `aimaestro-teams` CLI once ai-maestro#36 lands the verb (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): operations use the frozen `amp-kanban-*` CLIs (list/create-task/move/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. The field/response tables document what each CLI accepts and returns. Residuals with no frozen verb yet (re-assign/unassign an existing task, set/clear blockedBy dependencies, link prUrl / other non-status field edits, team `stats`) are marked DECOUPLE-BLOCKED inline, re-targeted to an ai-maestro follow-up. -->
 
 ## Table of Contents
 
-- [Endpoints](#endpoints)
-  - [GET /api/teams/{id}/tasks](#get-apiteamsidtasks)
-  - [POST /api/teams/{id}/tasks](#post-apiteamsidtasks)
-  - [PUT /api/teams/{id}/tasks/{taskId}](#put-apiteamsidtaskstaskid)
-  - [DELETE /api/teams/{id}/tasks/{taskId}](#delete-apiteamsidtaskstaskid)
-  - [GET /api/teams/{id}/kanban-config](#get-apiteamsidkanban-config)
-  - [PUT /api/teams/{id}/kanban-config](#put-apiteamsidkanban-config)
-  - [GET /api/teams/stats](#get-apiteamsstats)
+- [Operations](#operations)
+  - [List tasks](#list-tasks)
+  - [Create task](#create-task)
+  - [Update task (status move + fields)](#update-task-status-move--fields)
+  - [Archive / delete task](#archive--delete-task)
+  - [Get kanban config](#get-kanban-config)
+  - [Set kanban config](#set-kanban-config)
+  - [Team stats (residual)](#team-stats-residual)
 - [Task Lifecycle Examples](#task-lifecycle-examples)
 - [Task Dependencies](#task-dependencies)
 - [Kanban Configuration](#kanban-configuration)
@@ -24,22 +24,27 @@
 
 ---
 
-## Endpoints
+## Operations
 
-### GET /api/teams/{id}/tasks
+Each CLI auto-detects the team from your agent registration (pass `--team <id>` to
+override) and resolves the API base + auth internally — no headers to set by hand.
 
-List all tasks for a team with resolved dependency information.
+### List tasks
 
-**Query Parameters:**
+CLI: `amp-kanban-list.sh [--status S] [--assignee A] [--label L] [--task-type T] [--team <id>]`
 
-| Param | Type | Description |
+Lists all tasks for a team with resolved dependency information.
+
+**Filters:**
+
+| Flag | Type | Description |
 |-------|------|-------------|
-| `status` | string | Filter by status (must match a kanban column ID) |
-| `assignee` | string | Filter by assignee agent UUID |
-| `label` | string | Filter by label |
-| `taskType` | string | Filter by task type |
+| `--status` | string | Filter by status (must match a kanban column ID) |
+| `--assignee` | string | Filter by assignee agent UUID |
+| `--label` | string | Filter by label |
+| `--task-type` | string | Filter by task type |
 
-**Response:** Array of TaskWithDeps objects.
+**Response:** `{ "tasks": [...] }` — array of TaskWithDeps objects (unwrap with `jq '.tasks'`).
 
 Each task includes derived fields:
 
@@ -49,44 +54,41 @@ Each task includes derived fields:
 
 ---
 
-### POST /api/teams/{id}/tasks
+### Create task
 
-Create a new task.
+CLI: `amp-kanban-create-task.sh "<title>" [--description D] [--status S] [--priority N] [--assignee A] [--labels "a,b,c"] [--task-type T] [--team <id>]`
 
-**Body:**
+Creates a new task.
+
+**Fields** (CLI flag → stored field):
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `subject` | string | Yes | Task title |
-| `description` | string | No | Detailed description |
-| `status` | string | No | Initial status (default: first column, usually `backlog`) |
-| `priority` | number | No | Priority (lower = higher priority) |
-| `assigneeAgentId` | string | No | Agent UUID to assign |
-| `blockedBy` | string[] | No | Array of task IDs that block this task |
-| `labels` | string[] | No | Categorization labels |
-| `taskType` | string | No | Type: `feature`, `bug`, `chore`, `spike`, etc. |
-| `externalRef` | string | No | External issue URL (e.g., GitHub issue) |
-| `externalProjectRef` | string | No | External project URL |
-| `acceptanceCriteria` | string[] | No | Definition of done items |
-| `handoffDoc` | string | No | Handoff documentation |
-| `prUrl` | string | No | Associated pull request URL |
+| `subject` (positional title) | string | Yes | Task title |
+| `description` (`--description`) | string | No | Detailed description |
+| `status` (`--status`) | string | No | Initial status (default: first column, usually `backlog`) |
+| `priority` (`--priority`) | number | No | Priority (lower = higher priority) |
+| `assigneeAgentId` (`--assignee`) | string | No | Agent UUID to assign |
+| `labels` (`--labels`) | string[] | No | Categorization labels (comma-separated) |
+| `taskType` (`--task-type`) | string | No | Type: `feature`, `bug`, `chore`, `spike`, etc. |
+
+Additional stored fields (`blockedBy`, `externalRef`, `externalProjectRef`,
+`acceptanceCriteria`, `handoffDoc`, `prUrl`) are set at create time by the server
+default or left empty; editing them on an existing task is a residual (see below).
 
 **Response:** Created task object with generated `id`, `createdAt`, `updatedAt`.
 
 ---
 
-### PUT /api/teams/{id}/tasks/{taskId}
+### Update task (status move + fields)
 
-Update an existing task. All fields optional — only provided fields are changed.
+Update an existing task. The **status move** is covered by the frozen CLI:
 
-**Body:** Same fields as POST (all optional), plus:
+CLI: `amp-kanban-move.sh <task-id> <status> [--team <id>]`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `previousStatus` | string | Record previous status (for undo tracking) |
-| `reviewResult` | string | Review outcome notes |
+<!-- DECOUPLE-BLOCKED ai-maestro#36: editing NON-status fields on an existing task — re-assign/unassign (`assigneeAgentId`), set/clear `blockedBy` dependencies, `priority`, `prUrl`, `reviewResult`, `previousStatus` (was `PUT /api/teams/{id}/tasks/{taskId}` with those fields) — has no frozen-CLI verb yet. `amp-kanban-move` only changes status; `amp-kanban-create-task` sets initial priority/labels/assignee. Pending a follow-up verb. Do NOT call `/api/*` directly (core#11). -->
 
-**Validation:**
+**Validation** (enforced server-side):
 
 - `status` must match a column ID in the team's kanban config
 - `blockedBy` must not create circular dependencies
@@ -97,17 +99,21 @@ Update an existing task. All fields optional — only provided fields are change
 
 ---
 
-### DELETE /api/teams/{id}/tasks/{taskId}
+### Archive / delete task
 
-Delete a task permanently.
+CLI: `amp-kanban-archive.sh <task-id> [--team <id>]`
+
+Archives (removes) a task.
 
 **Response:** `{ "ok": true }`
 
 ---
 
-### GET /api/teams/{id}/kanban-config
+### Get kanban config
 
-Get the team's kanban column configuration.
+CLI: `aimaestro-teams.sh kanban-config <team-id> --get`
+
+Gets the team's kanban column configuration.
 
 **Response:**
 
@@ -125,11 +131,13 @@ If no custom config is set, returns the 5 default columns.
 
 ---
 
-### PUT /api/teams/{id}/kanban-config
+### Set kanban config
 
-Set custom kanban columns for a team.
+CLI: `aimaestro-teams.sh kanban-config <team-id> --set '<columns-json>'` (or `--set-file <path>`)
 
-**Body:**
+Sets custom kanban columns for a team.
+
+**Columns JSON:**
 
 ```json
 {
@@ -153,11 +161,11 @@ Set custom kanban columns for a team.
 
 ---
 
-### GET /api/teams/stats
+### Team stats (residual)
 
-Bulk stats for all teams (eliminates N+1 fetch pattern).
+<!-- DECOUPLE-BLOCKED ai-maestro#36: bulk team stats (task/doc counts across all teams, was `GET /api/teams/stats`) has no frozen-CLI verb yet — pending a follow-up. For a single team's task counts, list with `amp-kanban-list.sh` and aggregate client-side with `jq` (see Velocity and Distribution). Do NOT call `/api/*` directly (core#11). -->
 
-**Response:**
+**Shape (when a verb lands):**
 
 ```json
 {
@@ -211,79 +219,66 @@ GitPullRequest  Code  Shield  Zap  Target
 
 ## Task Lifecycle Examples
 
-### Auth Headers
+### Authentication
 
-All task/kanban endpoints require authentication:
-
-```bash
-AUTH="-H 'Authorization: Bearer <api-key>' -H 'X-Agent-Id: <your-agent-uuid>'"
-```
-
-If running as the system owner (no agents configured), omit auth headers.
+The `amp-kanban-*` / `aimaestro-teams.sh` CLIs resolve your agent identity + bearer
+token internally — no `Authorization` / `X-Agent-Id` headers to set by hand. Pass
+`--id <uuid>` only to act as a specific agent (UUID from `config.json`); omit it to
+run as the auto-detected caller.
 
 ### Create a Task
 
 ```bash
-curl -s -X POST "http://localhost:23000/api/teams/<team-id>/tasks" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "subject": "Implement auth middleware",
-    "description": "Add JWT validation to all API routes",
-    "status": "backlog",
-    "priority": 1,
-    "assigneeAgentId": "<agent-uuid>",
-    "labels": ["backend", "security"],
-    "taskType": "feature"
-  }' | jq .
+amp-kanban-create-task.sh "Implement auth middleware" \
+  --description "Add JWT validation to all API routes" \
+  --status backlog \
+  --priority 1 \
+  --assignee <agent-uuid> \
+  --labels "backend,security" \
+  --task-type feature | jq .
 ```
 
 ### List Tasks (with Filters)
 
 ```bash
-# All tasks (API returns { tasks: [...] } — unwrap with .tasks)
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | jq '.tasks'
+# All tasks (CLI returns { tasks: [...] } — unwrap with .tasks)
+amp-kanban-list.sh | jq '.tasks'
 
 # Filter by status
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks?status=in_progress" | jq '.tasks'
+amp-kanban-list.sh --status in_progress | jq '.tasks'
 
 # Filter by assignee
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks?assignee=<agent-uuid>" | jq '.tasks'
+amp-kanban-list.sh --assignee <agent-uuid> | jq '.tasks'
 
 # Filter by label
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks?label=backend" | jq '.tasks'
+amp-kanban-list.sh --label backend | jq '.tasks'
 
 # Filter by task type
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks?taskType=bug" | jq '.tasks'
+amp-kanban-list.sh --task-type bug | jq '.tasks'
 ```
 
 ### Move Task (Update Status)
 
 ```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"status": "in_progress"}' | jq .
+amp-kanban-move.sh <task-id> in_progress | jq .
 ```
 
 Status must match a column ID in the team's kanban config. Default columns: `backlog`, `pending`, `in_progress`, `review`, `completed`.
 
 ### Assign/Unassign Task
 
-```bash
-# Assign
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"assigneeAgentId": "<agent-uuid>"}' | jq .
+Set the assignee **at create time** with `--assignee` (covered):
 
-# Unassign
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"assigneeAgentId": null}' | jq .
+```bash
+amp-kanban-create-task.sh "Review PR #42" --assignee <agent-uuid> --status review | jq .
 ```
+
+<!-- DECOUPLE-BLOCKED ai-maestro#36: re-assigning or unassigning an EXISTING task (was `PUT /api/teams/{id}/tasks/{taskId}` with `{assigneeAgentId}` / `null`) has no frozen-CLI verb yet — pending a follow-up. Set the assignee at create time via `--assignee`, or wait for the verb. Do NOT call `/api/*` directly (core#11). -->
 
 ### Delete Task
 
 ```bash
-curl -s -X DELETE "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" | jq .
+amp-kanban-archive.sh <task-id> | jq .
 ```
 
 ---
@@ -292,30 +287,16 @@ curl -s -X DELETE "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" |
 
 Tasks can block other tasks via `blockedBy` (array of task IDs).
 
-### Set Dependencies
+### Set / Clear Dependencies
 
-```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"blockedBy": ["<blocking-task-id-1>", "<blocking-task-id-2>"]}' | jq .
-```
+<!-- DECOUPLE-BLOCKED ai-maestro#36: setting or clearing `blockedBy` dependencies on a task (was `PUT /api/teams/{id}/tasks/{taskId}` with `{blockedBy: [...]}` / `[]`) has no frozen-CLI verb yet — pending a follow-up. Circular dependencies are rejected server-side. Do NOT call `/api/*` directly (core#11). -->
 
 ### Check What's Blocked
 
 ```bash
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | \
+amp-kanban-list.sh | \
   jq '[.tasks[] | select(.isBlocked == true) | {id, subject, blockedBy}]'
 ```
-
-### Clear Dependencies
-
-```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"blockedBy": []}' | jq .
-```
-
-Circular dependencies are rejected by the API.
 
 ---
 
@@ -334,22 +315,18 @@ Circular dependencies are rejected by the API.
 ### Customize Columns
 
 ```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/kanban-config" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "columns": [
-      {"id": "backlog", "label": "Backlog", "color": "bg-gray-500", "icon": "Archive"},
-      {"id": "todo", "label": "TODO", "color": "bg-gray-400", "icon": "Circle"},
-      {"id": "in_progress", "label": "In Progress", "color": "bg-blue-400", "icon": "PlayCircle"},
-      {"id": "ai_review", "label": "AI Review", "color": "bg-purple-400", "icon": "SearchCheck"},
-      {"id": "human_review", "label": "Human Review", "color": "bg-amber-400", "icon": "Eye"},
-      {"id": "testing", "label": "Testing", "color": "bg-cyan-400", "icon": "FlaskConical"},
-      {"id": "completed", "label": "Done", "color": "bg-emerald-400", "icon": "CheckCircle2"}
-    ]
-  }' | jq .
+aimaestro-teams.sh kanban-config <team-id> --set '[
+  {"id": "backlog", "label": "Backlog", "color": "bg-gray-500", "icon": "Archive"},
+  {"id": "todo", "label": "TODO", "color": "bg-gray-400", "icon": "Circle"},
+  {"id": "in_progress", "label": "In Progress", "color": "bg-blue-400", "icon": "PlayCircle"},
+  {"id": "ai_review", "label": "AI Review", "color": "bg-purple-400", "icon": "SearchCheck"},
+  {"id": "human_review", "label": "Human Review", "color": "bg-amber-400", "icon": "Eye"},
+  {"id": "testing", "label": "Testing", "color": "bg-cyan-400", "icon": "FlaskConical"},
+  {"id": "completed", "label": "Done", "color": "bg-emerald-400", "icon": "CheckCircle2"}
+]' | jq .
 ```
 
-Each column needs: `id` (used as task status value), `label` (display name), `color` (Tailwind class). `icon` is optional (Lucide icon name).
+Each column needs: `id` (used as task status value), `label` (display name), `color` (Tailwind class). `icon` is optional (Lucide icon name). Tip: keep the column JSON in a file and use `aimaestro-teams.sh kanban-config <team-id> --set-file <path>`.
 
 After updating columns, existing tasks with statuses not in the new config cannot be moved until their status is updated to a valid column ID.
 
@@ -357,33 +334,32 @@ After updating columns, existing tasks with statuses not in the new config canno
 
 ## Velocity and Distribution
 
+These read the task list with `amp-kanban-list.sh` and aggregate client-side with `jq`.
+
 ### Tasks Per Status (Team Velocity Snapshot)
 
 ```bash
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | \
+amp-kanban-list.sh | \
   jq '.tasks | group_by(.status) | map({status: .[0].status, count: length})'
 ```
 
 ### Tasks Per Agent (Load Distribution)
 
 ```bash
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks" | \
+amp-kanban-list.sh | \
   jq '.tasks | group_by(.assigneeAgentId) | map({agent: .[0].assigneeAgentId, assigneeName: .[0].assigneeName, count: length, in_progress: [.[] | select(.status == "in_progress")] | length})'
 ```
 
 ### Completed in Date Range
 
 ```bash
-curl -s "http://localhost:23000/api/teams/<team-id>/tasks?status=completed" | \
+amp-kanban-list.sh --status completed | \
   jq --arg since "2026-03-01" '[.tasks[] | select(.completedAt >= $since)] | length'
 ```
 
 ### Bulk Stats (All Teams)
 
-```bash
-curl -s "http://localhost:23000/api/teams/stats" | jq .
-# Returns: { "<teamId>": { taskCount: N, docCount: N }, ... }
-```
+<!-- DECOUPLE-BLOCKED ai-maestro#36: bulk all-teams stats (was `GET /api/teams/stats`) has no frozen-CLI verb yet — pending a follow-up. For one team, use the per-status aggregation above. Do NOT call `/api/*` directly (core#11). -->
 
 ---
 
@@ -403,11 +379,9 @@ Tasks support fields for workflow tracking beyond basic status:
 
 ### Link PR to Task
 
-```bash
-curl -s -X PUT "http://localhost:23000/api/teams/<team-id>/tasks/<task-id>" \
-  -H "Content-Type: application/json" \
-  -d '{"prUrl": "https://github.com/org/repo/pull/42", "status": "review"}' | jq .
-```
+The **status move** part is covered (`amp-kanban-move.sh <task-id> review`).
+
+<!-- DECOUPLE-BLOCKED ai-maestro#36: setting `prUrl` (and the other extended fields above) on an existing task (was `PUT /api/teams/{id}/tasks/{taskId}` with `{prUrl, ...}`) has no frozen-CLI verb yet — pending a follow-up. Move the status with `amp-kanban-move`; the prUrl/extended-field edit waits for the verb. Do NOT call `/api/*` directly (core#11). -->
 
 ---
 
