@@ -3,7 +3,7 @@ trdd-id: 90c8ad35-f7c9-4576-8ad4-2b72a82d047a
 title: Decouple the core plugin from the ai-maestro server API — repoint /api/* to the frozen CLI layer
 column: dev
 created: 2026-06-17T00:28:54+0200
-updated: 2026-06-18T03:09:30+0200
+updated: 2026-06-18T03:39:08+0200
 pre-block-column: null
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
@@ -70,6 +70,35 @@ vs the old hook's `:true` — flagged on #11, NOT worked around (frozen CLI owns
 audit (only out-of-scope GitHub + the re-targeted residuals + `design/` docs remain)
 → **publish via the CPV plugin-fixer agent (never hand-publish)** → MANAGER verify-ack.
 Restore complete: `column: dev`, `pre-block-column: null` (the external #36 blocker cleared).
+
+### VERB MAP + DOC-PATTERN — reconnaissance COMPLETE 2026-06-18 (execute on MANAGER go)
+**Fleet doc-pattern (matched from COS published repoint `Emasoft/ai-maestro-chief-of-staff@c02cdf5c`, MANAGER-confirmed #20 recipe; COS published base-bulk promptly as v2.18.2 then residual passes v2.18.3/4):**
+convert each `curl /api/X` (in code fences AND prose/checklists) → the inline frozen-CLI
+invocation with full flags; for a no-verb endpoint replace with a
+`<!-- DECOUPLE-BLOCKED ai-maestro#36: <why-no-verb>. Pending a follow-up verb. -->`
+comment + a prose fallback ("Until then: use the <skill>…").
+
+**Verified verb map (deployed `~/.local/bin`, flags read from source):**
+- `GET /api/governance` → `aimaestro-governance.sh whoami`
+- `GET /api/teams` → `aimaestro-teams.sh list` · `GET /api/teams/{id}` → `aimaestro-teams.sh show <id>`
+- `POST /api/teams` → `aimaestro-teams.sh create --name <N> [--description D] [--agents JSON] [--type T] [--cos C] [--password P] [--gh-owner O --gh-repo R]`
+- `PUT /api/teams/{id}` → `aimaestro-teams.sh update <id> [--name|--description|--agents|--orchestrator|--gh-owner|--gh-repo]`
+- `DELETE /api/teams/{id}` → `aimaestro-teams.sh delete <id> [--password P] [--delete-agents]`
+- add/remove team agent → `aimaestro-teams.sh add-agent|remove-agent <id> <agent> [--password P]`
+- `GET /api/agents/{id}` → `aimaestro-agent.sh show <id>` (pipe to `jq -r '.agent.name'`)
+- `POST/GET /api/settings/mcp-discover` → `mcp-discover.sh` (deployed)
+- **NO VERB → stay DECOUPLE-BLOCKED + re-target:** assign-COS-to-EXISTING-team
+  (`POST /api/teams/{id}/chief-of-staff`; `update` has no `--cos` — note create DOES via `--cos`),
+  `/api/groups` (no groups verb), memory-search `subconscious/status`+`index-delta`.
+
+**Files to touch (6 repoint + 2 re-target):** team-governance SKILL.md + references/REFERENCE.md;
+team-kanban SKILL.md + references/api-reference.md + references/github-sync.md;
+mcp-discovery references/REFERENCE.md (repoint). memory-search SKILL.md + references/REFERENCE.md
+(re-target subconscious only). GitHub-sync (`kanban-sync.py`,`gh`) stays OUT OF SCOPE.
+
+**GATE:** holding the bulk doc rewrite + the CPV publish for MANAGER's #11 reply
+(comment 12 asked: publish-scope + pattern-confirm). Pattern is self-answered via COS
+above, so on ANY MANAGER go this executes immediately. Monitor `#11c` → 13.
 
 **Hook flip target — CORRECTED by MANAGER (#11, comment 4):** my session-verb
 "missing" finding was the **stale-deployed-copy trap** — I read deployed
