@@ -2,17 +2,17 @@
 name: team-governance
 user-invocable: false
 description: "Use when managing teams or governance titles. Trigger with /team-governance. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
+allowed-tools: "Bash(aimaestro-governance.sh:*), Bash(aimaestro-teams.sh:*), Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
   version: "2.0.0"
 ---
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: the `curl .../api/governance` and `curl .../api/teams/...` examples below will teach the `aimaestro-governance` / `aimaestro-teams` CLI once ai-maestro#36 lands the verbs (per core#11, TRDD-90c8ad35). Until then they stay functional against the server. AMP scripts (`amp-send`/`amp-inbox`) already use the CLI. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example below calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. AMP (`amp-send`/`amp-inbox`) already uses the CLI. The one residual — assigning a COS to an EXISTING team — has no frozen verb yet and is marked DECOUPLE-BLOCKED inline (set the COS at create time via `--cos`). -->
 
 ## Overview
 
-Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the AI Maestro governance API. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
+Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts via the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` CLIs. All teams are closed (isolated messaging with COS gateway). For lightweight agent collections, use Groups. Requires MANAGER or CHIEF-OF-STAFF title.
 
 **Communication graph (R6 v3, 2026-05-04):** AMP follows a title-based directed graph; HUMAN is a first-class node. v3 made **COS the SOLE gateway** for in-team agents — MANAGER no longer reaches ORCH/ARCH/INT/MEM directly. Blocked routes return HTTP 403 `title_communication_forbidden`. See R6 + matrix in the [reference](references/REFERENCE.md#team-messaging-rules) and the bundled rules.
 
@@ -20,8 +20,8 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
 ## Prerequisites
 
-- AI Maestro at `${AIMAESTRO_API:-http://localhost:23000}`
-- `curl(1)` and `jq` installed
+- AI Maestro running (the `aimaestro-*` CLIs resolve the API base + auth internally)
+- The `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs on PATH; `jq` installed
 - AMP scripts (`amp-send`, `amp-inbox`) for broadcasts
 - Agent must have MANAGER or COS title
 
@@ -30,46 +30,36 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 1. **Verify role** before any operation:
 
    ```bash
-   curl -s "http://localhost:23000/api/governance" | jq .
+   aimaestro-governance.sh whoami | jq .
    ```
 
    If not MANAGER or COS, STOP and inform the user.
 
-2. **API operations**:
-   - **List teams**: `GET /api/teams`
-   - **Create team**: `POST /api/teams` (closed requires MANAGER + `X-Agent-Id` header)
-   - **Update team**: `PUT /api/teams/{id}`
-   - **Delete team**: `DELETE /api/teams/{id}` (MANAGER only)
-   - **Assign COS**: `POST /api/teams/{id}/chief-of-staff` (MANAGER + governance password)
+2. **Operations** (each CLI resolves the API base + your agent identity internally):
+   - **List teams**: `aimaestro-teams.sh list`
+   - **Show team**: `aimaestro-teams.sh show <team-id>`
+   - **Create team**: `aimaestro-teams.sh create --name <name> --type closed [--cos <agent-id>]` (closed requires MANAGER)
+   - **Update team**: `aimaestro-teams.sh update <team-id> [--name|--description|--agents|--orchestrator]`
+   - **Delete team**: `aimaestro-teams.sh delete <team-id> --password <pw>` (MANAGER only)
+   - **Add / remove agent**: `aimaestro-teams.sh add-agent|remove-agent <team-id> <agent>`
 
-3. **Auth header** for protected operations:
-
-   ```bash
-   curl -s -X POST "http://localhost:23000/api/teams" \
-     -H "Content-Type: application/json" \
-     -H "X-Agent-Id: <your-agent-id>" \
-     -d '{"name":"my-team","type":"closed"}' | jq .
-   ```
-
-4. **COS assignment** — ask user for governance password (never cache it):
+3. **Create a closed team** (the CLI sends your agent identity — no manual header):
 
    ```bash
-   curl -s -X POST "http://localhost:23000/api/teams/<id>/chief-of-staff" \
-     -H "Content-Type: application/json" -H "X-Agent-Id: <id>" \
-     -d '{"agentId":"<cos-id>","password":"<pw>"}' | jq .
+   aimaestro-teams.sh create --name my-team --type closed | jq .
    ```
+
+4. **COS assignment** — ask the user for the governance password (never cache it):
+   - **At create time** (supported): `aimaestro-teams.sh create --name my-team --type closed --cos <cos-agent-id> --password <pw>`
+   <!-- DECOUPLE-BLOCKED ai-maestro#36: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. Pending a follow-up verb (same gov-password residual class flagged on ai-maestro#36). Until then: set the COS at create time via `--cos` above, or have the MANAGER assign it through their own tooling. Do NOT call `/api/*` directly (core#11). -->
 
 5. **Broadcasts** — message all team agents via AMP:
 
    ```bash
-   # Fetch to a temp file, then parse — keeps each API response inspectable.
-   TEAM_FILE="$(mktemp)"
-   curl -s "http://localhost:23000/api/teams/<id>" -o "$TEAM_FILE"
-   AGENTS=$(jq -r '.agentIds[]' "$TEAM_FILE")
+   # Resolve the team + each agent's name through the frozen CLIs, then AMP.
+   AGENTS=$(aimaestro-teams.sh show <team-id> | jq -r '.agentIds[]')
    for AID in $AGENTS; do
-     AGENT_FILE="$(mktemp)"
-     curl -s "http://localhost:23000/api/agents/$AID" -o "$AGENT_FILE"
-     NAME=$(jq -r '.agent.name' "$AGENT_FILE")
+     NAME=$(aimaestro-agent.sh show "$AID" | jq -r '.agent.name')
      amp-send "$NAME" "Subject" "Message"
    done
    ```
@@ -98,10 +88,10 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
 Copy this checklist and track your progress:
 
-- [ ] Verified governance role via `/api/governance`
+- [ ] Verified governance role via `aimaestro-governance.sh whoami`
 - [ ] Confirmed MANAGER or COS title
 - [ ] Obtained governance password from user (if COS assignment)
-- [ ] Executed API call with correct headers
+- [ ] Executed the frozen-CLI command (`aimaestro-teams.sh` / `aimaestro-governance.sh`)
 - [ ] Verified response; sent broadcasts if applicable
 
 ## Resources
