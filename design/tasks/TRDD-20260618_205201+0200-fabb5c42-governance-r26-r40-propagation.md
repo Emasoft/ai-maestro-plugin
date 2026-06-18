@@ -1,0 +1,88 @@
+---
+trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
+title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
+column: dev
+created: 2026-06-18T20:52:01+0200
+updated: 2026-06-18T20:52:01+0200
+current-owner: ai-maestro-plugin
+assignee: ai-maestro-plugin
+priority: 2
+severity: MEDIUM
+effort: L
+task-type: feature
+parent-trdd: null
+npt: []
+eht: []
+blocked-by: []
+relevant-rules: []
+release-via: publish
+delivery: direct-push
+target-branch: main
+must-pass-tests-before-merge: true
+review-requirements: [human-review]
+test-requirements: [lint]
+impacts: []
+implementation-commits: []
+external-refs: ["github.com/Emasoft/ai-maestro-plugin/issues/12", "github.com/Emasoft/ai-maestro/issues/37"]
+---
+
+# TRDD-fabb5c42 — Propagate governance R26-R40 into the core plugin (persona + skills + docs + SCEN)
+
+## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative) — 2026-06-18
+
+MANAGER directive (Emasoft/ai-maestro-plugin **#12**, opened 2026-06-18 by the
+Claude developing ai-maestro-assistant-manager-agent). Fleet governance landed:
+`GOVERNANCE-RULES.md v4.0.1`, rules **R26-R40** (USER's refined-v2 wording + the
+propagation task on **Emasoft/ai-maestro#37**). Every role-plugin persona must
+internalize R26-R40. **Reference implementation = AMAMA (MANAGER plugin)
+ai-maestro-assistant-manager-agent v2.12.0** (CPV `--strict` clean, tests 15/15:
+reconciled persona + skills + docs + `tests/scenarios/governance-scenarios.md`).
+Mirror that here. **Execute on next wake; reply on #37 or #12 when done.**
+
+THIS plugin's emphasis (it is the CORE / substrate): its **self-install skills are
+the R27 ENFORCEMENT POINT** — agents install ONLY through these skills (which call
+the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugin.
+
+### NEXT ACTION (start here)
+1. **Read canonical rules** — `docs/GOVERNANCE-RULES.md` on the `governance-rules`
+   branch of Emasoft/ai-maestro (R26-R40 full text) + ai-maestro#37 (per-plugin
+   matrix + refined-v2 wording). Fetch via `gh api` (don't trust the possibly-stale
+   bundled mirror at skills/team-governance/references/GOVERNANCE-RULES.md).
+2. **Study the AMAMA v2.12.0 reference** — how it reconciled persona + skills + docs
+   + governance-scenarios.md (follow-the-reference, match the shape).
+3. **Inventory OLD-model statements to REVERSE** in this plugin's persona + skills
+   + docs (grep candidates): "COS assignment is USER-only", "MANAGER recommends COS"
+   / "needsChiefOfStaff", any agent using a sudo / governance `--password`, team
+   create/delete needing user approval, COS-assignment semantics.
+4. **Edit persona + skills + docs** to internalize R26-R40 behaviors. Per #12, focus:
+   - **R27** self-install via the core plugin's skills ONLY (this plugin is the gate).
+   - **R28** 3-check authz: skills carry the AID → server derives TITLE → checks the
+     portfolio token. NEVER assert your own title.
+   - **R32** agents NEVER sudo: AID + portfolio token; a deployed-CLI `--password` is
+     a USER/UI residual you SURFACE to the MAESTRO, never perform.
+   - **R29-R31** MANAGER creates/deletes teams + auto-COS + 5 base members +
+     AUTONOMOUS/MAINTAINER (NO user approval); COS mandate + MEMBER-titled-on-the-
+     member-plugin; freeze incomplete teams.
+   - **R38/R39** the ASSISTANT title + role plugin; user↔agent messaging matrix.
+   - **R26** immutable identity; **R33/R34** signed-ledger SoT; **R35/R36/R37/R40**
+     foreign-host MAESTRO approval / obey active MAESTRO / MAESTRO-DELEGATE handoff.
+   - **REVERSE** every place the persona states the OLD model (the #12 examples).
+5. **Add `tests/scenarios/governance-scenarios.md`** (mirror AMAMA's).
+6. **CPV `--strict` clean** (devitalize/remove FPs — never suppress; report FPs to CPV).
+7. **Publish via the canonical pipeline (CPV agent)** — the #12 directive authorizes
+   "publish via your canonical pipeline." Residual/blocked items stay tagged.
+8. **Reply on #37 (or #12)** when shipped; this is the MANAGER #37 propagation task.
+
+### Load-bearing facts / gotchas
+- Canonical wording is on the ai-maestro `governance-rules` branch — the bundled
+  `team-governance/references/GOVERNANCE-RULES.md` mirror may be an OLD version; the
+  decouple work (TRDD-90c8ad35) treated that mirror as not-mine-to-edit (it mirrors
+  the server repo). Confirm whether THIS task wants the bundled mirror updated too
+  (it's a mirror of ai-maestro's canonical — likely synced separately).
+- Publish is non-exempt, but #12 explicitly instructs to publish — treat as
+  authorized (like #11's publish-ack); still report completion on #37/#12.
+- Shell gotcha: `UID` is a reserved zsh/bash variable — use `TID` etc. for UUIDs.
+
+### Plan provenance
+Issue #12 body (verbatim task) + ai-maestro#37 (canonical R26-R40 + per-plugin
+matrix). AMAMA v2.12.0 is the worked example to mirror.
