@@ -3,7 +3,7 @@ trdd-id: fabb5c42-c17a-4deb-b09a-6102765f1c4d
 title: Propagate governance R26-R40 into core-plugin persona + skills + docs + SCEN
 column: dev
 created: 2026-06-18T20:52:01+0200
-updated: 2026-06-18T21:02:04+0200
+updated: 2026-06-18T21:13:15+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 2
@@ -150,10 +150,38 @@ the server + CPV-scan). The whole fleet's R26-R40 compliance rests on this plugi
 - The `ama-*` PRRD/TRDD/kanban governance skills are a DIFFERENT governance layer
   (3-pillars task system, not the server identity/lifecycle model) — their "USER-only"
   (golden-rule editing) is correct + out of R26-R40 scope; leave them.
-- **NEXT CONCRETE STEP:** (a) `gh api` AMAMA repo → read its `tests/scenarios/
-  governance-scenarios.md` + the v2.12.0 persona/skills diff to mirror the shape;
-  (b) diff the bundled mirror's structure vs canonical to decide merge-vs-replace;
-  (c) execute edits skill-by-skill + add the SCEN; (d) CPV `--strict`; (e) publish; (f) reply #37/#12.
+### PROGRESS (2026-06-18T21:13)
+- **Authoritative canonical RESOLVED:** `governance-rules` @ **v4.0.2** (commit
+  `291758a4`, blob `ad6159e8`). NOT the `feature/phase6-jsonl-rebase-test` branch
+  (that holds a STALE v3.9.1 — the v4.0.2 doc's own `branch:` front-matter field
+  naming it is misleading editing metadata). `main` 404s (doc not yet merged
+  there). v4.0.2 already folds the USER's authoritative **refined-v2** R38/R39
+  wording (R38.2 user↔user messaging FORBIDDEN both ways; R39.7 ASSISTANT invisible
+  but inherits the user's tasks+permissions). #37 confirms: MANAGER published AMAMA
+  v2.12.0 (ref impl) + opened **9 per-plugin directives** (#12 is mine); cross-project
+  rule restated there ("I edit only my own plugin directly; every other self-updates").
+- **✅ ARTIFACT 1 DONE — bundled mirror synced** v3.9.1→v4.0.2 (commit `09393df`).
+  Decision was **REPLACE** (verbatim canonical body + refreshed local wrapper:
+  front-matter, regenerated TOC through R40, refreshed "Bundled mirror" banner),
+  NOT append — the 3.x→4.x MAJOR bump reworded R1-R21, so appending R26-R40 onto
+  stale R1-R21 would contradict. Verified: 1453 lines, R26-R40 at 1280-1427, single
+  title/version, clean seam at line 97. `/tmp/canon-v402.md` + `/tmp/canon-body.md`
+  + `/tmp/amama-gov-scen.md` (252 lines, 11 SCEN-G01..G11) cached THIS session.
+
+- **NEXT CONCRETE STEP (remaining artifacts):**
+  (2) **Reframe team-governance SKILL.md + references/REFERENCE.md** old-model
+      statements per R28/R32 (agents never sudo; AID+token IS authz; governance
+      password is USER/UI surfaced-not-performed) + R29 (MANAGER creates teams, no
+      user approval, auto-COS+5-base). Grep both for: "password", "sudo", "COS
+      assignment", "USER-only", "X-Sudo-Token". Reframe, don't just delete.
+  (3) **agents-management SKILL.md + REFERENCE.md** — add R26 (identity conferred,
+      immutable) / R27 (self-install only via core-plugin skills + approval + CPV
+      scan — THIS plugin is the gate) / R28 (3-check) governance framing.
+  (4) **NEW `tests/scenarios/governance-scenarios.md`** — mirror AMAMA's 11 SCENs
+      (`/tmp/amama-gov-scen.md`), adapted to the CORE-plugin perspective (emphasize
+      R27 self-install-gate, R28 skills-carry-AID-never-assert-title).
+  (5) CPV `--strict` clean (devitalize/remove FPs — never suppress; report to CPV).
+  (6) Publish via the canonical pipeline (CPV agent). (7) Reply #37/#12.
 
 ### Plan provenance
 Issue #12 body (verbatim task) + ai-maestro#37 (canonical R26-R40 + per-plugin
