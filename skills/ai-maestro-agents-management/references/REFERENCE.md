@@ -94,7 +94,7 @@ aimaestro-agent.sh list --status online
 
 Status filters: `offline`, `hibernated`, `all` (default). Output formats: `--format table` (default), `--format json`, `--format names`, `--json`, `-q` (quiet).
 
-**API:** `GET http://localhost:23000/api/agents`
+**Maps to:** `GET /api/agents` (handled by the CLI — never call it directly, core#11).
 
 ### 2. Create Agent
 
@@ -121,7 +121,7 @@ aimaestro-agent.sh show my-api
 
 JSON output: `--format json`. Shows: ID, persona name, title, role, working directory, model, tags, task, session status, plugins, skills.
 
-**API:** `GET http://localhost:23000/api/agents/{id}`
+**Maps to:** `GET /api/agents/{id}` (handled by the CLI — never call it directly, core#11).
 
 ### 4. Update Agent
 
@@ -164,7 +164,7 @@ aimaestro-agent.sh hibernate my-api
 
 Kills tmux session, preserves data/registry/memory/plugins. Agent can be woken later.
 
-**API:** `POST http://localhost:23000/api/agents/{id}/hibernate`
+**Maps to:** `POST /api/agents/{id}/hibernate` (handled by the CLI — never call it directly, core#11).
 
 ### 8. Wake Agent
 
@@ -175,7 +175,7 @@ aimaestro-agent.sh wake my-api --attach
 
 Restores hibernated agent: creates tmux session, launches `claude`.
 
-**API:** `POST http://localhost:23000/api/agents/{id}/wake`
+**Maps to:** `POST /api/agents/{id}/wake` (handled by the CLI — never call it directly, core#11).
 
 ### 9. Restart Agent
 
@@ -195,7 +195,7 @@ aimaestro-agent.sh export my-api -o /tmp/my-api-backup.agent.json
 
 Default output: `<agent>.agent.json` in current directory.
 
-**API:** `GET http://localhost:23000/api/agents/{id}/export` (save the response body to `agent-backup.json`)
+**Maps to:** `GET /api/agents/{id}/export` (handled by the CLI — never call it directly, core#11).
 
 ### 11. Import Agent
 
@@ -216,7 +216,7 @@ aimaestro-agent.sh import backup.agent.json --name new-agent --dir ~/projects/ne
 aimaestro-agent.sh skill list my-api
 ```
 
-**API:** `GET http://localhost:23000/api/agents/{id}/skills`
+**Maps to:** `GET /api/agents/{id}/skills` (handled by the CLI — never call it directly, core#11).
 
 ### 13. Install Skill
 
@@ -331,7 +331,7 @@ Auto-installations are non-blocking: title assignment succeeds even if plugin in
 aimaestro-agent.sh plugin list my-api
 ```
 
-**API:** `GET http://localhost:23000/api/agents/{id}/local-plugins`
+**Maps to:** `GET /api/agents/{id}/local-plugins` (handled by the CLI — never call it directly, core#11).
 
 ### 17. Install Plugin
 
