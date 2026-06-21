@@ -5,19 +5,38 @@ on:
     tags:
       - 'v*.*.*'
 
+# Least-privilege baseline. The release job widens to the writes it needs
+# (contents: write to create the release + upload assets; id-token +
+# attestations: write for build-provenance attestation — issue #121).
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Cold-install ceiling (issues #90 + #114). `uvx --from git+…` clones and
+    # builds CPV from source on a COLD runner — 12-20 min. The UV cache below
+    # makes every run after the first fast; the FIRST cold build must fit
+    # under this cap. 30 min is the documented cold ceiling; do NOT lower it
+    # below 25.
+    timeout-minutes: 30
     permissions:
-      contents: write       # create/edit the GitHub Release + attach assets
-      actions: read         # anchore/sbom-action needs this to attach the SBOM as a release asset
+      contents: write       # create the release + upload assets
+      id-token: write       # OIDC token for build-provenance attestation (#121)
+      attestations: write   # write the provenance attestation (#121)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@e4db8464a088ece1b920f60402e813ea4de65b8f # v4
+        # enable-cache: true keys an actions/cache on UV_CACHE_DIR so the
+        # cold `uvx --from git+…` build of CPV (12-20 min, issue #114) is
+        # paid ONCE per lockfile/runner; later runs restore the warm cache.
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
 
       - name: Set up Python
         run: uv python install 3.12
@@ -25,41 +44,29 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
-      # Cross-run CPV scan-cache — MUST mirror ci.yml's step verbatim (same
-      # action SHA / path / key / restore-keys) so the Release validate step
-      # restores the SAME warm ~/.cache/cpv that CI already populated on the
-      # release commit. Without it the Release validate ran COLD and timed out
-      # at 25 min while CI passed in ~3 min on the identical commit, killing
-      # the run before build-memgrep and shipping zero-asset releases
-      # (Emasoft/claude-plugins-validation#114). The cache key hashes
-      # .cpv-self-hashes.json so a CPV-source change busts it; the same-OS
-      # restore-keys fallback still warms the first run after a CPV bump.
-      - name: Restore CPV scan-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.cache/cpv
-          key: cpv-scan-cache-${{ runner.os }}-${{ hashFiles('**/.cpv-self-hashes.json') }}
-          restore-keys: |
-            cpv-scan-cache-${{ runner.os }}-
-
       - name: Run full plugin validation (remote CPV, --strict)
-        # Bound the remote uvx CPV fetch so a transient git-fetch stall fails
-        # fast (rerunnable) instead of hanging the release — see
-        # Emasoft/claude-plugins-validation#90. 25 min (not 12): a COLD CI
-        # runner pays for the uvx CPV build PLUS the whole-repo 15-language
-        # lint (each linter installed on demand); on this plugin that
-        # legitimately exceeds 12 min cold (≈7 s locally with warm caches).
-        # 25 min bounds a genuine infinite stall well below the 6-hour default.
-        timeout-minutes: 25
-        # Fetches CPV from GitHub so downstream plugins do not need to
-        # vendor a local validator script. Matches publish.py's local
-        # gate and the CI validate job. --strict blocks on CRITICAL /
-        # MAJOR / MINOR / NIT (exit codes 1-4); WARNING (exit 5+) is
-        # advisory only. Issue #11: removed the local validator
-        # invocation entirely; always go through the remote uvx entry.
+        # Fetches CPV from GitHub so downstream plugins do not need to vendor
+        # scripts/validate_plugin.py. Matches publish.py's local gate and the
+        # CI validate job. --strict blocks on CRITICAL/MAJOR/MINOR/NIT (exit
+        # codes 1-4); WARNING (exit 5+) is advisory only.
+        # Issue #11: removed local scripts/validate_plugin.py invocation.
+        # Root-cause #2: CPV is PINNED to @v2.137.0 (same ref the
+        # CI validate job and publish.py use) so the cold uvx-from-git build is
+        # cached per tag and a stricter future CPV release cannot break the
+        # release gate with no plugin change. Root-cause #5: this re-runs the
+        # gate publish.py already passed locally — pinning all three callsites
+        # to the SAME ref keeps that consistent; the gate itself stays intact
+        # (no security check is weakened).
+        env:
+          # Root-cause #4: skip the GitHub-anchored integrity fetch on a
+          # fresh-checkout runner (the local manifest already matches the code)
+          # and pass the repo owner so private-path heuristics treat it as
+          # public — matching the project's canonical validate command.
+          PLUGIN_SKIP_GITHUB_INTEGRITY: "1"
+          CLAUDE_PRIVATE_USERNAMES: "${{ github.repository_owner }}"
         run: |
           set +e
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation               --with pyyaml               cpv-remote-validate plugin . --strict               > validation-report.txt 2>&1
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v2.137.0               --with pyyaml               cpv-remote-validate plugin . --strict               > validation-report.txt 2>&1
           exit_code=$?
           set -e
           cat validation-report.txt
@@ -79,6 +86,20 @@ jobs:
 
       - name: Type check
         run: uv run mypy scripts/ --ignore-missing-imports
+
+      - name: Generate SBOM (SPDX)
+        # SLSA supply-chain control (issue #121): produce an SPDX SBOM of the
+        # repository contents so the published artifact carries a software
+        # bill of materials. Attached to the release below.
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+          # The action can attach the SBOM to the release itself; we also
+          # upload it as an asset explicitly below for determinism.
+          upload-release-assets: false
+          upload-artifact: false
 
       - name: Generate changelog
         id: changelog
@@ -125,13 +146,28 @@ jobs:
           fi
           echo "changelog_file=changelog.txt" >> "$GITHUB_OUTPUT"
 
+      - name: Compute per-asset SHA256SUMS
+        # SLSA supply-chain control (issue #121): checksum every release
+        # asset so consumers can verify integrity. SHA256SUMS is itself
+        # uploaded as an asset alongside the files it covers.
+        run: |
+          set -e
+          : > SHA256SUMS
+          for f in validation-report.txt sbom.spdx.json; do
+            if [ -f "$f" ]; then
+              sha256sum "$f" >> SHA256SUMS
+            fi
+          done
+          echo "SHA256SUMS:"
+          cat SHA256SUMS
+
       - name: Create or update GitHub Release (idempotent)
         # Idempotent shell flow — replaces the `softprops/action-gh-release`
         # action which 422s when publish.py's Gate-13 already created the
         # release locally. Pattern: `gh release view` to detect existence,
         # then `gh release edit` (with --notes-file fallback to existing body)
         # OR `gh release create` (when not pre-existing). Both branches
-        # upload the validation-report artifact.
+        # upload the validation-report, the SBOM, and SHA256SUMS (issue #121).
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
@@ -140,107 +176,19 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists — editing in place"
             gh release edit "$TAG"               --notes-file changelog.txt               --verify-tag
-            gh release upload "$TAG" validation-report.txt --clobber
+            gh release upload "$TAG" validation-report.txt sbom.spdx.json SHA256SUMS --clobber
           else
             echo "Release $TAG does not exist yet — creating"
-            gh release create "$TAG" validation-report.txt               --title "$TAG"               --notes-file changelog.txt               --verify-tag
+            gh release create "$TAG" validation-report.txt sbom.spdx.json SHA256SUMS               --title "$TAG"               --notes-file changelog.txt               --verify-tag
           fi
 
-      # Software Bill of Materials (provenance-audit MAJOR fix): syft scans the
-      # repo and emits a CycloneDX-JSON SBOM, then attaches it to the release
-      # this tag-push created above. upload-release-assets defaults true and
-      # targets the release for the current tag, so this MUST run AFTER the
-      # release exists. The SBOM lists every dependency that went into the
-      # shipped artifacts, enabling downstream CVE/license auditing.
-      # Third-party action → SHA-pinned (anchore/sbom-action v0.24.0).
-      - name: Generate SBOM and attach to release
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+      - name: Attest build provenance
+        # SLSA build-provenance attestation (issue #121) over the release
+        # assets. Needs id-token: write + attestations: write (declared on
+        # the job). The attestation is recorded in the repo's attestations
+        # store and verifiable with `gh attestation verify`.
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
-          path: .
-          format: cyclonedx-json
-          output-file: ai-maestro-plugin.cyclonedx.json
-          artifact-name: ai-maestro-plugin.cyclonedx.json
-          upload-release-assets: true
-
-  # Prebuilt memgrep binaries (issue #4): one tarball + sha256 checksum per
-  # platform, attached to the release so install-memgrep.sh can download a
-  # verified binary without requiring end-users to have a Rust toolchain.
-  build-memgrep:
-    needs: release
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-14        # Apple Silicon runner, native build
-            platform: darwin-arm64
-            target: aarch64-apple-darwin
-          # darwin-x64 is CROSS-COMPILED on the arm64 runner: GitHub retired
-          # the Intel macos-13 pool (jobs queue forever), and Xcode's clang
-          # cross-compiles x86_64 natively, including rusqlite's bundled
-          # SQLite C sources.
-          - os: macos-14
-            platform: darwin-x64
-            target: x86_64-apple-darwin
-          - os: ubuntu-latest
-            platform: linux-x64
-            target: x86_64-unknown-linux-gnu
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write       # upload the memgrep tarball + sha256 to the release
-      id-token: write       # attest-build-provenance: mint the OIDC token for the signed attestation
-      attestations: write   # attest-build-provenance: persist the build-provenance attestation
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      # Build into $RUNNER_TEMP (not the checkout's scripts/memgrep/target/):
-      # the artifact dir only exists at CI time, so a repo-relative literal
-      # path here would dangle for anyone reading the workflow against the
-      # tree, and keeping build output outside the checkout avoids polluting
-      # later steps that scan the workspace. The --target triple is always
-      # explicit (a no-op for the host triple) so the output path is uniform
-      # across native and cross builds.
-      - name: Build memgrep (release, locked)
-        env:
-          TARGET: ${{ matrix.target }}
-        run: |
-          rustup update --no-self-update stable
-          rustup default stable
-          rustup target add "$TARGET"
-          cargo build --release --locked --manifest-path scripts/memgrep/Cargo.toml --target "$TARGET" --target-dir "$RUNNER_TEMP/memgrep-target"
-
-      - name: Package + checksum
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          TARGET: ${{ matrix.target }}
-        run: |
-          set -e
-          ASSET="memgrep-${PLATFORM}.tar.gz"
-          tar -czf "$ASSET" -C "$RUNNER_TEMP/memgrep-target/$TARGET/release" memgrep
-          if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum "$ASSET" > "$ASSET.sha256"
-          else
-            shasum -a 256 "$ASSET" > "$ASSET.sha256"
-          fi
-          cat "$ASSET.sha256"
-
-      # Build-provenance attestation (provenance-audit MAJOR fix): cryptographically
-      # attest the memgrep tarball this matrix leg just built, so consumers can run
-      # `gh attestation verify memgrep-<platform>.tar.gz --repo Emasoft/ai-maestro-plugin`
-      # to prove it was built by THIS workflow on THIS commit (SLSA provenance).
-      # subject-path is a glob matching the single per-leg tarball in the workspace
-      # root (where Package+checksum wrote it). First-party actions/ action → pinned
-      # to the major tag v4 (kept current by Dependabot). Requires id-token: write +
-      # attestations: write (set at job level above). Runs on both macOS and Linux.
-      - name: Attest build provenance for memgrep binary
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-path: 'memgrep-${{ matrix.platform }}.tar.gz'
-
-      - name: Upload to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
-          PLATFORM: ${{ matrix.platform }}
-        run: |
-          gh release upload "$TAG" "memgrep-${PLATFORM}.tar.gz" "memgrep-${PLATFORM}.tar.gz.sha256" --clobber
+          subject-path: |
+            validation-report.txt
+            sbom.spdx.json

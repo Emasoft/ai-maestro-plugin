@@ -21,16 +21,45 @@ env:
   MARKETPLACE_OWNER: 'Emasoft'
   MARKETPLACE_REPO: 'ai-maestro-plugins'
 
+# Least-privilege: the cross-repo dispatch uses the MARKETPLACE_PAT secret,
+# not the workflow GITHUB_TOKEN, so this workflow needs no write scopes
+# (gh-actions.md §"least privilege").
+permissions:
+  contents: read
+
 jobs:
   notify:
     runs-on: ubuntu-latest
+    # Single API dispatch — 5 min is generous (issue #90). If we exceed it,
+    # the marketplace repo's API is very wrong.
+    timeout-minutes: 5
+    # Root-cause #9: NO-OP when MARKETPLACE_PAT is not configured. Expose the
+    # secret's presence as a boolean (`secrets` is available in a job-level
+    # env: mapping); the dispatch/summary steps are then gated on it via
+    # `if: env.HAS_MARKETPLACE_PAT == 'true'`. Without the secret the job runs,
+    # prints a notice, and SUCCEEDS (green) — instead of erroring with a gh
+    # 404/auth failure and showing a red associated workflow on the release.
+    env:
+      HAS_MARKETPLACE_PAT: ${{ secrets.MARKETPLACE_PAT != '' }}
     steps:
+      - name: Check marketplace secret
+        # Always runs. When the PAT is missing, emit a friendly notice and let
+        # the gated steps below skip — the job still ends green. When present,
+        # this is a no-op log line.
+        run: |
+          if [ "$HAS_MARKETPLACE_PAT" = "true" ]; then
+            echo "MARKETPLACE_PAT is configured — proceeding with marketplace notification."
+          else
+            echo "::notice::MARKETPLACE_PAT secret is not set — skipping marketplace notification (no-op)."
+          fi
+
       # Sanitization: every `${{ github.* }}` value crossing into a shell `run:`
       # block is first bound to an `env:` mapping; the run-script sees `$VAR`
       # rather than raw expression interpolation. Prevents shell-injection if
       # upstream metadata is ever crafted hostile (gh-actions.md L66-77).
       - name: Get plugin info
         id: plugin
+        if: env.HAS_MARKETPLACE_PAT == 'true'
         env:
           REPO_NAME: ${{ github.event.repository.name }}
           REF_SHA: ${{ github.sha }}
@@ -39,6 +68,12 @@ jobs:
           printf 'ref=%s\n'  "$REF_SHA"   >> "$GITHUB_OUTPUT"
 
       - name: Trigger marketplace update
+        if: env.HAS_MARKETPLACE_PAT == 'true'
+        # Defensive "second-latest" pin: v4.0.0, NOT the bleeding-edge v4.0.1.
+        # v4.0.1's SHA was the user-visible symptom of the 2026-05-26 GitHub
+        # Actions codeload auth outage; CPV stays one tag behind on the
+        # dispatch action as a hedge. See
+        # tests/test_canon_repository_dispatch_sha_pin.py for the full record.
         uses: peter-evans/repository-dispatch@5fc4efd1a4797ddb68ffd0714a238564e4cc0e6f # v4.0.0
         with:
           token: ${{ secrets.MARKETPLACE_PAT }}
@@ -53,6 +88,7 @@ jobs:
             }
 
       - name: Summary
+        if: env.HAS_MARKETPLACE_PAT == 'true'
         env:
           PLUGIN_NAME: ${{ steps.plugin.outputs.name }}
           PLUGIN_REF: ${{ steps.plugin.outputs.ref }}

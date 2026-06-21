@@ -28,7 +28,6 @@ ENABLE_LINTERS:
 # validators/tests, so linting them would "fix" the very defects the tests rely
 # on. Covers tests/fixtures, test/fixtures, spec/fixtures, __fixtures__ (JS),
 # testdata (Go), and a bare fixtures/ dir.
-# yamllint disable-line rule:line-length
 FILTER_REGEX_EXCLUDE: '(tests_dev/|docs_dev/|scripts_dev/|samples_dev/|examples_dev/|builds_dev/|downloads_dev/|libs_dev/|llm_externalizer_output/|\.claude/|\.tldr/|tests?/fixtures/|spec/fixtures/|__fixtures__/|testdata/|fixtures/)'
 
 # Python settings

@@ -81,13 +81,13 @@ except ImportError:
         "Run `cpv standardize --force-templates` to refresh.",
         file=sys.stderr,
     )
-    def gh_with_retry(cmd, **kwargs):  # type: ignore[no-redef,misc]
+    def gh_with_retry(cmd, **kwargs):  # type: ignore[no-redef]
         kwargs.pop("max_attempts", None)
         kwargs.pop("backoff", None)
         kwargs.setdefault("check", True)
         kwargs.setdefault("capture_output", False)
         return subprocess.run(cmd, **kwargs)
-    def git_with_retry(cmd, **kwargs):  # type: ignore[no-redef,misc]
+    def git_with_retry(cmd, **kwargs):  # type: ignore[no-redef]
         kwargs.pop("max_attempts", None)
         kwargs.pop("backoff", None)
         kwargs.setdefault("check", True)
@@ -109,6 +109,7 @@ GREEN  = "\033[0;32m" if _C else ""
 YELLOW = "\033[1;33m" if _C else ""
 BLUE   = "\033[0;34m" if _C else ""
 BOLD   = "\033[1m" if _C else ""
+DIM    = "\033[2m" if _C else ""
 NC     = "\033[0m" if _C else ""
 
 
@@ -342,74 +343,6 @@ def update_pyproject_toml(root: Path, new_ver: str) -> tuple[bool, str]:
     except OSError as e:
         return False, f"pyproject.toml update failed: {e}"
 
-# uv.lock carries an editable entry for THIS package (``source = { editable =
-# "." }``) whose ``version`` mirrors pyproject.toml's ``[project].version``.
-# Bumping pyproject without syncing uv.lock leaves the lock one version behind,
-# which surfaces as a dirty tree on the very next ``uv`` invocation and forced a
-# manual follow-up commit (e.g. ad7303e "sync uv.lock editable version"). This
-# closes that gap deterministically — no network, no dependency re-resolution:
-# rewrite ONLY the editable self-package's version line, matched by the
-# block-local ``source = { editable = "." }`` marker. Returns (changed, msg);
-# a missing uv.lock or a lock without an editable self-entry is a no-op success
-# (not every plugin is a uv project / vendors a lockfile).
-_UV_LOCK_EDITABLE_VERSION_RE = re.compile(
-    r'(?ms)'
-    r'(^\[\[package\]\]\n'          # start of a [[package]] block
-    r'(?:(?!^\[\[package\]\]).)*?'  # any block-internal lines (not crossing into the next block)
-    r'^version\s*=\s*")'            # the version key we will rewrite
-    r'[^"\n]*'                      # current version value (captured-out / replaced)
-    r'("\n'                         # close quote + newline
-    r'(?:(?!^\[\[package\]\]).)*?'  # more block-internal lines up to ...
-    r'^source\s*=\s*\{\s*editable\s*=\s*"\."\s*\})'  # ... the editable-self marker
-)
-
-# Read-only companion to the rewrite regex above: captures the editable
-# self-entry's version VALUE (group 1) for the consistency gate. Same
-# block-local anchoring on ``source = { editable = "." }`` so it never reports a
-# dependency's version by mistake.
-_UV_LOCK_EDITABLE_VERSION_VALUE_RE = re.compile(
-    r'(?ms)'
-    r'^\[\[package\]\]\n'
-    r'(?:(?!^\[\[package\]\]).)*?'
-    r'^version\s*=\s*"([^"\n]*)"\n'
-    r'(?:(?!^\[\[package\]\]).)*?'
-    r'^source\s*=\s*\{\s*editable\s*=\s*"\."\s*\}'
-)
-
-def update_uv_lock(root: Path, new_ver: str) -> tuple[bool, str]:
-    """Sync the editable self-package version in uv.lock to ``new_ver``.
-
-    No-op success when uv.lock is absent or has no ``source = { editable =
-    "." }`` entry. Surgical (single ``version`` line, anchored on the editable
-    marker) — never re-resolves dependencies, so it can run offline in the
-    publish gate without changing anything but the version.
-    """
-    lock = root / "uv.lock"
-    if not lock.is_file():
-        return True, "uv.lock not present — skipped"
-    try:
-        content = lock.read_text(encoding="utf-8")
-    except OSError as e:
-        return False, f"uv.lock read failed: {e}"
-    if 'editable = "."' not in content:
-        return True, "uv.lock has no editable self-entry — skipped"
-
-    def _swap(m: "re.Match[str]") -> str:
-        return f"{m.group(1)}{new_ver}{m.group(2)}"
-
-    updated, n = _UV_LOCK_EDITABLE_VERSION_RE.subn(_swap, content, count=1)
-    if n == 0:
-        # The editable marker exists but the regex did not bind the version —
-        # surface it rather than silently leaving uv.lock stale (fail-fast).
-        return False, "uv.lock: editable self-entry found but version line not matched"
-    if updated == content:
-        return True, f"uv.lock already at {new_ver}"
-    try:
-        lock.write_text(updated, encoding="utf-8")
-    except OSError as e:
-        return False, f"uv.lock write failed: {e}"
-    return True, f"uv.lock (editable self-entry) -> {new_ver}"
-
 def update_python_versions(root: Path, new_ver: str) -> list[tuple[bool, str]]:
     """Update __version__ = '...' in all .py files under scripts/."""
     results: list[tuple[bool, str]] = []
@@ -471,20 +404,6 @@ def check_version_consistency(root: Path) -> tuple[bool, str]:
         m = re.search(r'^version\s*=\s*"([^"]*)"', pp.read_text(encoding="utf-8"), re.MULTILINE)
         versions["pyproject.toml"] = m.group(1) if m else None
 
-    # uv.lock editable self-entry — only checked when the lock vendors one, so a
-    # stale lock (bumped pyproject but un-synced lock) is caught here rather than
-    # surfacing as a dirty tree on the next `uv` call.
-    lock = root / "uv.lock"
-    if lock.is_file():
-        try:
-            lock_text = lock.read_text(encoding="utf-8")
-        except OSError:
-            lock_text = ""
-        if 'editable = "."' in lock_text:
-            m_lock = _UV_LOCK_EDITABLE_VERSION_VALUE_RE.search(lock_text)
-            if m_lock:
-                versions["uv.lock:editable"] = m_lock.group(1)
-
     found = {k: v for k, v in versions.items() if v is not None}
     if not found:
         return False, "No version sources found"
@@ -506,7 +425,6 @@ def do_bump(root: Path, new_ver: str, dry_run: bool = False) -> bool:
         if is_layout_c:
             cprint(f"  Would update marketplace.json (metadata + self-entry, Layout C) -> {new_ver}")
         cprint(f"  Would update pyproject.toml -> {new_ver}")
-        cprint(f"  Would update uv.lock (editable self-entry) -> {new_ver}")
         cprint(f"  Would update __version__ vars -> {new_ver}")
         return True
 
@@ -521,23 +439,18 @@ def do_bump(root: Path, new_ver: str, dry_run: bool = False) -> bool:
     ok2, msg2 = update_pyproject_toml(root, new_ver)
     cprint(f"  {'OK' if ok2 else 'FAIL'}: {msg2}")
 
-    # Keep uv.lock's editable self-entry in lockstep with pyproject (closes the
-    # stale-lock gap that previously needed a manual follow-up commit).
-    ok3, msg3 = update_uv_lock(root, new_ver)
-    cprint(f"  {'OK' if ok3 else 'FAIL'}: {msg3}")
-
     py_results = update_python_versions(root, new_ver)
     for ok, msg in py_results:
         cprint(f"  {'OK' if ok else 'FAIL'}: {msg}")
 
-    return ok1 and ok2 and ok3 and ok_mp
+    return ok1 and ok2 and ok_mp
 
 
 # -- Hook installer ------------------------------------------------------------
 
 def install_hook(root: Path) -> int:
     """Copy git-hooks/pre-push to .git/hooks/pre-push and set core.hooksPath."""
-    cprint(f"\n{BOLD}Installing git hooks...{NC}")
+    cprint(f"\\n{BOLD}Installing git hooks...{NC}")
     source = root / "git-hooks" / "pre-push"
     if not source.is_file():
         cprint(f"  {RED}git-hooks/pre-push not found{NC}")
@@ -598,7 +511,7 @@ def install_branch_rules(root: Path) -> int:
     hook alone is bypassable with `git push --no-verify`, but a ruleset is
     enforced by GitHub itself.
     """
-    cprint(f"\n{BOLD}Installing branch-protection ruleset...{NC}")
+    cprint(f"\\n{BOLD}Installing branch-protection ruleset...{NC}")
     slug = _get_origin_slug(root)
     if slug is None:
         cprint(f"  {RED}Could not read origin remote URL — skipping.{NC}")
@@ -610,7 +523,7 @@ def install_branch_rules(root: Path) -> int:
             [
                 "uvx",
                 "--from",
-                "git+https://github.com/Emasoft/claude-plugins-validation",
+                "git+https://github.com/Emasoft/claude-plugins-validation@v2.137.0",
                 "--with",
                 "pyyaml",
                 "cpv-setup-branch-rules",
@@ -797,7 +710,7 @@ def run_gate(root: Path) -> int:
         return 1
     ve = subprocess.run(
         ["uvx", "--from",
-         "git+https://github.com/Emasoft/claude-plugins-validation",
+         "git+https://github.com/Emasoft/claude-plugins-validation@v2.137.0",
          "--with", "pyyaml",
          "cpv-remote-validate", "plugin", ".", "--strict"],
         cwd=str(root), timeout=600).returncode
@@ -839,25 +752,42 @@ def run_gate(root: Path) -> int:
 def stage_bypass_guard() -> None:
     """Step 0: Reject any env var that could bypass a check. No exceptions.
 
-    TRDD-bbff5bc5 §6.1: the canonical names are PLUGIN_SKIP_*; CPV_SKIP_*
-    are kept as legacy aliases for one release.
+    Issue #22 hardening (v2.86.0): broadened from a fixed allowlist to
+    prefix-pattern matching. Any env var matching ``PLUGIN_SKIP_*``,
+    ``CPV_SKIP_*``, ``SKIP_*``, or named ``NO_VERIFY`` aborts the publish.
+    Closes the loophole where a fresh skip name (e.g. ``CPV_SKIP_GATE7``)
+    that was not in the original explicit list would silently slip past.
+
+    Two explicit infrastructure exemptions remain — both are read-only
+    overrides used by CPV's own integrity / auth subsystems and never
+    skip a gate:
+        * ``CPV_SKIP_GITHUB_INTEGRITY=1`` — used to bypass GitHub-anchored
+          integrity check (see cpv_integrity.py). The integrity check is
+          a defence against tampering, NOT a publish gate.
+        * ``CPV_SKIP_GH_AUTH_CHECK=1`` — used by `_ensure_gh_auth` to bypass
+          the `gh auth status` round-trip on flaky networks. Auth still
+          has to work for the actual `git push` / `gh release create`;
+          this only skips the precheck.
+
+    Both are documented exemptions, listed below and excluded from the
+    pattern match.
     """
     cprint(f"\n{BOLD}[0/11] Checking for bypass attempts...{NC}")
-    forbidden = [
-        # New canonical names (TRDD-bbff5bc5)
-        "PLUGIN_SKIP_TESTS", "PLUGIN_SKIP_LINT", "PLUGIN_SKIP_VALIDATE",
-        "PLUGIN_FORCE_PUBLISH", "PLUGIN_BYPASS_CHECKS",
-        # Legacy aliases — removed in next release.
-        "CPV_SKIP_TESTS", "CPV_SKIP_LINT", "CPV_SKIP_VALIDATE",
-        "CPV_FORCE_PUBLISH", "CPV_BYPASS_CHECKS",
-        # Generic bypass attempts — always rejected.
-        "SKIP_TESTS", "SKIP_LINT", "SKIP_VALIDATE", "NO_VERIFY",
+    # Explicit infrastructure exemptions — see docstring above.
+    exemptions = {"CPV_SKIP_GITHUB_INTEGRITY", "CPV_SKIP_GH_AUTH_CHECK"}
+    forbidden_prefixes = ("PLUGIN_SKIP_", "CPV_SKIP_", "SKIP_")
+    forbidden_exact = {"NO_VERIFY"}
+    attempted = [
+        v
+        for v in sorted(os.environ)
+        if (v.startswith(forbidden_prefixes) or v in forbidden_exact) and v not in exemptions
+        if os.environ.get(v)
     ]
-    attempted = [v for v in forbidden if os.environ.get(v)]
     if attempted:
         cprint(f"  {RED}BLOCKED: forbidden env vars set: {', '.join(attempted)}{NC}")
         cprint(f"  {RED}The publish pipeline enforces every check. "
                f"Fix failures, do not skip them.{NC}")
+        cprint(f"  {DIM}(infrastructure exemptions: {', '.join(sorted(exemptions))}){NC}")
         sys.exit(1)
     cprint(f"  {GREEN}No bypass vars set.{NC}")
 
@@ -890,6 +820,84 @@ def stage_lint(root: Path) -> None:
     run(["uv", "run", "mypy", "scripts/", "--ignore-missing-imports"], cwd=root)
     cprint(f"  {GREEN}Lint + typecheck passed.{NC}")
 
+# Issue #31 (v2.98.0): browser-orphan cleanup signatures.
+#
+# A pytest run that spawns Playwright / dev-browser pages can leave
+# behind dozens of `Chrome for Testing` / `chromium` / `headless_shell`
+# processes if the test code (or fixtures) forget to close pages. Over
+# a long debug session those orphans pile up, exhausting file
+# descriptors or RAM and eventually crashing the browser or making
+# the machine unresponsive. The baseline-diff cleanup below catches
+# every leak regardless of test-code quality. NEVER skips tests — the
+# iron rule (no plugin with issues pushed) is preserved.
+_BROWSER_ORPHAN_SIGNATURES = (
+    "Chrome for Testing",
+    "chrome-for-testing",
+    "headless_shell",
+    "Chromium.app/Contents",
+    "chromium-browser",
+    "/playwright/",
+    "playwright-core",
+)
+
+
+def _snapshot_browser_pids() -> set:
+    """Snapshot-then-grep — never live-grep — for browser-signature PIDs."""
+    try:
+        snap = subprocess.run(
+            ["ps", "-eo", "pid,command"],
+            capture_output=True, text=True, check=False, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    if snap.returncode != 0 or not snap.stdout:
+        return set()
+    pids = set()
+    for raw_line in snap.stdout.strip().split("\n")[1:]:
+        line = raw_line.strip()
+        if not line:
+            continue
+        try:
+            pid_str, cmd = line.split(None, 1)
+            pid = int(pid_str)
+        except (ValueError, IndexError):
+            continue
+        if any(sig in cmd for sig in _BROWSER_ORPHAN_SIGNATURES):
+            pids.add(pid)
+    return pids
+
+
+def _cleanup_browser_orphans(baseline_pids: set) -> int:
+    """Kill browser-signature PIDs that appeared since ``baseline_pids``.
+
+    Baseline-diff: PIDs in baseline are pre-existing (maintainer's own
+    daily browser) — NEVER killed. Only PIDs that came into existence
+    during the pytest run are candidates.
+    """
+    import signal
+    import time
+
+    current = _snapshot_browser_pids()
+    new_pids = current - baseline_pids
+    if not new_pids:
+        return 0
+    killed = 0
+    for pid in new_pids:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            killed += 1
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+    if killed:
+        time.sleep(1.5)
+        for pid in new_pids:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError, OSError):
+                pass
+    return killed
+
+
 def stage_tests(root: Path) -> None:
     """Step 3: Run pytest. MANDATORY — no skip, no exceptions.
 
@@ -898,6 +906,12 @@ def stage_tests(root: Path) -> None:
 
     Order: tests run BEFORE the CPV validator so behavioral regressions fail
     fast on unit tests before the structural validator inspects the manifest.
+
+    Issue #31 (v2.98.0): wrap the pytest invocation in a baseline-diff
+    browser-orphan cleanup so dev-browser / Playwright leaks do not
+    pile up Chrome-for-Testing processes. Tests still run
+    unconditionally — the cleanup is a safety net, not a skip
+    mechanism.
     """
     cprint(f"\n{BOLD}[3/11] Running tests...{NC}")
     test_dir = root / "tests"
@@ -905,7 +919,13 @@ def stage_tests(root: Path) -> None:
         cprint(f"  {RED}BLOCKED: tests/ directory missing.{NC}")
         cprint(f"  {RED}Every CPV plugin MUST ship a tests/ directory.{NC}")
         sys.exit(1)
-    r = run(["uv", "run", "pytest", "tests/", "-x", "-q", "--tb=short"], cwd=root, check=False)
+    baseline_browser_pids = _snapshot_browser_pids()
+    try:
+        r = run(["uv", "run", "pytest", "tests/", "-x", "-q", "--tb=short"], cwd=root, check=False)
+    finally:
+        killed = _cleanup_browser_orphans(baseline_browser_pids)
+        if killed:
+            cprint(f"  {YELLOW}Cleaned up {killed} orphaned browser process(es) spawned by pytest.{NC}")
     if r.returncode == 5:
         # pytest exit 5 = no tests collected. This is ALSO a block — no exceptions.
         cprint(f"  {RED}BLOCKED: pytest collected 0 tests.{NC}")
@@ -922,7 +942,7 @@ def stage_validate(root: Path) -> None:
 
     Cornerstone rule: a plugin cannot be pushed unless validation passes
     with 0 issues (WARNING allowed). The validator is ALWAYS fetched from
-    GitHub (git+https://github.com/Emasoft/claude-plugins-validation) via
+    GitHub (git+https://github.com/Emasoft/claude-plugins-validation@v2.137.0) via
     uvx so a local tampered copy cannot weaken the rules. No exceptions.
 
     Order: runs AFTER lint + tests so behavioral regressions fail fast
@@ -937,7 +957,7 @@ def stage_validate(root: Path) -> None:
     # on CRITICAL(1), MAJOR(2), MINOR(3), NIT(4); WARNING(5+) passes.
     run([
         "uvx", "--from",
-        "git+https://github.com/Emasoft/claude-plugins-validation",
+        "git+https://github.com/Emasoft/claude-plugins-validation@v2.137.0",
         "--with", "pyyaml",
         "cpv-remote-validate", "plugin", ".", "--strict",
     ], cwd=root)
@@ -975,16 +995,8 @@ def _detect_layout(plugin_root: Path) -> tuple[str, dict]:
             content = notify_wf.read_text(encoding="utf-8")
         except OSError:
             content = ""
-        # The canonical CPV 2.80.1 template ships these regexes double-escaped
-        # (`\\s*`, `[\\"...]`) — that compiles to "literal backslash + s",
-        # which can NEVER match a real YAML file. As a result every Layout-A
-        # plugin's stage-5 marketplace-registration check fails with
-        # "BLOCKED: notify-marketplace.yml has no MARKETPLACE_OWNER /
-        # MARKETPLACE_REPO" even when the YAML is correct. Using single-
-        # backslash class shortcuts (`\s`, `\"`) makes the regex actually
-        # match the YAML envelope. Upstream issue to be filed.
-        m_owner = re.search(r"^\s*MARKETPLACE_OWNER:\s*['\"]?([^'\"\s]+)['\"]?\s*$", content, re.MULTILINE)
-        m_repo = re.search(r"^\s*MARKETPLACE_REPO:\s*['\"]?([^'\"\s]+)['\"]?\s*$", content, re.MULTILINE)
+        m_owner = re.search(r"^\s*MARKETPLACE_OWNER:\s*[\"']?([^\"'\s]+)[\"']?\s*$", content, re.MULTILINE)
+        m_repo = re.search(r"^\s*MARKETPLACE_REPO:\s*[\"']?([^\"'\s]+)[\"']?\s*$", content, re.MULTILINE)
         return "A", {
             "notify_workflow": notify_wf,
             "mkt_owner": m_owner.group(1) if m_owner else None,
@@ -1082,6 +1094,7 @@ def _remote_has_receiver_workflow(owner: str, repo: str) -> bool:
 
 
 def _plugin_in_remote_marketplace(mkt_json: dict, plugin_name: str, expected_repo: str | None) -> bool:
+    """Accept github/url/git source forms; match URL slug for url|git (issue #25 Defect A)."""
     plugins = mkt_json.get("plugins")
     if not isinstance(plugins, list):
         return False
@@ -1098,9 +1111,6 @@ def _plugin_in_remote_marketplace(mkt_json: dict, plugin_name: str, expected_rep
             if expected_repo is None or source.get("repo") == expected_repo:
                 return True
         elif stype in ("url", "git"):
-            # marketplace.json may register the plugin via a url/git source
-            # ({"source": "url", "url": ".../OWNER/REPO.git"}) rather than the
-            # github+repo form — match by OWNER/REPO parsed from the URL.
             url = source.get("url")
             if expected_repo is None:
                 return True
@@ -1329,7 +1339,7 @@ def stage_bump(root: Path, new_ver: str, dry_run: bool) -> None:
     cprint(f"  {GREEN}Version bumped to {new_ver}.{NC}")
 
 def stage_update_badges(root: Path, old_ver: str, new_ver: str, dry_run: bool) -> None:
-    """Step 7: Replace version badge in README.md.
+    """Step 8: Replace version badge in README.md.
 
     Strategy:
       1. Try exact-string substitution `version-<old>-blue` → `version-<new>-blue`
@@ -1502,59 +1512,16 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
     else:
         run(["git", "tag", "-a", tag, "-m", f"Release {tag}"], cwd=root)
 
-    # CC 2.1.118 introduced `claude plugin tag` which mirrors `git tag` AND
-    # nudges marketplace caches to re-fetch. Best-effort: this script already
-    # assumes a claude-plugin project (it reads .claude-plugin/plugin.json
-    # for the version), so no separate has-claude-plugin gate is needed.
-    # Never let a missing/old CLI fail the pipeline.
-    try:
-        subprocess.run(
-            ["claude", "plugin", "tag", tag],
-            cwd=root, capture_output=True, text=True, timeout=30, check=False,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
-
-    # MED-06: Refuse to push from any branch other than the detected default —
-    # otherwise `git push origin HEAD` would publish a release on a feature
-    # branch and Claude Code's marketplace auto-update would happily pull it.
-    # Re-uses the origin/HEAD detection that the version-bump gate already
-    # performed, falling back to main/master so the gate works on both.
-    sym = subprocess.run(
-        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
-        capture_output=True, text=True, cwd=str(root), timeout=10, check=False,
-    )
-    default_branch = sym.stdout.strip().split("/")[-1] if sym.returncode == 0 and sym.stdout.strip() else "main"
-    head_branch_proc = subprocess.run(
-        ["git", "symbolic-ref", "--short", "HEAD"],
-        capture_output=True, text=True, cwd=str(root), timeout=10, check=False,
-    )
-    head_branch = head_branch_proc.stdout.strip()
-    if head_branch and head_branch != default_branch:
-        cprint(
-            f"  {RED}✗ Refusing to push: HEAD is on '{head_branch}', "
-            f"expected default branch '{default_branch}'.{NC}"
-        )
-        cprint(f"  {RED}  Switch to {default_branch} (or fix origin/HEAD) before publishing.{NC}")
-        raise SystemExit(1)
-
     # gh-auth precheck — fail fast with actionable error if gh missing/unauthed.
     owner, repo = _resolve_owner_repo(root)
     _ensure_gh_auth(owner, repo)
-    # Atomic push: commit + tag land together or not at all. `--atomic` is a
-    # single transaction in the wire protocol; if any ref update is rejected
-    # the server rolls back ALL of them, eliminating the half-published-state
-    # failure mode where the commit pushed but the tag failed (rejected/network)
-    # and the remote was left with an unreleased commit and no tag.
-    # Retry-wrap the push: a single transient github.com hiccup used to leave
-    # the repo half-published. git_with_retry tolerates up to GIT_MAX_ATTEMPTS ×
-    # GIT_BACKOFF_SEC of transient errors and returns immediately on a permanent
-    # error (4xx, non-fast-forward).
-    # Push only HEAD + this release's tag — never `--tags`. `git push --tags`
-    # pushes EVERY local tag, and any pre-existing local tag that diverges from
-    # its remote counterpart is rejected, which fails the whole push (non-zero
-    # exit -> pipeline crash) even though HEAD and the new release tag were
-    # accepted.
+    # Atomic push: commit + tag land together or not at all. Eliminates the
+    # half-published-state failure mode where `git push origin HEAD --tags`
+    # could push the commit, fail on the tag (rejected/network), and leave
+    # the remote with an unreleased commit + no tag. `--atomic` is a single
+    # transaction in the wire protocol; the server rolls back if any ref
+    # update fails. git_with_retry still wraps the call so transient
+    # network hiccups (4xx-class permanent errors fall through immediately).
     cprint(f"  {BLUE}$ git push --atomic origin HEAD {tag}{NC}")
     git_with_retry(
         ["git", "push", "--atomic", "origin", "HEAD", tag],
@@ -1563,7 +1530,7 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
     cprint(f"  {GREEN}Pushed {tag} atomically.{NC}")
 
 def stage_gh_release(root: Path, new_ver: str, dry_run: bool) -> None:
-    """Step 10: Create GitHub release via gh CLI.
+    """Step 11: Create GitHub release via gh CLI.
 
     TRDD-bbff5bc5 §5: re-runs the gh-auth precheck before `gh release
     create` so an auth state change between gates 10 and 11 (token

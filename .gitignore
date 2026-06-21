@@ -41,3 +41,4 @@ llm_externalizer_output/
 # Added by CPV standardize
 *_dev/
 .coverage
+*.bak
