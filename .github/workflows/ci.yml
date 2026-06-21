@@ -134,11 +134,16 @@ jobs:
           # Root-cause #4: on a fresh-checkout runner the local self-hash
           # manifest already matches the code, so CPV's GitHub-anchored
           # integrity fetch (a live urlopen to raw.githubusercontent.com) adds
-          # no security but real latency/hang risk. Skip it — and tell CPV the
-          # repo owner so its private-path heuristics treat the org name as
-          # public, matching the project's own canonical validate command.
+          # no security but real latency/hang risk. Skip it.
           PLUGIN_SKIP_GITHUB_INTEGRITY: "1"
-          CLAUDE_PRIVATE_USERNAMES: "${{ github.repository_owner }}"
+          # Do NOT set CLAUDE_PRIVATE_USERNAMES to the repo owner. That var marks
+          # names as PRIVATE (to FLAG as leaks), NOT public — the canon template's
+          # comment had the semantics backwards. Setting it to
+          # "${{ github.repository_owner }}" (Emasoft) made CPV flag every
+          # legitimate github.com/Emasoft/... URL as a private-path leak: 22 false
+          # CRITICALs that red-lit CI on v2.7.13. The owner-name is PUBLIC, so the
+          # correct allowlist is to NOT list it. Local publish.py G3 sets no such
+          # env and validates clean (CRITICAL 0); CI now matches it.
         run: |
           set +e
           uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v2.137.0 \
