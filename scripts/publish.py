@@ -81,13 +81,13 @@ except ImportError:
         "Run `cpv standardize --force-templates` to refresh.",
         file=sys.stderr,
     )
-    def gh_with_retry(cmd, **kwargs):  # type: ignore[no-redef]
+    def gh_with_retry(cmd, **kwargs):  # type: ignore[no-redef, misc]
         kwargs.pop("max_attempts", None)
         kwargs.pop("backoff", None)
         kwargs.setdefault("check", True)
         kwargs.setdefault("capture_output", False)
         return subprocess.run(cmd, **kwargs)
-    def git_with_retry(cmd, **kwargs):  # type: ignore[no-redef]
+    def git_with_retry(cmd, **kwargs):  # type: ignore[no-redef, misc]
         kwargs.pop("max_attempts", None)
         kwargs.pop("backoff", None)
         kwargs.setdefault("check", True)
