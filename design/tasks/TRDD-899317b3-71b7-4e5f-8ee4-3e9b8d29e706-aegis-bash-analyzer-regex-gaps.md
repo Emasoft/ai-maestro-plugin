@@ -1,9 +1,9 @@
 ---
 trdd-id: 899317b3-71b7-4e5f-8ee4-3e9b8d29e706
 title: Strengthen directory-guard bash analyzer
-column: backburner
+column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-11T11:35:00+0200
+updated: 2026-06-22T10:41:59+0200
 current-owner: null
 task-type: security
 severity: HIGH

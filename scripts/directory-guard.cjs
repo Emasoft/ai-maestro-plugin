@@ -11,7 +11,13 @@
  *   - AGENT_WORK_DIR env var is the ONLY trusted source of the agent's directory.
  *     CWD is NOT trusted (agent can `cd` anywhere).
  *   - Bash commands are blocked when they contain ANY write-capable pattern
- *     targeting a forbidden path. This is best-effort but covers common vectors.
+ *     targeting a forbidden path. This bash scan is DEFENSE-IN-DEPTH /
+ *     ADVISORY ONLY — a heuristic, not a shell parser. It cannot be the hard
+ *     enforcement boundary (an attacker with shell access has eval, aliases,
+ *     here-docs, base64-decoded scripts, $() substitution, etc.). The HARD
+ *     enforcement layer is OS-level sandboxing the AI Maestro launcher must
+ *     provide (sandbox-exec on macOS, bwrap/landlock on Linux); this guard
+ *     raises the bar for the common write vectors and fails closed.
  *
  * Allowed write paths (when AGENT_WORK_DIR is set):
  *   - $AGENT_WORK_DIR/** (agent's own project)
@@ -251,19 +257,25 @@ function isUnder(child, parent) {
 /**
  * Detect bash commands that write to forbidden paths.
  *
- * This is NOT a full shell parser — it's a best-effort heuristic that catches
- * the most common write patterns. An attacker with shell access can always
- * find ways around it (eval, aliases, symlinks, etc.). The primary defense
- * is AGENT_WORK_DIR + the Write/Edit tool guards. Bash is secondary.
+ * This is NOT a full shell parser — it's a best-effort heuristic (DEFENSE-IN-
+ * DEPTH / ADVISORY) that catches the most common write patterns. An attacker
+ * with shell access can always find ways around it (eval, aliases, here-docs,
+ * $() substitution, base64-decoded scripts, etc.). The primary defense is
+ * AGENT_WORK_DIR + the Write/Edit tool guards; the HARD enforcement layer is
+ * OS-level sandboxing the launcher must provide. Bash scanning is secondary.
  *
  * Returns array of forbidden paths found, empty if clean.
  */
 function detectBashWriteTargets(command, agentWorkDir) {
   const violations = [];
 
-  // 1. Output redirects: > file, >> file, 2> file, 2>> file, &> file
-  const redirectRegex = /(?:&>>?|[12]?>>?)\s*([^\s;|&"']+)/g;
-  checkMatches(redirectRegex, command, 1, agentWorkDir, violations);
+  // QUOTE-AWARE PRE-PASS (ReDoS-safe, single linear scan — see dequoteCommand).
+  // Strips matched '…', "…", `…` pairs and joins the inner text to the
+  // adjacent token, so `> "/etc/passwd"` → `> /etc/passwd` and
+  // `cp x "/etc/p"` → `cp x /etc/p`. After this, the target-capture classes
+  // below can drop the `"'` exclusion (they only need to stop at shell
+  // separators), so quoted/backtick destinations are captured.
+  const cmd = dequoteCommand(command);
 
   // NOTE on regex shape (ReDoS hygiene): every repeated group below is
   // written so that the group's LAST element is a single char-class or a
@@ -272,61 +284,217 @@ function detectBashWriteTargets(command, agentWorkDir) {
   // instead of trailing it, and the old flags-loop-then-args-loop double
   // loop (whose overlapping token classes allowed exponential backtracking
   // on crafted input) was collapsed into one token loop wherever flags are
-  // a subset of the args class. Behavioral equivalence is pinned by node
+  // a subset of the args class. The dequote pre-pass is also linear-time (no
+  // nested quantifiers). Behavioral equivalence is pinned by node/pytest
   // tests on real command shapes; the bounds (4096-char tokens, 16-letter
   // flags) exceed anything a legitimate command line uses.
+  //
+  // PATH-CAPTURE classes are `[^\s;|&<>]+`: in addition to the shell
+  // separators (whitespace `;` `|` `&`), the redirect operators `<`/`>` are
+  // excluded so a captured path never absorbs a redirect token (e.g.
+  // `rm < /tmp/list` must NOT resolve the bare `<` as rm's target — the real
+  // semantics there are xargs/stdin-driven, modeled by #16). An unquoted
+  // `<`/`>` is always a redirect operator, never part of a path token.
+
+  // 1. Output redirects: > file, >> file, 2> file, 2>> file, &> file, >| file
+  //    `>|` is the clobber-override redirect (writes even under `set -o
+  //    noclobber`) — it must be caught just like `>`. The target token may be
+  //    concatenated to the operator (`>file`, `>|file`) since \s* allows zero
+  //    whitespace.
+  const redirectRegex = /(?:&>>?|[12]?>>?\|?|[12]?>\|)\s*([^\s;|&<>]+)/g;
+  checkMatches(redirectRegex, cmd, 1, agentWorkDir, violations);
 
   // 2. tee: tee [-a] file [file...]
-  const teeRegex = /\btee(?:\s+-[ai])*\s+([^\s;|&"']+)/g;
-  checkMatches(teeRegex, command, 1, agentWorkDir, violations);
+  const teeRegex = /\btee(?:\s+-[ai])*\s+([^\s;|&<>]+)/g;
+  checkMatches(teeRegex, cmd, 1, agentWorkDir, violations);
 
   // 3. cp/mv: cp [-rfp] source target, mv source target
   //    Last argument is the destination. Flags match the token loop too,
-  //    so no separate flags loop is needed.
-  const cpMvRegex = /\b(?:cp|mv)(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&"']+)/g;
-  checkMatches(cpMvRegex, command, 1, agentWorkDir, violations);
+  //    so no separate flags loop is needed. The `-t <dir>` /
+  //    `--target-directory=<dir>` form (destination is an EARLIER arg) is
+  //    handled by targetDirRegex (#15) so the real directory is reported.
+  const cpMvRegex = /\b(?:cp|mv)(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&<>]+)/g;
+  checkMatches(cpMvRegex, cmd, 1, agentWorkDir, violations);
 
-  // 4. curl/wget output: curl -o file, curl --output file, wget -O file
-  const curlOutRegex = /\bcurl\b[^;|&]*?(?:-o|--output)\s+([^\s;|&"']+)/g;
-  checkMatches(curlOutRegex, command, 1, agentWorkDir, violations);
-  const wgetOutRegex = /\bwget\b[^;|&]*?(?:-O|--output-document)\s+([^\s;|&"']+)/g;
-  checkMatches(wgetOutRegex, command, 1, agentWorkDir, violations);
+  // 4. curl/wget output: curl -o file / --output file, wget -O file /
+  //    --output-document file. The separator is \s* so the concatenated forms
+  //    `-O<path>` / `-o<path>` (no whitespace) are also captured. A bare `-o`
+  //    with no path (the next char is a separator) captures nothing.
+  const curlOutRegex = /\bcurl\b[^;|&]*?(?:-o|--output)\s*([^\s;|&<>]+)/g;
+  checkMatches(curlOutRegex, cmd, 1, agentWorkDir, violations);
+  const wgetOutRegex = /\bwget\b[^;|&]*?(?:-O|--output-document)\s*([^\s;|&<>]+)/g;
+  checkMatches(wgetOutRegex, cmd, 1, agentWorkDir, violations);
 
   // 5. Inline Python write: python -c "...open('path'..." or python3 -c
-  const pyWriteRegex = /\bpython[23]?\s+-c\s+["'].*?open\s*\(\s*["']([^"']+)["']/g;
-  checkMatches(pyWriteRegex, command, 1, agentWorkDir, violations);
+  //    (quotes already stripped by the pre-pass, so match the bare path).
+  const pyWriteRegex = /\bpython[23]?(?:\.[0-9]+)?\s+-c\s+.*?\bopen\s*\(\s*([^\s;|&,)]+)/g;
+  checkMatches(pyWriteRegex, cmd, 1, agentWorkDir, violations);
 
-  // 6. Inline Node write: node -e "...writeFileSync('path'..." or node -e "...writeFile("
-  const nodeWriteRegex = /\bnode\s+-e\s+["'].*?(?:writeFileSync|writeFile)\s*\(\s*["']([^"']+)["']/g;
-  checkMatches(nodeWriteRegex, command, 1, agentWorkDir, violations);
+  // 6. Inline Node write: node -e "...writeFileSync('path'..." / writeFile(
+  const nodeWriteRegex = /\bnode\s+-e\s+.*?(?:writeFileSync|writeFile|appendFileSync|appendFile)\s*\(\s*([^\s;|&,)]+)/g;
+  checkMatches(nodeWriteRegex, cmd, 1, agentWorkDir, violations);
+
+  // 6b. Inline ruby/perl write: ruby/perl -e '...File.write("f")... /
+  //     open(...,'w')...'. The script body lives after -e; scan it for the
+  //     common write builtins and capture the path arg. Conservative: a write
+  //     verb must be present, else nothing is captured.
+  const rubyPerlWriteRegex =
+    /\b(?:ruby|perl)\s+(?:-[a-zA-Z]\S{0,16}\s+)*-e\s+.*?(?:File\.write|File\.open|IO\.write|open)\s*\(\s*([^\s;|&,)]+)/g;
+  checkMatches(rubyPerlWriteRegex, cmd, 1, agentWorkDir, violations);
+
+  // 6c. awk write: awk '...print ... > "file"...' (and >>). awk's redirect is
+  //     INSIDE its program string; after dequoting it reads `print > /path`.
+  //     Match an awk invocation, then the first `>`/`>>` target in its body.
+  const awkWriteRegex = /\bawk\b[^;|&]*?>>?\s*([^\s;|&<>]+)/g;
+  checkMatches(awkWriteRegex, cmd, 1, agentWorkDir, violations);
 
   // 7. install/rsync: install [-m...] source dest, rsync ... dest
-  //    Flags match the token loop too (same collapse as cp/mv).
-  const installRegex = /\binstall(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&"']+)/g;
-  checkMatches(installRegex, command, 1, agentWorkDir, violations);
+  //    Flags match the token loop too (same collapse as cp/mv). `-t <dir>` is
+  //    handled by targetDirRegex (#15).
+  const installRegex = /\binstall(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&<>]+)/g;
+  checkMatches(installRegex, cmd, 1, agentWorkDir, violations);
 
   // 8. dd output: dd ... of=path
-  const ddRegex = /\bdd\b[^;|&]*?\bof=([^\s;|&"']+)/g;
-  checkMatches(ddRegex, command, 1, agentWorkDir, violations);
+  const ddRegex = /\bdd\b[^;|&]*?\bof=([^\s;|&<>]+)/g;
+  checkMatches(ddRegex, cmd, 1, agentWorkDir, violations);
 
   // 9. sed -i (in-place edit): sed -i[backup] ... file
-  const sedRegex = /\bsed\s+(?:-[a-zA-Z]*i[^\s]*\s+).*?([^\s;|&"']+)\s*(?:$|[;|&])/g;
-  checkMatches(sedRegex, command, 1, agentWorkDir, violations);
+  const sedRegex = /\bsed\s+(?:-[a-zA-Z]*i[^\s]*\s+).*?([^\s;|&<>]+)\s*(?:$|[;|&])/g;
+  checkMatches(sedRegex, cmd, 1, agentWorkDir, violations);
 
   // 10. rm/rmdir: rm [-rf] path (destructive, not write, but equally dangerous)
-  const rmRegex = /\b(?:rm|rmdir)(?:\s+-[a-zA-Z]{1,16})*\s+([^\s;|&"']+)/g;
-  checkMatches(rmRegex, command, 1, agentWorkDir, violations);
+  const rmRegex = /\b(?:rm|rmdir)(?:\s+-[a-zA-Z]{1,16})*\s+([^\s;|&<>]+)/g;
+  checkMatches(rmRegex, cmd, 1, agentWorkDir, violations);
 
   // 11. chmod/chown: targeting files outside sandbox
   //     Flags match the token loop too (same collapse as cp/mv).
-  const chmodRegex = /\b(?:chmod|chown)(?:\s+\S{1,4096})+\s+([^\s;|&"']+)/g;
-  checkMatches(chmodRegex, command, 1, agentWorkDir, violations);
+  const chmodRegex = /\b(?:chmod|chown)(?:\s+\S{1,4096})+\s+([^\s;|&<>]+)/g;
+  checkMatches(chmodRegex, cmd, 1, agentWorkDir, violations);
 
   // 12. ln -s: creating symlinks that point into the sandbox from outside
-  const lnRegex = /\bln(?:\s+-[a-zA-Z]{1,16})*\s+[^\s;|&]+\s+([^\s;|&"']+)/g;
-  checkMatches(lnRegex, command, 1, agentWorkDir, violations);
+  const lnRegex = /\bln(?:\s+-[a-zA-Z]{1,16})*\s+[^\s;|&]+\s+([^\s;|&<>]+)/g;
+  checkMatches(lnRegex, cmd, 1, agentWorkDir, violations);
+
+  // 13. tar extraction: `tar … x… -C <dir>` writes files into <dir>. Two
+  //     shapes — explicit `-C <dir>`, and bare `tar x…` whose default target
+  //     is CWD. The `t`(list)/`c`(create) modes do NOT extract and are not
+  //     matched here. Require an extract mode (`x`) to be present.
+  //     a) extraction with an explicit destination dir.
+  const tarDestRegex = /\btar\b(?=[^;|&]*\b[a-z]*x[a-z]*\b)[^;|&]*?-C\s*([^\s;|&<>]+)/g;
+  checkMatches(tarDestRegex, cmd, 1, agentWorkDir, violations);
+  //     b) extraction with no -C (writes into the agent's CWD). CWD is NOT a
+  //     trusted write root (the agent can `cd` anywhere), so an extract with
+  //     no destination is checked against the resolved CWD — caught only when
+  //     CWD is outside the sandbox, which is the dangerous case.
+  const tarCwdRegex = /\btar\s+(?:-?[a-zA-Z]*x[a-zA-Z]*)(?![^;|&]*-C\b)/g;
+  if (tarCwdRegex.test(cmd)) {
+    const cwd = path.resolve(process.cwd());
+    if (!isAllowedPath(cwd, agentWorkDir)) {
+      violations.push(cwd);
+    }
+  }
+
+  // 14. git config core.hooksPath: repoints git's hook directory, so the next
+  //     git operation runs arbitrary code from <dir> — a sandbox escape. This
+  //     is denied UNCONDITIONALLY (it is a code-exec config mutation, not a
+  //     file write): even a <dir> inside an allowed write root like /tmp is
+  //     dangerous, because the agent can then drop a hook there that executes
+  //     outside the sandbox on the next git op. Scoped narrowly to
+  //     core.hooksPath ON PURPOSE: a general `git config --global user.name x`
+  //     is a benign identity write and must stay allowed (it touches
+  //     ~/.gitconfig but cannot execute code) — the guard does NOT deny
+  //     --global writes wholesale, only this code-exec one.
+  const gitHooksPathRegex = /\bgit\s+config\b[^;|&]*?\bcore\.hooksPath\s+([^\s;|&<>]+)/g;
+  if (gitHooksPathRegex.test(cmd)) {
+    violations.push('git config core.hooksPath (repoints git hooks → code execution outside sandbox)');
+  }
+
+  // 15. cp/mv/install destination-directory flags: `-t <dir>` and
+  //     `--target-directory=<dir>` put the destination BEFORE the sources, so
+  //     cpMvRegex/installRegex (which capture the LAST token) would report the
+  //     wrong target. Capture the real directory here.
+  const targetDirRegex =
+    /\b(?:cp|mv|install)\b[^;|&]*?(?:--target-directory=([^\s;|&<>]+)|(?:^|\s)-t\s+([^\s;|&<>]+))/g;
+  checkMatchesAlt(targetDirRegex, cmd, [1, 2], agentWorkDir, violations);
+
+  // 16. xargs <writer>: xargs invokes a downstream command once per stdin
+  //     token. When that command is a writer/destructive verb (rm, cp, mv,
+  //     tee, dd, install, ln, truncate, shred), the writes are real but the
+  //     targets come from stdin (not statically visible). Deny outright when
+  //     the downstream verb is destructive/writing — there is no safe way to
+  //     bound the targets. (`xargs echo`, `xargs ls`, etc. are not matched.)
+  const xargsWriterRegex =
+    /\bxargs\b(?:\s+-[a-zA-Z0-9]\S{0,16}|\s+--[a-zA-Z-]+(?:=\S{1,4096})?){0,8}\s+(rm|rmdir|cp|mv|tee|dd|install|ln|truncate|shred|unlink|chmod|chown)\b/g;
+  if (xargsWriterRegex.test(cmd)) {
+    violations.push('xargs <writer> (writes/deletes targets read from stdin)');
+  }
+
+  // 17. Leading env-var assignments that hijack script execution. BASH_ENV /
+  //     ENV are sourced by non-interactive shells; LD_PRELOAD injects a shared
+  //     library into every spawned process; SHELLOPTS can force `xtrace`/
+  //     sourcing behavior. None have a legitimate in-sandbox use as a command
+  //     PREFIX, so deny outright. Matched only at a command boundary (start of
+  //     string or after `;`/`|`/`&`/`(`), where they act as exec-env prefixes
+  //     — NOT when they appear as a value being assigned to something else.
+  const envExecRegex =
+    /(?:^|[;|&(]|&&|\|\|)\s*(?:BASH_ENV|LD_PRELOAD|LD_LIBRARY_PATH|ENV|SHELLOPTS|BASH_FUNC_)\s*=/g;
+  if (envExecRegex.test(cmd)) {
+    violations.push('env-exec assignment (BASH_ENV/LD_PRELOAD/ENV/SHELLOPTS hijacks execution)');
+  }
 
   return violations;
+}
+
+/**
+ * Quote-aware linear-time pre-pass. Walks the command once, character by
+ * character, tracking single/double/backtick quote state. Quote DELIMITERS
+ * are dropped and the inner text is emitted verbatim (no separator inserted),
+ * so a quoted run fuses with whatever token it abuts:
+ *   `echo h > "/etc/passwd"`  →  `echo h > /etc/passwd`
+ *   `cp x '/a b/c'`           →  `cp x /a b/c`   (intentional: the path with a
+ *                                  space is exposed; the redirect/target regex
+ *                                  then stops at the space, capturing `/a`,
+ *                                  which still resolves outside the sandbox and
+ *                                  denies — fail-closed, never fail-open)
+ * A backslash inside a double-quote or unquoted region escapes the next char
+ * (so `\"` does not open/close a quote). This is O(n), single pass, no
+ * backtracking — it CANNOT introduce ReDoS. It is intentionally permissive
+ * (it does not model every POSIX quoting nuance); its only job is to deny the
+ * heuristic's evasion via quoting, and any ambiguity errs toward MORE matching.
+ */
+function dequoteCommand(command) {
+  // Hard cap mirrors the per-token bounds elsewhere: a pathological
+  // multi-megabyte command is truncated rather than scanned in full. A real
+  // command line never approaches this; truncation only ever drops trailing
+  // content, which is fail-closed for a prefix-anchored heuristic.
+  const MAX = 65536;
+  const src = command.length > MAX ? command.slice(0, MAX) : command;
+
+  let out = '';
+  let quote = null; // null | "'" | '"' | '`'
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    // Backslash escape outside single-quotes (single-quotes are literal in sh).
+    if (ch === '\\' && quote !== "'" && i + 1 < src.length) {
+      out += src[i + 1];
+      i++;
+      continue;
+    }
+    if (quote) {
+      if (ch === quote) {
+        quote = null; // closing delimiter — drop it
+      } else {
+        out += ch; // inner text verbatim
+      }
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch; // opening delimiter — drop it
+      continue;
+    }
+    out += ch;
+  }
+  return out;
 }
 
 function checkMatches(regex, command, group, agentWorkDir, violations) {
@@ -339,5 +507,33 @@ function checkMatches(regex, command, group, agentWorkDir, violations) {
         violations.push(resolved);
       }
     }
+    // Guard against zero-width matches stalling exec() on a global regex.
+    if (match.index === regex.lastIndex) regex.lastIndex++;
+  }
+}
+
+/**
+ * Like checkMatches but the path can land in ANY of several capture groups
+ * (used where a regex has alternated forms, e.g. `--target-directory=<dir>`
+ * vs `-t <dir>` — only one group is populated per match). The first
+ * non-empty group in `groups` is taken as the target.
+ */
+function checkMatchesAlt(regex, command, groups, agentWorkDir, violations) {
+  let match;
+  while ((match = regex.exec(command)) !== null) {
+    let target;
+    for (const g of groups) {
+      if (match[g]) {
+        target = match[g];
+        break;
+      }
+    }
+    if (target) {
+      const resolved = path.resolve(target);
+      if (!isAllowedPath(resolved, agentWorkDir)) {
+        violations.push(resolved);
+      }
+    }
+    if (match.index === regex.lastIndex) regex.lastIndex++;
   }
 }
