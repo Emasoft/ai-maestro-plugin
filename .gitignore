@@ -42,3 +42,6 @@ llm_externalizer_output/
 *_dev/
 .coverage
 *.bak
+/.trashcan/*
+!/.trashcan/.gitkeep
+!/.trashcan/README.txt
