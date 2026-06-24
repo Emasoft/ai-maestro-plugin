@@ -3,7 +3,7 @@ trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 column: planned
 created: 2026-06-20T20:08:24+0200
-updated: 2026-06-20T20:11:22+0200
+updated: 2026-06-24T04:58:02+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -178,7 +178,7 @@ context. Read-only from any foreign project. Enforced:
   Commit. (Await user "go" before Rust.)
 - **Phase 2 (coordination):** file the janitor coordination issue (§5 janitor items + §4
   invariant + 🔒 privacy invariant); self-identify per R22/G1.1.
-- **Phase 3:** file the SEPARATE discoverability issue on the janitor (complaint A).
+- **Phase 3:** file the SEPARATE discoverability issue on the janitor (complaint A). ✅ FILED 2026-06-24 — `Emasoft/ai-maestro-janitor#62` (independent of the gated Phase 1 build; raises the concern + landscape + candidate gaps for the janitor to scope).
 
 ## 7. Derived tasks / risks
 
