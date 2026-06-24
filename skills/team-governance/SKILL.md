@@ -2,13 +2,13 @@
 name: team-governance
 user-invocable: false
 description: "Use when managing teams or governance titles. Trigger with /team-governance. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(aimaestro-governance.sh:*), Bash(aimaestro-teams.sh:*), Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(amp-send:*), Bash(amp-inbox:*), Read, Edit, Grep, Glob"
+allowed-tools: "Bash(aimaestro-governance.sh:*), Bash(aimaestro-teams.sh:*), Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(amp-*:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
   version: "2.1.0"
 ---
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example below calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. AMP (`amp-send`/`amp-inbox`) already uses the CLI. The one residual — assigning a COS to an EXISTING team — has no frozen verb yet and is marked DECOUPLE-BLOCKED inline (set the COS at create time via `--cos`). -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example below calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. AMP (`amp-send.sh`/`amp-inbox.sh`) already uses the CLI. The one residual — assigning a COS to an EXISTING team — has no frozen verb yet and is marked DECOUPLE-BLOCKED inline (set the COS at create time via `--cos`). -->
 
 ## Overview
 
@@ -24,7 +24,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
 - AI Maestro running (the `aimaestro-*` CLIs resolve the API base + auth internally)
 - The `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs on PATH; `jq` installed
-- AMP scripts (`amp-send`, `amp-inbox`) for broadcasts
+- AMP scripts (`amp-send.sh`, `amp-inbox.sh`) for broadcasts
 - Agent must have MANAGER or COS title
 
 ## Instructions
@@ -62,7 +62,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    AGENTS=$(aimaestro-teams.sh show <team-id> | jq -r '.agentIds[]')
    for AID in $AGENTS; do
      NAME=$(aimaestro-agent.sh show "$AID" | jq -r '.agent.name')
-     amp-send "$NAME" "Subject" "Message"
+     amp-send.sh "$NAME" "Subject" "Message"
    done
    ```
 
@@ -84,7 +84,21 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
 ## Examples
 
-`/team-governance create a closed team` — see REFERENCE.md for full flows.
+```bash
+# List all teams
+aimaestro-teams.sh list | jq .
+
+# Create a closed team with a Chief-of-Staff (MANAGER only; --cos sets the COS at create time)
+aimaestro-teams.sh create --name backend --type closed --cos alice | jq .
+
+# Broadcast to every agent on a team via AMP
+for AID in $(aimaestro-teams.sh show <team-id> | jq -r '.agentIds[]'); do
+  NAME=$(aimaestro-agent.sh show "$AID" | jq -r '.agent.name')
+  amp-send.sh "$NAME" "Standup" "Daily 10am SLT"
+done
+```
+
+See [REFERENCE.md](references/REFERENCE.md) for full flows.
 
 ## Checklist
 

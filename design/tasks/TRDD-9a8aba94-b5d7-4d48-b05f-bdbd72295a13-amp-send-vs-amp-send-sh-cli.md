@@ -1,9 +1,9 @@
 ---
 trdd-id: 9a8aba94-b5d7-4d48-b05f-bdbd72295a13
 title: Reconcile amp-send vs amp-send.sh CLI naming
-column: backburner
+column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-11T11:35:00+0200
+updated: 2026-06-24T03:19:05+0200
 current-owner: null
 task-type: docs
 severity: HIGH

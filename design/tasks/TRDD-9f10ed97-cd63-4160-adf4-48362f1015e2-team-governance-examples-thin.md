@@ -1,9 +1,9 @@
 ---
 trdd-id: 9f10ed97-cd63-4160-adf4-48362f1015e2
 title: Expand team-governance Examples section
-column: backburner
+column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-11T11:35:00+0200
+updated: 2026-06-24T03:19:05+0200
 current-owner: null
 task-type: docs
 severity: HIGH

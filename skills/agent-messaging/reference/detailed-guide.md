@@ -100,7 +100,7 @@ GOVERNANCE-RULES.md (R6 §11).
 
 ## Full Commands Reference
 
-All commands are bash scripts installed at `~/.local/bin/`.
+All commands are bash scripts installed at `~/.local/bin/`. Each also has a bare-name convenience wrapper (`amp-send` ↔ `amp-send.sh`, `amp-inbox` ↔ `amp-inbox.sh`, etc.) — the two forms are equivalent; the `.sh` form is canonical in this guide.
 
 ### amp-init.sh — Initialize Agent
 
