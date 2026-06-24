@@ -92,6 +92,7 @@ Copy this checklist and track your progress:
 | `amp-delete.sh <id>` | Delete a message |
 | `amp-download.sh <id> --all` | Download attachments |
 | `amp-fetch.sh` | Fetch from external providers |
+| `amp-register --provider <provider> --user-key <key>` | Register with an external provider |
 
 Agent ID resolution: `AMP_DIR` env var > `--id` flag > `CLAUDE_AGENT_ID` > auto-select. Addresses: `alice` (local) or `alice@acme.crabmail.ai` (external, requires registration).
 

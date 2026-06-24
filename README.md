@@ -58,6 +58,7 @@ are documented in the table below.
 | `ai-maestro-agents-management`  | Agent lifecycle management                   |
 | `agent-identity`                | AID agent identity (Ed25519)                 |
 | `agent-messaging`               | AMP inter-agent messaging                    |
+| `agent-repo-workflow`           | Agent repo/branch/PR + task done/blocked     |
 | `debug-hooks`                   | Hook debugging utilities                     |
 | `docs-search`                   | Documentation search                         |
 | `graph-query`                   | Code graph querying                          |
