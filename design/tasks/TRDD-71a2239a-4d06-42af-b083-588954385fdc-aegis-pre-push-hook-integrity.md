@@ -3,11 +3,12 @@ trdd-id: 71a2239a-4d06-42af-b083-588954385fdc
 title: Hash-pin the pre-push hook template
 column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-24T03:06:58+0200
+updated: 2026-06-24T22:12:47+0200
 current-owner: null
 task-type: security
 severity: HIGH
 relevant-rules: []
+implementation-commits: [a567dec]
 ---
 
 # TRDD-71a2239a-4d06-42af-b083-588954385fdc — Hash-pin the pre-push hook template
@@ -16,8 +17,16 @@ relevant-rules: []
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/aegis-security.md` (HIGH-05)
 **Severity:** HIGH (silent gate weakening)
-**Status:** Not started
+**Status:** Complete — shipped in a567dec (pending push). File-to-file sha256 pin (`.githooks/pre-push.sha256`) + CI/local integrity gate; tests in `tests/test_pre_push_hook_integrity.py`. Verified fix-plan: `reports/go-on-yourself/20260622_102243+0200-security-trio-plan.md`.
 **Filed:** 2026-05-08
+
+> **Implementation note (2026-06-24, shipped `a567dec`):** the premise below — "publish.py
+> writes `PRE_PUSH_HOOK_TEMPLATE` to `.githooks/pre-push` on every run" — was VERIFIED STALE
+> on 2026-06-22: that template and `ensure_pre_push_hook` were deleted in commit `2073681`,
+> so the hook is a **static committed file**. The hash-pin therefore shipped as a simpler
+> file-to-file check (`.githooks/pre-push.sha256` vs the committed hook, CI- and
+> publish-verified), and the Layer-3 `--dry-run` no-op became moot (nothing rewrites the
+> hook). The original design prose below is preserved as the filing.
 
 ## Problem
 

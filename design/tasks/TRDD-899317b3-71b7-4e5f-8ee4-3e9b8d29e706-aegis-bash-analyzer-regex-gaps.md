@@ -3,11 +3,12 @@ trdd-id: 899317b3-71b7-4e5f-8ee4-3e9b8d29e706
 title: Strengthen directory-guard bash analyzer
 column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-22T10:41:59+0200
+updated: 2026-06-24T22:12:47+0200
 current-owner: null
 task-type: security
 severity: HIGH
 relevant-rules: []
+implementation-commits: [e5a8a0e]
 ---
 
 # TRDD-899317b3-71b7-4e5f-8ee4-3e9b8d29e706 — Strengthen directory-guard bash analyzer
@@ -16,7 +17,7 @@ relevant-rules: []
 **Tracked in:** this repo (design/tasks/ is git-tracked)
 **Source audit:** `reports/v258-pre-publish-audit/aegis-security.md` (HIGH-01)
 **Severity:** HIGH (sandbox bypass)
-**Status:** Not started
+**Status:** Complete — shipped in e5a8a0e (pending push). 11 write bypasses closed (Option A quote-aware tokenizer + denylist); tests in `tests/test_directory_guard_bash.py`. Verified fix-plan: `reports/go-on-yourself/20260622_102243+0200-security-trio-plan.md`.
 **Filed:** 2026-05-08
 
 ## Problem
