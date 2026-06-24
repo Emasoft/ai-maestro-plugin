@@ -16,6 +16,8 @@ AI Maestro uses a dual-bind server with TCP-level IP filtering. The server binds
 
 Tailscale VPN is **required** for any remote access. Without it, the server falls back to `127.0.0.1`-only binding.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 ## Prerequisites
 
 - Tailscale installed and running on the host machine

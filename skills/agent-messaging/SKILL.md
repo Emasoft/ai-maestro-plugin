@@ -17,6 +17,8 @@ metadata:
 
 Send and receive cryptographically signed messages between AI agents using the Agent Messaging Protocol (AMP). Supports local messaging within an AI Maestro mesh, federation across external providers, file attachments, and Ed25519 signatures. Works with any AI agent that can execute shell commands.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 ## Communication Rules (R6 v3, 2026-05-04)
 
 AMP uses a title-based directed graph with HUMAN as a first-class node. Edge types: `Y` (allow), `1` (reply-only — requires `options.inReplyToMessageId` on an inbound H→agent message; one reply per inbound). Subagents are not nodes and **cannot send messages**. Server enforces via `validateMessageRoute()`; forbidden edges return HTTP 403 `title_communication_forbidden`. Full 9-column matrix + rules R6.1–R6.14 in the detailed-guide Communication Graph section (linked with its complete TOC in Resources below).

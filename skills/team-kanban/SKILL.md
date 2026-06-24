@@ -25,6 +25,8 @@ design-pipeline state. A team task references a TRDD by `TRDD-<id>` but never
 overrides its `column:`. When they appear to disagree: the TRDD file wins for
 pipeline state; this server board wins for live assignment/presence.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 ## Prerequisites
 
 - AI Maestro running (the `amp-kanban-*` / `aimaestro-teams.sh` CLIs resolve the API base + auth internally)
@@ -32,6 +34,8 @@ pipeline state; this server board wins for live assignment/presence.
 - For GitHub sync: `gh` CLI authenticated, `kanban-sync.py` at `~/.local/bin/`
 
 ## Instructions
+
+> **Approval requirements.** Task creation and board operations (create/move/archive/configure) on a team you belong to are **Tier-0 in-scope** — no proposal needed; act directly. Anything that escalates beyond your slice (creating a team, cross-team work) follows the `ama-proposal-approvals` skill and the `trdd-approval-tiers` rule.
 
 1. **Identify team**: `aimaestro-teams.sh list | jq .`
 2. **Create task**: `amp-kanban-create-task.sh "<title>" [--status S] [--priority N] [--labels "a,b"] [--assignee <id>]`
@@ -41,6 +45,8 @@ pipeline state; this server board wins for live assignment/presence.
 6. **Configure columns**: `aimaestro-teams.sh kanban-config <team-id> --get | --set <columns-json>`
 7. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>` (out of #11 scope — keep)
    <!-- DECOUPLE-BLOCKED ai-maestro#36: non-status task edits (priority / blockedBy dependencies, was `PUT /api/teams/{id}/tasks/{taskId}` with `{priority}`/`{blockedBy}`) and team metrics (was `GET /api/teams/stats`) have no frozen-CLI verb yet — pending a follow-up. `amp-kanban-move` handles status moves; `amp-kanban-create-task` sets initial priority/labels. Do NOT call `/api/*` directly (core#11). -->
+
+   When the sync posts to GitHub (issue, PR comment, project-item note), per PRRD G1.1 begin the body with a one-line self-identification of the authoring agent, since all agents share the one owner identity.
 
 ### Quick CLI Reference
 

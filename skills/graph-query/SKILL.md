@@ -12,6 +12,8 @@ metadata:
 
 Query the indexed code graph (CozoDB) to understand symbols, call chains, dependencies, and relationships before making changes. All `graph-*.sh` commands auto-detect your agent ID from the tmux session. Scripts are installed at `~/.local/bin/`.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 ## Prerequisites
 
 - AI Maestro running on `localhost:23000`

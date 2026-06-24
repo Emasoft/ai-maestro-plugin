@@ -14,6 +14,8 @@ Manage AI agents through the frozen `aimaestro-agent.sh` CLI (which resolves the
 
 **Authorization & identity (R26–R28, security-first).** An agent's identity — **TITLE / ROLE / NAME / AID** — is **conferred** by the USER / MANAGER / own-team COS and is **immutable to the agent itself** (R26): creating or configuring an agent CONFERS identity; an agent never self-assigns or self-changes its own title/role/name/AID (NAME/AID change only on compromise, via the proper authority). Agents **self-install ONLY through this core plugin's skills** — this skill IS that install surface — after **MANAGER** (no team) / **own-COS** (in team) approval, and the **server CPV-scans every extension before install** (R27); never install via a raw client CLI or bypass the scan. Every operation authenticates by the caller's **AID**: the CLI sends it, the **server** runs the **3-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope, and the skill **never asserts its own title** (R28). Full text: the [`team-governance`](../team-governance/references/GOVERNANCE-RULES.md) bundled rules, R26–R28.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RULES.md) covers:
 
 - §0. Canonical source + copies

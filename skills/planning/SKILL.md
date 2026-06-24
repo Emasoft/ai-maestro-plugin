@@ -12,6 +12,8 @@ metadata:
 
 Creates and manages 3 persistent markdown files (task_plan.md, findings.md, progress.md) that keep you focused during complex tasks. Solves goal drift, lost progress, and repeated errors by externalizing state to disk.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 ## Prerequisites
 
 - Bash shell access

@@ -20,6 +20,8 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
 **Authorization model (R26–R40, security-first):** agents authenticate **only** by their **AID** — the `aimaestro-*` CLIs send it automatically. The server runs the **R28 three-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope; a skill **never asserts its own title**. Per **R32**, agents **never** face a sudo gate — AID + title + token IS the authorization; a governance/sudo **password is requested only of the USER, only via the UI** (R16), so a `--password` flag on a deployed CLI is a **USER/UI residual you surface to the user, never supply yourself**. Per **R29–R31**, the **MANAGER** creates/deletes teams (auto-creating the COS + the 5 base members) with **no user approval** (R9.11); a **COS** needs a MANAGER mandate to add extra MEMBER agents (the 5-member base is invariant); a team missing any base member is **frozen** (only its COS active) until complete. Identity is **conferred, never self-assigned** (R26). Full text in the [bundled rules](references/GOVERNANCE-RULES.md) R26–R40.
 
+> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+
 ## Prerequisites
 
 - AI Maestro running (the `aimaestro-*` CLIs resolve the API base + auth internally)
@@ -36,6 +38,8 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    ```
 
    If not MANAGER or COS, STOP and inform the user.
+
+> **Approval requirements.** Creating a team is **≥ Tier 1** (Chief-of-Staff approval); assigning or changing a Chief-of-Staff is **Tier 2** (MANAGER approval). File the proposal and route it per the `ama-proposal-approvals` skill and the `trdd-approval-tiers` rule before acting. Listing/showing teams is read-only (Tier 0).
 
 2. **Operations** (each CLI resolves the API base + your agent identity internally):
    - **List teams**: `aimaestro-teams.sh list`
@@ -65,6 +69,8 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
      amp-send.sh "$NAME" "Subject" "Message"
    done
    ```
+
+   Per PRRD G1.1, begin every GitHub post (broadcast/issue/PR comment/review) with a one-line self-identification of the authoring agent, since all agents share the one owner identity.
 
 6. **Respect messaging isolation** for closed teams. See reference for full rules.
 
