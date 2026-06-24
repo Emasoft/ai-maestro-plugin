@@ -1,10 +1,11 @@
 ---
 trdd-id: P83T33EN
 title: Close the script↔skill coverage gap — new agent-repo-workflow skill for the uncovered AMP work-loop scripts
-column: dev
+column: complete
 created: 2026-06-24T03:51:53+0200
-updated: 2026-06-24T03:51:53+0200
+updated: 2026-06-24T03:58:13+0200
 current-owner: ai-maestro-plugin
+implementation-commits: [a401719]
 assignee: ai-maestro-plugin
 priority: 2
 severity: HIGH
