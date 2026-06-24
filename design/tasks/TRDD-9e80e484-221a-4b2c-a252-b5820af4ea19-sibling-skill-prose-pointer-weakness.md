@@ -1,9 +1,9 @@
 ---
 trdd-id: 9e80e484-221a-4b2c-a252-b5820af4ea19
 title: Sibling-skill prose-pointer weakness
-column: backburner
+column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-11T11:35:00+0200
+updated: 2026-06-24T03:22:31+0200
 current-owner: null
 task-type: docs
 severity: LOW

@@ -117,3 +117,8 @@ TOKEN=$(aid-token.sh \
 - Canonical governance rules (§TERMINOLOGY.3 PERSONA tuple, R16
   governance-password secrecy): see the `team-governance` skill,
   which bundles the canonical rules and embeds the full TOC.
+
+## Use also
+
+- `Skill(skill: "team-governance")` — teams, titles, and the governance rules this identity authorizes.
+- `Skill(skill: "agent-messaging")` — send and receive messages as this identified agent (AMP).

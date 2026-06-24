@@ -147,3 +147,8 @@ Copy this checklist and track your progress:
 - Canonical governance rules (R15 written-orders / GitHub trail, R12
   minimum team composition): see the `team-governance` skill, which
   bundles the canonical rules and embeds the full TOC.
+
+## Use also
+
+- `Skill(skill: "team-governance")` — the teams and titles the board's tasks belong to.
+- `Skill(skill: "agent-messaging")` — notify agents about task changes (AMP).

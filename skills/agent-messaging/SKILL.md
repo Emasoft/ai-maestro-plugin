@@ -121,3 +121,8 @@ Run `amp-init.sh --auto` if not initialized. Run `amp-fetch.sh` if messages not 
 - Canonical governance rules (R6 communication graph + §TERMINOLOGY
   PERSONA addressing): see the `team-governance` skill, which bundles
   the canonical rules and embeds the full TOC.
+
+## Use also
+
+- `Skill(skill: "team-governance")` — team broadcasts and closed-team messaging isolation.
+- `Skill(skill: "agent-identity")` — the AID/identity messages are sent under.

@@ -181,3 +181,8 @@ Copy this checklist and track your progress:
   approval + CPV scan, R28 three-check AID authz**): see the
   `team-governance` skill, which bundles the canonical rules
   and embeds the full TOC.
+
+## Use also
+
+- `Skill(skill: "team-governance")` — assign agents to teams and govern titles.
+- `Skill(skill: "agent-identity")` — the AID each managed agent authenticates by.

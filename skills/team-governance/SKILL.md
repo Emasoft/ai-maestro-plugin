@@ -168,3 +168,8 @@ Copy this checklist and track your progress:
   - R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON)
   - R40. Foreign-User Creation Approval (IRON)
   - Role-Based Permission Matrix
+
+## Use also
+
+- `Skill(skill: "agent-messaging")` — inter-agent messaging and team broadcasts (AMP).
+- `Skill(skill: "team-kanban")` — the team's task board (TRDD / kanban).
