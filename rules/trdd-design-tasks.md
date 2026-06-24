@@ -358,8 +358,10 @@ land directly on the spec file.
 1. Generate a UUID:
 
    ```bash
-   UID=$(python3 -c "import uuid; print(uuid.uuid4())")
-   SHORT=${UID:0:8}
+   # Use TID, NOT UID — `UID` is readonly in zsh (the user's numeric uid), so
+   # `UID=…` / `${UID:0:8}` break with "zsh: bad math expression" (core#15).
+   TID=$(python3 -c "import uuid; print(uuid.uuid4())")
+   SHORT=${TID:0:8}
    ```
 2. Capture timestamps:
 
@@ -370,7 +372,7 @@ land directly on the spec file.
 3. Ensure `design/tasks/` exists; verify `design/` is NOT in `.gitignore`.
 4. Create the TRDD at `design/tasks/TRDD-$TS-$SHORT-<slug>.md` with the
    mandatory frontmatter; initialise `column: backburner` (or
-   `live_auditing` for audit TRDDs), `trdd-id: $UID`, same ISO datetime
+   `live_auditing` for audit TRDDs), `trdd-id: $TID`, same ISO datetime
    in BOTH `created:` and `updated:`. Write the prose.
 5. Create a TaskCreate entry referencing the TRDD.
 6. Stage and commit:
