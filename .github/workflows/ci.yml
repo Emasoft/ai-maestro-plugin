@@ -40,6 +40,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Pre-push hook integrity (TRDD-71a2239a): the static committed
+      # .githooks/pre-push must match its committed sha256 pin. Editing the hook
+      # without re-pinning in the SAME commit fails here — so a silent weakening
+      # of the strict-publish hook can't be merged unseen. Plain `sha256sum -c`,
+      # no third-party action; MUST stay byte-identical with the same step in
+      # release.yml (CI/Release-parity — Release diverges/times out when a step
+      # lives only in ci.yml).
+      - name: Verify pre-push hook sha256 pin
+        run: sha256sum -c .githooks/pre-push.sha256
+
       # Cheap-fail-first: workflow-syntax errors before mega-linter.
       - name: Lint workflow YAML (actionlint)
         uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12

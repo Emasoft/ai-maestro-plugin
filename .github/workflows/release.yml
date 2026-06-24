@@ -16,6 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Pre-push hook integrity (TRDD-71a2239a): MUST stay byte-identical with
+      # the same step in ci.yml (CI/Release-parity — Release diverges/times out
+      # when a step lives only in ci.yml). The static committed .githooks/pre-push
+      # must match its committed sha256 pin; editing the hook without re-pinning
+      # in the SAME commit fails here. Plain `sha256sum -c`, no third-party action.
+      - name: Verify pre-push hook sha256 pin
+        run: sha256sum -c .githooks/pre-push.sha256
+
       - name: Install uv
         uses: astral-sh/setup-uv@e4db8464a088ece1b920f60402e813ea4de65b8f # v4
 

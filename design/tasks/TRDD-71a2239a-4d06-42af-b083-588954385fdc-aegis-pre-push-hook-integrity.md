@@ -1,9 +1,9 @@
 ---
 trdd-id: 71a2239a-4d06-42af-b083-588954385fdc
 title: Hash-pin the pre-push hook template
-column: backburner
+column: complete
 created: 2026-05-08T00:00:00+0200
-updated: 2026-06-11T11:35:00+0200
+updated: 2026-06-24T03:06:58+0200
 current-owner: null
 task-type: security
 severity: HIGH
