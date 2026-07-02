@@ -22,10 +22,5 @@
     "identity",
     "AMP",
     "AID"
-  ],
-  "cpv": {
-    "allow_orchestrator_traversal": [
-      "skills/ama-trdd-transition"
-    ]
-  }
+  ]
 }
