@@ -38,6 +38,30 @@ canon_path() {
     ( cd "${_d}" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "${_b}" ) || printf ''
 }
 
+# Print the working directory of a live PID (the owner's OWN process — no
+# privilege needed). Linux: /proc; macOS/BSD: lsof. Empty if undeterminable.
+# WHY (TRDD-9CQ2X7HK): a RELATIVE script token in an ancestor's argv — the real
+# `uv run python scripts/publish.py` carries the relative `scripts/publish.py` —
+# MUST be resolved against the ANCESTOR's cwd, never the hook's cwd. Resolving a
+# relative token against the hook's cwd (the original bug) let a FOREIGN or STALE
+# `python scripts/publish.py` ancestor (a different repo's publish still live in
+# the ancestry) false-match THIS repo, since the hook's cwd holds a same-named
+# path — silently authorizing an ungated direct push. Resolve against the real
+# ancestor cwd so a foreign publish's path differs and correctly fails to match.
+ancestor_cwd() {
+    _cpid=$1
+    [ -n "${_cpid}" ] || { printf ''; return; }
+    if [ -r "/proc/${_cpid}/cwd" ]; then
+        readlink "/proc/${_cpid}/cwd" 2>/dev/null || printf ''
+        return
+    fi
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -a -p "${_cpid}" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1
+        return
+    fi
+    printf ''
+}
+
 # Expected absolute target: THIS repo's scripts/publish.py. git_root via
 # `git rev-parse --show-toplevel` so a spoof referring to some OTHER
 # checkout's publish.py cannot satisfy the realpath equality below.
@@ -63,6 +87,7 @@ EXPECTED_PUBLISH=$(canon_path "${GIT_ROOT}/scripts/publish.py")
 ancestor_is_publish() {
     _comm=$1
     _cmd=$2
+    _pid=${3:-}
     # (a) interpreter basename must be in the python/uv family. NOTE: on macOS a
     # bare framework python reports comm basename `Python` (capital P, the
     # Python.app launcher binary) — verified empirically; rejecting it would
@@ -112,7 +137,19 @@ ancestor_is_publish() {
     done
     [ "$#" -ge 1 ] || return 1
     _script=$1
-    [ "$(canon_path "${_script}")" = "${EXPECTED_PUBLISH}" ] && return 0
+    # (e) Resolve a RELATIVE script token against the ANCESTOR's cwd, not the
+    # hook's cwd (TRDD-9CQ2X7HK). Absolute tokens need no cwd. If the ancestor's
+    # cwd is undeterminable, fail closed — never guess against the hook's cwd,
+    # which is exactly the foreign/stale-publish false-match this closes.
+    case "${_script}" in
+        /*) _cand=${_script} ;;
+        *)
+            _acwd=$(ancestor_cwd "${_pid}")
+            [ -n "${_acwd}" ] || return 1
+            _cand=${_acwd}/${_script}
+            ;;
+    esac
+    [ "$(canon_path "${_cand}")" = "${EXPECTED_PUBLISH}" ] && return 0
 
     # NOTE — `uv run python scripts/publish.py` is admitted via the PYTHON frame,
     # NOT a uv-argv branch. Walking UP from the hook the ancestry is
@@ -142,7 +179,7 @@ find_publish_ancestor() {
         # comm may be an absolute path (e.g. /usr/bin/python3) on some platforms —
         # reduce to its basename before the family check.
         comm_base=$(basename -- "${comm}" 2>/dev/null || printf '')
-        if ancestor_is_publish "${comm_base}" "${cmd}"; then
+        if ancestor_is_publish "${comm_base}" "${cmd}" "${pid}"; then
             return 0
         fi
         ppid=$(ps -o ppid= -p "${pid}" 2>/dev/null | tr -d ' ' || printf '')
