@@ -316,12 +316,13 @@ def _coerce_yaml_value(val: str) -> Any:
             return int(s)
         except ValueError:
             pass
-    # float?
-    if re.fullmatch(r"-?\d+\.\d+", s):
-        try:
-            return float(s)
-        except ValueError:
-            pass
+    # A `\d+\.\d+` value is deliberately NOT float-coerced: in the PRRD/TRDD
+    # domain every such value is a VERSION (semver `major.minor`, rule `n.v`),
+    # and float() is lossy — float("1.10") == 1.1 drops the trailing zero, so the
+    # next bump regresses 1.10 -> 1.2 and collides with the historical 1.2.
+    # matches_where re-floats on demand (float(value) at compare time) for
+    # numeric `<`/`>` comparisons, so keeping the exact string here is both
+    # correct and lossless.
     # plain string
     return s
 
@@ -520,23 +521,35 @@ def matches_where(trdd: TRDDDoc, where: str) -> bool:
     # Tokenize on AND/OR (we don't support parens here)
     tokens = re.split(r"\s+(AND|OR|and|or)\s+", where)
     # Even indices: clauses; odd indices: connectors
-    result = _eval_clause(trdd, tokens[0])
+    # SQL precedence: AND binds tighter than OR, so evaluate as an OR of
+    # AND-groups (NOT a strict left-to-right fold, which would wrongly group
+    # `A OR B AND C` as `(A OR B) AND C`). Accumulate an AND-chain; each OR
+    # closes the current chain into the running OR result and starts a new one.
+    and_acc = _eval_clause(trdd, tokens[0])
+    result = False  # OR identity
     i = 1
     while i < len(tokens) - 1:
         connector = tokens[i].upper()
         clause_val = _eval_clause(trdd, tokens[i + 1])
         if connector == "AND":
-            result = result and clause_val
+            and_acc = and_acc and clause_val
         elif connector == "OR":
-            result = result or clause_val
+            result = result or and_acc
+            and_acc = clause_val
         i += 2
-    return result
+    return result or and_acc
 
 
 def _eval_clause(trdd: TRDDDoc, clause: str) -> bool:
     clause = clause.strip()
     m = re.match(
-        r"^(?P<f>[a-zA-Z][\w-]*)\s*(?P<op>=|!=|<|<=|>|>=|IN|NOT IN|in|not in)\s*(?P<rhs>.+)$",
+        # Operator alternation MUST list longer ops before their prefixes:
+        # Python regex alternation is ordered (first match wins, NOT longest),
+        # so `<`/`>` before `<=`/`>=` swallows the single char and leaves the
+        # trailing `=` in the RHS, breaking every `<=`/`>=` query
+        # (float("=3") -> ValueError -> clause silently False). Two-char ops and
+        # `NOT IN` therefore come first.
+        r"^(?P<f>[a-zA-Z][\w-]*)\s*(?P<op>!=|<=|>=|=|<|>|NOT IN|IN|not in|in)\s*(?P<rhs>.+)$",
         clause,
     )
     if not m:
