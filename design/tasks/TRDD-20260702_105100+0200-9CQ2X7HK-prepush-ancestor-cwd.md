@@ -1,25 +1,27 @@
 ---
 trdd-id: 9CQ2X7HK
 title: pre-push gate — resolve ancestor script token against the ancestor's cwd, not the hook's
-column: testing
+column: published
 created: 2026-07-02T10:51:00+0200
-updated: 2026-07-02T10:51:00+0200
+updated: 2026-07-03T19:33:44+0200
 current-owner: ai-maestro-plugin
 task-type: security
 parent-trdd: TRDD-4b298890
 relevant-rules: []
 test-requirements: [unit]
 release-via: publish
-implementation-commits: []
+implementation-commits: [bce9d1e]
+published-version: 2.8.0
+published-at: 2026-07-02T12:50:15+0200
 ---
 
 # TRDD-9CQ2X7HK — pre-push gate: resolve ancestor script against the ANCESTOR's cwd
 
 ## ⏵ STATE — READ FIRST
-- FIX DONE + 8/8 `tests/test_pre_push_gate.py` pass standalone; hook re-pinned
-  (`.githooks/pre-push.sha256`). Authoritative proof = publish.py G4 (runs the
-  suite UNDER a real `python scripts/publish.py` ancestor).
-- NEXT: commit hook + pin + this TRDD, then `publish.py --minor`.
+- SHIPPED in v2.8.0 — fix `bce9d1e` (ancestor of tag `v2.8.0` @ 2026-07-02).
+  column: published. Record reconciled 2026-07-03 (was stale at `testing`).
+- FIX DONE + 8/8 `tests/test_pre_push_gate.py` pass; hook re-pinned
+  (`.githooks/pre-push.sha256`); proven under publish.py G4 (real ancestor).
 
 ## The hole (real, narrow, pre-ship)
 `.githooks/pre-push` accepts a push when a python/uv ancestor's first positional
