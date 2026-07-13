@@ -33,6 +33,17 @@ FILTER_REGEX_EXCLUDE: '(tests_dev/|docs_dev/|scripts_dev/|samples_dev/|examples_
 # Python settings
 PYTHON_RUFF_ARGUMENTS: "--select=E,F,W,I --ignore=E501"
 PYTHON_MYPY_ARGUMENTS: "--ignore-missing-imports"
+# Bandit: the Python in this repo is release tooling that drives git/gh, and the
+# four rules below flag exactly that — not a vulnerability in it.
+#   B404 importing subprocess, B603 subprocess without shell=True, B607 partial
+#   executable path: every call here passes a LIST of literal args with no shell,
+#   which is the SAFE pattern; B603/B607 fire on it regardless. Removing them
+#   would mean shelling out or hardcoding /usr/bin paths — both worse.
+#   B101 assert_used: asserts are what a test suite is made of.
+# Without this, VALIDATE_ALL_CODEBASE:false hides the noise until someone edits a
+# Python file — and then their PR fails CI for code they did not write. (49 of the
+# 57 findings on the PR that added this line predate it.)
+PYTHON_BANDIT_ARGUMENTS: "--skip B101,B404,B603,B607"
 
 # Copy-paste detection — allow up to 5% duplication (0% is too strict for plugins)
 COPYPASTE_JSCPD_ARGUMENTS: "--threshold 5"

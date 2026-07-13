@@ -1,0 +1,33 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "comment": [
+    "Project dictionary. Every word here is an identifier or a domain term that",
+    "already exists in this repo's source — cspell only flagged them once a PR",
+    "touched the file that contains them, because MegaLinter runs with",
+    "VALIDATE_ALL_CODEBASE: false. Without this file, any PR that edits a Python",
+    "file fails CI on words it did not introduce."
+  ],
+  "words": [
+    "bypassable",
+    "cprint",
+    "getpid",
+    "pdata",
+    "ppid",
+    "precheck",
+    "redef",
+    "refspec",
+    "spoofable",
+    "stype",
+    "trdd",
+    "unparseable",
+    "unresolvable"
+  ],
+  "ignorePaths": [
+    "uv.lock",
+    "**/*.json",
+    "CHANGELOG.md",
+    "node_modules/**",
+    ".git/**"
+  ]
+}
