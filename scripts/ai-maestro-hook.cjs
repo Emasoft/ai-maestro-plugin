@@ -13,6 +13,8 @@
  * - Notification (permission_prompt): When Claude is waiting for permission approval
  * - Notification (elicitation_dialog): When MCP server requests user input
  * - PermissionRequest: When Claude asks for tool permission
+ * - PreToolUse (AskUserQuestion): When Claude blocks on a multiple-choice question
+ * - PostToolUse (AskUserQuestion): When the question's answer returns
  * - Stop: When Claude finishes responding
  * - StopFailure: When a turn ends due to API error
  * - SessionStart: When a session starts/resumes
@@ -120,8 +122,21 @@ function writeState(cwd, state) {
     const cwdHash = hashCwd(cwd);
     const stateFile = path.join(stateDir, `${cwdHash}.json`);
 
+    // subagentCount is a PERSISTENT counter owned by SubagentStart/Stop. A state
+    // write that doesn't mention it (idle_prompt / permission_prompt / elicitation /
+    // PermissionRequest / StopFailure / question) must CARRY THE PRIOR VALUE
+    // THROUGH — never silently drop it — otherwise the dashboard shows 0 running
+    // subagents mid-fan-out and CC's restart/autoContinue gate (which keys on
+    // subagentCount) misfires (#17). A handler that means to RESET the counter
+    // still can by passing an explicit value (SessionStart/End pass 0); an
+    // explicit field always wins over the carried-through prior.
+    const subagentCount = state.subagentCount === undefined
+        ? getSubagentCount(cwd)
+        : state.subagentCount;
+
     const fullState = {
         ...state,
+        subagentCount,
         cwd,
         cwdHash,
         updatedAt: new Date().toISOString()
@@ -145,12 +160,26 @@ function writeState(cwd, state) {
 }
 
 // Log to debug file (mode 0600 — see writeState rationale)
+//
+// debugLog runs at the TOP of main() on EVERY event, before any writeState has
+// created the state dir. On a fresh install the dir does not exist yet, so it
+// MUST create it here — otherwise the first-ever event throws ENOENT, main()'s
+// .catch exits, writeState never runs, and the hook is silently dead until some
+// other process creates ~/.aimaestro/chat-state. It also swallows all of its
+// own errors: a logging failure must never abort the hook's real work ("don't
+// block Claude").
 function debugLog(data) {
-    const debugFile = path.join(os.homedir(), '.aimaestro', 'chat-state', 'hook-debug.log');
-    const timestamp = new Date().toISOString();
-    const line = `[${timestamp}] ${JSON.stringify(data)}\n`;
-    fs.appendFileSync(debugFile, line, { mode: 0o600 });
-    try { fs.chmodSync(debugFile, 0o600); } catch (e) {}
+    try {
+        const stateDir = path.join(os.homedir(), '.aimaestro', 'chat-state');
+        fs.mkdirSync(stateDir, { recursive: true, mode: 0o700 });
+        const debugFile = path.join(stateDir, 'hook-debug.log');
+        const timestamp = new Date().toISOString();
+        const line = `[${timestamp}] ${JSON.stringify(data)}\n`;
+        fs.appendFileSync(debugFile, line, { mode: 0o600 });
+        try { fs.chmodSync(debugFile, 0o600); } catch (e) {}
+    } catch (e) {
+        // Logging is best-effort; never let it break the hook.
+    }
 }
 
 // Inject a message-notification into the agent's tmux session (was: GET
@@ -493,6 +522,51 @@ async function main() {
                 sessionId,
                 transcriptPath
             });
+            break;
+
+        case 'PreToolUse':
+            // AskUserQuestion is about to block the agent on a multiple-choice
+            // question. Capture the question + options so the dashboard shows the
+            // agent is WAITING (not idle) and can surface the choices (#20). This
+            // matcher is registered as ^AskUserQuestion$ only (directory-guard owns
+            // the write-tool matcher), but guard on tool_name defensively. The hook
+            // only records state and returns success ({} below) — it never emits a
+            // permission decision, so it cannot block or alter the question.
+            {
+                const puTool = input.tool_name || input.toolName;
+                if (puTool === 'AskUserQuestion') {
+                    const ti = input.tool_input || input.toolInput || {};
+                    const questions = Array.isArray(ti.questions) ? ti.questions : [];
+                    const first = questions[0] || {};
+                    writeState(cwd, {
+                        status: 'waiting_for_input',
+                        notificationType: 'question',
+                        message: first.question || 'Claude is asking a question…',
+                        questions,
+                        sessionId,
+                        transcriptPath
+                    });
+                    debugLog({ event: 'question_asked', cwd, count: questions.length });
+                }
+            }
+            break;
+
+        case 'PostToolUse':
+            // The AskUserQuestion answer came back — clear the question-blocked
+            // state so the dashboard stops showing the agent as waiting (#20).
+            {
+                const ptTool = input.tool_name || input.toolName;
+                if (ptTool === 'AskUserQuestion') {
+                    const currentSubagents = getSubagentCount(cwd);
+                    writeState(cwd, {
+                        status: currentSubagents > 0 ? 'subagents_running' : 'active',
+                        message: null,
+                        sessionId,
+                        transcriptPath
+                    });
+                    debugLog({ event: 'question_answered', cwd });
+                }
+            }
             break;
 
         default:
