@@ -7,7 +7,10 @@
  * sandboxing — it runs even with --dangerously-skip-permissions.
  *
  * SECURITY MODEL:
- *   - FAIL-CLOSED: if work directory cannot be determined → DENY ALL writes.
+ *   - FAIL-CLOSED within an AGENT context: if this is an AI-Maestro agent
+ *     (AID_AUTH set) but its work directory cannot be determined → DENY ALL
+ *     writes. A NON-agent session (no agent marker) is NOT sandboxed by this
+ *     guard — denying it bricked every interactive session machine-wide (#22).
  *   - AGENT_WORK_DIR env var is the ONLY trusted source of the agent's directory.
  *     CWD is NOT trusted (agent can `cd` anywhere).
  *   - Bash commands are blocked when they contain ANY write-capable pattern
@@ -114,10 +117,21 @@ function evaluateAccess(event) {
   // ── Resolve agent work directory (ONLY from env var) ───────
   const agentWorkDir = resolveAgentWorkDir();
   if (!agentWorkDir) {
-    // FAIL-CLOSED: cannot determine sandbox → block all writes
-    return denyDecision(
-      'Directory guard: AGENT_WORK_DIR not set — all writes blocked. AI Maestro must set this env var at agent launch.'
-    );
+    // AGENT_WORK_DIR is unset. This is the load-bearing distinction (#22):
+    //   - In an AI-Maestro AGENT context (a positive identity marker is present)
+    //     an unset sandbox root is a MISCONFIGURED agent → FAIL-CLOSED (deny):
+    //     we must never let an agent write with an undetermined sandbox.
+    //   - With NO agent marker at all, this is an ordinary (non-agent) Claude
+    //     Code session that this guard was never meant to sandbox. Denying it
+    //     bricked every interactive session machine-wide (#22) — so allow it.
+    // WHY a positive marker instead of bare AGENT_WORK_DIR-absence: absence is
+    // the NORMAL state of a human's own session; it is NOT evidence of an agent.
+    if (isAiMaestroAgentContext()) {
+      return denyDecision(
+        'Directory guard: AI-Maestro agent context detected (AID_AUTH set) but AGENT_WORK_DIR is unset — cannot determine the sandbox root, blocking writes (fail-closed). AI Maestro must set AGENT_WORK_DIR at agent launch.'
+      );
+    }
+    return allowDecision();
   }
 
   // ── Write/Edit/NotebookEdit: check file_path ──────────────
@@ -186,8 +200,26 @@ function resolveAgentWorkDir() {
   if (envDir && envDir.trim()) {
     return path.resolve(envDir.trim());
   }
-  // No trusted source → null → fail-closed
+  // No trusted source → null → caller decides (fail-closed only in an agent
+  // context; a non-agent session is not sandboxed — see evaluateAccess / #22).
   return null;
+}
+
+/**
+ * True when this process is an AI-Maestro AGENT rather than an ordinary human
+ * Claude Code session. AI-Maestro provisions every agent with an AID identity
+ * whose bearer rides in AID_AUTH (the marker the prrd-trdd / governance CLIs
+ * authenticate with); a real agent also gets AGENT_WORK_DIR. We treat AID_AUTH
+ * as the positive agent signal for the one case AGENT_WORK_DIR can't cover
+ * (#22): an agent whose sandbox root failed to get set. This decides only
+ * WHETHER to sandbox, never grants a privilege. An agent stripped of BOTH
+ * markers is indistinguishable from a non-agent and would not be sandboxed —
+ * acceptable because this guard is advisory (see SECURITY MODEL above); the
+ * hard boundary is the launcher's OS-level sandbox.
+ */
+function isAiMaestroAgentContext() {
+  const aid = process.env.AID_AUTH;
+  return Boolean(aid && aid.trim());
 }
 
 // ============================================================================

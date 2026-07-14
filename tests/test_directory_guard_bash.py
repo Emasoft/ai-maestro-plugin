@@ -182,11 +182,36 @@ def test_sanity_baseline_deny(case_id: str, command: str) -> None:
     assert decision == "deny", f"{case_id}: expected deny, got {decision}"
 
 
-def test_fail_closed_without_work_dir() -> None:
-    """With AGENT_WORK_DIR unset the guard denies all writes (fail-closed)."""
+def test_non_agent_session_without_work_dir_is_allowed() -> None:
+    """No AGENT_WORK_DIR and no agent marker → an ordinary (non-agent) Claude
+    session the guard must NOT sandbox (#22: denying it bricked every
+    interactive session machine-wide)."""
     event = {"tool_name": "Bash", "tool_input": {"command": f"echo x > {WORK}/f"}}
     env = os.environ.copy()
     env.pop("AGENT_WORK_DIR", None)
+    env.pop("AID_AUTH", None)  # ensure a truly marker-less (non-agent) context
+    proc = subprocess.run(
+        ["node", str(GUARD)],
+        input=json.dumps(event),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=30,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    hook = json.loads(proc.stdout)["hookSpecificOutput"]
+    assert hook["permissionDecision"] == "allow"
+
+
+def test_agent_context_without_work_dir_fails_closed() -> None:
+    """An AI-Maestro AGENT (AID_AUTH set) whose AGENT_WORK_DIR failed to get set
+    → FAIL-CLOSED (deny): a real agent must never write with an undetermined
+    sandbox root (#22)."""
+    event = {"tool_name": "Bash", "tool_input": {"command": f"echo x > {WORK}/f"}}
+    env = os.environ.copy()
+    env.pop("AGENT_WORK_DIR", None)
+    env["AID_AUTH"] = "test-agent-bearer-token"  # positive agent marker
     proc = subprocess.run(
         ["node", str(GUARD)],
         input=json.dumps(event),
