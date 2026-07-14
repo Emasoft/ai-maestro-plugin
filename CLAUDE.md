@@ -70,18 +70,23 @@ fi
 so one call yields the facts AND every WHY. Read the page WHOLE (facts + its
 linked lessons) before acting.
 
-### Two memory systems — transcripts vs curated notes (COMPLEMENTARY)
+### Wiki-memory recall — one curated corpus, two entry points
 
-This plugin still ships `memory-search` (conversation-transcript search) — a
-DIFFERENT system from the wiki-memory notes. They answer different questions:
+There is ONE memory system that matters here: the curated, symptom-indexed
+markdown **wiki-memory** corpus, queried by the `memgrep` engine. The old AI
+Maestro conversation-transcript RAG backend that `/memory-search` used to hit was
+**permanently removed in v2.9.0 (#27)** — no replacement CLI, none planned. Both
+skills below now read the SAME wiki corpus; they are entry points, not rival
+systems:
 
-| System | Surface | Corpus | Question it answers |
-|---|---|---|---|
-| Conversation memory | `/memory-search` (this plugin; AI Maestro server) | indexed conversation transcripts across sessions | "what did we SAY / discuss / decide in chat?" |
-| Wiki note memory | `/janitor-memory-{recall,write,update}` (janitor global) | curated, symptom-indexed wiki pages | "what did we LEARN that must not be re-derived?" |
+| Surface | Role | Question it answers |
+|---|---|---|
+| `/memory-search` (this plugin) | RECALL-side entry: builds the LOCAL/PROJECT/USER roots and runs `memgrep recall`/`find` (degrades to `grep`) | "what did we LEARN that must not be re-derived?" |
+| `/janitor-memory-{recall,write,update,bootstrap}` (janitor global) | the AUTHORING/maintenance layer on top of `memgrep` | write / update / stand up the same corpus |
 
-A debugging session often uses BOTH: recall the wiki page for the known gotcha,
-search the transcript for the discussion that produced it. The `memgrep` engine
-that powers wiki recall is hosted by THIS plugin (`scripts/memgrep/`, installer
-`scripts/install-memgrep.sh`, prebuilt release-asset binaries) and consumed
-across the ecosystem; recall degrades to plain `grep` when memgrep is absent.
+For "what did we SAY / decide in chat?" there is no transcript-search backend
+anymore — use Claude Code's own conversation history and project `CLAUDE.md`. The
+`memgrep` engine that powers recall is hosted by THIS plugin (`scripts/memgrep/`,
+installer `scripts/install-memgrep.sh`, prebuilt release-asset binaries) and
+consumed across the ecosystem; recall degrades to plain `grep` when memgrep is
+absent.
