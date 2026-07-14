@@ -147,3 +147,23 @@ def test_elicitation_dialog_handled(home: str) -> None:
     matcher was widened so CC actually delivers it)."""
     run_hook({"hook_event_name": "Notification", "notification_type": "elicitation_dialog"}, home)
     assert read_state(home)["status"] == "elicitation"
+
+
+def test_agent_needs_input_marks_waiting_and_preserves_count(home: str) -> None:
+    """CC 2.1.198: a background agent that blocks on input fires the
+    agent_needs_input notification — it must surface as waiting_for_input (so a
+    background AMP agent isn't shown idle) and carry the subagent counter."""
+    run_hook({"hook_event_name": "SubagentStart", "agent_id": "a1"}, home)
+    run_hook({"hook_event_name": "Notification", "notification_type": "agent_needs_input"}, home)
+    s = read_state(home)
+    assert s["status"] == "waiting_for_input"
+    assert s["notificationType"] == "agent_needs_input"
+    assert s["subagentCount"] == 1
+
+
+def test_agent_completed_returns_to_idle(home: str) -> None:
+    """CC 2.1.198: agent_completed flips a previously-blocked agent back to idle
+    (mirrors Stop), instead of leaving a stale waiting_for_input state."""
+    run_hook({"hook_event_name": "Notification", "notification_type": "agent_needs_input"}, home)
+    run_hook({"hook_event_name": "Notification", "notification_type": "agent_completed"}, home)
+    assert read_state(home)["status"] == "idle"

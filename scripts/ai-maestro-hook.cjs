@@ -12,6 +12,8 @@
  * - Notification (idle_prompt): When Claude is waiting for user input
  * - Notification (permission_prompt): When Claude is waiting for permission approval
  * - Notification (elicitation_dialog): When MCP server requests user input
+ * - Notification (agent_needs_input): CC 2.1.198 — a background agent blocks on input
+ * - Notification (agent_completed): CC 2.1.198 — a background agent finished its work
  * - PermissionRequest: When Claude asks for tool permission
  * - PreToolUse (AskUserQuestion): When Claude blocks on a multiple-choice question
  * - PostToolUse (AskUserQuestion): When the question's answer returns
@@ -403,6 +405,39 @@ async function main() {
                 writeState(cwd, {
                     status: 'elicitation',
                     message: input.message || 'MCP server requesting input…',
+                    notificationType,
+                    sessionId,
+                    transcriptPath
+                });
+            } else if (notificationType === 'agent_needs_input') {
+                // CC 2.1.198: background agents (subagents now run in the
+                // background by DEFAULT) fire this when they block on input.
+                // Same blocked state as idle_prompt so a background AMP agent
+                // does NOT look idle to the dashboard — the exact gap #17/#20/#21
+                // closed for foreground prompts, now closed for background agents.
+                writeState(cwd, {
+                    status: 'waiting_for_input',
+                    message: input.message || 'Background agent waiting for input…',
+                    notificationType,
+                    sessionId,
+                    transcriptPath
+                });
+
+                // A blocked agent is the right moment to drain the AMP inbox.
+                const messagePrompt = await checkUnreadMessages(cwd);
+                if (messagePrompt) {
+                    debugLog({ event: 'sending_message_notification', cwd, prompt: messagePrompt, trigger: 'agent_needs_input' });
+                    await sendMessageNotification(cwd, messagePrompt);
+                }
+            } else if (notificationType === 'agent_completed') {
+                // CC 2.1.198: a background agent finished its work. Mirror Stop's
+                // idle branch (preserve any still-running subagent count) so the
+                // agent flips to idle/subagents_running, not a stale blocked state.
+                const currentSubagents = getSubagentCount(cwd);
+                writeState(cwd, {
+                    status: currentSubagents > 0 ? 'subagents_running' : 'idle',
+                    message: null,
+                    subagentCount: currentSubagents,
                     notificationType,
                     sessionId,
                     transcriptPath
