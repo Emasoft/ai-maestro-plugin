@@ -120,14 +120,54 @@ function writeState(cwd, state) {
     const cwdHash = hashCwd(cwd);
     const stateFile = path.join(stateDir, `${cwdHash}.json`);
 
+    // Preserve counter-class fields the incoming event does NOT carry.
+    //
+    // WHY: writeState REPLACES the whole state file, but some fields are
+    // CUMULATIVE across events, not derivable from a single event. The subagent
+    // counter is the load-bearing one. Under Claude Code >=2.1.198 a background
+    // subagent runs concurrently with the parent turn, so the event stream
+    // interleaves like:
+    //     SubagentStart(count=1) -> Notification(idle_prompt) -> SubagentStop
+    // The idle_prompt / permission_prompt handlers call writeState WITHOUT a
+    // subagentCount, so a naive replace drops it to undefined; the next
+    // SubagentStop then reads getSubagentCount()===0 and floors the live
+    // counter at 0 PERMANENTLY (every later Start/Stop cancels from a wrong
+    // base). The server's stop/restart safe-state gate trusts that counter, so
+    // a floored value lets a stop land while subagents are still running.
+    // Carry counter-class fields forward when the event omits them so the count
+    // survives interleaved non-subagent events. Fields the event DOES carry
+    // (e.g. SessionStart's deliberate subagentCount:0 reset) are left untouched.
+    const COUNTER_FIELDS = ['subagentCount'];
+    const preserved = {};
+    try {
+        const prev = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+        for (const key of COUNTER_FIELDS) {
+            if (!Object.prototype.hasOwnProperty.call(state, key)
+                && Object.prototype.hasOwnProperty.call(prev, key)) {
+                preserved[key] = prev[key];
+            }
+        }
+    } catch (e) {
+        // No prior state (first write) or an unreadable file — nothing to carry.
+    }
+
     const fullState = {
+        ...preserved,
         ...state,
         cwd,
         cwdHash,
         updatedAt: new Date().toISOString()
     };
 
-    fs.writeFileSync(stateFile, JSON.stringify(fullState, null, 2), { mode: 0o600 });
+    // Atomic write: serialize to a unique temp file in the SAME directory, then
+    // rename() over the target. rename(2) is atomic within a filesystem, so a
+    // concurrent hook process — or getSubagentCount() reading mid-write — never
+    // observes a torn/half-written state file (a partial read would parse-fail
+    // and silently reset the counter to 0, re-introducing the corruption above).
+    const tmpFile = path.join(stateDir, `.${cwdHash}.${process.pid}.${Date.now()}.tmp`);
+    fs.writeFileSync(tmpFile, JSON.stringify(fullState, null, 2), { mode: 0o600 });
+    try { fs.chmodSync(tmpFile, 0o600); } catch (e) {}
+    fs.renameSync(tmpFile, stateFile);
     try { fs.chmodSync(stateFile, 0o600); } catch (e) {}
 
     // Also write to a "by-cwd" index for easy lookup
@@ -378,20 +418,6 @@ async function main() {
                     sessionId,
                     transcriptPath
                 });
-            }
-            break;
-
-        case 'Stop':
-            // Claude finished responding — clear the waiting state but preserve subagent count
-            {
-                const currentSubagents = getSubagentCount(cwd);
-                writeState(cwd, {
-                    status: currentSubagents > 0 ? 'subagents_running' : 'idle',
-                    message: null,
-                    subagentCount: currentSubagents,
-                    sessionId,
-                    transcriptPath
-                });
             } else if (notificationType === 'agent_needs_input') {
                 // Claude Code signalled the agent needs input to proceed — a
                 // blocking, needs-input state parallel to elicitation_dialog.
@@ -405,6 +431,20 @@ async function main() {
                     status: 'needs_input',
                     message: input.message || 'Agent needs input to proceed…',
                     notificationType,
+                    sessionId,
+                    transcriptPath
+                });
+            }
+            break;
+
+        case 'Stop':
+            // Claude finished responding — clear the waiting state but preserve subagent count
+            {
+                const currentSubagents = getSubagentCount(cwd);
+                writeState(cwd, {
+                    status: currentSubagents > 0 ? 'subagents_running' : 'idle',
+                    message: null,
+                    subagentCount: currentSubagents,
                     sessionId,
                     transcriptPath
                 });
