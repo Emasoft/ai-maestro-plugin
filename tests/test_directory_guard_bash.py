@@ -182,11 +182,17 @@ def test_sanity_baseline_deny(case_id: str, command: str) -> None:
     assert decision == "deny", f"{case_id}: expected deny, got {decision}"
 
 
-def test_fail_closed_without_work_dir() -> None:
-    """With AGENT_WORK_DIR unset the guard denies all writes (fail-closed)."""
+def _decision_no_work_dir(extra_env: dict[str, str]) -> str:
+    """Run the guard with AGENT_WORK_DIR unset; return the permissionDecision.
+
+    Both AI-Maestro agent markers are cleared first so `extra_env` fully
+    controls whether an agent context is simulated.
+    """
     event = {"tool_name": "Bash", "tool_input": {"command": f"echo x > {WORK}/f"}}
     env = os.environ.copy()
-    env.pop("AGENT_WORK_DIR", None)
+    for key in ("AGENT_WORK_DIR", "AID_AUTH", "AIMAESTRO_AGENT"):
+        env.pop(key, None)
+    env.update(extra_env)
     proc = subprocess.run(
         ["node", str(GUARD)],
         input=json.dumps(event),
@@ -197,8 +203,20 @@ def test_fail_closed_without_work_dir() -> None:
         check=False,
     )
     assert proc.returncode == 0, proc.stderr
-    hook = json.loads(proc.stdout)["hookSpecificOutput"]
-    assert hook["permissionDecision"] == "deny"
+    return json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"]
+
+
+def test_no_work_dir_no_agent_marker_allows() -> None:
+    """No AGENT_WORK_DIR and no agent marker → a plain interactive session, not
+    a sandboxed agent, so the guard must ALLOW rather than DoS the user (#22)."""
+    assert _decision_no_work_dir({}) == "allow"
+
+
+def test_no_work_dir_with_agent_marker_fails_closed() -> None:
+    """No AGENT_WORK_DIR but a positive agent marker (AID_AUTH / AIMAESTRO_AGENT)
+    means a mis-launched agent → the guard must stay fail-closed and DENY (#22)."""
+    assert _decision_no_work_dir({"AID_AUTH": "proof-token"}) == "deny"
+    assert _decision_no_work_dir({"AIMAESTRO_AGENT": "1"}) == "deny"
 
 
 def test_single_invocation_is_fast_no_redos() -> None:

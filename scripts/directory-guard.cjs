@@ -114,9 +114,39 @@ function evaluateAccess(event) {
   // ── Resolve agent work directory (ONLY from env var) ───────
   const agentWorkDir = resolveAgentWorkDir();
   if (!agentWorkDir) {
-    // FAIL-CLOSED: cannot determine sandbox → block all writes
+    // AGENT_WORK_DIR is unset. Two very different situations reach here and
+    // MUST NOT be treated the same:
+    //
+    //   (a) A plain interactive Claude Code session that AI Maestro never
+    //       launched. This guard is registered at PLUGIN (user) scope, so it
+    //       loads in EVERY session on the machine — including ones with no
+    //       agent sandbox at all. Denying every Bash/Write/Edit here bricks the
+    //       user's normal sessions (a self-inflicted DoS): there is no sandbox
+    //       to enforce, so there is nothing to "fail closed" ABOUT.
+    //
+    //   (b) A genuine AI Maestro agent whose launcher FAILED to set
+    //       AGENT_WORK_DIR. THAT is the launcher bug this guard exists to
+    //       catch, so it must stay fail-closed (DENY).
+    //
+    // We tell the two apart by a POSITIVE agent marker in the environment
+    // (see isAiMaestroAgentContext). No marker ⇒ no agent context ⇒ ALLOW.
+    // Marker present but workdir missing ⇒ mis-launched agent ⇒ DENY. The
+    // ALLOW path therefore fires ONLY when there is genuinely no agent context.
+    if (!isAiMaestroAgentContext()) {
+      // Advise on STDERR only — stdout is the hook's JSON decision channel.
+      process.stderr.write(
+        'Directory guard: no AI Maestro agent context ' +
+        '(AGENT_WORK_DIR/AID_AUTH/AIMAESTRO_AGENT all unset) — ' +
+        'not a sandboxed session, allowing.\n'
+      );
+      return allowDecision();
+    }
+    // FAIL-CLOSED: an agent marker is present but the sandbox root is missing —
+    // the launcher mis-configured this agent. Block all writes.
     return denyDecision(
-      'Directory guard: AGENT_WORK_DIR not set — all writes blocked. AI Maestro must set this env var at agent launch.'
+      'Directory guard: AGENT_WORK_DIR not set but an AI Maestro agent marker ' +
+      'is present — the launcher failed to set the sandbox. All writes blocked ' +
+      '(fail-closed).'
     );
   }
 
@@ -188,6 +218,30 @@ function resolveAgentWorkDir() {
   }
   // No trusted source → null → fail-closed
   return null;
+}
+
+/**
+ * True when the environment carries a POSITIVE AI Maestro agent marker.
+ *
+ * This guard is installed at plugin (user) scope, so it also loads in ordinary
+ * interactive sessions AI Maestro never launched. When AGENT_WORK_DIR is unset
+ * we must fail-closed ONLY for genuine agent sessions; a marker set by the AI
+ * Maestro launcher (never by a human's shell) is how we recognise one:
+ *   - AID_AUTH        — the agent's Ed25519 proof-of-possession token
+ *   - AIMAESTRO_AGENT — the agent-context flag
+ *
+ * NOTE: env vars are spoofable, but that cannot LOOSEN this guard — SETTING a
+ * marker only ever pushes a workdir-less session onto the DENY (more
+ * restrictive) branch, never onto ALLOW. So trusting a marker's PRESENCE to
+ * TIGHTEN enforcement is safe. Real containment is OS-level sandboxing, per the
+ * SECURITY MODEL note at the top of this file.
+ */
+function isAiMaestroAgentContext() {
+  const markers = ['AID_AUTH', 'AIMAESTRO_AGENT'];
+  return markers.some((k) => {
+    const v = process.env[k];
+    return typeof v === 'string' && v.trim() !== '';
+  });
 }
 
 // ============================================================================
