@@ -8,6 +8,7 @@
   - [List Agents](#1-list-agents)
   - [Create Agent](#2-create-agent)
   - [Show Agent](#3-show-agent)
+  - [Get Consolidated Config](#3a-get-consolidated-config)
   - [Update Agent](#4-update-agent)
   - [Rename Agent](#5-rename-agent)
   - [Delete Agent](#6-delete-agent)
@@ -56,6 +57,7 @@
 |-------------|----------------|
 | `aimaestro-agent.sh list` | `GET /api/agents` |
 | `aimaestro-agent.sh show <agent>` | `GET /api/agents/{id}` |
+| `aimaestro-agent.sh config <agent>` | `GET /api/agents/{id}/config` (consolidated: launch args, title, role-plugin, teams, GitHub repo, Docker, tasks, AID) |
 | `aimaestro-agent.sh create <name> --dir <path>` | `POST /api/agents` |
 | `aimaestro-agent.sh update <agent> [opts]` | `PATCH /api/agents/{id}` |
 | `aimaestro-agent.sh delete <agent> --confirm` | `DELETE /api/agents/{id}` |
@@ -122,6 +124,36 @@ aimaestro-agent.sh show my-api
 JSON output: `--format json`. Shows: ID, persona name, title, role, working directory, model, tags, task, session status, plugins, skills.
 
 **Maps to:** `GET /api/agents/{id}` (handled by the CLI — never call it directly, core#11).
+
+### 3a. Get Consolidated Config
+
+```bash
+aimaestro-agent.sh config my-api
+```
+
+**One call, the whole setup.** Returns a single consolidated object so the
+caller never has to stitch together `show` + team lookups + a plugin/skill
+listing + an AID query by hand:
+
+| Field (shape) | What it is |
+|---|---|
+| launch string / CLI args | how the agent's `claude` process is invoked (program, model, extra args) |
+| governance title | MANAGER / ORCHESTRATOR / ARCHITECT / INTEGRATOR / CHIEF-OF-STAFF / MEMBER / AUTONOMOUS / MAINTAINER |
+| role-plugin | the role plugin conferring that title's behavior |
+| teams | every team the agent belongs to |
+| GitHub repo | the repo associated with the agent's working directory, if any |
+| Docker | whether this agent runs inside a container |
+| pending tasks | outstanding kanban/TRDD work assigned to it |
+| AID public key | the agent's Ed25519 identity public key |
+
+**Read-only — never mutates anything.** Use `show` when you just need the
+lighter agent-record fields (id, name, title, working directory, session
+status); use `config` when you need the fuller cross-cutting picture (e.g.
+before deciding whether a config CHANGE — via `update`/`plugin`/`skill` — is
+even warranted, or before handing an agent's setup to another tool/report).
+
+**Maps to:** `GET /api/agents/{id}/config` (handled by the CLI — never call
+it directly, core#11).
 
 ### 4. Update Agent
 

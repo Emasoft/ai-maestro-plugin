@@ -1,18 +1,18 @@
 ---
 name: team-kanban
 user-invocable: false
-description: "Manage team kanban boards and tasks. Use when creating, moving, or filtering tasks. Trigger with /team-kanban. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(amp-kanban-list.sh:*), Bash(amp-kanban-create-task.sh:*), Bash(amp-kanban-move.sh:*), Bash(amp-kanban-archive.sh:*), Bash(aimaestro-teams.sh:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
+description: "Manage team kanban boards and tasks. Use when creating, moving, filtering, getting, or editing tasks. Trigger with /team-kanban. Loaded by ai-maestro-plugin"
+allowed-tools: "Bash(amp-kanban-list.sh:*), Bash(amp-kanban-get.sh:*), Bash(amp-kanban-create-task.sh:*), Bash(amp-kanban-move.sh:*), Bash(amp-kanban-edit.sh:*), Bash(amp-kanban-archive.sh:*), Bash(aimaestro-teams.sh:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): task/board examples call the frozen `amp-kanban-*` CLIs (list/create-task/move/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. Residuals with no frozen verb yet (non-status task edits — priority/blockedBy; team `stats`/metrics) are marked DECOUPLE-BLOCKED inline. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE — keep. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): task/board examples call the frozen `amp-kanban-*` CLIs (list/get/create-task/move/edit/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. `amp-kanban-get.sh` and `amp-kanban-edit.sh` (issue #23) close most of the former non-status-field residuals — `edit` is the general verb, every field the task PUT accepts. The one residual with no frozen verb yet (team `stats`/bulk metrics) is marked DECOUPLE-BLOCKED inline. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE — keep. -->
 
 ## Overview
 
-Manage team kanban boards and tasks via the frozen `amp-kanban-*` CLIs + `aimaestro-teams.sh kanban-config`. Create, filter, move, archive tasks; configure columns; sync with GitHub Projects v2.
+Manage team kanban boards and tasks via the frozen `amp-kanban-*` CLIs + `aimaestro-teams.sh kanban-config`. Create, filter, get, move, edit, archive tasks; configure columns; sync with GitHub Projects v2.
 
 **Single board — anti-split-brain (team-kanban vs the `ama-*` design board).** Two
 kanban surfaces exist and are NOT interchangeable — each is the SINGLE writer of its own
@@ -40,11 +40,13 @@ pipeline state; this server board wins for live assignment/presence.
 1. **Identify team**: `aimaestro-teams.sh list | jq .`
 2. **Create task**: `amp-kanban-create-task.sh "<title>" [--status S] [--priority N] [--labels "a,b"] [--assignee <id>]`
 3. **List/filter**: `amp-kanban-list.sh [--status X] [--assignee Y] [--label Z]`
-4. **Move task**: `amp-kanban-move.sh <task-id> <status>`
-5. **Archive/delete task**: `amp-kanban-archive.sh <task-id>`
-6. **Configure columns**: `aimaestro-teams.sh kanban-config <team-id> --get | --set <columns-json>`
-7. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>` (out of #11 scope — keep)
-   <!-- DECOUPLE-BLOCKED ai-maestro#36: non-status task edits (priority / blockedBy dependencies, was `PUT /api/teams/{id}/tasks/{taskId}` with `{priority}`/`{blockedBy}`) and team metrics (was `GET /api/teams/stats`) have no frozen-CLI verb yet — pending a follow-up. `amp-kanban-move` handles status moves; `amp-kanban-create-task` sets initial priority/labels. Do NOT call `/api/*` directly (core#11). -->
+4. **Get one task**: `amp-kanban-get.sh <task-id>` — full task object, not just the fields `list` filters return.
+5. **Move task (status only)**: `amp-kanban-move.sh <task-id> <status>`
+6. **Edit task (any field)**: `amp-kanban-edit.sh <task-id> --set priority=1 --set assigneeAgentId=<uuid>` or `--set-json blockedBy='["<id>"]'` — the general verb; every field the task PUT accepts, repeatable per call.
+7. **Archive/delete task**: `amp-kanban-archive.sh <task-id>`
+8. **Configure columns**: `aimaestro-teams.sh kanban-config <team-id> --get | --set <columns-json>`
+9. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>` (out of #11 scope — keep)
+   <!-- DECOUPLE-BLOCKED ai-maestro#36: bulk team metrics across all teams (was `GET /api/teams/stats`) has no frozen-CLI verb yet — pending a follow-up. For one team's counts, list with `amp-kanban-list.sh` and aggregate client-side with `jq` (see the Velocity and Distribution reference). Do NOT call `/api/*` directly (core#11). -->
 
    When the sync posts to GitHub (issue, PR comment, project-item note), per PRRD G1.1 begin the body with a one-line self-identification of the authoring agent, since all agents share the one owner identity.
 
@@ -53,8 +55,10 @@ pipeline state; this server board wins for live assignment/presence.
 | Operation | CLI command |
 |-----------|-------------|
 | List / filter tasks | `amp-kanban-list.sh [--status\|--assignee\|--label\|--task-type]` |
+| Get one task | `amp-kanban-get.sh <task-id>` |
 | Create task | `amp-kanban-create-task.sh "<title>" [--status\|--priority\|--labels\|--assignee]` |
 | Move task (status) | `amp-kanban-move.sh <task-id> <status>` |
+| Edit task (any field) | `amp-kanban-edit.sh <task-id> (--set k=v \| --set-json k=<json>)...` |
 | Archive / delete task | `amp-kanban-archive.sh <task-id>` |
 | Kanban config | `aimaestro-teams.sh kanban-config <team-id> --get\|--set <json>` |
 
@@ -118,8 +122,10 @@ Copy this checklist and track your progress:
 - [API Reference](references/api-reference.md)
   - Operations
     - List tasks
+    - Get task
     - Create task
-    - Update task (status move + fields)
+    - Move task (status)
+    - Edit task (any field)
     - Archive / delete task
     - Get kanban config
     - Set kanban config

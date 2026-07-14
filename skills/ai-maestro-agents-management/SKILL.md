@@ -1,16 +1,16 @@
 ---
 name: ai-maestro-agents-management
 user-invocable: false
-description: "Manage AI agent lifecycle via CLI. Use when creating, listing, deleting, or configuring agents. Trigger with /ai-maestro-agents-management. Loaded by ai-maestro-plugin"
+description: "Manage AI agent lifecycle via CLI. Use when creating, listing, deleting, configuring, or looking up an agent's consolidated config (launch args, title, role-plugin, teams, GitHub repo, Docker, pending tasks, AID public key). Trigger with /ai-maestro-agents-management. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(tmux:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "3.2.0"
+  version: "3.3.0"
 ---
 
 ## Overview
 
-Manage AI agents through the frozen `aimaestro-agent.sh` CLI (which resolves the API base + your agent identity internally — never call `/api/*` directly, R23). Covers the full agent lifecycle: creation, configuration, hibernation, plugin/skill management, and import/export. For inter-agent messaging, use the `agent-messaging` skill instead.
+Manage AI agents through the frozen `aimaestro-agent.sh` CLI (which resolves the API base + your agent identity internally — never call `/api/*` directly, R23). Covers the full agent lifecycle: creation, configuration, hibernation, plugin/skill management, import/export, and reading an agent's consolidated config (`config <agent>`). For inter-agent messaging, use the `agent-messaging` skill instead.
 
 **Authorization & identity (R26–R28, security-first).** An agent's identity — **TITLE / ROLE / NAME / AID** — is **conferred** by the USER / MANAGER / own-team COS and is **immutable to the agent itself** (R26): creating or configuring an agent CONFERS identity; an agent never self-assigns or self-changes its own title/role/name/AID (NAME/AID change only on compromise, via the proper authority). Agents **self-install ONLY through this core plugin's skills** — this skill IS that install surface — after **MANAGER** (no team) / **own-COS** (in team) approval, and the **server CPV-scans every extension before install** (R27); never install via a raw client CLI or bypass the scan. Every operation authenticates by the caller's **AID**: the CLI sends it, the **server** runs the **3-check** (AID → derived TITLE → portfolio approval/mandate token) and never trusts a client-supplied id/title/scope, and the skill **never asserts its own title** (R28). Full text: the [`team-governance`](../team-governance/references/GOVERNANCE-RULES.md) bundled rules, R26–R28.
 
@@ -72,11 +72,12 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
 
 ## Instructions
 
-1. **Identify the operation** the user needs (create, list, show, update, delete, rename, hibernate, wake, restart, export, import, plugin/skill management).
+1. **Identify the operation** the user needs (create, list, show, config, update, delete, rename, hibernate, wake, restart, export, import, plugin/skill management).
 2. **Run the CLI command** using `aimaestro-agent.sh <command> <agent> [options]`. Key commands:
    - `list [--status online|offline|hibernated]` — List agents
    - `create <name> --dir <path> [--task "..."] [--tags "..."]` — Create agent
    - `show <agent>` — Show agent details
+   - `config <agent>` — **One call, the consolidated config**: launch string/CLI args, governance title, role-plugin, teams, associated GitHub repo, whether it runs in Docker, pending tasks, and the AID public key
    - `update <agent> [--task|--tags|--model|--args]` — Update properties
    - `delete <agent> --confirm` — Delete agent
    - `hibernate <agent>` / `wake <agent>` — Suspend/restore
@@ -86,7 +87,8 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
    - `plugin marketplace list|add|remove|update <agent> <source>`
    - `skill list|install|uninstall|add|remove <agent> <skill>`
 3. **Verify the result** by running `aimaestro-agent.sh show <agent>` or `list`.
-4. **CRITICAL:** Never hibernate+wake for config changes. Use graceful restart (send `/exit`, re-launch) for plugin changes. Use `update` for property changes (no restart needed).
+4. **CRITICAL:** Never hibernate+wake for config changes. Use graceful restart (send `/exit`, re-launch) for plugin changes. Use `update` for property changes (no restart needed). `config` is **read-only** — it never mutates anything; it's the one-call answer to "what is this agent's whole setup," not a setter.
+5. **CRITICAL — self-configuration is always refused.** `config <agent>` is a read; it's fine on self. But **no agent may reconfigure itself** — role plugin, extensions, MCP, hooks, sub-agents, title, or team changes are refused on self for every title, MANAGER included (`TRDD-D3RP7KQZ`). Configuration changes on **another** agent go through this skill under the identity-immutability rules below (R26–R28) — never through `ama-session`'s terminal-drive verbs, which only reach an agent's own surface.
 
 ## Output
 
@@ -120,6 +122,14 @@ Expected: Table of all online agents with status and working directory.
 
 Expected: Plugin installed, agent gracefully restarted.
 
+```bash
+/ai-maestro-agents-management config my-api
+```
+
+Expected: one JSON object — launch string/CLI args, governance title,
+role-plugin, teams, associated GitHub repo, Docker yes/no, pending tasks,
+and the AID public key. Read-only; no restart, no side effects.
+
 ## Checklist
 
 Copy this checklist and track your progress:
@@ -139,6 +149,7 @@ Copy this checklist and track your progress:
   - List Agents
   - Create Agent
   - Show Agent
+  - Get Consolidated Config
   - Update Agent
   - Rename Agent
   - Delete Agent
@@ -188,3 +199,6 @@ Copy this checklist and track your progress:
 
 - `Skill(skill: "team-governance")` — assign agents to teams and govern titles.
 - `Skill(skill: "agent-identity")` — the AID each managed agent authenticates by.
+- `Skill(skill: "ama-session")` — an agent driving its **own** terminal/state
+  (a different, narrower surface than this skill's lifecycle/configuration
+  authority over agents in general).

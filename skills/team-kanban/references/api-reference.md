@@ -1,13 +1,15 @@
 # Kanban API Reference
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): operations use the frozen `amp-kanban-*` CLIs (list/create-task/move/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. The field/response tables document what each CLI accepts and returns. Residuals with no frozen verb yet (re-assign/unassign an existing task, set/clear blockedBy dependencies, link prUrl / other non-status field edits, team `stats`) are marked DECOUPLE-BLOCKED inline, re-targeted to an ai-maestro follow-up. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): operations use the frozen `amp-kanban-*` CLIs (list/get/create-task/move/edit/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. The field/response tables document what each CLI accepts and returns. `amp-kanban-get.sh` (issue #23) is the single-task read; `amp-kanban-edit.sh` (issue #23) is the general field editor — it closes the former non-status-field residuals (re-assign/unassign, blockedBy, prUrl, extended fields). The one residual with no frozen verb yet (bulk team `stats`) is marked DECOUPLE-BLOCKED inline, re-targeted to an ai-maestro follow-up. -->
 
 ## Table of Contents
 
 - [Operations](#operations)
   - [List tasks](#list-tasks)
+  - [Get task](#get-task)
   - [Create task](#create-task)
-  - [Update task (status move + fields)](#update-task-status-move--fields)
+  - [Move task (status)](#move-task-status)
+  - [Edit task (any field)](#edit-task-any-field)
   - [Archive / delete task](#archive--delete-task)
   - [Get kanban config](#get-kanban-config)
   - [Set kanban config](#set-kanban-config)
@@ -54,6 +56,23 @@ Each task includes derived fields:
 
 ---
 
+### Get task
+
+CLI: `amp-kanban-get.sh <task-id> [--team <id>]`
+
+Reads one task by id — the full object, including derived fields
+(`blocks`, `isBlocked`, `assigneeName`) and every extended field (see
+[Extended Task Fields](#extended-task-fields)). Use this instead of
+filtering `amp-kanban-list.sh` down to one id when you already know which
+task you want.
+
+**Response:** the task object (same shape as one element of
+`amp-kanban-list.sh`'s `tasks` array).
+
+**Error:** 404 `Task not found` if the id doesn't resolve within the team.
+
+---
+
 ### Create task
 
 CLI: `amp-kanban-create-task.sh "<title>" [--description D] [--status S] [--priority N] [--assignee A] [--labels "a,b,c"] [--task-type T] [--team <id>]`
@@ -74,26 +93,41 @@ Creates a new task.
 
 Additional stored fields (`blockedBy`, `externalRef`, `externalProjectRef`,
 `acceptanceCriteria`, `handoffDoc`, `prUrl`) are set at create time by the server
-default or left empty; editing them on an existing task is a residual (see below).
+default or left empty; edit them on an existing task with
+[`amp-kanban-edit.sh`](#edit-task-any-field).
 
 **Response:** Created task object with generated `id`, `createdAt`, `updatedAt`.
 
 ---
 
-### Update task (status move + fields)
-
-Update an existing task. The **status move** is covered by the frozen CLI:
+### Move task (status)
 
 CLI: `amp-kanban-move.sh <task-id> <status> [--team <id>]`
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: editing NON-status fields on an existing task — re-assign/unassign (`assigneeAgentId`), set/clear `blockedBy` dependencies, `priority`, `prUrl`, `reviewResult`, `previousStatus` (was `PUT /api/teams/{id}/tasks/{taskId}` with those fields) — has no frozen-CLI verb yet. `amp-kanban-move` only changes status; `amp-kanban-create-task` sets initial priority/labels/assignee. Pending a follow-up verb. Do NOT call `/api/*` directly (core#11). -->
+The narrow verb — status only. `status` must match a column ID in the
+team's kanban config.
 
-**Validation** (enforced server-side):
+**Response:** Updated task object.
 
-- `status` must match a column ID in the team's kanban config
+---
+
+### Edit task (any field)
+
+CLI: `amp-kanban-edit.sh <task-id> (--set k=v | --set-json k=<json>)... [--team <id>]`
+
+The **general** verb (issue #23) — every field the task PUT accepts,
+repeatable per call. `--set` takes a scalar (`priority=1`,
+`assigneeAgentId=<uuid>`, `prUrl=https://...`); `--set-json` takes a JSON
+value for array/object fields (`--set-json blockedBy='["<id>"]'`). This is
+what closes the former non-status-field residuals: re-assign/unassign,
+`blockedBy` dependencies, `prUrl`, `reviewResult`, and the other
+[Extended Task Fields](#extended-task-fields).
+
+**Validation** (enforced server-side, same as before):
+
 - `blockedBy` must not create circular dependencies
 - `priority` must be a finite number
-- `assigneeAgentId` can be `null` to explicitly unassign
+- `assigneeAgentId` set to `null` via `--set assigneeAgentId=null` explicitly unassigns
 
 **Response:** Updated task object.
 
@@ -267,13 +301,18 @@ Status must match a column ID in the team's kanban config. Default columns: `bac
 
 ### Assign/Unassign Task
 
-Set the assignee **at create time** with `--assignee` (covered):
+Set the assignee **at create time** with `--assignee`:
 
 ```bash
 amp-kanban-create-task.sh "Review PR #42" --assignee <agent-uuid> --status review | jq .
 ```
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: re-assigning or unassigning an EXISTING task (was `PUT /api/teams/{id}/tasks/{taskId}` with `{assigneeAgentId}` / `null`) has no frozen-CLI verb yet — pending a follow-up. Set the assignee at create time via `--assignee`, or wait for the verb. Do NOT call `/api/*` directly (core#11). -->
+Re-assign or unassign an **existing** task with `amp-kanban-edit.sh`:
+
+```bash
+amp-kanban-edit.sh <task-id> --set assigneeAgentId=<agent-uuid> | jq .
+amp-kanban-edit.sh <task-id> --set assigneeAgentId=null | jq .   # unassign
+```
 
 ### Delete Task
 
@@ -289,7 +328,12 @@ Tasks can block other tasks via `blockedBy` (array of task IDs).
 
 ### Set / Clear Dependencies
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: setting or clearing `blockedBy` dependencies on a task (was `PUT /api/teams/{id}/tasks/{taskId}` with `{blockedBy: [...]}` / `[]`) has no frozen-CLI verb yet — pending a follow-up. Circular dependencies are rejected server-side. Do NOT call `/api/*` directly (core#11). -->
+```bash
+amp-kanban-edit.sh <task-id> --set-json blockedBy='["<other-task-id>"]' | jq .
+amp-kanban-edit.sh <task-id> --set-json blockedBy='[]' | jq .   # clear
+```
+
+Circular dependencies are rejected server-side.
 
 ### Check What's Blocked
 
@@ -379,9 +423,18 @@ Tasks support fields for workflow tracking beyond basic status:
 
 ### Link PR to Task
 
-The **status move** part is covered (`amp-kanban-move.sh <task-id> review`).
+The **status move**:
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: setting `prUrl` (and the other extended fields above) on an existing task (was `PUT /api/teams/{id}/tasks/{taskId}` with `{prUrl, ...}`) has no frozen-CLI verb yet — pending a follow-up. Move the status with `amp-kanban-move`; the prUrl/extended-field edit waits for the verb. Do NOT call `/api/*` directly (core#11). -->
+```bash
+amp-kanban-move.sh <task-id> review | jq .
+```
+
+The **field edit** — `prUrl` (and the other extended fields above) on an
+existing task:
+
+```bash
+amp-kanban-edit.sh <task-id> --set prUrl="https://github.com/org/repo/pull/42" | jq .
+```
 
 ---
 
