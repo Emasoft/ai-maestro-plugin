@@ -1,113 +1,165 @@
 ---
 name: memory-search
 user-invocable: false
-description: "Search conversation history and semantic memory for past discussions and decisions. Use when recalling prior context or decisions. Trigger with /memory-search. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(memory-*:*), Bash(curl:*), Bash(jq:*), Bash(docs-*:*), Bash(graph-*:*), Read, Grep, Glob"
+description: "Recall prior knowledge from the markdown wiki-memory corpus via memgrep and the janitor's global recall skills. Use before acting on a recurring problem, a design decision, or a repeated alert. Trigger with /memory-search. Loaded by ai-maestro-plugin"
+allowed-tools: "Bash(memgrep:*), Bash(grep:*), Bash(git:*), Bash(find:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "2.0.0"
+  version: "3.0.0"
 ---
-
-<!-- DECOUPLE-BLOCKED ai-maestro#36 (re-targeted): the subconscious status-check / manual re-index operations have NO frozen-CLI verb — ai-maestro#36 deployed without one. The live direct HTTP calls to `/api/agents/{id}/subconscious/...` are removed (no plugin calls `/api/*` directly, core#11); pending a follow-up verb. `memory-search.sh` itself already uses the CLI, and subconscious indexing runs automatically. -->
 
 ## Overview
 
-Searches AI Maestro's indexed conversation history using `memory-search.sh`. Supports semantic, keyword, term, and symbol search modes. Conversations are automatically indexed by the subconscious process, creating a searchable memory across all sessions.
+Recalls prior knowledge before acting on a recurring problem, a design
+decision, or a repeated alert. **The AI Maestro conversation-transcript RAG
+backend this skill used to query (a shell wrapper that hit the subconscious
+index) has been permanently removed — there is no replacement CLI for it and
+none is planned.** This skill is reimplemented around the two memory systems
+that actually exist and are actively maintained:
 
-**This is NOT the curated-note memory.** This skill searches conversation *transcripts* ("what did we SAY"); the COMPLEMENTARY janitor global skills `/janitor-memory-recall` + `/janitor-memory-write` + `/janitor-memory-update` work on curated, symptom-indexed wiki-memory *pages* ("what did we LEARN"). A debugging session often uses both: recall the wiki page for the known gotcha, search the transcript for the discussion that produced it. See `~/.claude/rules/markdown-memory-recall.md`.
+1. **`memgrep`** (hosted in this repo at `scripts/memgrep/`) — a
+   markdown-AST-aware grep over the curated wiki-memory corpus: symptom-indexed
+   notes with `[^N]` lessons-learned, a persistent SQLite query index, and a
+   keyword/boolean query DSL.
+2. **The janitor's global wiki-memory skills** —
+   `/janitor-memory-recall`, `/janitor-memory-write`, `/janitor-memory-update`
+   (and `/janitor-memory-bootstrap` to stand up a project's wikimem the first
+   time) — the authoring/maintenance layer built on top of `memgrep`.
+3. **Claude Code's own built-in memory** (project `CLAUDE.md`, the
+   auto-loaded per-project `MEMORY.md`) — always available, needs no extra
+   tooling.
+
+This is **curated-note recall**, not conversation-transcript search — index
+by the **SYMPTOM** (the user's words / the error text), never the answer's
+jargon. Full protocol: `~/.claude/rules/markdown-memory-recall.md`.
 
 ## Prerequisites
 
-- AI Maestro running on `localhost:23000`
-- `memory-search.sh` installed at `~/.local/bin/` (via `install-memory-tools.sh` from the AI Maestro repo)
-- Subconscious process running and indexing conversations
-- Optional: `docs-search.sh` and `graph-describe.sh` for combined search
+- `memgrep` on `PATH` — install with `scripts/install-memgrep.sh` (downloads a
+  prebuilt binary to `~/.local/bin/memgrep`, falls back to
+  `cargo install --path scripts/memgrep` if no prebuilt asset exists for the
+  platform). If `memgrep` is unavailable, recall degrades to plain `grep` —
+  it never blocks.
+- The `ai-maestro-janitor` plugin, if you want the `/janitor-memory-*` authoring
+  skills (optional — `memgrep recall`/`find` work standalone against any
+  directory of markdown notes).
 
 ## Instructions
 
-1. **Identify the search query** from the user's request (topic, term, code symbol, or question).
-
-2. **Choose the search mode** based on query type:
-   - `hybrid` (default) — general purpose, combines semantic + keyword
-   - `semantic` — conceptually related content, different wording
-   - `term` — exact text/substring matching
-   - `symbol` — code identifiers (functions, classes, variables)
-
-3. **Run the search:**
+1. **Build the search roots.** Zero, one, two, or three may exist for a given
+   project — skip any that don't:
 
    ```bash
-   memory-search.sh "<query>" --mode <mode> --limit 10
+   LOCAL_MEM="$HOME/.claude/projects/$(pwd | sed 's#[/ ]#-#g')/memory"                # machine-private
+   PROJECT_MEM="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/project/memory"  # git-tracked, shared
+   USER_MEM="$HOME/.claude/plugins/data/ai-maestro-janitor-ai-maestro-plugins/memory" # global (fixed janitor path)
+   ROOTS=(); for d in "$LOCAL_MEM" "$PROJECT_MEM" "$USER_MEM"; do [ -d "$d" ] && ROOTS+=("$d"); done
    ```
 
-4. **Filter by speaker** if needed:
+   Build an **array**, never a space-joined string — zsh (the macOS default
+   shell) does not word-split an unquoted variable, so a joined string passes
+   every root as one bogus path and silently returns 0 results. `"${ROOTS[@]}"`
+   works in bash and zsh alike.
+
+2. **Recall by symptom** — the user's words / the error text, NOT the fix's
+   jargon:
 
    ```bash
-   memory-search.sh "<query>" --role user      # user instructions only
-   memory-search.sh "<query>" --role assistant  # assistant responses only
+   if command -v memgrep >/dev/null 2>&1; then
+     memgrep recall "<symptom>" "${ROOTS[@]}"    # ranked: path — description (+ lessons)
+   else
+     grep -rliE "<symptom>" "${ROOTS[@]}"          # fallback: degrade, never break
+   fi
    ```
 
-5. **Review results** and summarize relevant findings for the user.
+3. **Read the top 1-3 notes returned.** `recall` auto-resolves and appends
+   each note's `[^N]` lessons-learned by default, so one call yields the fact
+   AND every WHY behind it. On conflicting facts across scopes, the more
+   specific one wins: **LOCAL > PROJECT > USER**.
 
-6. **If no results**, try: different wording, broader query, `--limit 20`, or different mode. If still nothing, the topic is genuinely new.
-
-7. **For complete context**, optionally search docs and graph too:
+4. **Keyword search** when you need AND/OR/exclude instead of symptom ranking:
 
    ```bash
-   docs-search.sh "<query>"
-   graph-describe.sh "<query>"
+   memgrep find "+must -exclude \"exact phrase\"" "${ROOTS[@]}"   # note-level keyword DSL
+   memgrep find "+term" "${ROOTS[@]}" --only-notes                # search ONLY the lessons-learned
+   ```
+
+5. **Nothing returned is valid information** — the memory doesn't exist yet.
+   After solving the problem, write it with `/janitor-memory-write` (or
+   `/janitor-memory-update` if it extends an existing page), routed to the
+   right scope (LOCAL/PROJECT/USER — see below), rather than re-deriving the
+   same fix next session.
+
+6. **"What did we SAY in chat" vs "what did we LEARN"** — this skill answers
+   the second question (curated notes). For the first, there is no separate
+   transcript-search backend anymore; use Claude Code's own conversation
+   history and project `CLAUDE.md`.
+
+7. **Keep the index fresh** after a large batch of memory edits (not required
+   for correctness — `recall`/`find` fall back to a live walk when the sidecar
+   is stale — but faster on a large corpus):
+
+   ```bash
+   memgrep reindex "${ROOTS[@]}"   # rebuilds .memgrep/index.db (git-incremental, gitignored)
    ```
 
 ## Output
 
-Returns matching conversation excerpts with timestamps, session context, and relevance scores. Present results as a concise summary highlighting key decisions, prior work, and relevant context.
+`memgrep recall`/`find` print ranked notes as `path — description`, each
+followed by its resolved `[^N]` lessons-learned. Present the top 1-3 hits and
+their lessons to the user; state clearly when nothing was found (new topic,
+not a failure).
 
 ## Error Handling
 
-- **No results**: Try alternate wording, broader terms, increased limit, or different mode. No results is valid — report the topic as new.
-- **Script not found**: Run `install-memory-tools.sh` from the AI Maestro repo to install.
-- **Memory not indexed**: Subconscious indexing runs automatically. A manual status-check / re-index has no frozen-CLI verb yet (DECOUPLE-BLOCKED ai-maestro#36, pending a follow-up) — see the reference's Troubleshooting section.
-- **Connection refused**: Verify AI Maestro is running on port 23000.
+| Problem | Solution |
+|---------|----------|
+| `memgrep` not found | Run `scripts/install-memgrep.sh`; use the `grep -rliE` fallback above until it's installed |
+| No results | Broaden or reword — `recall` ranks on `description + title + tags`, not full body text; a genuinely new topic is valid, don't force a match |
+| Wrong/stale-looking results | `memgrep reindex <memdir>` to refresh the SQLite sidecar |
+| No memory directory exists yet for this project | Run `/janitor-memory-bootstrap` (if the janitor plugin is installed) to stand up the project's wikimem, or just start writing notes — the directories are created on first write |
+| `/janitor-memory-*` skills unavailable | The `ai-maestro-janitor` plugin isn't installed here — `memgrep recall`/`find` still work standalone against any markdown directory |
 
 ## Examples
 
 ```
-/memory-search authentication flow
+/memory-search rotator failed, had to log in manually
 ```
 
-Searches for past discussions about authentication using hybrid mode.
+Builds the LOCAL/PROJECT/USER roots, runs `memgrep recall` (or the `grep`
+fallback if `memgrep` is absent) ranked by symptom, and reports the top
+matching note plus its lessons-learned.
 
 ```
-/memory-search "ECONNREFUSED" --mode term
+/memory-search +oauth +keychain -widget
 ```
 
-Finds exact occurrences of the error message in conversation history.
-
-```
-/memory-search MAX_RETRY_COUNT --mode symbol
-```
-
-Locates discussions about the `MAX_RETRY_COUNT` code identifier.
+Runs `memgrep find "+oauth +keychain -widget" <roots>` — a mandatory-AND,
+exclude-one keyword search instead of symptom ranking.
 
 ## Checklist
 
 Copy this checklist and track your progress:
 
-- [ ] Identify search query from user request
-- [ ] Select appropriate search mode
-- [ ] Run memory-search.sh with chosen parameters
-- [ ] Review and summarize results
-- [ ] If no results, retry with alternate strategy
-- [ ] Optionally search docs/graph for broader context
-- [ ] Present findings to user
+- [ ] Build the LOCAL/PROJECT/USER root array (skip roots that don't exist)
+- [ ] Recall by symptom with `memgrep recall` (or the `grep` fallback)
+- [ ] Read the top hits AND their `[^N]` lessons before acting
+- [ ] If nothing found, note it as new information — don't guess or re-derive silently
+- [ ] After solving, write/update the owning page via `/janitor-memory-write`/`update`
 
 ## Resources
 
-- `/janitor-memory-recall`, `/janitor-memory-write`, `/janitor-memory-update` — the COMPLEMENTARY curated-note memory (the janitor's global wiki-memory; symptom-indexed pages; see `~/.claude/rules/markdown-memory-recall.md`)
-- [Detailed Reference](references/REFERENCE.md) - Full CLI reference and search patterns
-  - Memory Pipeline
-  - CLI Reference and Options
-  - Search Modes Explained
+- `~/.claude/rules/markdown-memory-recall.md` — the full recall protocol
+  (scope routing, the wikimem hub/aspect/component model, dual-test
+  evaluation)
+- `/janitor-memory-recall`, `/janitor-memory-write`, `/janitor-memory-update`,
+  `/janitor-memory-bootstrap` — the janitor's global authoring/maintenance
+  skills this one complements
+- [Detailed Reference](references/REFERENCE.md)
+  - memgrep Command Reference
+  - Search Modes (recall vs find)
+  - Scope Routing (LOCAL / PROJECT / USER)
   - Use Cases with Examples
   - Combined Search Pattern
   - Troubleshooting Guide
-  - Helper Scripts
+  - Installation

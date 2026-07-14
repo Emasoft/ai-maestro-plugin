@@ -1,119 +1,52 @@
 ---
 name: graph-query
 user-invocable: false
-description: "Query code graph DB for symbol relationships, callers, callees, and dependencies. Use when exploring codebase structure or impact. Trigger with /graph-query. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(graph-*:*), Bash(curl:*), Bash(jq:*), Read, Glob, Grep"
+description: "RETIRED — the CozoDB graph backend (the graph-describe/graph-find-* shell wrappers) is permanently gone. Use the codegraph MCP tools instead for symbol/caller/callee/impact queries. Trigger with /graph-query. Loaded by ai-maestro-plugin"
+allowed-tools: "Read, Glob, Grep"
 metadata:
   author: "Emasoft"
-  version: "2.0.0"
+  version: "3.0.0"
 ---
 
-## Overview
+## Retired — use the codegraph MCP tools instead
 
-Query the indexed code graph (CozoDB) to understand symbols, call chains, dependencies, and relationships before making changes. All `graph-*.sh` commands auto-detect your agent ID from the tmux session. Scripts are installed at `~/.local/bin/`.
+This skill used to wrap a family of shell scripts that queried an AI Maestro
+CozoDB graph backend. That backend has been **permanently removed** — there
+is no replacement CLI, and none is planned. Do not look for `graph-describe`,
+`graph-find-callers`, `graph-index-delta`, or any sibling wrapper script; they
+no longer exist anywhere.
 
-> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+For code-structure questions, reach for the **`codegraph` MCP tools** (present
+whenever a project has `.codegraph/` initialized — check with
+`codegraph_status`):
 
-## Prerequisites
+| Old graph-backend command | codegraph MCP tool |
+|---|---|
+| `graph-describe <symbol>` | `codegraph_node` (pass `includeCode: true` for source) |
+| `graph-find-callers <fn>` | `codegraph_callers` |
+| `graph-find-callees <fn>` | `codegraph_callees` |
+| `graph-find-path <from> <to>` | `codegraph_trace` — one call returns the whole path, including dynamic-dispatch hops |
+| `graph-find-related <sym>` / `graph-find-associations <sym>` | `codegraph_context` (composes search + node + callers + callees in one call) |
+| `graph-find-by-type <type>` | `codegraph_search` (filter with `kind`) |
+| survey several related symbols at once | `codegraph_explore` (one capped call instead of many `codegraph_node`/`Read` calls) |
+| "what's in this directory" | `codegraph_files` |
+| "what would break if I changed this" | `codegraph_impact` |
+| re-index after a refactor | not needed — the file watcher keeps the index current (~500ms debounce behind writes) |
 
-- AI Maestro running on `localhost:23000`
-- Graph scripts installed: `~/.local/bin/graph-*.sh`
-- Agent registered (auto-detected from tmux session)
-- Project indexed: run `graph-index-delta.sh` if first time
+**Rule of thumb:** for "how does X work" / architecture / "what calls this" /
+"what would break" questions, start with `codegraph_context` (broad survey) or
+`codegraph_trace` (a specific flow from A to B) — both answer in 2-3 calls what
+a grep+read loop would take dozens of calls to reconstruct.
 
-## Instructions
+If `.codegraph/` is not initialized for the project, ask the user: "This
+project doesn't have CodeGraph initialized — want me to run `codegraph init -i`
+to build the index?"
 
-1. **Index the project** (if not already done):
-
-   ```bash
-   graph-index-delta.sh [project-path]
-   ```
-
-2. **Query symbols** using the appropriate command:
-
-   | Command | Purpose |
-   |---------|---------|
-   | `graph-describe.sh <symbol>` | What is this symbol? Type, location, docs |
-   | `graph-find-callers.sh <fn>` | Who calls this function? |
-   | `graph-find-callees.sh <fn>` | What does this function call? |
-   | `graph-find-path.sh <from> <to>` | Call chain between two symbols |
-   | `graph-find-related.sh <sym>` | Inheritance, mixins, interfaces |
-   | `graph-find-associations.sh <sym>` | Model associations (has_many, belongs_to) |
-   | `graph-find-by-type.sh <type>` | List all symbols of a type |
-   | `graph-find-serializers.sh [model]` | Find serializer classes |
-
-3. **Before modifying code**, always check impact:
-   - Changing a function? Run `graph-find-callers.sh` first
-   - Changing a model? Run `graph-find-serializers.sh` and `graph-find-associations.sh`
-   - Tracing a bug? Run `graph-find-callees.sh` to follow data flow
-
-4. **Re-index after large refactors**:
-
-   ```bash
-   graph-index-delta.sh
-   ```
-
-## Output
-
-Each command returns structured text output with:
-
-- Symbol names and types
-- File paths and line numbers
-- Relationship types (calls, inherits, associates)
-- Path chains (for `graph-find-path.sh`)
-
-## Error Handling
-
-- **Scripts not found**: Run `~/ai-maestro/install-graph-tools.sh` to install
-- **API connection fails**: Verify AI Maestro is running with `aimaestro-agent.sh list` — a clean exit (no connection error) means the server is reachable; no direct server call needed (decoupled per ai-maestro#11)
-- **Stale results**: Re-index with `graph-index-delta.sh`
-- **Graph unavailable**: Inform user: "Graph unavailable, proceeding with manual analysis"
-
-## Examples
-
-```bash
-/graph-query process_payment
-```
-
-Runs `graph-describe.sh process_payment` then `graph-find-callers.sh process_payment` to show what the function does and who calls it.
-
-```bash
-/graph-query User --associations
-```
-
-Runs `graph-find-associations.sh User` to show model relationships (has_many, belongs_to).
-
-```bash
-/graph-query handle_request save_to_db --path
-```
-
-Runs `graph-find-path.sh handle_request save_to_db` to trace the call chain.
-
-## Checklist
-
-Copy this checklist and track your progress:
-
-- [ ] Project is indexed (`graph-index-delta.sh`)
-- [ ] Describe the target symbol (`graph-describe.sh`)
-- [ ] Check callers before changing signatures (`graph-find-callers.sh`)
-- [ ] Check callees to understand dependencies (`graph-find-callees.sh`)
-- [ ] Verify serializers if model changed (`graph-find-serializers.sh`)
-- [ ] Re-index after refactoring (`graph-index-delta.sh`)
+Fall back to `Grep`/`Glob`/`Read` only for literal-text lookups (string
+contents, log messages, comments) that codegraph cannot answer structurally.
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md)
-  - Graph Commands
-  - graph-describe.sh
-  - graph-find-callers.sh
-  - graph-find-callees.sh
-  - graph-find-path.sh
-  - graph-find-related.sh
-  - graph-find-associations.sh
-  - graph-find-by-type.sh
-  - graph-find-serializers.sh
-  - graph-index-delta.sh
-  - graph-helper.sh
-  - Automatic Query Patterns
-  - Combined Search Pattern
-  - Troubleshooting
+None — this skill has no `references/` anymore (the dead graph-backend docs
+were removed). See the CodeGraph section of `~/.claude/rules/` for the full
+tool-selection table, or ask `codegraph_context`/`codegraph_search` directly.

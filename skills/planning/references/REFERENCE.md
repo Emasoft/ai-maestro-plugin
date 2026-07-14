@@ -258,8 +258,8 @@ User: "Build a new authentication system"
    - Break into phases: Research, Design, Implement, Test, Document
 
 2. EXECUTE PHASE 1 (Research)
-   - Search memory: memory-search.sh "authentication"
-   - Search docs: docs-search.sh "auth patterns"
+   - Recall prior work: /memory-search "authentication" (memgrep + janitor wiki-memory)
+   - Check code structure: tldr search "auth patterns" src/ (tldr-code skill)
    - Write findings to findings.md
    - Mark Phase 1 complete in task_plan.md
 

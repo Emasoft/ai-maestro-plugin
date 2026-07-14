@@ -1,91 +1,46 @@
 ---
 name: docs-search
 user-invocable: false
-description: "Search codebase docs for function signatures, APIs, and class definitions. Use when understanding existing patterns before coding. Trigger with /docs-search. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(docs-*:*), Bash(curl:*), Read, Grep, Glob"
+description: "RETIRED — the AI Maestro docs indexing backend (the docs-search/docs-index shell wrappers) is permanently gone. Use the tldr CLI (tldr-code skill) for codebase docs/signatures instead. Trigger with /docs-search. Loaded by ai-maestro-plugin"
+allowed-tools: "Bash(tldr:*), Read, Glob, Grep"
 metadata:
   author: "Emasoft"
-  version: "2.0.0"
+  version: "3.0.0"
 ---
 
-## Overview
+## Retired — use the tldr-code skill instead
 
-Searches auto-generated codebase documentation for function signatures, API docs, class definitions, and code comments. Supports semantic search, keyword search, type-based filtering, and delta indexing. Commands auto-detect your agent ID from the tmux session.
+This skill used to wrap a family of shell scripts that queried an AI Maestro
+documentation-index backend. That backend has been **permanently removed** —
+there is no replacement CLI, and none is planned. Do not look for
+`docs-search`, `docs-index`, `docs-get`, or any sibling wrapper script; they
+no longer exist anywhere.
 
-**Rule: Receive Instruction -> Search Docs -> Then Proceed.** Always search docs before implementing.
+For "find the function/class/API that does X" or "understand this module
+before coding" questions, use the **`tldr-code` skill** (the `tldr` CLI — an
+official ai-maestro dependency, tree-sitter based, nothing to index):
 
-> **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
+| Old docs-backend command | `tldr` equivalent |
+|---|---|
+| `docs-search "<terms>"` (semantic search) | `tldr semantic '<terms>' <path>` |
+| `docs-search --keyword "<name>"` | `tldr search '<name>' <path>` or `tldr definition --symbol <name> --file <f>` |
+| `docs-find-by-type function\|class\|module\|interface\|...` | `tldr structure <path>` (functions/classes/imports per file) |
+| `docs-get <doc-id>` (full document) | `tldr definition ...` to pin the location, then `Read` just those lines |
+| `docs-list` / `docs-stats` | `tldr structure <path>` / `tldr health <path>` |
+| `docs-index` / `docs-index-delta` (indexing step) | not needed — `tldr` parses on demand, there is no index to build |
 
-## Prerequisites
+**Rule of thumb:** default to `tldr` before reading a whole file — it extracts
+only the lines that define, call, or are called by the symbol you asked about.
+See the `tldr-code` skill for the full 63-command catalog
+(`tldr definition|references|structure|search|impact`, plus security/quality/
+metrics commands).
 
-- AI Maestro running on `localhost:23000`
-- `docs-*.sh` scripts in `~/.local/bin/` (run `install-doc-tools.sh` from the AI Maestro repo if missing)
-- Documentation indexed (`docs-index.sh` or `docs-index-delta.sh`)
-
-## Instructions
-
-1. **Search first** — run `docs-search.sh "<terms>"` before any task
-2. **Semantic search** for concepts: `docs-search.sh "authentication flow"`
-3. **Keyword search** for exact names: `docs-search.sh --keyword "UserController"`
-4. **Filter by type**: `docs-find-by-type.sh function|class|module|interface`
-5. **Get details**: `docs-get.sh <doc-id>` for full content
-6. **Check stats**: `docs-stats.sh` to verify index availability
-7. **Re-index after changes**: `docs-index-delta.sh` (fast) or `docs-index.sh` (full)
-
-## Output
-
-- **Search results**: List with ID, type, name, relevance score
-- **Full document**: All sections, parameters, return types, comments
-- **Stats**: Index count, types breakdown, last indexed timestamp
-
-## Error Handling
-
-| Problem | Solution |
-|---------|----------|
-| Script not found | Run `install-doc-tools.sh` from the AI Maestro repo |
-| API connection fails | Verify AI Maestro: `docs-stats.sh` (clean exit ⇒ server reachable; no direct server call) |
-| No docs indexed | Run `docs-index.sh` or `docs-index-delta.sh` |
-| Empty results | Try broader terms, keyword search, or different types |
-
-If no docs exist for a topic, proceed with direct code analysis instead.
-
-## Examples
-
-```bash
-# Search for a service
-/docs-search PaymentService
-```
-
-Returns matching class/function docs.
-
-```bash
-# Keyword search for exact function
-docs-search.sh --keyword "validateUser"
-```
-
-```bash
-# Delta index after code changes
-docs-index-delta.sh /path/to/project
-```
-
-## Checklist
-
-Copy this checklist and track your progress:
-
-- [ ] Verify docs scripts installed (`which docs-search.sh`)
-- [ ] Verify AI Maestro running (`docs-stats.sh`)
-- [ ] Index project documentation if needed
-- [ ] Search docs before implementing any task
-- [ ] Re-index after significant code changes
+For *official product* documentation (a framework's or library's public API —
+not this codebase), use Claude Code's built-in web lookup (`WebFetch`/
+`WebSearch`) or a project's `Context7`/`Mintlify` MCP tools when installed —
+not this skill.
 
 ## Resources
 
-- [Detailed Reference](references/REFERENCE.md)
-  - CLI Commands
-  - Search Commands
-  - Indexing Commands
-  - Document Types
-  - Search Patterns by User Intent
-  - Combined Search Pattern
-  - Helper Scripts
-  - Troubleshooting
+None — this skill has no `references/` anymore (the dead docs-backend docs
+were removed). See the `tldr-code` skill for the full command catalog.
