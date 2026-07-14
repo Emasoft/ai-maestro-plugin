@@ -392,6 +392,22 @@ async function main() {
                     sessionId,
                     transcriptPath
                 });
+            } else if (notificationType === 'agent_needs_input') {
+                // Claude Code signalled the agent needs input to proceed — a
+                // blocking, needs-input state parallel to elicitation_dialog.
+                // The Notification matcher (hooks/hooks.json, #21) now delivers
+                // this type, so it MUST have a branch here: wiring a matcher
+                // entry to a missing handler would silently drop the event.
+                // Mirror the elicitation branch — record a needs-input status
+                // and pass notificationType through verbatim so the server's
+                // notificationType-keyed state model sees the real type.
+                writeState(cwd, {
+                    status: 'needs_input',
+                    message: input.message || 'Agent needs input to proceed…',
+                    notificationType,
+                    sessionId,
+                    transcriptPath
+                });
             }
             break;
 
