@@ -3,7 +3,7 @@ trdd-id: LEMJMCAQ
 title: Vendor dev-browser under Emasoft and pin it as a core-plugin dependency
 column: dev
 created: 2026-07-15T09:51:47+0200
-updated: 2026-07-15T09:51:47+0200
+updated: 2026-07-15T10:49:58+0200
 current-owner: ai-maestro-plugin (core)
 task-type: infra
 relevant-rules: [how-to-fix-issues-of-other-projects]
@@ -40,6 +40,14 @@ the only real pin.
 3. Verify: clean-dir `claude plugin install ai-maestro-plugin ai-maestro-plugins` pulls
    `dev-browser` transitively at commit `b549fb0` (the version string should carry that sha).
 4. Bump version, ship via `publish.py`.
+
+**STANDING OBLIGATION (EHT — do not forget):** a pinned fork FREEZES at `b549fb0`
+and no longer inherits upstream SECURITY fixes. `Emasoft/dev-browser` must be
+periodically reconciled with `SawyerHood/dev-browser` HEAD and its resolver tag
+bumped when a security patch lands, or the pin silently rots into a stale-vuln.
+Carry this as a recurring EHT on the fork. Source: USER-memory note
+`fleet-third-party-plugin-dep-fork-pin-pattern.md` (the ratified fleet pattern
+this task instantiates).
 
 **SUPERSEDED — do NOT carry forward:** the issue-#19 floating shape
 `{name: dev-browser, marketplace: dev-browser-marketplace}` (tracks sawyerhood HEAD, no
