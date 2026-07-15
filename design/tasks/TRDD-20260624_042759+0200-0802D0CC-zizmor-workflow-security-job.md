@@ -1,9 +1,9 @@
 ---
 trdd-id: 0802D0CC
 title: Add a zizmor workflow-security job to ci.yml — CPV canon dropped it (core#13 landmine 1)
-column: backburner
+column: dev
 created: 2026-06-24T04:27:59+0200
-updated: 2026-06-24T04:42:41+0200
+updated: 2026-07-15T10:04:48+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -20,6 +20,38 @@ external-refs: ["Emasoft/ai-maestro-plugin#13", "Emasoft/ai-maestro#44"]
 ---
 
 # TRDD-0802D0CC — zizmor workflow-security job for ci.yml (core#13 landmine 1)
+
+## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-07-15
+
+**Unparked from `backburner` → `dev` while executing core#13's CPV canonical-pipeline
+upgrade (branch `fix/open-issues-sweep`). Implementation is DONE in the working tree and
+LOCALLY VERIFIED green; it is NOT yet committed/pushed (this session had no push/publish
+authorization).**
+
+- **Job added.** `.github/workflows/ci.yml` now carries an advisory `workflow-security`
+  job (name "Workflow security (zizmor)") — SHA-pinned `actions/checkout@df4cb1c… v6.0.3`
+  + `zizmorcore/zizmor-action@192e21d… v0.5.7`, `contents: read` + `security-events: write`,
+  `timeout-minutes: 10`, `persist-credentials: false`. It is NON-required (its own name),
+  so the `Lint`/`Validate`/`Test` required-context contract is unchanged.
+- **All 11 findings FIXED** (were 5 HIGH + 6 MEDIUM, zizmor exit 14; now `zizmor --offline
+  --persona regular` = 0 findings, exit 0; `actionlint` clean):
+  - `unpinned-uses` ×3 → SHA-pinned: release.yml checkouts `@v4`→`@df4cb1c… v6.0.3` (aligned
+    to ci.yml), and `actions/attest-build-provenance@v4`→`@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1`.
+  - `artipacked` ×6 → `persist-credentials: false` on all 4 ci.yml checkouts + BOTH release.yml
+    checkouts. VERIFIED both release jobs publish via `gh`/`GH_TOKEN` and never `git push`, so
+    dropping the persisted token is safe (resolves the TRDD's "verify before touching" caveat).
+  - `cache-poisoning` ×2 (release.yml setup-uv + actions/cache) → JUSTIFIED
+    `# zizmor: ignore[cache-poisoning]` (NOT a blanket suppress): release fires only on an
+    owner `v*.*.*` tag push — no fork-PR writer path — and the CPV cache is required (#114
+    cold-timeout). Matches the TRDD's cache-poisoning decision exactly.
+
+**NEXT ACTION (needs the orchestrator's commit + push authorization):** commit these changes,
+`publish.py` (or push a branch), watch the CI `Workflow security (zizmor)` job go green, confirm
+SARIF lands in the code-scanning tab, then post the `from → to` row on `Emasoft/ai-maestro#44`
+and close core#13. Nothing further is locally verifiable.
+
+**Load-bearing facts:** SARIF upload + the action's fail-on-findings behavior are the ONLY
+parts not locally checkable (they need a real CI run). Everything else is verified green.
 
 ## Problem (verified)
 
@@ -83,14 +115,16 @@ Verified facts for the implementation:
 
 ## Acceptance criteria
 
-- [ ] `zizmorcore/zizmor-action@v0.5.7` action.yml + README read; SARIF/upload
-      behavior confirmed (built-in vs needs a codeql upload-sarif step)
-- [ ] `workflow-security` job added to ci.yml, SHA-pinned, `security-events: write`
-- [ ] Job is ADVISORY — does NOT alter the required `Lint`/`Validate`/`Test` contexts
-- [ ] Mirror into release.yml only if CI/Release parity requires it (it likely does
-      NOT — security scan belongs to CI, not the release path); decide explicitly
+- [x] `zizmorcore/zizmor-action@v0.5.7` action.yml + README read; SARIF/upload
+      behavior confirmed (`advanced-security: true` default → SARIF to the security tab;
+      no separate codeql upload-sarif step needed)
+- [x] `workflow-security` job added to ci.yml, SHA-pinned, `security-events: write`
+- [x] Job is ADVISORY — does NOT alter the required `Lint`/`Validate`/`Test` contexts
+      (distinct job name "Workflow security (zizmor)")
+- [x] Decided: do NOT mirror into release.yml — the security scan belongs to CI, not the
+      release path; release.yml's own findings were fixed but no zizmor job was added there
 - [ ] Pushed on a branch via publish.py; CI run watched green; SARIF appears in
-      the code-scanning tab (or the advisory job passes)
+      the code-scanning tab (or the advisory job passes) — BLOCKED this session (no push auth)
 - [ ] Post the `from → to` row on `Emasoft/ai-maestro#44` + request MANAGER tally
 - [ ] Close core#13 on the MANAGER tally
 

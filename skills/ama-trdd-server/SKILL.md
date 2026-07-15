@@ -1,7 +1,7 @@
 ---
 name: ama-trdd-server
 user-invocable: false
-description: "Search, read, verify, and (server-mediated) mutate TRDDs through the aimaestro-trdd.sh CLI — the AI Maestro dashboard's authorization-aware view of the design/ corpus. Read verbs: search / read / verify (verify checks an approval's cryptographic authenticity). Write verbs (STRICT, governed by the manage-trdd AuthAction, agent acts with its own AID + title): edit / approve / refuse / promote / archive — each gated by the TRDD's own min-approval-requirement, with a hard self-approval ban and USER-only for user-tier cards. Use when server-mirrored state or server-side authorization matters — the dashboard's kanban view, approving a proposal, or confirming an approval is real. Trigger with /ama-trdd-server, 'approve this TRDD', 'search TRDDs on the dashboard', 'verify this TRDD's approval'. For local design/ file editing (still the source of truth) use ama-trdd-find/write/update/transition. Loaded by ai-maestro-plugin"
+description: "Search, read, verify, and server-mediated mutate TRDDs via the aimaestro-trdd.sh CLI — the AI Maestro dashboard's authorization-aware view of the design/ corpus. Write verbs (edit / approve / refuse / promote / archive) are STRICT, gated by each TRDD's min-approval-requirement with a hard self-approval ban. Use when server-mirrored state or server-side authorization matters: the dashboard kanban, approving a proposal, confirming an approval is real. Trigger with /ama-trdd-server, 'approve this TRDD', 'search TRDDs on the dashboard'. For local design/ file editing use ama-trdd-find/write/update/transition. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-trdd.sh:*), Bash(jq:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"
 metadata:

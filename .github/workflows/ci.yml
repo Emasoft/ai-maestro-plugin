@@ -39,6 +39,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
+          persist-credentials: false   # Lint only reads the tree; never pushes (zizmor artipacked).
 
       # Pre-push hook integrity (TRDD-71a2239a): the static committed
       # .githooks/pre-push must match its committed sha256 pin. Editing the hook
@@ -81,6 +82,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
+          persist-credentials: false   # Commitlint only reads git history; never pushes (zizmor artipacked).
       - name: Conventional-commits gate
         uses: wagoid/commitlint-github-action@6cf16efdf4da5277c791d335142c03a0bdf1766e # v6.2.1
 
@@ -100,6 +102,8 @@ jobs:
       # the Validate job down with a misleading 'process git failed exit
       # code 128'. Drop the recurse to remove the moot enumeration step.
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false   # Validate only reads the tree; never pushes (zizmor artipacked).
 
       - name: Install uv
         # enable-cache: true keys an actions/cache on UV_CACHE_DIR so the
@@ -193,6 +197,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false   # Test only reads the tree; never pushes (zizmor artipacked).
 
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
@@ -239,3 +245,24 @@ jobs:
           fi
           echo "::error::Test matrix did not pass (result: ${{ needs.test.result }})"
           exit 1
+
+  # Advisory static security analysis of the workflows themselves (TRDD-0802D0CC,
+  # core#13 landmine 1). zizmor audits for template-injection, excessive
+  # permissions, unpinned actions, credential persistence, cache poisoning, etc.,
+  # and uploads SARIF to the code-scanning tab. NOT a required context — it must
+  # NOT alter the Lint / Validate / Test contract wired by cpv-setup-branch-rules,
+  # so it is an advisory job with its own name.
+  workflow-security:
+    name: Workflow security (zizmor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write   # upload SARIF to the code-scanning tab (advanced-security default)
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false   # Only reads the tree to audit workflows; never pushes.
+      # advanced-security: true is the action default (SARIF → repo security tab,
+      # needs security-events: write). SHA-pinned per gh-actions.md.
+      - uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7

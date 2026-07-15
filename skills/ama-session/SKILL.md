@@ -1,7 +1,7 @@
 ---
 name: ama-session
 user-invocable: false
-description: "Drive an agent's own terminal and read its own activity state via the frozen aimaestro-session.sh CLI — send an allowlisted slash command, enqueue a command for later (works even while busy or hibernated), inject raw text into a live pane, read the agent's 5-state activity, and read/answer a pending permission or AskUserQuestion prompt. Use when an agent needs to act on itself: arm its own janitor heartbeat, answer a pending prompt, check whether it is idle/busy, or queue work for after its current turn. Trigger with /ama-session, 'send myself a slash command', 'queue a command for when I'm idle', 'what is my current state', 'answer my pending prompt'. Never for reconfiguring an agent (role/plugin/team) — that is ai-maestro-agents-management, and it is refused on self for every title anyway. Loaded by ai-maestro-plugin"
+description: "Drive an agent's own terminal and read its own activity state via the frozen aimaestro-session.sh CLI — send or enqueue an allowlisted slash command (works even while busy/hibernated), inject raw text into a live pane, read the 5-state activity, and read/answer a pending permission or AskUserQuestion prompt. Use when an agent must act on itself: arm its janitor heartbeat, answer a pending prompt, check if idle/busy, or queue work for later. Trigger with /ama-session, 'queue a command for when I'm idle', 'answer my pending prompt'. Not for reconfiguring an agent (role/plugin/team) — that is ai-maestro-agents-management. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-session.sh:*), Bash(jq:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
