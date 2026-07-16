@@ -41,7 +41,7 @@ feedback-event count. If it reports zero clients, `set`/`open` will report
 Per `TRDD-D3RP7KQZ`: an agent drives its **own** panel by default. Targeting
 **another** agent's panel requires MANAGER (any agent) or CHIEF-OF-STAFF
 (agents of its own team). **Strict verbs** (agent: AID + title; human: fresh
-sudo token): `open`, `close`, `refresh`, `set`. **Non-strict**: `status`,
+sudo-token): `open`, `close`, `refresh`, `set`. **Non-strict**: `status`,
 `feedback`.
 
 ## Security constraints on pushed content

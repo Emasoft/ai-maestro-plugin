@@ -1,7 +1,7 @@
 ---
 name: ama-session
 user-invocable: false
-description: "Drive an agent's own terminal and read its own activity state via the frozen aimaestro-session.sh CLI — send or enqueue an allowlisted slash command (works even while busy/hibernated), inject raw text into a live pane, read the 5-state activity, and read/answer a pending permission or AskUserQuestion prompt. Use when an agent must act on itself: arm its janitor heartbeat, answer a pending prompt, check if idle/busy, or queue work for later. Trigger with /ama-session, 'queue a command for when I'm idle', 'answer my pending prompt'. Not for reconfiguring an agent (role/plugin/team) — that is ai-maestro-agents-management. Loaded by ai-maestro-plugin"
+description: "Drive an agent's own terminal and read its own activity state via the frozen aimaestro-session.sh CLI — send or enqueue an allowlisted slash command (works even while busy/hibernated), type raw text into a live pane, read the 5-state activity, and read/answer a pending permission or AskUserQuestion prompt. Use when an agent must act on itself: arm its janitor heartbeat, answer a pending prompt, check if idle/busy, or queue work for later. Trigger with /ama-session, 'queue a command for when I'm idle', 'answer my pending prompt'. Not for reconfiguring an agent (role/plugin/team) — that is ai-maestro-agents-management. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-session.sh:*), Bash(jq:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -83,7 +83,7 @@ too is self-refused for configuration).
 
 **Strict vs non-strict** (who can call what, and how they authenticate):
 `answer` and `queue` are **strict** — an agent authenticates by AID + title,
-a human needs a fresh sudo token. `inject`, `slash`, `slash-keys`, `state`,
+a human needs a fresh sudo-token. `inject`, `slash`, `slash-keys`, `state`,
 `read-prompt`, `queue-list`, `queue-cancel` are **non-strict**.
 
 ## Prerequisites

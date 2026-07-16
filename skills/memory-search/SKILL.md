@@ -156,10 +156,11 @@ Copy this checklist and track your progress:
   `/janitor-memory-bootstrap` — the janitor's global authoring/maintenance
   skills this one complements
 - [Detailed Reference](references/REFERENCE.md)
+  - Why This Skill Was Reimplemented
   - memgrep Command Reference
-  - Search Modes (recall vs find)
+  - Search Modes: recall vs find
   - Scope Routing (LOCAL / PROJECT / USER)
   - Use Cases with Examples
   - Combined Search Pattern
-  - Troubleshooting Guide
+  - Troubleshooting
   - Installation

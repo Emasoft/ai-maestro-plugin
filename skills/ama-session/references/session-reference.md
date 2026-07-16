@@ -17,7 +17,7 @@ are `send-command`-class actions. Who may act **on whom**:
 
 | Caller | May act on |
 |---|---|
-| the human USER | any agent (needs a fresh sudo token) |
+| the human USER | any agent (needs a fresh sudo-token) |
 | MANAGER | any agent |
 | CHIEF-OF-STAFF | agents of its own team only |
 | any agent | **itself only** |
@@ -82,7 +82,7 @@ assuming a command-key exists; do not guess one for `slash` or `queue
 |---|---|
 | `AID_AUTH` | the agent's own Bearer token (`export AID_AUTH="$(aid-auth.sh)"`) — every `aimaestro-*` script reads it |
 | `AIMAESTRO_SESSION` / `~/.aimaestro/cli-session` | the human's session token (written by `aimaestro-governance.sh login`) |
-| `AIMAESTRO_SUDO_TOKEN` | the human caller's fresh sudo token on a strict route (`answer`, `queue`) |
+| `AIMAESTRO_SUDO_TOKEN` | the human caller's fresh sudo-token on a strict route (`answer`, `queue`) |
 | `AIMAESTRO_API_BASE` | override the API base URL (default: this host) |
 
 Resolution order (first match wins): `AID_AUTH` → `AIMAESTRO_SESSION` →

@@ -42,8 +42,8 @@ a 403 (best case) or oversteps the governance graph (worst case).
 **The seven rules that govern every write verb:**
 
 1. **All five are STRICT verbs** governed by `manage-trdd`. An **agent**
-   authenticates with its own **AID + governance title** (no sudo prompt);
-   a **human** would need a fresh sudo token (but the human path 401s today
+   authenticates with its own **AID + governance title** (no sudo-prompt);
+   a **human** would need a fresh sudo-token (but the human path 401s today
    — see the gap note below).
 2. **The required tier is read from the TRDD's own
    `min-approval-requirement:`** field. The authority matrix mirrors the
