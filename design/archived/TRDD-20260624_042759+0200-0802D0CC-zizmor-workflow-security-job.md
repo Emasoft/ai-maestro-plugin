@@ -1,9 +1,10 @@
 ---
 trdd-id: 0802D0CC
 title: Add a zizmor workflow-security job to ci.yml — CPV canon dropped it (core#13 landmine 1)
-column: dev
+column: completed
 created: 2026-06-24T04:27:59+0200
-updated: 2026-07-15T10:04:48+0200
+updated: 2026-07-16T12:35:00+0200
+implementation-commits: [d03dc97]
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -45,10 +46,12 @@ authorization).**
     owner `v*.*.*` tag push — no fork-PR writer path — and the CPV cache is required (#114
     cold-timeout). Matches the TRDD's cache-poisoning decision exactly.
 
-**NEXT ACTION (needs the orchestrator's commit + push authorization):** commit these changes,
-`publish.py` (or push a branch), watch the CI `Workflow security (zizmor)` job go green, confirm
-SARIF lands in the code-scanning tab, then post the `from → to` row on `Emasoft/ai-maestro#44`
-and close core#13. Nothing further is locally verifiable.
+**COMPLETED (2026-07-16, v2.10.0):** committed as `d03dc97`, shipped via
+`publish.py`; CI run `29489778087` on `6a58fe6` green INCLUDING
+`Workflow security (zizmor): success`; zizmor SARIF analysis confirmed present
+in the code-scanning tab for `6a58fe6`; `from → to` row posted on
+`Emasoft/ai-maestro#44`; core#13 closed. The two formerly-unverifiable items
+(SARIF upload + fail-on-findings behavior) are now verified by the real run.
 
 **Load-bearing facts:** SARIF upload + the action's fail-on-findings behavior are the ONLY
 parts not locally checkable (they need a real CI run). Everything else is verified green.

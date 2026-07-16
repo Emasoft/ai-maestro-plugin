@@ -1,13 +1,13 @@
 ---
 trdd-id: LEMJMCAQ
 title: Vendor dev-browser under Emasoft and pin it as a core-plugin dependency
-column: dev
+column: completed
 created: 2026-07-15T09:51:47+0200
-updated: 2026-07-16T11:58:00+0200
+updated: 2026-07-16T12:20:00+0200
 current-owner: ai-maestro-plugin (core)
 task-type: infra
 relevant-rules: [how-to-fix-issues-of-other-projects]
-implementation-commits: []
+implementation-commits: [df585b9, a088f7a-on-ai-maestro-plugins]
 ---
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-07-16
@@ -33,10 +33,13 @@ under Emasoft, then pin**.
   dev-browser@ai-maestro-plugins` (after `marketplace update`) → cache checkout
   `git rev-parse HEAD` = `b549fb0…` exactly, SKILL.md present.
 
-**NEXT ACTION:** ship via `publish.py` (the dep rides the sweep release), then
-verify the TRANSITIVE half post-publish: clean-dir install of
-`ai-maestro-plugin@ai-maestro-plugins` must pull dev-browser automatically at
-`b549fb0`. Then close #19 and archive this TRDD as completed.
+**COMPLETED (2026-07-16, v2.10.0):** shipped via `publish.py`; post-publish
+transitive verification PASSED — clean-dir `claude plugin install
+ai-maestro-plugin@ai-maestro-plugins` resolved 2.10.0 and reported
+`(+ 1 dependency: dev-browser)`; the dep cache checkout is exactly `b549fb0`.
+Issue #19 closed. ONLY the standing fork-security-rot reconciliation EHT
+survives this TRDD (periodic upstream reconcile + tag/sha bump on
+`Emasoft/dev-browser`).
 
 **STANDING OBLIGATION (EHT — do not forget):** a pinned fork FREEZES at `b549fb0`
 and no longer inherits upstream SECURITY fixes. `Emasoft/dev-browser` must be
