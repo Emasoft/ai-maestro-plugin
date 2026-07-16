@@ -3,43 +3,40 @@ trdd-id: LEMJMCAQ
 title: Vendor dev-browser under Emasoft and pin it as a core-plugin dependency
 column: dev
 created: 2026-07-15T09:51:47+0200
-updated: 2026-07-15T10:49:58+0200
+updated: 2026-07-16T11:58:00+0200
 current-owner: ai-maestro-plugin (core)
 task-type: infra
 relevant-rules: [how-to-fix-issues-of-other-projects]
 implementation-commits: []
 ---
 
-## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-07-15
+## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-07-16
 
 **Why this exists:** issue #19 asked to declare `dev-browser` as a core-plugin
 dependency, PINNED (supply-chain safety — a compromised third-party upstream HEAD
 must not auto-propagate to every agent). USER decision (2026-07-15): **vendor/fork
-under Emasoft, then pin** (chosen over "ship floating" and "hold out"). "Pin to a
-commit" is NOT expressible in `plugin.json` — CC deps support only
-`name`/`version`/`marketplace`, and `version` resolves against `{name}--v{version}`
-git tags. Third-party `sawyerhood/dev-browser` has only plain `vX.Y.Z` tags and its
-marketplace declares no version, so an owner-controlled fork with the right tag is
-the only real pin.
+under Emasoft, then pin**.
 
-**DONE (this session, verified on GitHub):**
-- Forked `SawyerHood/dev-browser` → **`Emasoft/dev-browser`** (`gh repo fork`, default branch `main`).
-- Created resolver tag **`dev-browser--v1.0.0` → commit `b549fb0ecf9fa339100419d597ba4d04cda3e016`**
-  (the upstream `v1.0.0` release commit) in the fork, verified it resolves.
+**DONE (verified, not assumed):**
+- Forked `SawyerHood/dev-browser` → **`Emasoft/dev-browser`**; resolver tag
+  **`dev-browser--v1.0.0` → `b549fb0ecf9fa339100419d597ba4d04cda3e016`** (upstream
+  v1.0.0 release commit).
+- **Registered in the hub** (2026-07-16): `Emasoft/ai-maestro-plugins` PR #11
+  MERGED — entry hosts dev-browser IN the same marketplace, `source: {github,
+  Emasoft/dev-browser, sha: b549fb0…}` (**sha-pinned source** — stronger than the
+  tag alone; a sha cannot be force-moved), `strict: false` +
+  `skills: ["./skills/dev-browser"]` mirroring the upstream self-referential entry
+  (the repo ships NO plugin.json at that commit), entry `version: "1.0.0"`.
+- **Dep added** to `.claude-plugin/plugin.json`:
+  `{name: dev-browser, marketplace: ai-maestro-plugins, version: "1.0.0"}`.
+- **Pin verified live**: clean-dir `claude plugin install
+  dev-browser@ai-maestro-plugins` (after `marketplace update`) → cache checkout
+  `git rev-parse HEAD` = `b549fb0…` exactly, SKILL.md present.
 
-**NEXT ACTION (cross-repo — do in the marketplace hub's own context, NOT from the plugin session):**
-1. Register `Emasoft/dev-browser` in the Emasoft marketplace the core plugin ships from
-   (`Emasoft/ai-maestro-plugins`, `.claude-plugin/marketplace.json`): add a `dev-browser`
-   plugin entry with `source: {source: "github", repo: "Emasoft/dev-browser"}`. Decide
-   whether to host it IN `ai-maestro-plugins` (then the dep is same-marketplace) or keep it
-   cross-marketplace and repoint `allowCrossMarketplaceDependenciesOn` from
-   `dev-browser-marketplace` (sawyerhood) to the Emasoft fork's marketplace.
-2. Only AFTER step 1 exists, add to THIS repo's `.claude-plugin/plugin.json`:
-   `"dependencies": [{ "name": "dev-browser", "marketplace": "<emasoft-mkt>", "version": "1.0.0" }]`
-   — do NOT add it before step 1 or every fresh install 404s on the unresolved dep.
-3. Verify: clean-dir `claude plugin install ai-maestro-plugin ai-maestro-plugins` pulls
-   `dev-browser` transitively at commit `b549fb0` (the version string should carry that sha).
-4. Bump version, ship via `publish.py`.
+**NEXT ACTION:** ship via `publish.py` (the dep rides the sweep release), then
+verify the TRANSITIVE half post-publish: clean-dir install of
+`ai-maestro-plugin@ai-maestro-plugins` must pull dev-browser automatically at
+`b549fb0`. Then close #19 and archive this TRDD as completed.
 
 **STANDING OBLIGATION (EHT — do not forget):** a pinned fork FREEZES at `b549fb0`
 and no longer inherits upstream SECURITY fixes. `Emasoft/dev-browser` must be

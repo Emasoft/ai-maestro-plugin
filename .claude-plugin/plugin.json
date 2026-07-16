@@ -9,6 +9,13 @@
   "homepage": "https://github.com/Emasoft/ai-maestro",
   "repository": "https://github.com/Emasoft/ai-maestro-plugin",
   "license": "MIT",
+  "dependencies": [
+    {
+      "name": "dev-browser",
+      "marketplace": "ai-maestro-plugins",
+      "version": "1.0.0"
+    }
+  ],
   "keywords": [
     "ai",
     "agents",
