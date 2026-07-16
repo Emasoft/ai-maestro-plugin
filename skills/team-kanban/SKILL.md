@@ -5,10 +5,10 @@ description: "Manage team kanban boards and tasks. Use when creating, moving, fi
 allowed-tools: "Bash(amp-kanban-list.sh:*), Bash(amp-kanban-get.sh:*), Bash(amp-kanban-create-task.sh:*), Bash(amp-kanban-move.sh:*), Bash(amp-kanban-edit.sh:*), Bash(amp-kanban-archive.sh:*), Bash(aimaestro-teams.sh:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "2.1.0"
+  version: "2.1.1"
 ---
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): task/board examples call the frozen `amp-kanban-*` CLIs (list/get/create-task/move/edit/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. `amp-kanban-get.sh` and `amp-kanban-edit.sh` (issue #23) close most of the former non-status-field residuals — `edit` is the general verb, every field the task PUT accepts. The one residual with no frozen verb yet (team `stats`/bulk metrics) is marked DECOUPLE-BLOCKED inline. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE — keep. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): task/board examples call the frozen `amp-kanban-*` CLIs (list/get/create-task/move/edit/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. `amp-kanban-get.sh` and `amp-kanban-edit.sh` (issue #23) close most of the former non-status-field residuals — `edit` is the general verb, every field the task PUT accepts. Bulk team `stats` is permanently client-side (`jq` aggregation) per MANAGER verdict ai-maestro#64 — no verb is pending. GitHub-sync (`kanban-sync.py`, `gh`) is OUT OF SCOPE — keep. -->
 
 ## Overview
 
@@ -46,7 +46,7 @@ pipeline state; this server board wins for live assignment/presence.
 7. **Archive/delete task**: `amp-kanban-archive.sh <task-id>`
 8. **Configure columns**: `aimaestro-teams.sh kanban-config <team-id> --get | --set <columns-json>`
 9. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>` (out of #11 scope — keep)
-   <!-- DECOUPLE-BLOCKED ai-maestro#36: bulk team metrics across all teams (was `GET /api/teams/stats`) has no frozen-CLI verb yet — pending a follow-up. For one team's counts, list with `amp-kanban-list.sh` and aggregate client-side with `jq` (see the Velocity and Distribution reference). Do NOT call `/api/*` directly (core#11). -->
+   <!-- Bulk team metrics across all teams (was `GET /api/teams/stats`) will NEVER get a frozen-CLI verb — MANAGER verdict ai-maestro#64: an all-teams roll-up is a dashboard concern, not an agent verb. Permanent pattern: list with `amp-kanban-list.sh` per team and aggregate client-side with `jq` (see the Velocity and Distribution reference). Do NOT call `/api/*` directly (core#11). -->
 
    When the sync posts to GitHub (issue, PR comment, project-item note), per PRRD G1.1 begin the body with a one-line self-identification of the authoring agent, since all agents share the one owner identity.
 

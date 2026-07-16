@@ -49,7 +49,7 @@
 
 ---
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): agents use the `aimaestro-agent.sh` CLI verbs (list/show/create/update/delete/rename/hibernate/wake/export/import/plugin/skill) — the primary surface shown in each section + the CLI Quick Reference table. The runnable raw-HTTP request blocks have been REMOVED; each section's `**Maps to:**` line documents the endpoint the verb wraps (reference only — never call `/api/*` directly). The governance/title bits in "Auto-install triggers" (`/api/governance/manager`, `/api/teams/.../chief-of-staff`, `ChangeTitle`) describe SERVER-side behaviour, not agent curls; the assign-MANAGER/COS-title verbs stay DECOUPLE-BLOCKED (gov-password residual class, pending an ai-maestro follow-up). -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): agents use the `aimaestro-agent.sh` CLI verbs (list/show/create/update/delete/rename/hibernate/wake/export/import/plugin/skill) — the primary surface shown in each section + the CLI Quick Reference table. The runnable raw-HTTP request blocks have been REMOVED; each section's `**Maps to:**` line documents the endpoint the verb wraps (reference only — never call `/api/*` directly). The governance/title bits in "Auto-install triggers" (`/api/governance/manager`, `/api/teams/.../chief-of-staff`, `ChangeTitle`) describe SERVER-side behaviour, not agent curls; the assign-MANAGER/COS-title operations are UI/USER-only PERMANENTLY, BY DESIGN — never a pending gap: the governance password must never pass through a model (R32.3; MANAGER ruling ai-maestro#64). An agent that could assign itself the MANAGER title could grant itself any authority in the fleet. Do not "unblock" this. -->
 
 ## CLI Quick Reference
 

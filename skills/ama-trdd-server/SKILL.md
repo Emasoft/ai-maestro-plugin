@@ -6,7 +6,7 @@ allowed-tools: "Bash(aimaestro-trdd.sh:*), Bash(jq:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"
 metadata:
   author: "Emasoft"
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # ama-trdd-server — server-mediated TRDD search / read / verify / mutate
@@ -219,7 +219,10 @@ returns the minted token reference. Nothing is committed for you.
 An ORCHESTRATOR approves a designed proposal whose `min-approval-requirement:`
 is `orchestrator`.
 → First confirm the tier and that you are not the proposer, then
-`aimaestro-trdd.sh approve 9a8aba94 --approver <self> --tier orchestrator --rationale "matches the accepted design"`.
+`aimaestro-trdd.sh approve 9a8aba94 --approver <self> --tier <N> --rationale "matches the accepted design"`.
+(`--tier` is NUMERIC — the deployed CLI rejects names with "must be a number
+(0-3)"; the canonical name→number mapping for the ladder above is pending on
+the ai-maestro side.)
 The server mints the signed token and moves the file `proposals/ → tasks/`.
 </example>
 

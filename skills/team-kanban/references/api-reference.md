@@ -1,6 +1,6 @@
 # Kanban API Reference
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): operations use the frozen `amp-kanban-*` CLIs (list/get/create-task/move/edit/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. The field/response tables document what each CLI accepts and returns. `amp-kanban-get.sh` (issue #23) is the single-task read; `amp-kanban-edit.sh` (issue #23) is the general field editor — it closes the former non-status-field residuals (re-assign/unassign, blockedBy, prUrl, extended fields). The one residual with no frozen verb yet (bulk team `stats`) is marked DECOUPLE-BLOCKED inline, re-targeted to an ai-maestro follow-up. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): operations use the frozen `amp-kanban-*` CLIs (list/get/create-task/move/edit/archive) + `aimaestro-teams.sh kanban-config`, which resolve the API base + agent identity internally, never the server `/api/*` directly. The field/response tables document what each CLI accepts and returns. `amp-kanban-get.sh` (issue #23) is the single-task read; `amp-kanban-edit.sh` (issue #23) is the general field editor — it closes the former non-status-field residuals (re-assign/unassign, blockedBy, prUrl, extended fields). Bulk team `stats` is permanently client-side (`jq` aggregation over per-team lists) per MANAGER verdict ai-maestro#64 — no verb is pending. -->
 
 ## Table of Contents
 
@@ -195,11 +195,11 @@ Sets custom kanban columns for a team.
 
 ---
 
-### Team stats (residual)
+### Team stats (client-side, permanently)
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: bulk team stats (task/doc counts across all teams, was `GET /api/teams/stats`) has no frozen-CLI verb yet — pending a follow-up. For a single team's task counts, list with `amp-kanban-list.sh` and aggregate client-side with `jq` (see Velocity and Distribution). Do NOT call `/api/*` directly (core#11). -->
+<!-- Bulk team stats (task/doc counts across all teams, was `GET /api/teams/stats`) will NEVER get a frozen-CLI verb — MANAGER verdict ai-maestro#64: a fleet roll-up is a dashboard concern, not an agent verb; N× `jq` is fine at fleet scale. Permanent pattern: `amp-kanban-list.sh` per team + client-side `jq` (see Velocity and Distribution). Do NOT call `/api/*` directly (core#11). -->
 
-**Shape (when a verb lands):**
+**Shape to aggregate into (per team, via `jq`):**
 
 ```json
 {
@@ -403,7 +403,7 @@ amp-kanban-list.sh --status completed | \
 
 ### Bulk Stats (All Teams)
 
-<!-- DECOUPLE-BLOCKED ai-maestro#36: bulk all-teams stats (was `GET /api/teams/stats`) has no frozen-CLI verb yet — pending a follow-up. For one team, use the per-status aggregation above. Do NOT call `/api/*` directly (core#11). -->
+<!-- Bulk all-teams stats (was `GET /api/teams/stats`) is permanently client-side — MANAGER verdict ai-maestro#64 (no verb, by decision). For one team, use the per-status aggregation above. Do NOT call `/api/*` directly (core#11). -->
 
 ---
 

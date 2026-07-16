@@ -5,7 +5,7 @@ description: "Manage AI agent lifecycle via CLI. Use when creating, listing, del
 allowed-tools: "Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(tmux:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
-  version: "3.3.0"
+  version: "3.3.1"
 ---
 
 ## Overview
