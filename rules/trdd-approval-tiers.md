@@ -215,7 +215,7 @@ proposal` and live in `design/proposals/`. To author one:
 ### Promotion protocol (approve: `proposal` → `planned`)
 
 Performed by the authority Part B requires (USER / MANAGER / COS), or
-in batch by the `amama-proposal-approvals` skill. Per proposal:
+in batch by the `amama-approval-workflows` skill. Per proposal:
 
 1. Confirm the approver holds the proposal's `approval-tier:` authority
    (a Tier-3 proposal needs USER; a Tier-2 needs MANAGER; etc.).
@@ -279,7 +279,7 @@ cancelled`, operationalizes this.)
 ### Batch approval syntax (the fast user/MANAGER path)
 
 Reviewing proposals one-by-one does not scale. The canonical fast path
-(operationalized by the **`amama-proposal-approvals`** skill in the
+(operationalized by the **`amama-approval-workflows`** skill in the
 MANAGER plugin) is:
 
 1. **List** — the tool prints every proposal in `design/proposals/`
