@@ -167,3 +167,20 @@ def test_agent_completed_returns_to_idle(home: str) -> None:
     run_hook({"hook_event_name": "Notification", "notification_type": "agent_needs_input"}, home)
     run_hook({"hook_event_name": "Notification", "notification_type": "agent_completed"}, home)
     assert read_state(home)["status"] == "idle"
+
+
+def test_notification_matcher_covers_every_handled_type() -> None:
+    """#21 structural invariant (ported from PR #28): hooks.json's Notification
+    matcher must deliver every type the handler branches for — a handled type
+    absent from the matcher is unreachable dead code."""
+    hooks = json.loads((PLUGIN_ROOT / "hooks" / "hooks.json").read_text())
+    matcher = hooks["hooks"]["Notification"][0]["matcher"]
+    delivered = set(matcher.split("|"))
+    required = {
+        "idle_prompt",
+        "permission_prompt",
+        "elicitation_dialog",
+        "agent_needs_input",
+        "agent_completed",
+    }
+    assert required <= delivered, f"matcher {matcher!r} is missing {required - delivered}"

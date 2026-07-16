@@ -144,7 +144,16 @@ function writeState(cwd, state) {
         updatedAt: new Date().toISOString()
     };
 
-    fs.writeFileSync(stateFile, JSON.stringify(fullState, null, 2), { mode: 0o600 });
+    // Atomic write: serialize to a unique temp file in the SAME directory, then
+    // rename() over the target. rename(2) is atomic within a filesystem, so a
+    // concurrent hook process — or getSubagentCount() reading mid-write — never
+    // observes a torn/half-written state file. A partial read would parse-fail
+    // and silently reset subagentCount to 0, re-introducing #17 through the I/O
+    // side door. (Adopted from PR #28, the server Claude's parallel fix.)
+    const tmpFile = path.join(stateDir, `.${cwdHash}.${process.pid}.${Date.now()}.tmp`);
+    fs.writeFileSync(tmpFile, JSON.stringify(fullState, null, 2), { mode: 0o600 });
+    try { fs.chmodSync(tmpFile, 0o600); } catch (e) {}
+    fs.renameSync(tmpFile, stateFile);
     try { fs.chmodSync(stateFile, 0o600); } catch (e) {}
 
     // Also write to a "by-cwd" index for easy lookup

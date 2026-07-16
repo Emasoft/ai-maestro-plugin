@@ -189,7 +189,10 @@ def test_non_agent_session_without_work_dir_is_allowed() -> None:
     event = {"tool_name": "Bash", "tool_input": {"command": f"echo x > {WORK}/f"}}
     env = os.environ.copy()
     env.pop("AGENT_WORK_DIR", None)
-    env.pop("AID_AUTH", None)  # ensure a truly marker-less (non-agent) context
+    # Ensure a truly marker-less (non-agent) context — BOTH positive markers
+    # must be absent, or a host env leak would flip this test to deny.
+    env.pop("AID_AUTH", None)
+    env.pop("AIMAESTRO_AGENT", None)
     proc = subprocess.run(
         ["node", str(GUARD)],
         input=json.dumps(event),
@@ -204,14 +207,21 @@ def test_non_agent_session_without_work_dir_is_allowed() -> None:
     assert hook["permissionDecision"] == "allow"
 
 
-def test_agent_context_without_work_dir_fails_closed() -> None:
-    """An AI-Maestro AGENT (AID_AUTH set) whose AGENT_WORK_DIR failed to get set
-    → FAIL-CLOSED (deny): a real agent must never write with an undetermined
-    sandbox root (#22)."""
+@pytest.mark.parametrize(
+    "marker_env",
+    [{"AID_AUTH": "test-agent-bearer-token"}, {"AIMAESTRO_AGENT": "1"}],
+    ids=["aid_auth", "aimaestro_agent"],
+)
+def test_agent_context_without_work_dir_fails_closed(marker_env: dict) -> None:
+    """An AI-Maestro AGENT (either positive marker: AID_AUTH or AIMAESTRO_AGENT)
+    whose AGENT_WORK_DIR failed to get set → FAIL-CLOSED (deny): a real agent
+    must never write with an undetermined sandbox root (#22, marker set per PR #28)."""
     event = {"tool_name": "Bash", "tool_input": {"command": f"echo x > {WORK}/f"}}
     env = os.environ.copy()
     env.pop("AGENT_WORK_DIR", None)
-    env["AID_AUTH"] = "test-agent-bearer-token"  # positive agent marker
+    env.pop("AID_AUTH", None)
+    env.pop("AIMAESTRO_AGENT", None)
+    env.update(marker_env)
     proc = subprocess.run(
         ["node", str(GUARD)],
         input=json.dumps(event),

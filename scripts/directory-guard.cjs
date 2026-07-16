@@ -8,7 +8,7 @@
  *
  * SECURITY MODEL:
  *   - FAIL-CLOSED within an AGENT context: if this is an AI-Maestro agent
- *     (AID_AUTH set) but its work directory cannot be determined → DENY ALL
+ *     (AID_AUTH or AIMAESTRO_AGENT set) but its work directory cannot be determined → DENY ALL
  *     writes. A NON-agent session (no agent marker) is NOT sandboxed by this
  *     guard — denying it bricked every interactive session machine-wide (#22).
  *   - AGENT_WORK_DIR env var is the ONLY trusted source of the agent's directory.
@@ -128,7 +128,7 @@ function evaluateAccess(event) {
     // the NORMAL state of a human's own session; it is NOT evidence of an agent.
     if (isAiMaestroAgentContext()) {
       return denyDecision(
-        'Directory guard: AI-Maestro agent context detected (AID_AUTH set) but AGENT_WORK_DIR is unset — cannot determine the sandbox root, blocking writes (fail-closed). AI Maestro must set AGENT_WORK_DIR at agent launch.'
+        'Directory guard: AI-Maestro agent context detected (AID_AUTH/AIMAESTRO_AGENT set) but AGENT_WORK_DIR is unset — cannot determine the sandbox root, blocking writes (fail-closed). AI Maestro must set AGENT_WORK_DIR at agent launch.'
       );
     }
     return allowDecision();
@@ -209,17 +209,24 @@ function resolveAgentWorkDir() {
  * True when this process is an AI-Maestro AGENT rather than an ordinary human
  * Claude Code session. AI-Maestro provisions every agent with an AID identity
  * whose bearer rides in AID_AUTH (the marker the prrd-trdd / governance CLIs
- * authenticate with); a real agent also gets AGENT_WORK_DIR. We treat AID_AUTH
- * as the positive agent signal for the one case AGENT_WORK_DIR can't cover
- * (#22): an agent whose sandbox root failed to get set. This decides only
- * WHETHER to sandbox, never grants a privilege. An agent stripped of BOTH
+ * authenticate with); the launcher also sets AIMAESTRO_AGENT (the agent-context
+ * flag) and AGENT_WORK_DIR. We treat AID_AUTH OR AIMAESTRO_AGENT as the
+ * positive agent signal for the one case AGENT_WORK_DIR can't cover (#22): an
+ * agent whose sandbox root failed to get set. This decides only WHETHER to
+ * sandbox, never grants a privilege — env vars are spoofable, but SETTING a
+ * marker only ever pushes a workdir-less session onto the DENY (more
+ * restrictive) branch, never onto ALLOW, so trusting marker PRESENCE to
+ * TIGHTEN enforcement is safe (adopted from PR #28). An agent stripped of ALL
  * markers is indistinguishable from a non-agent and would not be sandboxed —
  * acceptable because this guard is advisory (see SECURITY MODEL above); the
  * hard boundary is the launcher's OS-level sandbox.
  */
 function isAiMaestroAgentContext() {
-  const aid = process.env.AID_AUTH;
-  return Boolean(aid && aid.trim());
+  const markers = ['AID_AUTH', 'AIMAESTRO_AGENT'];
+  return markers.some((k) => {
+    const v = process.env[k];
+    return typeof v === 'string' && v.trim() !== '';
+  });
 }
 
 // ============================================================================
