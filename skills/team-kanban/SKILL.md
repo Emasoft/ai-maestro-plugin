@@ -87,6 +87,33 @@ migrated may still serve them, which is exactly why you read the config instead 
 assuming. Configure a team onto the ratified set with `kanban-config --set` (see
 [api-reference](references/api-reference.md)).
 
+### Write-gate enforcement — not every move is yours to make
+
+The server **refuses** some moves. This is enforced at the write endpoint, so a move you are
+not entitled to make fails with `403` rather than silently succeeding:
+
+- **GATE 1 — governed transitions need a MANAGER (by AID) or the human owner.** That covers
+  moving a card *into* `human_review`, `complete`, `publish`, `deploy`, `published`, `live`,
+  `failed`, or `superseded`; moving it *backward into* `dev` from `human_review` or
+  `live_auditing`; and writing the release-evidence fields `publishedVersion` / `liveSince`.
+- **GATE 2 — self-review ban.** You may not render a verdict on a card **you are assigned to**
+  — writing `reviewResult`, or moving it out of `ai_review`/`human_review` into `complete`.
+  Any *other* agent, of any title, may.
+- **Everything else is a free member move**: `backburner`, `todo`, `design`, `dispatch`,
+  `dev` (forward), `testing`, `ai_review`, `blocked`, `live_auditing`.
+
+**Caveat — teams on a custom column configuration.** The gate matches literal column strings,
+so this guarantee holds only for columns whose names match the ratified 17-column set; a
+renamed governed column is not yet gated (tracked in TRDD-LY442MKH). A default-board team
+needs no qualifier.
+
+**Enforcement vs. process.** The write gate distinguishes only *MANAGER-by-AID / owner* from
+*everyone else*, plus the self-review ban. The finer per-title routing (`todo→design` =
+ORCHESTRATOR, `design→dispatch` = ARCHITECT, `dispatch→dev` = ORCHESTRATOR sets the assignee,
+…) is the **organizational contract agents follow — it is NOT mechanically enforced**. Do not
+rely on the server to refuse a contract violation it does not gate; see the TRDD
+approval-tiers rule (§B2) for the routing itself.
+
 ## Output
 
 - Task list: `{"tasks":[...]}` with `isBlocked`, `blocks[]`, `assigneeName`
