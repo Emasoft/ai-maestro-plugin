@@ -71,12 +71,21 @@ canonical home. A floor restated in a skill is a floor that goes stale.
    zsh — use `$SHORT`):
 
    ```bash
-   TRDD_UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-   SHORT=${TRDD_UUID:0:8}
+   # The id IS 8-char UPPERCASE base36 (A-Z0-9) — it is the canonical identifier.
+   # There is NO UUID: `trdd-id:` carries this same value, not a longer form.
+   # -iname, NOT -name: legacy LOWERCASE ids exist and can NEVER be renamed (they are
+   # cited in immutable commit subjects), so a case-sensitive check would report a
+   # case-folding id as free and the write would silently overwrite that card.
+   # This is permanent, not a migration aid — never "simplify" it back to -name.
+   while :; do
+     TID=$(LC_ALL=C tr -dc 'A-Z0-9' < /dev/urandom | head -c 8)
+     find design ~/.claude/projects/*/design -iname "TRDD-*-${TID}-*.md" 2>/dev/null \
+       | grep -q . || break      # grep -q, never `ls <glob>`: an unmatched glob can
+   done                          # make ls list the cwd and exit 0 -> infinite loop
    TS=$(date +%Y%m%d_%H%M%S%z)        # filename timestamp (compact, Windows-safe)
    ISO=$(date +%Y-%m-%dT%H:%M:%S%z)   # frontmatter datetime (ISO 8601 + TZ)
-   ZONE=tasks                         # 'tasks' for Tier 0; 'proposals' for Tier 1/2/3
-   FN="design/$ZONE/TRDD-$TS-$SHORT-<short-slug>.md"
+   ZONE=tasks                         # 'tasks' for `none`; 'proposals' for any higher rung
+   FN="design/$ZONE/TRDD-$TS-$TID-<short-slug>.md"
    ```
 
 3. Write the frontmatter + body (canonical skeleton in the scripts-usage

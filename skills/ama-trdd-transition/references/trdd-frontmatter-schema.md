@@ -35,11 +35,35 @@ Every field is engineered to answer a real grep question in one line.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `trdd-id` | UUID | — | RFC 4122 UUIDv4, full form. The 8-char prefix derives from this. Generate: `python3 -c "import uuid; print(uuid.uuid4())"` |
+| `trdd-id` | string | — | **8-char UPPERCASE base36 (`A-Z0-9`) — this IS the canonical id; there is no UUID and nothing derives from anything.** Generate: `LC_ALL=C tr -dc 'A-Z0-9' < /dev/urandom \| head -c 8`, re-rolling while `find … -iname "TRDD-*-<id>-*.md" \| grep -q .`. **The uppercase constraint binds at MINT time only** — see the immutability note below. |
 | `title` | string | — | Single line, ≤80 chars, no colons. The TRDD's headline. |
 | `column` | enum | — | Current kanban column. See [column-transitions.md](column-transitions.md) for the transition matrix and [trdd-design-tasks.md](trdd-design-tasks.md) for the full enum (incl. the proposal-lifecycle values `proposal`/`planned`/`refused`/`cancelled` — see [approval-tiers-and-zones.md](approval-tiers-and-zones.md)). Mandatory. |
 | `created` | datetime | — | When this TRDD was authored. Never changes after creation. |
 | `updated` | datetime | — | Last modification time. Bump on EVERY edit. |
+
+> **⚠ `trdd-id` IMMUTABILITY — the uppercase rule binds at MINT time ONLY, and existing
+> lowercase ids are non-conformant BY DESIGN. Never normalize them, and never write a
+> migration that does.**
+>
+> Much of the existing corpus carries 8-char **lowercase** hex ids minted by a retired
+> `uuid4()`-derived recipe. They are permanently valid. Renaming one is forbidden because
+> the id is cited in places that cannot be rewritten:
+>
+> - **commit subjects** — immutable; rewriting them is a history rewrite. They are the
+>   backtracking chain (`git log --grep 'TRDD-<id>'`) that traces a bug found next year to
+>   the TRDD that introduced it, together with `implementation-commits:`.
+> - `npt:` / `eht:` / `blocked-by:` / `parent-trdd:` edges across the corpus, and GitHub
+>   issue bodies.
+>
+> Normalizing for conformance would destroy that provenance to satisfy a formatting rule —
+> it converts a silent, improbable failure into a loud, certain one.
+>
+> **Therefore every id READER must be case-insensitive, permanently:** lookup, resolve,
+> dependency-edge resolution, the board renderer, and the collision check. `-iname` is not
+> a transitional aid; "simplifying" it to `-name` silently reintroduces the overwrite
+> defect against a corpus that will contain lowercase ids indefinitely. The collision check
+> is the reader that loses data; the others merely fail to find the card — which is the
+> deterministic failure, and the one that actually fires.
 
 ### 2. Ownership
 

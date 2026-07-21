@@ -138,11 +138,18 @@ log` line and `git mv`s the file (never deletes). See
 ## Authoring a new TRDD (canonical skeleton)
 
 ```bash
-TRDD_UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-SHORT=${TRDD_UUID:0:8}                 # NB: not $UID (zsh reserves it)
+# The id IS 8-char UPPERCASE base36 (A-Z0-9). There is NO UUID.
+# -iname, NOT -name: legacy LOWERCASE ids exist and can NEVER be renamed (cited in
+# immutable commit subjects), so a case-sensitive check would call a case-folding id
+# free and the write would overwrite that card. Permanent, not a migration aid.
+while :; do
+  TID=$(LC_ALL=C tr -dc 'A-Z0-9' < /dev/urandom | head -c 8)   # NB: not $UID (zsh reserves it)
+  find design ~/.claude/projects/*/design -iname "TRDD-*-${TID}-*.md" 2>/dev/null \
+    | grep -q . || break        # grep -q, never `ls <glob>` (unmatched glob -> ls lists
+done                            # the cwd and exits 0 -> infinite loop)
 TS=$(date +%Y%m%d_%H%M%S%z)
 ISO=$(date +%Y-%m-%dT%H:%M:%S%z)
-FN="design/tasks/TRDD-$TS-$SHORT-<short-slug>.md"
+FN="design/tasks/TRDD-$TS-$TID-<short-slug>.md"
 
 cat > "$FN" <<EOF
 ---

@@ -191,10 +191,19 @@ proposal` and live in `design/proposals/`. To author one:
 
 1. Generate identity + timestamps (same as any TRDD):
    ```bash
-   TID=$(python3 -c "import uuid; print(uuid.uuid4())"); SHORT=${TID:0:8}
+   # The id IS 8-char UPPERCASE base36 (A-Z0-9). There is no UUID.
+   # -iname, NOT -name: legacy LOWERCASE ids exist and can NEVER be renamed (they are
+   # cited in immutable commit subjects), so a case-sensitive check would report a
+   # case-folding id as free and the write would overwrite that card. Do not
+   # "simplify" this back to -name — it is load-bearing permanently, not a migration aid.
+   while :; do
+     TID=$(LC_ALL=C tr -dc 'A-Z0-9' < /dev/urandom | head -c 8)
+     find design ~/.claude/projects/*/design -iname "TRDD-*-${TID}-*.md" 2>/dev/null \
+       | grep -q . || break        # grep -q, never `ls <glob>`: an unmatched glob can
+   done                            # make ls list the cwd and exit 0 -> infinite loop
    TS=$(date +%Y%m%d_%H%M%S%z); ISO=$(date +%Y-%m-%dT%H:%M:%S%z)
    ```
-2. Write `design/proposals/TRDD-$TS-$SHORT-<slug>.md` with frontmatter:
+2. Write `design/proposals/TRDD-$TS-$TID-<slug>.md` with frontmatter:
    - `trdd-id: $TID`, `title:` (no colon), `column: proposal`,
      `created: $ISO`, `updated: $ISO`, `current-owner:`, `task-type:`.
    - **`min-approval-requirement: <title>`** — the TITLE that must
