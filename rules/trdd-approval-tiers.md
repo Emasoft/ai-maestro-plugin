@@ -32,7 +32,7 @@ gate), this rule governs.
 
   idea / request
        │
-       │  Tier 0 (own scope · NPT/EHT) ── author directly as `planned` ──┐
+       │  `none` (own scope · NPT/EHT) ─ author directly as `planned` ──┐
        │                                                                 │
        ▼   needs approval                                                ▼
  ┌───────────────────┐   approve                                ┌────────────────────────┐
@@ -155,13 +155,13 @@ failed".
    **Refusal protocol** below.)
 4. **An agent MAY author a TRDD directly in `design/tasks/` with
    `column: planned`** — skipping the proposal stage entirely — **only
-   when the task is within that agent's independent authority (Tier 0
+   when the task is within that agent's independent authority (`none`
    below).** This is the common case for **DERIVED TASKS**: the
    necessary prerequisites (NPT) and effect-handling tasks (EHT) an
    agent must create and execute to deliver an already-approved task.
    It also covers a genuinely independent, in-scope task the agent
    needs to do its job. Agents are **expected** to continuously plan
-   and execute their own Tier-0 work this way without waiting on
+   and execute their own `none` work this way without waiting on
    anyone.
 
 The design/ folders are therefore an **accurate live index** with three
@@ -197,11 +197,13 @@ proposal` and live in `design/proposals/`. To author one:
 2. Write `design/proposals/TRDD-$TS-$SHORT-<slug>.md` with frontmatter:
    - `trdd-id: $TID`, `title:` (no colon), `column: proposal`,
      `created: $ISO`, `updated: $ISO`, `current-owner:`, `task-type:`.
-   - **`approval-tier: N`** — the tier (0/1/2/3 from Part B) this
-     proposal needs. This is what makes the proposal's required
-     authority greppable and lets the listing tool show it. A Tier-0
-     task does **not** belong here (author it directly in
-     `design/tasks/`); proposals are Tier 1/2/3 by definition.
+   - **`min-approval-requirement: <title>`** — the TITLE that must
+     approve this proposal, from the ladder in Part B:
+     `none | orchestrator | chief-of-staff | manager | user`. This is
+     what makes the proposal's required authority greppable and lets the
+     listing tool show it. Absent means `none`. A `none` task does
+     **not** belong here (author it directly in `design/tasks/`);
+     proposals require an approver by definition.
    - Relationships (`parent-trdd:`, `npt:`, `eht:`, `relevant-rules:`)
      and `external-refs:` as applicable.
 3. Body: fully **self-contained** (a cross-project proposal's
@@ -217,12 +219,14 @@ proposal` and live in `design/proposals/`. To author one:
 Performed by the authority Part B requires (USER / MANAGER / COS), or
 in batch by the `amama-approval-workflows` skill. Per proposal:
 
-1. Confirm the approver holds the proposal's `approval-tier:` authority
-   (a Tier-3 proposal needs USER; a Tier-2 needs MANAGER; etc.).
+1. Confirm the approver's title meets the proposal's
+   `min-approval-requirement:` on the Part B ladder (a `user` proposal
+   needs the USER; a `manager` proposal needs the MANAGER; etc. — a
+   HIGHER rung may always approve a lower one, never the reverse).
 2. Edit frontmatter: `column: proposal` → `column: planned`; bump
    `updated:` to a fresh `date +%Y-%m-%dT%H:%M:%S%z`.
 3. Append to `## Approval log`:
-   `- <ISO> — APPROVED by <approver> (tier <N>). <one-line rationale>.`
+   `- <ISO> — APPROVED by <approver> (min-approval-requirement: <title>). <reason>`
 4. `git mv design/proposals/TRDD-….md design/tasks/TRDD-….md`.
 5. Commit (`docs: approve TRDD-<short> → planned`). The owner then
    advances it through the normal v2 pipeline (`planned` → `todo` → …).
@@ -235,7 +239,7 @@ refused proposal:
 1. Edit frontmatter: `column: proposal` → `column: refused`; bump
    `updated:`.
 2. Append to `## Approval log`:
-   `- <ISO> — REFUSED by <approver> (tier <N>). <one-line reason>.`
+   `- <ISO> — REFUSED by <approver> (min-approval-requirement: <title>). <reason>`
 3. `git mv` the file into `design/refused/` (create the
    folder if absent). It leaves the pending index but stays in-repo.
 4. Commit (`docs: refuse TRDD-<short> → refused`).
@@ -314,11 +318,30 @@ have reviewed the whole list and want everything except the named few).
 
 ## Part B — Approval classification: who must approve before `planned`
 
-**THE DEFAULT IS TIER 0 (agent-independent).** An agent escalates to a
-higher tier **only** when a trigger in that tier fires. **When unsure
-which tier applies, escalate one tier — conservative beats sorry.**
+**The authority is named by a TITLE, in the frontmatter field
+`min-approval-requirement:`. The ladder is:**
 
-### Tier 0 — Agent-independent — DEFAULT, no approval
+```
+none  <  orchestrator  <  chief-of-staff  <  manager  <  user
+```
+
+`member` / `architect` / `integrator` carry none-authority. A **higher**
+rung may always approve a lower one; never the reverse.
+
+**THE DEFAULT IS `none` (agent-independent)** — and it is also what an
+**absent** `min-approval-requirement:` means. An agent escalates to a
+higher rung **only** when a trigger below fires. **When unsure which rung
+applies, escalate one rung — conservative beats sorry.**
+
+> **Legacy DECODE only — never write a number.** Older TRDDs carry a
+> retired numeric `approval-tier:`. Read it as
+> `0→none, 1→chief-of-staff, 2→manager, 3→user`, then rewrite the card to
+> the title. **`orchestrator` has no number** — that is precisely why the
+> numeric scheme was retired: it structurally cannot express this rung.
+> `maestro` is a deprecated read-alias — accept it on read, normalize to
+> `user`, never write it.
+
+### `none` — Agent-independent — DEFAULT, no approval
 Author directly in `design/tasks/` as `planned`. Permitted when **all**
 hold:
 - The task is a **DERIVED TASK** (NPT/EHT of a task the agent already
@@ -338,7 +361,8 @@ This is exactly the **EXEMPT** set in
 intake/authoring, within-team coordination, read-only queries, runtime
 evidence logging, applying the ratified baseline as-is).
 
-### Tier 1 — CHIEF-OF-STAFF approval — team-internal coordination
+### `chief-of-staff` — team-internal coordination
+### (`orchestrator` when the move is purely dispatch-scoped)
 Required when the task:
 - affects **other members of the same team**, reprioritizes team work,
   or creates team-internal dependencies; or
@@ -348,9 +372,9 @@ Required when the task:
 Per R6 v3, **COS is the sole entry point into a team** — the proposal
 routes through the team's CHIEF-OF-STAFF. COS may approve and promote
 (`proposal → planned`, move the file) **without** escalating, UNLESS a
-Tier-2/3 trigger also fires — then COS forwards to MANAGER.
+`manager`/`user` trigger also fires — then COS forwards to MANAGER.
 
-### Tier 2 — MANAGER approval — cross-team / governance / release / baseline-deviation
+### `manager` — cross-team / governance / release / baseline-deviation
 Required when the task:
 - **deviates from a standard baseline, or adds/loosens/removes a rule
   relative to the baseline** — e.g. a special GitHub-ruleset exception,
@@ -368,7 +392,7 @@ files the TRDD in `design/proposals/` and routes an approval request to
 MANAGER (team-internal agents via their COS). MANAGER approves →
 promotes → moves to `design/tasks/`.
 
-### Tier 3 — USER approval — golden / highest-stakes / owner-facing
+### `user` — golden / highest-stakes / owner-facing
 Required when the task:
 - changes a **GOLDEN PRRD rule**, or promotes/demotes a rule between
   golden and silver; or
@@ -384,12 +408,13 @@ MANAGER escalates to USER and relays the decision back down the chain.
 
 ### Routing summary
 - Team-internal agents (ORCH/ARCH/INT/MEMBER) route **all** proposals
-  through their **COS** (R6 v3). COS handles Tier 1; forwards Tier 2/3
+  through their **COS** (R6 v3). COS handles `chief-of-staff` (and
+  `orchestrator`); forwards `manager`/`user`
   to MANAGER.
 - AUTONOMOUS and MAINTAINER propose **directly to MANAGER**
   (governance-layer peers).
-- MANAGER handles Tier 2; forwards Tier 3 to USER.
-- USER is the only approver for Tier 3.
+- MANAGER handles `manager`; forwards `user` to the USER.
+- The USER is the only approver for `user`.
 
 ---
 
@@ -404,11 +429,12 @@ under-classification an efficiency-oriented agent is tempted to do.
 
 ### D1. Never block; enqueue and drain on idle
 
-- **Tier 0** → author in `design/tasks/` as `planned` and **proceed
+- **`none`** → author in `design/tasks/` as `planned` and **proceed
   immediately**. No wait, ever. This is the overwhelming majority of work
   (all derived NPT/EHT and in-scope tasks). Agents are *expected* to
-  create as many Tier-0 derived TRDDs as the work needs.
-- **Tier 1/2/3** → author in `design/proposals/`, then **keep working on
+  create as many `none` derived TRDDs as the work needs.
+- **Any higher rung** (`orchestrator` / `chief-of-staff` / `manager` /
+  `user`) → author in `design/proposals/`, then **keep working on
   other things**. The agent does NOT spin-wait on the approver. The
   proposal sits in a **queue** the approver drains when not busy with
   more urgent matters (the janitor heartbeat is a natural idle cadence).
@@ -420,11 +446,12 @@ under-classification an efficiency-oriented agent is tempted to do.
 
 ### D2. Self-classify for speed — but it is AUDITED, not trusted
 
-The agent sets its own `approval-tier:` so it never waits on a human to
-*classify*. That speed is bought with an explicit anti-gaming contract:
+The agent sets its own `min-approval-requirement:` so it never waits on a
+human to *classify*. That speed is bought with an explicit anti-gaming
+contract:
 
 - An agent that **deliberately under-classifies** a TRDD (flags a
-  sensitive change Tier 0 to dodge the queue) commits a **governance
+  sensitive change `none` to dodge the queue) commits a **governance
   violation** — worse than the wait it avoided. The agent's local
   judgment is NOT a substitute for the MANAGER's: only the MANAGER has
   the cross-project, user-priority, whole-picture view.
@@ -437,12 +464,12 @@ The agent sets its own `approval-tier:` so it never waits on a human to
 A TRDD's **minimum** tier is computed from what it actually touches —
 signals a script can check, so the watchdog needs no subjective call:
 
-| Objective signal in the TRDD's content / proposed diff | Tier floor |
+| Objective signal in the TRDD's content / proposed diff | `min-approval-requirement:` floor |
 |---|---|
-| GOLDEN PRRD rule edit · shared credentials / owner identity · irreversible destructive op · first production deploy of a new service · breaking public-API change | **3 (USER)** |
-| `.github/` workflows or rulesets · baseline-ruleset deviation · another project's source (cross-repo) · SILVER PRRD / persona / governance file · `release-via: publish\|deploy` to production | **2 (MANAGER)** |
-| affects other members of the same team / cross-member coordination | **1 (COS)** |
-| everything else (in-scope dev, NPT/EHT, docs, local refactor) | **0** |
+| GOLDEN PRRD rule edit · shared credentials / owner identity · irreversible destructive op · first production deploy of a new service · breaking public-API change | **`user`** |
+| `.github/` workflows or rulesets · baseline-ruleset deviation · another project's source (cross-repo) · SILVER PRRD / persona / governance file · `release-via: publish\|deploy` to production | **`manager`** |
+| affects other members of the same team / cross-member coordination | **`chief-of-staff`** (or **`orchestrator`** when the move is purely dispatch-scoped) |
+| everything else (in-scope dev, NPT/EHT, docs, local refactor) | **`none`** |
 
 Keep the floors **narrow and objective** — approval is required *rarely*,
 only for truly sensitive, detectable categories. The narrower and more
@@ -456,11 +483,13 @@ heartbeat cadence / MANAGER idle sweep) — **never** on every creation:
 
 1. For each TRDD in `design/tasks/` + `design/proposals/`, compute the
    D3 objective floor from its content + proposed diff.
-2. Compare the **declared** `approval-tier:` to the floor:
+2. Compare the **declared** `min-approval-requirement:` to the floor
+   (compare by RUNG on the Part B ladder, not alphabetically):
    - **declared ≥ floor** → fine.
    - **declared < floor (UNDER-CLASSIFIED)** → for an *unambiguous*
-     objective signal, **auto-correct**: raise `approval-tier:` to the
-     floor, and if it was already in `design/tasks/` as `planned`, **move
+     objective signal, **auto-correct**: raise
+     `min-approval-requirement:` to the floor, and if it was already in
+     `design/tasks/` as `planned`, **move
      it back to `design/proposals/`** (un-authorize it) and stop any
      dependent execution; log it in the TRDD `## Approval log` and the
      watchdog report. For an *ambiguous* case, **flag** it for the
@@ -514,7 +543,7 @@ server registry):
     paths:    ["**/libfoo/**"]
     keywords: ["libfoo", "CVE-2026-XXXX"]
     deps:     ["libfoo"]
-  min-tier: 2                  # raise matches to >= Tier 2
+  min-approval-requirement: manager   # raise matches to >= manager
   no-self-approve: true
   mode: realtime              # proactive for THIS category only
   expires: 2026-06-12T19:00:00+0200   # TTL — see below
@@ -533,7 +562,8 @@ shrinks:
    certainty, but they shrink the investigation area massively — that is
    their job.
 2. **LLM confirm only on the suspects:** the (few) matched TRDDs get the
-   expensive check — raise their `approval-tier:` to `min-tier`, enforce
+   expensive check — raise their `min-approval-requirement:` to the
+   emergency rule's `min-approval-requirement`, enforce
    `no-self-approve` (if a match was self-approved into `design/tasks/`,
    move it back to `design/proposals/` and halt dependent execution),
    and LLM-confirm ambiguous matches. The non-matches never cost a
@@ -562,10 +592,10 @@ definition lives in `manager-approval-defaults.md` §F.
 **The ai-maestro-janitor automatically enforces this baseline.** If an
 agent forgets to set it (or a repo drifts off it), the janitor
 re-applies the ratified pair unprompted. Applying the baseline **as-is**
-is a **Tier-0** operation — no approval needed; the janitor does it
+is a **`none`** operation — no approval needed; the janitor does it
 without being asked.
 
-**Any deviation is Tier 2 (MANAGER permission required BEFORE it is
+**Any deviation is `manager` (MANAGER permission required BEFORE it is
 applied):**
 - adding a special exception or an extra rule not in the baseline,
 - loosening, downgrading, or removing a baseline rule or check,
@@ -577,17 +607,18 @@ No agent may unilaterally weaken, extend, or diverge from the baseline.
 If a repo genuinely needs a non-baseline rule, the agent files a
 **proposal** TRDD describing the exception and routes it to MANAGER
 (team-internal via COS). MANAGER weighs it; if it touches a GOLDEN rule
-or the shared identity, MANAGER forwards to USER (Tier 3).
+or the shared identity, MANAGER forwards to the USER (`user`).
 
 ---
 
 ## Why this exists
 
 - **Autonomy without chaos.** Agents must plan and execute their own
-  Tier-0 work continuously (DERIVED TASKS) — waiting on approval for
+  `none` work continuously (DERIVED TASKS) — waiting on approval for
   every step would stall everything. The tiers draw the exact line
   between "just do it" and "ask first."
-- **One clear escalation ladder.** Tier 0 → COS → MANAGER → USER maps
+- **One clear escalation ladder.** `none` → ORCHESTRATOR → COS → MANAGER
+  → USER maps
   directly onto the EXEMPT/NON-EXEMPT lists and the GOLDEN/SILVER split,
   so there is a single, greppable answer to "who signs off on this?"
 - **Proposals are visible and revertible.** A `proposal` in
@@ -599,13 +630,13 @@ or the shared identity, MANAGER forwards to USER (Tier 3).
 
 ## Anti-patterns
 
-- Authoring a Tier-2/Tier-3 task directly in `design/tasks/` as
+- Authoring a `manager`/`user` task directly in `design/tasks/` as
   `planned` to skip approval. The folder is determined by the tier, not
   by convenience.
 - A team-internal agent routing a proposal straight to MANAGER instead
   of through its COS (violates R6 v3).
 - "It's just a small ruleset tweak" applied without MANAGER sign-off —
-  baseline deviations are Tier 2 regardless of size.
+  baseline deviations are `manager` regardless of size.
 - Moving a grandfathered `design/tasks/` TRDD back into
   `design/proposals/`.
 - Leaving an approved proposal in `design/proposals/` after approval —
