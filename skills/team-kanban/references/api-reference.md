@@ -51,7 +51,7 @@ Lists all tasks for a team with resolved dependency information.
 Each task includes derived fields:
 
 - `blocks` — array of task IDs that this task blocks
-- `isBlocked` — boolean, true if any blockedBy task is not completed
+- `isBlocked` — boolean, true if any blockedBy task has not reached a terminal column
 - `assigneeName` — display name of the assigned agent (resolved from registry)
 
 ---
@@ -85,7 +85,7 @@ Creates a new task.
 |-------|------|----------|-------------|
 | `subject` (positional title) | string | Yes | Task title |
 | `description` (`--description`) | string | No | Detailed description |
-| `status` (`--status`) | string | No | Initial status (default: first column, usually `backlog`) |
+| `status` (`--status`) | string | No | Initial status (default: the team config's first column; ratified first column is `backburner`) |
 | `priority` (`--priority`) | number | No | Priority (lower = higher priority) |
 | `assigneeAgentId` (`--assignee`) | string | No | Agent UUID to assign |
 | `labels` (`--labels`) | string[] | No | Categorization labels (comma-separated) |
@@ -154,8 +154,8 @@ Gets the team's kanban column configuration.
 ```json
 {
   "columns": [
-    { "id": "backlog", "label": "Backlog", "color": "bg-gray-500", "icon": "Archive" },
-    { "id": "pending", "label": "To Do", "color": "bg-gray-400", "icon": "Circle" },
+    { "id": "backburner", "label": "Backburner", "color": "bg-gray-500", "icon": "Archive" },
+    { "id": "todo", "label": "TODO", "color": "bg-gray-400", "icon": "Circle" },
     ...
   ]
 }
@@ -265,7 +265,7 @@ run as the auto-detected caller.
 ```bash
 amp-kanban-create-task.sh "Implement auth middleware" \
   --description "Add JWT validation to all API routes" \
-  --status backlog \
+  --status backburner \
   --priority 1 \
   --assignee <agent-uuid> \
   --labels "backend,security" \
@@ -279,7 +279,7 @@ amp-kanban-create-task.sh "Implement auth middleware" \
 amp-kanban-list.sh | jq '.tasks'
 
 # Filter by status
-amp-kanban-list.sh --status in_progress | jq '.tasks'
+amp-kanban-list.sh --status dev | jq '.tasks'
 
 # Filter by assignee
 amp-kanban-list.sh --assignee <agent-uuid> | jq '.tasks'
@@ -294,10 +294,15 @@ amp-kanban-list.sh --task-type bug | jq '.tasks'
 ### Move Task (Update Status)
 
 ```bash
-amp-kanban-move.sh <task-id> in_progress | jq .
+amp-kanban-move.sh <task-id> dev | jq .
 ```
 
-Status must match a column ID in the team's kanban config. Default columns: `backlog`, `pending`, `in_progress`, `review`, `completed`.
+Status must match a column ID **in that team's kanban config** — read the config rather
+than assuming a vocabulary. The ratified set is the 17 columns (`backburner`, `todo`,
+`design`, `dispatch`, `dev`, `testing`, `ai_review`, `human_review`, `complete`,
+`publish`, `published`, `deploy`, `live`, `live_auditing`, plus `blocked`, `failed`,
+`superseded`). The legacy five (`backlog`/`pending`/`in_progress`/`review`/`completed`)
+are obsolete; an unmigrated team may still serve them.
 
 ### Assign/Unassign Task
 
@@ -346,27 +351,46 @@ amp-kanban-list.sh | \
 
 ## Kanban Configuration
 
-### Default Columns
+### Columns
 
-| id | label | color | icon |
-|----|-------|-------|------|
-| `backlog` | Backlog | bg-gray-500 | Archive |
-| `pending` | To Do | bg-gray-400 | Circle |
-| `in_progress` | In Progress | bg-blue-400 | PlayCircle |
-| `review` | Review | bg-amber-400 | Eye |
-| `completed` | Done | bg-emerald-400 | CheckCircle2 |
+Column ids are **per-team**, set via `kanban-config --set` (below). Read a team's actual
+config before moving cards.
+
+The **ratified 17-column vocabulary** — 14 lifecycle, in order, then 3 orthogonal/terminal:
+
+| id | meaning |
+|----|---------|
+| `backburner` | parked, not yet queued |
+| `todo` | queued |
+| `design` | being designed / split |
+| `dispatch` | ready to assign |
+| `dev` | implementation in progress |
+| `testing` | gates running |
+| `ai_review` | AI review |
+| `human_review` | escalated to a human |
+| `complete` | verdict accepted |
+| `publish` → `published` | release pipeline (tools) |
+| `deploy` → `live` → `live_auditing` | release pipeline (services) |
+| `blocked` / `failed` / `superseded` | orthogonal / terminal |
+
+**Legacy (obsolete):** `backlog`, `pending`, `in_progress`, `review`, `completed` — an
+unmigrated team may still serve these; migrate it with `kanban-config --set` rather than
+teaching agents the old ids.
 
 ### Customize Columns
 
 ```bash
 aimaestro-teams.sh kanban-config <team-id> --set '[
-  {"id": "backlog", "label": "Backlog", "color": "bg-gray-500", "icon": "Archive"},
+  {"id": "backburner", "label": "Backburner", "color": "bg-gray-500", "icon": "Archive"},
   {"id": "todo", "label": "TODO", "color": "bg-gray-400", "icon": "Circle"},
-  {"id": "in_progress", "label": "In Progress", "color": "bg-blue-400", "icon": "PlayCircle"},
+  {"id": "design", "label": "Design", "color": "bg-indigo-400", "icon": "PenTool"},
+  {"id": "dispatch", "label": "Dispatch", "color": "bg-sky-400", "icon": "Send"},
+  {"id": "dev", "label": "Dev", "color": "bg-blue-400", "icon": "PlayCircle"},
+  {"id": "testing", "label": "Testing", "color": "bg-cyan-400", "icon": "FlaskConical"},
   {"id": "ai_review", "label": "AI Review", "color": "bg-purple-400", "icon": "SearchCheck"},
   {"id": "human_review", "label": "Human Review", "color": "bg-amber-400", "icon": "Eye"},
-  {"id": "testing", "label": "Testing", "color": "bg-cyan-400", "icon": "FlaskConical"},
-  {"id": "completed", "label": "Done", "color": "bg-emerald-400", "icon": "CheckCircle2"}
+  {"id": "complete", "label": "Complete", "color": "bg-emerald-400", "icon": "CheckCircle2"},
+  {"id": "blocked", "label": "Blocked", "color": "bg-red-400", "icon": "Ban"}
 ]' | jq .
 ```
 
@@ -391,13 +415,13 @@ amp-kanban-list.sh | \
 
 ```bash
 amp-kanban-list.sh | \
-  jq '.tasks | group_by(.assigneeAgentId) | map({agent: .[0].assigneeAgentId, assigneeName: .[0].assigneeName, count: length, in_progress: [.[] | select(.status == "in_progress")] | length})'
+  jq '.tasks | group_by(.assigneeAgentId) | map({agent: .[0].assigneeAgentId, assigneeName: .[0].assigneeName, count: length, dev: [.[] | select(.status == "dev")] | length})'
 ```
 
 ### Completed in Date Range
 
 ```bash
-amp-kanban-list.sh --status completed | \
+amp-kanban-list.sh --status complete | \
   jq --arg since "2026-03-01" '[.tasks[] | select(.completedAt >= $since)] | length'
 ```
 

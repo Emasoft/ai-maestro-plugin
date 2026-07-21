@@ -68,9 +68,24 @@ Each CLI auto-detects the team from your agent registration (pass `--team <id>` 
 
 The `amp-kanban-*` / `aimaestro-teams.sh` CLIs resolve your agent identity + bearer token internally — no `Authorization` / `X-Agent-Id` headers to set by hand. Pass `--id <uuid>` only to act as a specific agent.
 
-### Default Columns
+### Columns
 
-`backlog` / `pending` / `in_progress` / `review` / `completed`
+Columns are **per-team configurable** — `status` must match a column id in that team's
+kanban config, so read the team's real config before moving a card rather than assuming
+a vocabulary (`aimaestro-teams.sh kanban-config <team-id>`).
+
+The **ratified vocabulary is the 17 columns** — 14 lifecycle:
+
+`backburner` → `todo` → `design` → `dispatch` → `dev` → `testing` → `ai_review` →
+`human_review` → `complete` → `publish` → `published` → `deploy` → `live` → `live_auditing`
+
+plus 3 orthogonal/terminal: `blocked`, `failed`, `superseded`.
+
+The legacy five (`backlog`/`pending`/`in_progress`/`review`/`completed`) are **obsolete**
+and must not be taught as the target vocabulary — but a team whose config was never
+migrated may still serve them, which is exactly why you read the config instead of
+assuming. Configure a team onto the ratified set with `kanban-config --set` (see
+[api-reference](references/api-reference.md)).
 
 ## Output
 
