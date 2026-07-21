@@ -32,8 +32,9 @@ binaries) consumed by the other ecosystem plugins.
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
 ## Applies to
-- (radiates down to the component/aspect pages of this functionality — empty
-  until the first one is written; wire the reciprocal `## Governed by` on each)
+- [[trdd-id-and-approval-vocabulary]] — the two ratified governance models CORE taught
+  wrongly until 2026-07-21/22: the TRDD id (UPPERCASE base36, legacy lowercase ids
+  permanently valid) and `min-approval-requirement:` (titles, not the retired numeric tiers).
 
 ## See also
 - (lateral links to other functionality hubs, once they exist)
