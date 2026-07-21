@@ -23,19 +23,29 @@ for one atomic non-trivial task; trivial in-session todos do NOT need one.
 | **author proto-TRDD** | ✅ | ✅ | ✅ | ✅ | ✅ | via COS | ✅ | ✅ |
 
 Authoring is broadly allowed; a MEMBER routes intake through its COS (R6 v3).
-**The zone you write into is decided by the approval tier** (self-classify):
+**The zone you write into is decided by `min-approval-requirement:`** — the TITLE
+that must approve the card (self-classify). The ladder:
 
-- **Tier 0 (default)** — a DERIVED task (an NPT/EHT of work you already own) or a
-  task fully inside your own scope, reversible & local, no baseline deviation →
-  author directly in `design/tasks/` with `column: planned`. Proceed immediately.
-- **Tier 1 / 2 / 3** — affects other team members (1, COS) / crosses team or
-  project boundaries, enters the release pipeline, changes SILVER governance (2,
-  MANAGER) / changes GOLDEN governance or is irreversible/owner-facing (3, USER)
-  → author in `design/proposals/` with `column: proposal` and `approval-tier: N`;
-  then keep working — approval is asynchronous (`ama-proposal-approvals` drains it).
+```
+none  <  orchestrator  <  chief-of-staff  <  manager  <  user
+```
 
-**When unsure which tier, escalate one tier — conservative beats sorry.** Use the
-objective tier-floor table in the approval-tiers reference.
+- **`none` (default, and what an ABSENT field means)** — a DERIVED task (an NPT/EHT
+  of work you already own) or a task fully inside your own scope, reversible &
+  local, no baseline deviation → author directly in `design/tasks/` with
+  `column: planned`. Proceed immediately.
+- **Any higher rung** → author in `design/proposals/` with `column: proposal` and
+  `min-approval-requirement: <title>`; then keep working — approval is asynchronous
+  (`ama-proposal-approvals` drains it).
+
+**When unsure which rung, escalate one — conservative beats sorry.** Do NOT
+reproduce the floor here: read the objective tier-floor table in the **TRDD
+approval-tiers rule, §D3** (`rules/trdd-approval-tiers.md`), which is its single
+canonical home. A floor restated in a skill is a floor that goes stale.
+
+> **Never write a number.** `approval-tier: N` is retired. Read a legacy card as
+> `0→none, 1→chief-of-staff, 2→manager, 3→user` and rewrite it to the title;
+> `orchestrator` has no number. `maestro` is a deprecated read-alias for `user`.
 
 ## Prerequisites
 
@@ -71,8 +81,9 @@ objective tier-floor table in the approval-tiers reference.
 
 3. Write the frontmatter + body (canonical skeleton in the scripts-usage
    reference). Mandatory fields: `trdd-id`, `title` (no colon), `column`
-   (`planned` for Tier 0 in tasks/, `proposal` for proposals/), `created`,
-   `updated` (same ISO in both). For a proposal add `approval-tier: N` and end
+   (`planned` for a `none` card in tasks/, `proposal` for proposals/), `created`,
+   `updated` (same ISO in both). For a proposal add
+   `min-approval-requirement: <title>` and end
    the body with an empty `## Approval log` placeholder. Keep the body
    **self-contained** (a cross-team implementer shares none of your context).
    Add a `## ⏵ STATE` head block if the TRDD will span more than one session.
@@ -98,7 +109,8 @@ A MEMBER must add an e2e test for an already-approved feature (a DERIVED EHT).
 
 <example>
 An agent wants to change the release pipeline.
-→ Tier 2: author in design/proposals/ with `approval-tier: 2`, then keep working;
+→ `manager`: author in design/proposals/ with `min-approval-requirement: manager`,
+  then keep working;
   the MANAGER approves it later via /ama-proposal-approvals.
 </example>
 

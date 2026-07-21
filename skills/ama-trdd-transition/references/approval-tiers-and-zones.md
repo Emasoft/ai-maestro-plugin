@@ -57,10 +57,10 @@ treated as `planned` — do NOT move them to `proposals/`.
 ```
 
 - **Author a proposal:** a normal TRDD that starts `column: proposal` in
-  `design/proposals/`, carrying `approval-tier: N` (the tier it needs). Body is
-  fully self-contained + an empty `## Approval log` placeholder.
+  `design/proposals/`, carrying `min-approval-requirement: <title>` (the TITLE it
+  needs). Body is fully self-contained + an empty `## Approval log` placeholder.
 - **Promote (approve):** set `column: planned`, append an `## Approval log` line
-  (`<ISO> — APPROVED by <approver> (tier N). <rationale>.`),
+  (`<ISO> — APPROVED by <approver> (min-approval-requirement: <title>). <reason>`),
   `git mv design/proposals/… design/tasks/…`, bump `updated:`.
 - **Refuse:** set `column: refused`, log the reason, `git mv … design/refused/`.
 - **Archive:** set `column: completed|cancelled|superseded`, log it,
@@ -72,10 +72,17 @@ The `amama_proposal_approvals.py` script operationalizes all four moves
 
 ## C. The four-tier approval ladder
 
-**THE DEFAULT IS TIER 0.** Escalate only when a trigger fires. When unsure,
-escalate one tier — conservative beats sorry. The `approval-tier:` frontmatter
-field records the tier a TRDD needs (a Tier-0 task is authored directly in
-`design/tasks/`; tiers 1/2/3 start as proposals).
+**THE DEFAULT IS `none`** — and that is also what an ABSENT field means. Escalate
+only when a trigger fires. When unsure, escalate one rung — conservative beats
+sorry. The `min-approval-requirement:` frontmatter field records the TITLE a TRDD
+needs, on the ladder
+`none < orchestrator < chief-of-staff < manager < user` (a `none` task is authored
+directly in `design/tasks/`; any higher rung starts as a proposal).
+
+> **`approval-tier: N` is RETIRED — never write a number.** DECODE a legacy card as
+> `0→none, 1→chief-of-staff, 2→manager, 3→user` and rewrite it to the title.
+> `orchestrator` has no number: a 4-value numeric field structurally cannot express
+> it, which is exactly why the scheme was retired.
 
 | Tier | Approver | Author directly in `design/tasks/`? | Fires when the task… |
 |---|---|---|---|
@@ -108,8 +115,9 @@ check, so under-classification is detectable, not trusted:
   approver drains the proposal queue on idle, by priority — never as a
   per-creation interrupt.
 - Self-classification is for SPEED but is AUDITED: a periodic watchdog compares
-  each TRDD's declared `approval-tier:` to its objective floor and corrects
-  under-classification (raises the tier, moves a wrongly-self-approved TRDD back
+  each TRDD's declared `min-approval-requirement:` to its objective floor (compared
+  by RUNG on the ladder, not alphabetically) and corrects
+  under-classification (raises the rung, moves a wrongly-self-approved TRDD back
   to `proposals/`). Deliberate under-classification is a governance violation.
 
 ## D. Single-writer-per-domain (collision avoidance)

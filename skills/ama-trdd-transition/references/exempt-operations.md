@@ -14,12 +14,12 @@ the agent MUST treat it as non-exempt and request MANAGER approval.
 Better safe than sorry.
 
 **Relationship to the tier ladder:** the EXEMPT set below is exactly
-**Tier 0** (agent-independent) in
+**`none`** (agent-independent) in
 [approval-tiers-and-zones.md](approval-tiers-and-zones.md); the NON-EXEMPT
-operations map to **Tier 1** (COS), **Tier 2** (MANAGER), or **Tier 3**
-(USER). "Treat as non-exempt when unsure" is the same rule as "escalate one
-tier when unsure". A TRDD records the tier it needs in its `approval-tier:`
-field.
+operations map to **`orchestrator`** / **`chief-of-staff`** (COS),
+**`manager`** (MANAGER), or **`user`** (USER). "Treat as non-exempt when
+unsure" is the same rule as "escalate one rung when unsure". A TRDD records
+the TITLE it needs in its `min-approval-requirement:` field.
 
 **R15 alignment:** Every command from agent to agent is documented in
 the TRDD body (R15.1). Approval-request AMP messages carry only the
