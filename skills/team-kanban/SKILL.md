@@ -127,6 +127,8 @@ approval-tiers rule (§B2) for the routing itself.
 | 400 | Invalid status | Must match a column ID |
 | 400 | Circular dependency | blockedBy creates cycle |
 | 403 | Access denied | Agent not team member |
+| 403 | Governed transition refused (GATE 1) | Move into a governed column, backward into `dev` from `human_review`/`live_auditing`, or a write to `publishedVersion`/`liveSince` — needs a MANAGER (by AID) or the human owner. **Not** a membership problem; do not go debug membership |
+| 403 | Self-review refused (GATE 2) | You are the card's assignee — another agent must render the verdict |
 | 404 | Not found | Invalid team/task ID |
 
 ## Examples

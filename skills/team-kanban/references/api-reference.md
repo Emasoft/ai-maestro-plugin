@@ -470,5 +470,7 @@ amp-kanban-edit.sh <task-id> --set prUrl="https://github.com/org/repo/pull/42" |
 | 400 | `Circular dependency` | blockedBy would create a cycle |
 | 400 | `priority must be a finite number` | Priority must be a number |
 | 403 | `Access denied` | Agent not a member of closed team |
+| 403 | governed-transition refusal (GATE 1) | Moving into `human_review`/`complete`/`publish`/`deploy`/`published`/`live`/`failed`/`superseded`, moving backward into `dev` from `human_review`/`live_auditing`, or writing `publishedVersion`/`liveSince` requires a MANAGER (by AID) or the human owner. A member in good standing gets this too — it is **not** a membership failure |
+| 403 | self-review refusal (GATE 2) | The caller is the card's assignee and tried to write `reviewResult` or move it out of `ai_review`/`human_review` into `complete`. Any other agent, of any title, may |
 | 404 | `Team not found` | Invalid team ID |
 | 404 | `Task not found` | Invalid task ID |
