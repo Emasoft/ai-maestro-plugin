@@ -179,7 +179,13 @@ and `verify` will still say the approval is authentic, because it is.)
 
    ```bash
    aimaestro-trdd.sh verify 9a8aba94 --json
+   aimaestro-trdd.sh verify 9a8aba94 --agent <uuid|name>   # multi-project host: pick whose design/ to check
    ```
+
+   `--agent A` selects **which agent's `<workdir>/design` corpus** to verify against (sent as
+   `?agentId=`); omit it to use the current project's `design/`. Branch on the **exit code**, not
+   on the presence of `reasons[]` — `reasons[]` is also populated on the verified path (it carries
+   `"no approval required"` when a card legitimately needs no token).
 
 ### Quick CLI Reference
 
@@ -187,7 +193,7 @@ and `verify` will still say the approval is authentic, because it is.)
 |---|---|---|
 | `search` | `--column C`, `--id I`, `--keyword K`, `--zone proposals\|tasks\|archived\|refused` | read, non-strict |
 | `read <id>` | — | read, non-strict |
-| `verify <id>` | `--json` | read-only, non-strict, mutates nothing |
+| `verify <id>` | `--json`, `--agent A` | read-only, non-strict, mutates nothing |
 | `edit <id>` | `--set k=v` (repeatable) | **write, STRICT** |
 | `approve <id>` | `--approver W` `--tier N` `--rationale R` | **write, STRICT** — mints token, `proposals/ → tasks/` |
 | `refuse <id>` | `--approver W` `--tier N` `--reason R` | **write, STRICT** — `→ refused/` |
