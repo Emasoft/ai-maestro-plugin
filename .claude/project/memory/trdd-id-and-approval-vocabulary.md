@@ -88,10 +88,22 @@ deprecated READ-alias for `user` — accept on read, normalize, never write.
   canonical source by NAME + section, never by absolute path (a path couples every consumer
   to one install layout, and the path is what rots).
 
-[^5]: [id:ATOM-TWO-PLUGINS-ONE-RULENAME, status:valid, keywords:"two_plugins_ship_the_same_rule_filename which_copy_of_the_rule_is_installed contradictory_rule_content install_ordering_luck", ocd:2026-07-22, lmd:2026-07-22]
+[^5]: [id:ATOM-TWO-PLUGINS-ONE-RULENAME, status:valid, keywords:"two_plugins_ship_the_same_rule_filename which_copy_of_the_rule_is_installed contradictory_rule_content my_edit_to_the_repo_rule_had_no_effect_anywhere editing_an_inert_rule_copy", ocd:2026-07-22, lmd:2026-07-22]
   DO NOT assume the rule file loaded in a session is the one THIS repo ships, BECAUSE CORE
   and ai-maestro-janitor both ship `rules/trdd-design-tasks.md` with CONTRADICTORY id models
   (janitor's base36 copy is what is installed; CORE's teaches the retired uuid4 scheme and
-  reasons from it) — the correct one is live by install ORDERING, not by design. DO diff the
+  reasons from it)[^6]. The janitor's copy WINS STABLY — CORE's installer overwrites a differing
+  file only when its hash matches CORE's own stamp, so once the janitor has written, CORE
+  never reclaims the name; the loser's copy is INERT, and editing it has no effect on any
+  machine while an in-repo reader still believes it is live. DO diff the
   installed copy against the repo copy before trusting either, and treat "which plugin owns
   this filename" as a `manager`-floor decision, not a doc edit.
+
+[^6]: [id:ATOM-GUARD-CLAUSE-VS-CONSEQUENCE, status:valid, keywords:"who_wins_when_two_installers_write_the_same_file is_it_install_order_luck read_the_guard_but_not_its_consequence the_live_state_is_the_fixed_point i_predicted_a_race_that_cannot_happen", ocd:2026-07-22, lmd:2026-07-22]
+  DO NOT conclude "whoever installs last wins" from reading one installer's guard clause,
+  BECAUSE a stamp-guarded writer that only overwrites its OWN unmodified output can never
+  reclaim a file another writer has taken — so the outcome is a FIXED POINT, not a race. I
+  published "live only by install-ordering luck" twice before the janitor Claude disproved
+  it. DO trace the guard's consequence one step past the branch, and treat the OBSERVED
+  on-disk state as evidence rather than coincidence — it was the disproof in front of me the
+  whole time.
