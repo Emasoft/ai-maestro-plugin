@@ -201,9 +201,9 @@ the HTML side panel is `ama-panel`. Server-mediated TRDD search/read is
   the full authorization table, the queue's server-side delivery mechanics
   (why a hibernated target is never waited on), and worked examples.
   > Contents · Authorization matrix (who may target whom) · How `queue` actually delivers (verified end-to-end) · `slash` vs `queue` vs `inject` — the full decision table · Environment variables the CLI reads · Worked examples
-- `${CLAUDE_PLUGIN_ROOT}/rules/manager-approval-defaults.md` — the
+- `.claude/rules/aimaestro-manager-approval-defaults.md` — the
   EXEMPT/NON-EXEMPT operation lists this skill's strict/non-strict split
-  mirrors (auto-installed each session).
+  mirrors (the ai-maestro DEP overlay, seeded into every agent workdir).
 
 ## Use also
 

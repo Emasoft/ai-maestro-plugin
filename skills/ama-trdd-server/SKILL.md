@@ -264,11 +264,11 @@ tier check — are `ama-trdd-find` / `ama-trdd-write` / `ama-trdd-update` /
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/trdd-design-tasks.md` — canonical TRDD v2
-  format (auto-installed each session).
-- `${CLAUDE_PLUGIN_ROOT}/rules/trdd-approval-tiers.md` — the four-tier
+- `~/.claude/rules/trdd-design-tasks.md` — canonical TRDD v2
+  format (shipped globally by the ai-maestro-janitor (IND base)).
+- `.claude/rules/aimaestro-trdd-approval.md` — the four-tier
   approval ladder and `min-approval-requirement:` semantics the write
-  verbs enforce (auto-installed each session).
+  verbs enforce (the ai-maestro DEP overlay, seeded into every agent workdir).
 - The four zones + tier ladder + objective tier-floor this skill's write verbs
   and `verify` are checked against are detailed in the `ama-trdd-transition`
   skill (see Use also) — plus the auto-installed `trdd-approval-tiers.md` rule.

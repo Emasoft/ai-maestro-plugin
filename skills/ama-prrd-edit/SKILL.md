@@ -116,7 +116,7 @@ installed — set `$AI_MAESTRO_PRRD_SCRIPTS_DIR` or install the base.
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md` — canonical PRRD format, mutation-authority table, GOLDEN/SILVER.
+- `~/.claude/rules/prrd-design-rules.md` — canonical PRRD format, mutation-authority table, GOLDEN/SILVER.
 - [../ama-trdd-transition/references/prrd-design-rules.md](../ama-trdd-transition/references/prrd-design-rules.md) — the one fact every ama-prrd-* skill enforces (pointer).
   > Contents · Why this is a pointer, not a copy · The one fact every `ama-prrd-*` skill enforces
 - `/ama-prrd-propose` — the proposal path for every non-MANAGER (and for GOLDEN changes).

@@ -22,7 +22,8 @@ shared mechanics references (column-transitions, approval-tiers-and-zones,
 dialog-loops, cos-delegation, exempt-operations, frontmatter-schema,
 scripts-usage, pillar-scripts-delivery) live in this skill's `references/` and
 the other `ama-*` skills link to them here. The four governance RULES themselves
-live in `${CLAUDE_PLUGIN_ROOT}/rules/` (auto-installed each session) — referenced,
+live at their canonical homes (janitor IND bases in `~/.claude/rules/`,
+ai-maestro DEP overlays in each agent workdir's `.claude/rules/`) — referenced,
 never duplicated.
 
 ## Permission (this skill's matrix row) — SELF-CHECK WHICH MOVE YOU MAY MAKE
@@ -162,4 +163,4 @@ a partial failure.
   > Contents · resolve_pillar_scripts.sh — locate the scripts from any plugin (delivery mechanism) · get-prrd.py — read PRRD rules · prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation) · findprrd.py — search PRRD rules · findtrdd.py — find TRDDs · kanban.py — render the board (READ-ONLY) · bootstrap_design.py — create the 4-zone design/ folders · amama_proposal_approvals.py — batch proposal approvals (list/approve/refuse/archive) · Authoring a new TRDD (canonical skeleton) · Exit codes · Per-role quick examples
 - [references/pillar-scripts-delivery.md](references/pillar-scripts-delivery.md) — cross-plugin script resolution.
   > Contents · Two supported delivery models · Why a resolver, not a hard-coded path
-- `${CLAUDE_PLUGIN_ROOT}/rules/trdd-design-tasks.md`, `${CLAUDE_PLUGIN_ROOT}/rules/trdd-approval-tiers.md`, `${CLAUDE_PLUGIN_ROOT}/rules/manager-approval-defaults.md`, `${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md` — the four canonical governance rules (auto-installed to `~/.claude/rules/` each session; referenced, never duplicated).
+- `~/.claude/rules/trdd-design-tasks.md`, `.claude/rules/aimaestro-trdd-approval.md`, `.claude/rules/aimaestro-manager-approval-defaults.md`, `~/.claude/rules/prrd-design-rules.md` — the four canonical governance rules (the two universal ones shipped globally by the ai-maestro-janitor (IND base); the two harness ones as the ai-maestro DEP overlay, seeded into every agent workdir; referenced, never duplicated).

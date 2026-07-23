@@ -108,7 +108,7 @@ a partial failure.
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md` — canonical PRRD format + the proposal queue.
+- `~/.claude/rules/prrd-design-rules.md` — canonical PRRD format + the proposal queue.
 - [../ama-trdd-transition/references/cos-delegation-authority.md](../ama-trdd-transition/references/cos-delegation-authority.md) — the COS two-tier filter (who escalates what).
   > The two-tier model · How escalation composes with presence (the full chain) · COS-AUTONOMOUS — the COS decides, no upstream · COS-ESCALATE — forward to MANAGER · Consolidation — the COS batches, it doesn't flood · The COS escalation message (to MANAGER) · User-presence — where it lives, and the janitor fallback · Why this exists · Relationship to exempt-operations.md
 - `/ama-prrd-edit` — the MANAGER direct-mutation path (SILVER only).

@@ -108,7 +108,7 @@ a partial failure.
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/trdd-design-tasks.md` — canonical TRDD v2 format + the STATE-block + terminal-freeze rules (auto-installed each session).
+- `~/.claude/rules/trdd-design-tasks.md` — canonical TRDD v2 format + the STATE-block + terminal-freeze rules (shipped globally by the ai-maestro-janitor (IND base)).
 - [../ama-trdd-transition/references/trdd-frontmatter-schema.md](../ama-trdd-transition/references/trdd-frontmatter-schema.md) — which fields are mutable, their types/defaults, the grep-first invariants.
   > Contents · Schema invariants (grep-friendliness) · Field schema · 1. Identity (mandatory on every TRDD) · 2. Ownership · 3. Classification · 4. Relationships · 5. Delivery · 6. Verification requirements · 7. Impact · 8. Runtime evidence · 9. Audit-flow · 10. External · Type forms · Schema extension · Validation · Migration from v1 · Anti-patterns
 - `/ama-trdd-transition` — the gated column-move skill.

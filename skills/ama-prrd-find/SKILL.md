@@ -85,7 +85,7 @@ a partial failure.
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md` — canonical PRRD format + citation grammar.
+- `~/.claude/rules/prrd-design-rules.md` — canonical PRRD format + citation grammar.
 - [../ama-trdd-transition/references/scripts-usage.md](../ama-trdd-transition/references/scripts-usage.md)
   — full script usage + exit codes.
   > resolve_pillar_scripts.sh — locate the scripts from any plugin (delivery mechanism) · get-prrd.py — read PRRD rules · prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation) · findprrd.py — search PRRD rules · findtrdd.py — find TRDDs · kanban.py — render the board (READ-ONLY) · bootstrap_design.py — create the 4-zone design/ folders · amama_proposal_approvals.py — batch proposal approvals (list/approve/refuse/archive) · Authoring a new TRDD (canonical skeleton) · Exit codes · Per-role quick examples

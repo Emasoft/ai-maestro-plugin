@@ -94,7 +94,7 @@ a partial failure.
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/trdd-design-tasks.md` — canonical TRDD v2 format + the 8-char hash ref syntax + grep cheat-sheet (auto-installed each session).
+- `~/.claude/rules/trdd-design-tasks.md` — canonical TRDD v2 format + the 8-char hash ref syntax + grep cheat-sheet (shipped globally by the ai-maestro-janitor (IND base)).
 - [../ama-trdd-transition/references/trdd-frontmatter-schema.md](../ama-trdd-transition/references/trdd-frontmatter-schema.md) — field-by-field schema (what `--validate` checks).
   > Contents · Schema invariants (grep-friendliness) · Field schema · 1. Identity (mandatory on every TRDD) · 2. Ownership · 3. Classification · 4. Relationships · 5. Delivery · 6. Verification requirements · 7. Impact · 8. Runtime evidence · 9. Audit-flow · 10. External · Type forms · Schema extension · Validation · Migration from v1 · Anti-patterns
 - [../ama-trdd-transition/references/scripts-usage.md](../ama-trdd-transition/references/scripts-usage.md) — full findtrdd.py usage + exit codes.

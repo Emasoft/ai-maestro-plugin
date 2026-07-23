@@ -154,9 +154,9 @@ caller is MANAGER (any) / COS (own team). Terminal/state control is
 
 ## Resources
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/manager-approval-defaults.md` — the
+- `.claude/rules/aimaestro-manager-approval-defaults.md` — the
   EXEMPT/NON-EXEMPT split this skill's strict/non-strict verbs mirror
-  (auto-installed each session).
+  (the ai-maestro DEP overlay, seeded into every agent workdir).
 
 ## Use also
 

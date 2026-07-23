@@ -14,6 +14,11 @@
       "name": "dev-browser",
       "marketplace": "ai-maestro-plugins",
       "version": "1.0.0"
+    },
+    {
+      "name": "ai-maestro-janitor",
+      "marketplace": "ai-maestro-plugins",
+      "version": ">=0.58.0"
     }
   ],
   "keywords": [

@@ -25,9 +25,17 @@ binaries) consumed by the other ecosystem plugins.
 - **Scripts** (`scripts/`) — AMP/AID shell scripts installed to PATH, the
   PRRD/TRDD/Kanban Python pillar scripts, `publish.py` (release pipeline),
   `install-memgrep.sh`, and the bundled `memgrep` Rust crate.
-- **Rules** (`rules/`) — the governance ruleset (`prrd-design-rules`,
-  `trdd-design-tasks`, `trdd-approval-tiers`, `manager-approval-defaults`)
-  installed via `install-governance-rules.cjs`.
+- **Rules** — CORE ships **zero** governance rules (retired core#35/#33, 2026-07-23).
+  Per the 3-pillars SPEC ownership split: the IND universal bases
+  (`trdd-design-tasks`, `prrd-design-rules`, `universal-kanban`) are shipped
+  globally to `~/.claude/rules/` by the **ai-maestro-janitor**; the DEP overlays
+  (`aimaestro-trdd-approval`, `aimaestro-manager-approval-defaults`, …) are seeded
+  per agent-workdir by **ai-maestro**. CORE's skills reference those homes; the old
+  `rules/` dir + `install-governance-rules.cjs` SessionStart installer were removed.
+  CORE **declares a plugin dependency on `ai-maestro-janitor`** in
+  `.claude-plugin/plugin.json` (`dependencies[]`, marketplace `ai-maestro-plugins`,
+  `>=0.58.0`), so the janitor — and therefore its `~/.claude/rules/` IND bases — is
+  GUARANTEED installed+enabled wherever CORE is, not merely assumed present.
 - **Memory** — this plugin USES the janitor's global wiki-memory system (recall /
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
@@ -40,3 +48,14 @@ binaries) consumed by the other ecosystem plugins.
 - (lateral links to other functionality hubs, once they exist)
 
 ## Notes and lessons learned
+[^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
+  DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
+  CORE, BECAUSE the 3-pillars SPEC (`3P-BND`) assigns rule ownership away from CORE: IND universal
+  bases → the ai-maestro-janitor (`~/.claude/rules/`), DEP overlays → ai-maestro (per agent-workdir
+  `.claude/rules/aimaestro-*.md`). CORE shipping its own copies was redundant + generation-skewed
+  (its INERT copy silently taught retired vocabulary while the janitor's copy actually won). DO leave
+  CORE shipping zero governance rules and let its skills reference those two homes (retired core#35/#33).
+  The universal home is not "hoped for": CORE declares a `dependencies[]` entry on `ai-maestro-janitor`
+  in `.claude-plugin/plugin.json`, which GUARANTEES the janitor (and its `~/.claude/rules/` install) is
+  present wherever CORE is — the sanctioned mechanism (plugin-dependencies spec). DO NOT "fix" a
+  missing-rule worry by re-bundling; add/adjust the dependency instead.

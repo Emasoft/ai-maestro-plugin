@@ -11,15 +11,16 @@
 > proposal queue, and the mutation-authority table — lives in the **bundled
 > canonical rule** and is NOT duplicated here:
 >
-> **`${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md`**
+> **`~/.claude/rules/prrd-design-rules.md`**
 >
-> That same file is auto-installed to `~/.claude/rules/prrd-design-rules.md` at
+> That same file is shipped globally by the ai-maestro-janitor (IND base) at
 > session start, so every agent already has the full text in context.
 
 ## Why this is a pointer, not a copy
 
-The four governance rules are bundled ONCE in `${CLAUDE_PLUGIN_ROOT}/rules/` and
-auto-installed every session; re-pasting the rule text here would create a
+The governance rules live at their canonical homes (janitor IND bases in
+`~/.claude/rules/`, ai-maestro DEP overlays in each agent workdir's
+`.claude/rules/`); re-pasting the rule text here would create a
 second copy that drifts. This reference exists only so the relative links from
 co-located mechanics references resolve to a real file, while the authoritative
 text stays in one place.
@@ -35,4 +36,4 @@ text stays in one place.
   The `ama-prrd-edit` skill refuses a non-MANAGER SILVER edit and routes to
   `ama-prrd-propose`; GOLDEN edits are refused for everyone but the USER.
 
-See `${CLAUDE_PLUGIN_ROOT}/rules/prrd-design-rules.md` for the complete model.
+See `~/.claude/rules/prrd-design-rules.md` for the complete model.
