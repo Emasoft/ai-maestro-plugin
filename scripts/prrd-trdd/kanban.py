@@ -114,10 +114,9 @@ def _display_column(d: plib.TRDDDoc) -> str:
 
     `d.column` already returns an explicit v2 `column:`, or maps a v1 `status:`
     via prrd_lib._V1_TO_V2. Per the MANAGER ruling (issue #7), a TRDD with neither
-    `column:` nor `status:` is grandfathered as authorized -> `planned` (the
-    approval-tiers rule); an explicit value we cannot place on the board ->
-    `(unknown)`; otherwise the resolved column. Render-only — the file is never
-    mutated.
+    `column:` nor `status:` is grandfathered as authorized -> `planned`; an explicit
+    value we cannot place on the board -> `(unknown)`; otherwise the resolved column.
+    Render-only — the file is never mutated.
     """
     col = d.column
     if not col:

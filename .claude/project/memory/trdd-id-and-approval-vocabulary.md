@@ -2,13 +2,13 @@
 name: trdd-id-and-approval-vocabulary
 description: "why are some TRDD ids lowercase and others uppercase / can I rename a TRDD id to make it conformant / my TRDD lookup finds nothing even though the card exists / find -name vs -iname on TRDD files / what replaced approval-tier: N / is it maestro or user at the top of the approval ladder / where is the tier-floor table and should a skill restate it / two plugins ship the same rule filename"
 ocd: 2026-07-22
-lmd: 2026-07-22
+lmd: 2026-07-23
 metadata:
   node_type: memory
   type: project
   tier: component
   functionality: governance
-  globs: ["rules/trdd-*.md", "skills/ama-trdd-*/**", "skills/ama-proposal-approvals/**"]
+  globs: ["skills/ama-trdd-*/**", "skills/ama-proposal-approvals/**"]
 ---
 
 # TRDD ids and the approval vocabulary — two ratified models CORE taught wrongly
@@ -50,8 +50,11 @@ one, never the reverse. **Absent means `none`.** `approval-tier: N` is RETIRED (
 `0→none, 1→chief-of-staff, 2→manager, 3→user`, then rewrite to the title). `maestro` is a
 deprecated READ-alias for `user` — accept on read, normalize, never write.
 
-**Cite the floor, never restate it.** The objective tier-floor lives in exactly one place
-(the TRDD approval-tiers rule, §D3). Skills state the principle and point at it.
+**Cite the floor, never restate it.** The objective requirement-floor lives in exactly one
+place — the **ai-maestro TRDD-approval DEP overlay** (`aimaestro-trdd-approval.md`, §D3),
+seeded into every agent workdir at `.claude/rules/`. CORE ships **no** copy (its
+`rules/trdd-approval-tiers.md` was retired, `e7b247f`, `core#35`). Skills state the principle
+and point at the overlay by name.[^7]
 
 ## Governed by
 
@@ -107,3 +110,11 @@ deprecated READ-alias for `user` — accept on read, normalize, never write.
   it. DO trace the guard's consequence one step past the branch, and treat the OBSERVED
   on-disk state as evidence rather than coincidence — it was the disproof in front of me the
   whole time.
+
+[^7]: [id:ATOM-FLOOR-HOME-IS-THE-OVERLAY, status:valid, keywords:"where_is_the_tier_floor_table the_trdd_approval_tiers_rule_is_gone which_rule_owns_the_requirement_floor CORE_no_longer_ships_the_approval_rule dangling_ref_to_approval_tiers_rule", ocd:2026-07-23, lmd:2026-07-23]
+  DO NOT cite "the TRDD approval-tiers rule" as the requirement-floor's home, BECAUSE CORE
+  RETIRED its `rules/trdd-approval-tiers.md` copy (`e7b247f`, `core#35`) — per SPEC `3P-BND-02`
+  approval authority is a DEP concern, so a CORE copy was a duplicate-that-drifts. The floor's
+  single canonical home is the ai-maestro DEP overlay `aimaestro-trdd-approval.md` §D3, seeded
+  per agent-workdir at `.claude/rules/`. DO cite the overlay BY NAME (never a `${CLAUDE_PLUGIN_ROOT}/rules/`
+  path — that path no longer exists), consistent with [^4].
