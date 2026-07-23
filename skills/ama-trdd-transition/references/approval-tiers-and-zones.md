@@ -2,8 +2,11 @@
 
 This is the CANONICAL bundled definition of (A) the four `design/` zones a TRDD
 moves through, (B) the `proposal → planned` approval lifecycle, and (C) the
-four-tier approval ladder that decides WHO must approve a TRDD before it may be
-executed. Role plugins defer to this file. It is a unifying layer over
+`min-approval-requirement:` field whose ladder decides WHO must approve a TRDD
+before it may be executed — with the authoritative **rung semantics deferred to
+the ai-maestro DEP overlay** (approval authority is a DEP concern per the
+3-pillars SPEC `3P-BND-02`, not CORE's to re-teach). Role plugins defer to this
+file for the IND scaffolding. It is a unifying layer over
 [exempt-operations.md](exempt-operations.md) (the EXEMPT/NON-EXEMPT lists),
 [trdd-design-tasks.md](trdd-design-tasks.md) (the `column:` pipeline), and
 [prrd-design-rules.md](prrd-design-rules.md) (GOLDEN/SILVER).
@@ -12,7 +15,7 @@ executed. Role plugins defer to this file. It is a unifying layer over
 
 - A. The four design zones
 - B. The `proposal → planned` lifecycle
-- C. The four-tier approval ladder
+- C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay)
 - D. Single-writer-per-domain (collision avoidance)
 - Batch approval syntax (the fast path)
 
@@ -70,55 +73,36 @@ The `amama_proposal_approvals.py` script operationalizes all four moves
 (`list`/`approve`/`refuse`/`archive`) — see
 [scripts-usage.md](scripts-usage.md).
 
-## C. The four-tier approval ladder
+## C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay)
 
-**THE DEFAULT IS `none`** — and that is also what an ABSENT field means. Escalate
-only when a trigger fires. When unsure, escalate one rung — conservative beats
-sorry. The `min-approval-requirement:` frontmatter field records the TITLE a TRDD
-needs, on the ladder
-`none < orchestrator < chief-of-staff < manager < user` (a `none` task is authored
-directly in `design/tasks/`; any higher rung starts as a proposal).
+The `min-approval-requirement:` frontmatter field records the TITLE a TRDD needs
+before it may execute, on the ladder
+`none < orchestrator < chief-of-staff < manager < user`. **THE DEFAULT IS `none`** —
+and that is also what an ABSENT field means: a `none` task is authored directly in
+`design/tasks/` as `planned`; any higher rung starts as a proposal in
+`design/proposals/`. When unsure, escalate one rung — conservative beats sorry.
 
 > **`approval-tier: N` is RETIRED — never write a number.** DECODE a legacy card as
 > `0→none, 1→chief-of-staff, 2→manager, 3→user` and rewrite it to the title.
 > `orchestrator` has no number: a 4-value numeric field structurally cannot express
 > it, which is exactly why the scheme was retired.
 
-| Tier | Approver | Author directly in `design/tasks/`? | Fires when the task… |
-|---|---|---|---|
-| **0** | none (agent-independent) — DEFAULT | YES, as `planned` | is a DERIVED task (NPT/EHT of work it owns) or fully in its own scope; no baseline deviation; reversible & local. = the EXEMPT set. |
-| **1** | CHIEF-OF-STAFF | no — `design/proposals/` | affects other members of the SAME team / reprioritizes team work. COS is the sole team entry point (R6 v3). |
-| **2** | MANAGER | no — `design/proposals/` | deviates from a standard baseline; crosses team/project boundaries; enters the release pipeline; changes a SILVER PRRD rule / persona / governance; architectural / high-blast-radius. = the NON-EXEMPT set minus USER-only. |
-| **3** | USER | no — `design/proposals/` | changes a GOLDEN PRRD rule, promotes/demotes a rule, or is irreversible / owner-identity-facing / highest-stakes. |
+**The authoritative rung semantics live in the ai-maestro DEP overlay, not here.**
+Per the 3-pillars SPEC `3P-BND-02`, `min-approval-requirement` / approval tiers /
+mandate authority / COS routing are **DEP** — so WHO each title is, WHEN each rung
+fires, the objective **requirement-floor** the watchdog audits against, and the COS
+routing are defined once in `.claude/rules/aimaestro-trdd-approval.md` (Part B2),
+seeded into every agent workdir. CORE does not re-teach them here — a second copy
+would drift, which is exactly what the governance-rules retirement (core#35) removed.
+The one IND base rule that holds even with no harness: the **USER** approves a
+GOLDEN-PRRD-rule change or an irreversible / owner-identity-facing op; a project's own
+Claude self-approves in-scope `none` work.
 
-**Routing:** team-internal agents (ORCH/ARCH/INT/MEMBER) route ALL proposals
-through their COS (R6 v3); COS handles Tier 1, forwards 2/3 to MANAGER. AUTONOMOUS
-and MAINTAINER propose directly to MANAGER. MANAGER handles Tier 2, forwards Tier
-3 to USER.
-
-### The objective tier-floor (mechanical, greppable)
-
-A TRDD's MINIMUM tier is computed from what it touches — signals a script can
-check, so under-classification is detectable, not trusted:
-
-| Objective signal in the TRDD's content / proposed diff | Tier floor |
-|---|---|
-| GOLDEN rule edit · shared credentials / owner identity · irreversible destructive op · first production deploy · breaking public-API change | **3** |
-| `.github/` rulesets-or-workflows · baseline deviation · another project's source · SILVER/persona/governance file · `release-via: publish\|deploy` to production | **2** |
-| affects other same-team members | **1** |
-| everything else (in-scope dev, NPT/EHT, docs, local refactor) | **0** |
-
-### Asynchronous enforcement (never block)
-
-- Tier 0 → author and proceed immediately. The overwhelming majority of work.
-- Tier 1/2/3 → author the proposal, then KEEP WORKING on other things. The
-  approver drains the proposal queue on idle, by priority — never as a
-  per-creation interrupt.
-- Self-classification is for SPEED but is AUDITED: a periodic watchdog compares
-  each TRDD's declared `min-approval-requirement:` to its objective floor (compared
-  by RUNG on the ladder, not alphabetically) and corrects
-  under-classification (raises the rung, moves a wrongly-self-approved TRDD back
-  to `proposals/`). Deliberate under-classification is a governance violation.
+Enforcement is **asynchronous — never block**: author a `none` task and proceed; for
+any higher rung author the proposal and KEEP WORKING while the approver drains the
+queue on idle (never a per-creation interrupt). Self-classification is for SPEED but
+is AUDITED by the overlay's watchdog, which raises an under-classified requirement and
+moves a wrongly-self-approved TRDD back to `proposals/`.
 
 ## D. Single-writer-per-domain (collision avoidance)
 

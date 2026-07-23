@@ -37,6 +37,6 @@ file, while the authoritative text stays in one place.
 | The full TRDD v2 spec / column enum / NPT-EHT / STATE block | `~/.claude/rules/trdd-design-tasks.md` (canonical) |
 | The field-by-field frontmatter schema (types, defaults, validation) | [trdd-frontmatter-schema.md](trdd-frontmatter-schema.md) |
 | Who can move a TRDD column X→Y + side effects + AMP | [column-transitions.md](column-transitions.md) |
-| The 4 design zones + `proposal → planned` lifecycle + tier ladder | [approval-tiers-and-zones.md](approval-tiers-and-zones.md) |
+| The 4 design zones + `proposal → planned` lifecycle + the approval ladder | [approval-tiers-and-zones.md](approval-tiers-and-zones.md) |
 | The EXEMPT / NON-EXEMPT operation lists + approval-request template | [exempt-operations.md](exempt-operations.md) |
 | GOLDEN / SILVER rule format + citation grammar | `~/.claude/rules/prrd-design-rules.md` (canonical) |

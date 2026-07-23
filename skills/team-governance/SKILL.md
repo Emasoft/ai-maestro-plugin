@@ -39,7 +39,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
    If not MANAGER or COS, STOP and inform the user.
 
-> **Approval requirements.** Creating a team is **≥ Tier 1** (Chief-of-Staff approval); assigning or changing a Chief-of-Staff is **Tier 2** (MANAGER approval). File the proposal and route it per the `ama-proposal-approvals` skill and the `trdd-approval-tiers` rule before acting. Listing/showing teams is read-only (Tier 0).
+> **Approval requirements.** Creating a team requires **`min-approval-requirement: chief-of-staff`**; assigning or changing a Chief-of-Staff requires **`manager`**. File the proposal and route it per the `ama-proposal-approvals` skill and the ai-maestro approval overlay (`.claude/rules/aimaestro-trdd-approval.md`) before acting. Listing/showing teams is read-only (`none`).
 
 2. **Operations** (each CLI resolves the API base + your agent identity internally):
    - **List teams**: `aimaestro-teams.sh list`

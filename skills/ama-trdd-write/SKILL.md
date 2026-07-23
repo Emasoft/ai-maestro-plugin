@@ -39,9 +39,10 @@ none  <  orchestrator  <  chief-of-staff  <  manager  <  user
   (`ama-proposal-approvals` drains it).
 
 **When unsure which rung, escalate one — conservative beats sorry.** Do NOT
-reproduce the floor here: read the objective tier-floor table in the **TRDD
-approval-tiers rule, §D3** (`rules/trdd-approval-tiers.md`), which is its single
-canonical home. A floor restated in a skill is a floor that goes stale.
+reproduce the floor here: read the objective requirement-floor table in the
+**ai-maestro DEP overlay `.claude/rules/aimaestro-trdd-approval.md`, §D3** (seeded
+into every agent workdir), which is its single canonical home. A floor restated in
+a skill is a floor that goes stale.
 
 > **Never write a number.** `approval-tier: N` is retired. Read a legacy card as
 > `0→none, 1→chief-of-staff, 2→manager, 3→user` and rewrite it to the title;
@@ -145,5 +146,5 @@ a partial failure.
   > Contents · Schema invariants (grep-friendliness) · Field schema · 1. Identity (mandatory on every TRDD) · 2. Ownership · 3. Classification · 4. Relationships · 5. Delivery · 6. Verification requirements · 7. Impact · 8. Runtime evidence · 9. Audit-flow · 10. External · Type forms · Schema extension · Validation · Migration from v1 · Anti-patterns
 - [../ama-trdd-transition/references/scripts-usage.md](../ama-trdd-transition/references/scripts-usage.md) — the canonical TRDD skeleton + bootstrap_design.py + per-role examples.
   > Contents · resolve_pillar_scripts.sh — locate the scripts from any plugin (delivery mechanism) · get-prrd.py — read PRRD rules · prrd-edit.py — mutate the PRRD (MANAGER-only for direct mutation) · findprrd.py — search PRRD rules · findtrdd.py — find TRDDs · kanban.py — render the board (READ-ONLY) · bootstrap_design.py — create the 4-zone design/ folders · amama_proposal_approvals.py — batch proposal approvals (list/approve/refuse/archive) · Authoring a new TRDD (canonical skeleton) · Exit codes · Per-role quick examples
-- [../ama-trdd-transition/references/approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md) — the four zones + tier ladder + the objective tier-floor (which zone to write into).
-  > Contents · A. The four design zones · B. The `proposal → planned` lifecycle · C. The four-tier approval ladder · The objective tier-floor (mechanical, greppable) · Asynchronous enforcement (never block) · D. Single-writer-per-domain (collision avoidance) · Batch approval syntax (the fast path)
+- [../ama-trdd-transition/references/approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md) — the four zones + the `min-approval-requirement:` ladder + the objective requirement-floor (which zone to write into).
+  > Contents · A. The four design zones · B. The `proposal → planned` lifecycle · C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay) · D. Single-writer-per-domain (collision avoidance) · Batch approval syntax (the fast path)

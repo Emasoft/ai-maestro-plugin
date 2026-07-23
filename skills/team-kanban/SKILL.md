@@ -35,7 +35,7 @@ pipeline state; this server board wins for live assignment/presence.
 
 ## Instructions
 
-> **Approval requirements.** Task creation and board operations (create/move/archive/configure) on a team you belong to are **Tier-0 in-scope** — no proposal needed; act directly. Anything that escalates beyond your slice (creating a team, cross-team work) follows the `ama-proposal-approvals` skill and the `trdd-approval-tiers` rule.
+> **Approval requirements.** Task creation and board operations (create/move/archive/configure) on a team you belong to are **`min-approval-requirement: none` (in-scope)** — no proposal needed; act directly. Anything that escalates beyond your slice (creating a team, cross-team work) follows the `ama-proposal-approvals` skill and the ai-maestro approval overlay (`.claude/rules/aimaestro-trdd-approval.md`).
 
 1. **Identify team**: `aimaestro-teams.sh list | jq .`
 2. **Create task**: `amp-kanban-create-task.sh "<title>" [--status S] [--priority N] [--labels "a,b"] [--assignee <id>]`
@@ -111,8 +111,9 @@ needs no qualifier.
 *everyone else*, plus the self-review ban. The finer per-title routing (`todo→design` =
 ORCHESTRATOR, `design→dispatch` = ARCHITECT, `dispatch→dev` = ORCHESTRATOR sets the assignee,
 …) is the **organizational contract agents follow — it is NOT mechanically enforced**. Do not
-rely on the server to refuse a contract violation it does not gate; see the TRDD
-approval-tiers rule (§B2) for the routing itself.
+rely on the server to refuse a contract violation it does not gate; see the
+ai-maestro DEP overlay `.claude/rules/aimaestro-trdd-approval.md` (Part B) for the
+routing itself.
 
 ## Output
 

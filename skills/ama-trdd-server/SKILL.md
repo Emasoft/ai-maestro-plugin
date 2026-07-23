@@ -266,19 +266,20 @@ tier check — are `ama-trdd-find` / `ama-trdd-write` / `ama-trdd-update` /
 
 - `~/.claude/rules/trdd-design-tasks.md` — canonical TRDD v2
   format (shipped globally by the ai-maestro-janitor (IND base)).
-- `.claude/rules/aimaestro-trdd-approval.md` — the four-tier
-  approval ladder and `min-approval-requirement:` semantics the write
-  verbs enforce (the ai-maestro DEP overlay, seeded into every agent workdir).
-- The four zones + tier ladder + objective tier-floor this skill's write verbs
-  and `verify` are checked against are detailed in the `ama-trdd-transition`
-  skill (see Use also) — plus the auto-installed `trdd-approval-tiers.md` rule.
+- `.claude/rules/aimaestro-trdd-approval.md` — the approval ladder
+  and `min-approval-requirement:` semantics the write verbs enforce
+  (the ai-maestro DEP overlay, seeded into every agent workdir).
+- The four zones + the `min-approval-requirement:` ladder + the objective
+  requirement-floor this skill's write verbs and `verify` are checked against are
+  detailed in the `ama-trdd-transition` skill (see Use also); the authoritative rung
+  semantics live in the overlay above.
 
 ## Use also
 
 - `Skill(skill: "ama-trdd-find")` — find a TRDD in the local `design/`
   corpus (the source of truth).
-- `Skill(skill: "ama-trdd-transition")` — the four zones + tier ladder +
-  objective tier-floor (approval-tiers-and-zones) the write verbs enforce.
+- `Skill(skill: "ama-trdd-transition")` — the four zones + the `min-approval-requirement:`
+  ladder + the objective requirement-floor (approval-tiers-and-zones) the write verbs enforce.
 - `Skill(skill: "ama-trdd-transition")` — move a TRDD between columns
   locally, with the full transition matrix (the local counterpart to
   `promote`).

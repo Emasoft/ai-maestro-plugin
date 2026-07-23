@@ -13,7 +13,7 @@ EXEMPTIONS. **Anything not on the exempt list is non-exempt.**
 the agent MUST treat it as non-exempt and request MANAGER approval.
 Better safe than sorry.
 
-**Relationship to the tier ladder:** the EXEMPT set below is exactly
+**Relationship to the approval ladder:** the EXEMPT set below is exactly
 **`none`** (agent-independent) in
 [approval-tiers-and-zones.md](approval-tiers-and-zones.md); the NON-EXEMPT
 operations map to **`orchestrator`** / **`chief-of-staff`** (COS),
@@ -111,7 +111,7 @@ NON-EXEMPT and requires MANAGER approval.
 
 | Operation | Owner | Reference |
 |---|---|---|
-| Apply baseline branch rulesets (no-force/no-delete/linear + PR/checks split) | INTEGRATOR / MAINTAINER (via `workflow-protect-branch`) / janitor (Tier 1 + Tier 2) | Ratified baseline |
+| Apply baseline branch rulesets (no-force/no-delete/linear + PR/checks split) | INTEGRATOR / MAINTAINER (via `workflow-protect-branch`) / janitor (chief-of-staff + manager) | Ratified baseline |
 | SHA-pin third-party GitHub Actions | INTEGRATOR / MAINTAINER (via `workflow-pin-actions`) | Standard hardening |
 | Lint config files (JSON/YAML/TOML/.env/Dockerfile) | INTEGRATOR / MAINTAINER (via `maintainer-config-lint`) | Drift detection |
 | Run secret scans on the working tree + git history | INTEGRATOR / MAINTAINER (via `maintainer-secrets-scan`) | TruffleHog with public-info allowlist |
