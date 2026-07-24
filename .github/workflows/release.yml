@@ -80,7 +80,7 @@ jobs:
         # invocation entirely; always go through the remote uvx entry.
         run: |
           set +e
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation               --with pyyaml               cpv-remote-validate plugin . --strict               > validation-report.txt 2>&1
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0               --with pyyaml               cpv-remote-validate plugin . --strict               > validation-report.txt 2>&1
           exit_code=$?
           set -e
           cat validation-report.txt

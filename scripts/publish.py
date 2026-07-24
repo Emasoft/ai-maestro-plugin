@@ -692,7 +692,7 @@ def install_branch_rules(root: Path) -> int:
             [
                 "uvx",
                 "--from",
-                "git+https://github.com/Emasoft/claude-plugins-validation",
+                "git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0",
                 "--with",
                 "pyyaml",
                 "cpv-setup-branch-rules",
@@ -891,7 +891,7 @@ def run_gate(root: Path) -> int:
         return 1
     ve = subprocess.run(
         ["uvx", "--from",
-         "git+https://github.com/Emasoft/claude-plugins-validation",
+         "git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0",
          "--with", "pyyaml",
          "cpv-remote-validate", "plugin", ".", "--strict"],
         cwd=str(root), timeout=600).returncode
@@ -1031,7 +1031,7 @@ def stage_validate(root: Path) -> None:
     # on CRITICAL(1), MAJOR(2), MINOR(3), NIT(4); WARNING(5+) passes.
     run([
         "uvx", "--from",
-        "git+https://github.com/Emasoft/claude-plugins-validation",
+        "git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0",
         "--with", "pyyaml",
         "cpv-remote-validate", "plugin", ".", "--strict",
     ], cwd=root)
