@@ -17,8 +17,7 @@
     },
     {
       "name": "ai-maestro-janitor",
-      "marketplace": "ai-maestro-plugins",
-      "version": ">=0.58.0"
+      "marketplace": "ai-maestro-plugins"
     }
   ],
   "keywords": [
