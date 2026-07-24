@@ -2,7 +2,7 @@
 name: architecture
 description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live"
 ocd: 2026-06-16
-lmd: 2026-06-16
+lmd: 2026-07-24
 metadata:
   node_type: memory
   type: project
@@ -36,6 +36,12 @@ binaries) consumed by the other ecosystem plugins.
   `.claude-plugin/plugin.json` (`dependencies[]`, marketplace `ai-maestro-plugins`,
   `>=0.58.0`), so the janitor — and therefore its `~/.claude/rules/` IND bases — is
   GUARANTEED installed+enabled wherever CORE is, not merely assumed present.
+- **Publish / CI pipeline** — `scripts/publish.py` is the canonical CPV release
+  pipeline, aligned to **CPV canonical v3.5.0** (2026-07-24): the CPV-validator ref is
+  pinned `@v3.5.0` across `.github/workflows/{ci,release}.yml` and `publish.py`; local
+  `--gate` includes a **jscpd** copy-paste gate (**G3b**, #143) on top of the standard
+  version/lint/validate gates. The **type gate is mypy** (`mypy scripts/
+  --ignore-missing-imports`, in `release.yml` + publish.py G2), **not Pyright**.[^2]
 - **Memory** — this plugin USES the janitor's global wiki-memory system (recall /
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
@@ -59,3 +65,13 @@ binaries) consumed by the other ecosystem plugins.
   in `.claude-plugin/plugin.json`, which GUARANTEES the janitor (and its `~/.claude/rules/` install) is
   present wherever CORE is — the sanctioned mechanism (plugin-dependencies spec). DO NOT "fix" a
   missing-rule worry by re-bundling; add/adjust the dependency instead.
+
+[^2]: [id:ATOM-ARCH-0002, status:valid, keywords:"publish.py pyright errors kwargs not assignable _infer_bump_type _pid not accessed type gate mypy not pyright IDE diagnostics blocking", ocd:2026-07-24, lmd:2026-07-24]
+  DO NOT "fix" the Pyright ✘ advisories the IDE shows on `scripts/publish.py` (the
+  `(cmd, **kwargs)` callable-assignability on the `try/except ImportError`
+  `gh_with_retry`/`git_with_retry` shim, and the `_`-prefixed unused `_infer_bump_type` /
+  `_pid`), BECAUSE the pipeline's actual type gate is **mypy** (`mypy scripts/
+  --ignore-missing-imports`), which passes clean — Pyright and mypy infer the import-shim
+  union and unused module-level defs differently, and `_infer_bump_type` pre-existed at
+  `6c1cf63` (not introduced by the CPV upgrade). DO run the gate command to judge type
+  health, not the IDE Pyright panel; a green mypy is the authoritative signal.
