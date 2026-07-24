@@ -28,6 +28,13 @@ Install from the `Emasoft/ai-maestro-plugins` marketplace inside Claude Code:
 /plugin install ai-maestro-plugin
 ```
 
+**`node` must be on `PATH`.** Every hook this plugin registers — session
+tracking, the `directory-guard` sandbox check, notifications, compaction
+handoff — runs `scripts/ai-maestro-hook.cjs` under Node. Hooks fail quietly
+(non-zero exit inside a short timeout), so without Node the whole hook surface
+is inert with no visible error: AI Maestro never sees the session, and the
+directory guard stops enforcing.
+
 The PRRD/TRDD/Kanban pillar scripts need Python 3.10+ on `PATH`. The AMP/AID
 shell scripts need the `curl, jq, openssl, base64` CLI tools. The optional `memgrep`
 note-recall engine installs from a prebuilt release binary via
