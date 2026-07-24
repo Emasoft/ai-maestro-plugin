@@ -149,7 +149,13 @@
     "workflow",
     "xdist",
     "yamllint",
-    "zizmor"
+    "zizmor",
+    "agent",
+    "agents",
+    "edit",
+    "monkeypatch",
+    "read",
+    "write"
   ],
   "ignorePaths": [
     "uv.lock",

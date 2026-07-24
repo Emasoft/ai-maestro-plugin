@@ -1,6 +1,7 @@
 # AI Maestro Plugin
 
 <!--BADGES-START-->
+[![CI](https://github.com/Emasoft/ai-maestro-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/ai-maestro-plugin/actions/workflows/ci.yml)
 ![version](https://img.shields.io/badge/version-2.10.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 <!--BADGES-END-->
