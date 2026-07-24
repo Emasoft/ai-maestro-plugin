@@ -37,6 +37,9 @@ Gate stages (--gate mode, called by pre-push hook):
    G1. Version bump check (local vs remote, auto-detects origin/HEAD)
    G2. Lint (ruff)
    G3. Validate (uvx cpv-remote-validate plugin . --strict)
+   G3b. jscpd copy-paste parity (npx jscpd; issue #143) — runs CI's
+        Mega-Linter COPYPASTE_JSCPD check locally off .jscpd.json; degrades
+        to a non-blocking WARNING when Node/npx is absent.
    G4. Tests (pytest)
 
 Usage:
@@ -901,6 +904,35 @@ def run_gate(root: Path) -> int:
         cprint(f"  {RED}BLOCKED: {labels.get(ve, f'exit {ve}')} issues found{NC}")
         return 1
     cprint(f"  {GREEN}Validation passed (0 blocking issues).{NC}")
+
+    # Gate 3b: jscpd copy-paste parity (issue #143). Runs the SAME duplication
+    # check CI's Mega-Linter runs (COPYPASTE_JSCPD, --threshold 5), so
+    # over-threshold copy-paste is caught LOCALLY before the bump/tag/push/release
+    # — not on CI after the release is already tagged. `.jscpd.json` at the repo
+    # root is the single source of truth for the threshold + ignore globs and is
+    # auto-discovered by BOTH jscpd here and Mega-Linter in CI, so the two gates
+    # stay in lock-step. GRACEFUL DEGRADATION: jscpd needs Node/npx; a missing
+    # tool (or a jscpd run error) DEGRADES to a non-blocking WARNING because CI's
+    # Mega-Linter still enforces the check — a dev box without Node is never
+    # false-blocked, but full local parity requires Node/npx installed.
+    cprint(f"\n{BLUE}[G3b] jscpd copy-paste parity...{NC}")
+    if not (root / ".jscpd.json").is_file():
+        cprint(f"  {YELLOW}SKIPPED: .jscpd.json not found — CI Mega-Linter still enforces copy-paste.{NC}")
+    elif not shutil.which("npx"):
+        cprint(f"  {YELLOW}SKIPPED: Node/npx not on PATH — jscpd not run locally.{NC}")
+        cprint(f"  {YELLOW}Install Node for full local parity; CI's Mega-Linter still enforces it.{NC}")
+    else:
+        try:
+            je = subprocess.run(
+                ["npx", "--yes", "jscpd", "."],
+                cwd=str(root), timeout=600).returncode
+        except (OSError, subprocess.SubprocessError) as exc:
+            cprint(f"  {YELLOW}SKIPPED: jscpd could not run ({type(exc).__name__}) — CI still enforces it.{NC}")
+        else:
+            if je != 0:
+                cprint(f"  {RED}BLOCKED: jscpd found copy-paste duplication over the .jscpd.json threshold.{NC}")
+                return 1
+            cprint(f"  {GREEN}Copy-paste under threshold.{NC}")
 
     # Gate 4: Tests. MANDATORY — missing tests/ dir or zero tests is a BLOCK.
     cprint(f"\n{BLUE}[G4] Running tests...{NC}")
