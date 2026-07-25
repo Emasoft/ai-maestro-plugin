@@ -1,0 +1,55 @@
+version: 2
+
+# Every third-party action in this repo is SHA-pinned (a supply-chain
+# requirement, and CI enforces it). A SHA pin cannot be bumped by a tag moving,
+# which is the point -- but it also means nothing surfaces upstream releases or
+# security advisories. Without this file the pins simply rot: the protection
+# quietly becomes staleness. Dependabot is the update channel that makes
+# pinning safe to keep.
+#
+# Dependabot rewrites the SHA *and* the trailing `# vX.Y.Z` comment together,
+# so the pinned form survives its PRs.
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      # Off the hour -- every repo that asks for "weekly" lands on 00:00 UTC.
+      time: "06:17"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+      - github-actions
+
+  # The memgrep engine. CORE hosts it for the whole ecosystem and ships it as
+  # prebuilt release assets, so a vulnerable crate here reaches every consumer
+  # that installs the binary -- not just this repo.
+  - package-ecosystem: cargo
+    directory: /scripts/memgrep
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:23"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    labels:
+      - dependencies
+      - rust
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:29"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    labels:
+      - dependencies
+      - python
