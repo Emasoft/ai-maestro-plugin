@@ -1,8 +1,8 @@
 ---
 name: architecture
-description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live"
+description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live / are the dependencies safe / dependabot reports no alerts"
 ocd: 2026-06-16
-lmd: 2026-07-24
+lmd: 2026-07-25
 metadata:
   node_type: memory
   type: project
@@ -42,6 +42,12 @@ binaries) consumed by the other ecosystem plugins.
   `--gate` includes a **jscpd** copy-paste gate (**G3b**, #143) on top of the standard
   version/lint/validate gates. The **type gate is mypy** (`mypy scripts/
   --ignore-missing-imports`, in `release.yml` + publish.py G2), **not Pyright**.[^2]
+- **Dependency scanning** — `.github/dependabot.yml` (added 2026-07-25, `886778d`)
+  covers **github-actions**, **cargo** (`/scripts/memgrep`) and **uv**. Note that
+  Dependabot **ALERTS** are a separate mechanism from this config, and for the Rust
+  surface they are **blind**: the dependency graph resolves 0 cargo packages against
+  125 crates in `scripts/memgrep/Cargo.lock`. Audit crates with **OSV**, never with
+  the alert count.[^3]
 - **Memory** — this plugin USES the janitor's global wiki-memory system (recall /
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
@@ -75,3 +81,18 @@ binaries) consumed by the other ecosystem plugins.
   union and unused module-level defs differently, and `_infer_bump_type` pre-existed at
   `6c1cf63` (not introduced by the CPV upgrade). DO run the gate command to judge type
   health, not the IDE Pyright panel; a green mypy is the authoritative signal.
+
+[^3]: [id:ATOM-ARCH-0003, status:valid, keywords:"dependabot reports no alerts zero open alerts are the rust dependencies safe cargo crates never scanned dependency graph resolves no cargo memgrep vulnerable crate osv advisory check", ocd:2026-07-25, lmd:2026-07-25]
+  DO NOT read "0 open Dependabot alerts" as evidence that memgrep's Rust dependencies are
+  clean, BECAUSE the dependency graph for this repo resolves 15 packages (9 pypi, 5
+  github-actions, 1 self) and **zero cargo** — while `scripts/memgrep/Cargo.lock` holds 125
+  crates and has been on the default branch since `3de7401`. Alerts are genuinely ENABLED
+  (`vulnerability-alerts` → 204, `dependabot_security_updates: enabled`) and genuinely
+  return `[]`, which is what makes it dangerous: the empty list looks like a clean bill of
+  health and is actually total blindness. Verified 2026-07-25 by querying OSV with the
+  lockfile directly — **5 of 141 packages carried advisories**, including RUSTSEC-2026-0190
+  in `anyhow`, a DIRECT dependency (fixed in `3334030`). This surface has the widest blast
+  radius in the repo: memgrep ships as prebuilt release binaries consumed ecosystem-wide, so
+  a vulnerable crate reaches every consumer as a compiled artifact with nothing ever
+  alerting. DO audit crates against OSV (POST the lockfile's name+version pairs to
+  `api.osv.dev/v1/querybatch`) and treat the alert count as covering only Actions and Python.
