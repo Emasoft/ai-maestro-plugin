@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-25T00:10:42+0200
+updated: 2026-07-26T06:50:27+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -42,6 +42,33 @@ CORE's public surface, so they were deliberately NOT taken):
 | D2 | MAJOR-2: reconcile 13 skills whose description promises `/<name>` while `user-invocable: false` and no `commands/<name>.md` exists | three valid fixes per skill (flip the flag / add the wrapper / reword to a natural-language trigger) — needs ONE policy choice, not 13 ad-hoc ones |
 | D3 | MAJOR-5 (= warning #20, highest-value): add a push/PR smoke job that builds ONE memgrep target and runs the staged binary `--version` | a CI change; the payoff is ecosystem-wide |
 | D4 | warning #28: replace `.markdownlint.json`'s `{"default": false}` with canon's explicit per-rule opt-out list | flipping linting on surfaces a backlog of existing violations — expect CI churn before green |
+
+**OPEN DEFECT found while publishing v2.11.0 (2026-07-26) — CI `Validate` intermittently
+exceeds its 30-min cap.** MAJOR-5 stopped being hypothetical: the `v2.11.0` release run
+timed out at 25 min on `Run full plugin validation (remote CPV, --strict)` and shipped a
+release with **no memgrep binaries**; a re-run passed and attached all assets. `ci.yml`'s
+`Validate` job then hit the same wall on `main` **twice** (30-min cap, both the original
+run and a re-run), so CI on `main` is currently red at `85f7653` while the release itself
+is complete and correct.
+
+Do NOT re-test these two — both were measured and DISPROVEN:
+
+| Hypothesis | Verdict |
+|---|---|
+| The `@v3.5.0` pin is stale/bad (CPV is at v3.19.1) | **WRONG.** `refs/tags/v3.5.0` exists (`3d8ea58`). Cold-cache locally: **v3.5.0 = 39 s exit 0**, v3.19.1 = 47 s exit 0. The version is not the variable. |
+| A cold `uvx --from git+…` fetch/build stall (what the workflow comments claim) | **WRONG.** The CI log shows `Built claude-plugins-validation @ git+…` **4 seconds** after the step starts. The fetch is not the cost. |
+
+Also not it: both `ci.yml` and `release.yml` already restore `cpv-scan-cache` **and** run
+`setup-uv` with `enable-cache: true`, so a missing cache is not the difference.
+
+What IS established: after CPV builds, the step runs 25-30 min and is killed. The apparent
+"zero output" is a red herring — the step redirects with `> validation-report.txt 2>&1`, so
+nothing reaches the log until `cat`. Remaining suspect: CPV installing its ~15 on-demand
+linters on a fresh ubuntu runner (network-bound, variable) — which is the class of the CPV
+issues the workflow comments already cite (**#90**, **#114**). Per
+`~/.claude/rules/plugin-tests-are-the-plugins-job.md` the G3-validate gate is CPV-owned
+infrastructure, so the fix likely belongs upstream, not in CORE's workflow. Next step is to
+reproduce on a fresh ubuntu runner (not macOS) before filing.
 
 **Load-bearing facts / gotchas:**
 
