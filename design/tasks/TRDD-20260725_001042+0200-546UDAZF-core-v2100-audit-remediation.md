@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-28T19:18:00+0200
+updated: 2026-07-28T19:27:43+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -65,10 +65,19 @@ Measured here after the bump: cold `v3.22.3` = **19–36 s, exit 0**. Changes la
 pins `v3.5.0 → v3.22.3` at all five sites (the three in `publish.py` collapsed into one `CPV_REF`
 constant, because a bump that missed one would leave the local G3 gate and CI validating with
 **different** validators while both reported "passed"); `PYTHONUNBUFFERED: "1"` in both workflows;
-and `release.yml`'s `> file 2>&1` + trailing `cat` replaced with `| tee` + **`set -o pipefail`**.
-That pipefail is load-bearing: GitHub's default `run:` shell is `bash -e {0}` **without** it, so
-after a pipe the captured status is `tee`'s (~always 0) and the gate would have reported success
-for **every failed validation**.
+and `release.yml`'s `> file 2>&1` + trailing `cat` replaced with `| tee` + a
+**`${PIPESTATUS[0]}`** read. That read is load-bearing: GitHub's default `run:` shell is
+`bash -e {0}` **without** `-o pipefail`, so a bare `$?` after the pipe is `tee`'s status
+(~always 0) and the gate would have reported success for **every failed validation**.
+
+> **Superseded within the same day: my first implementation used `set -o pipefail`.** Upstream
+> recommended `${PIPESTATUS[0]}` and was right — `pipefail` yields the **rightmost** non-zero
+> status, so a `tee` write error masks CPV's real severity. Verified in bash rather than
+> assumed: bare `$?` → **1** (tee's) · `pipefail` → **1** (masks cpv=4) · `PIPESTATUS[0]` → **4**
+> (CPV's own verdict). `PIPESTATUS` must be captured as an array in ONE expansion — any later
+> command, **including a plain assignment**, resets it (a sequential second read returns empty;
+> also verified). `tee`'s own status is checked separately so a failed write cannot look like a
+> clean validation. Fixed in `e40a688`.
 
 **Trap hit while doing it, worth keeping:** the first draft of those `tee` comments used markdown
 backticks, and backticks are command-substitution syntax to a shell — CPV's scanner flagged a
@@ -200,7 +209,29 @@ MINOR: ~~stray `scripts/memgrep/SKILL.md` with no frontmatter~~ **DONE 2026-07-2
 renamed to `scripts/memgrep/README.md`, 2 referrers repointed
 · ~~13 terminal TRDDs parked in `design/tasks/`~~ **the count is WRONG — 6, not 13, and
 the move is BLOCKED** on the archival-vocabulary ruling (`Emasoft/ai-maestro#93`); see
-the conflict analysis there
+the conflict analysis there.
+**2026-07-28 — premise CHALLENGED then RE-CONFIRMED; a fix is now drafted upstream.** The
+janitor (`ai-maestro#98` §1) argued #93 might be arguing with a DEAD FILE: the
+`trdd-approval-tiers.md` I cited carries no janitor provenance marker and is the retired
+predecessor of ai-maestro's `aimaestro-trdd-approval.md` overlay. I verified rather than
+accept it — **the archival protocol survived into the live overlay, so the ruling still
+stands**, and the contradiction is now provably INTERNAL to that one file:
+`~/ai-maestro/.claude/rules/aimaestro-trdd-approval.md` **:148** operationalizes archival as
+`--state <completed|cancelled|superseded>` while **:787** treats `column ∈ {complete,
+published, live}` as terminal. Line 148's only edit since (2026-07-16, ai-maestro#65 B2) was
+a **skill rename**, not a vocabulary change. The janitor's `#98` §2.3 proposes exactly the
+fix (archive-eligible terminal set = `completed|cancelled|superseded|published|live`); I
+said I'd adopt it as written and have no competing proposal. Still parked until it lands —
+a wrong mass-mutation of frozen TRDDs has no clean inverse.
+**Related finding (CORE-side, not a defect):** CORE has **no `.claude/rules/` at all** — it is
+not a registered agent workdir, so the DEP overlay was never seeded here (it exists in
+`~/ai-maestro/` and other workdirs). CORE's skill refs to `.claude/rules/aimaestro-*.md` are
+correct AT THE POINT OF USE (an agent in a seeded workdir resolves them), but CORE cannot
+self-check its teaching against the live rule, and **this session is steered by the orphan**.
+Also measured, and it guards a real hazard: `~/.claude/rules/` holds **32 files, only 8
+janitor-MARKED** — the other 24 are the USER's own hand-authored rules. So "absent marker"
+means *not janitor-installed*, NOT *orphan*; a sweep by marker-absence would delete 24 user
+rules. The by-NAME sweep the janitor proposed is the correct mechanism.
 · ~~no `.github/dependabot.yml`~~ **DONE 2026-07-25** (`886778d`) — github-actions +
 cargo + uv; it immediately opened 10 PRs, 4 of them cargo
 · stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)
