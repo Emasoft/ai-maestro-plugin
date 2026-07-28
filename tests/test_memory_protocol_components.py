@@ -95,11 +95,17 @@ class TestCanonicalArtifacts:
     """The memgrep memory-hosting artifacts this plugin ships for the ecosystem."""
 
     def test_memgrep_crate_is_vendored_complete(self) -> None:
-        """scripts/memgrep ships Cargo.toml + Cargo.lock + sources + its own tests."""
+        """scripts/memgrep ships Cargo.toml + Cargo.lock + README + sources + its own tests."""
         crate = PLUGIN_ROOT / "scripts" / "memgrep"
         assert (crate / "Cargo.toml").is_file()
         assert (crate / "Cargo.lock").is_file()  # --locked builds need it
-        assert (crate / "SKILL.md").is_file()
+        # README.md, NOT SKILL.md: the file was renamed in cabe004 because it
+        # carried no YAML frontmatter and so was never loadable as a skill.
+        # This assertion is why a rename must be grepped by BASENAME as well as
+        # by full path — the path here is JOINED, so grepping the old string
+        # "scripts/memgrep/SKILL.md" could not match it, and the rename shipped
+        # a red test that only an unpushed-commit accident kept out of CI.
+        assert (crate / "README.md").is_file()
         assert (crate / "src" / "main.rs").is_file()
         assert (crate / "tests" / "cli.rs").is_file()
 
