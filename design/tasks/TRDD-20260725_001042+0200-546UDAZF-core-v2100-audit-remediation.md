@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-28T15:56:21+0200
+updated: 2026-07-28T18:38:28+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -69,6 +69,40 @@ issues the workflow comments already cite (**#90**, **#114**). Per
 `~/.claude/rules/plugin-tests-are-the-plugins-job.md` the G3-validate gate is CPV-owned
 infrastructure, so the fix likely belongs upstream, not in CORE's workflow. Next step is to
 reproduce on a fresh ubuntu runner (not macOS) before filing.
+
+**OPEN DEFECT (2026-07-28) — CORE publishes a memgrep that cannot index lesson atoms.**
+Surfaced sideways, from three janitor `MEMGREP-004` tickets about `atoms` missing a `status`
+column. Those are the janitor's to fix (their validator raised them, their source already has
+`status` + `superseded_by`, the tickets say the janitor self-repairs). Underneath them is a
+defect that is **ours**:
+
+```
+CORE  scripts/memgrep   Cargo.toml 0.1.0   creates: files, memories, notes          <- NO atoms
+janitor scripts/memgrep Cargo.toml 0.1.0   creates: atoms, files, memories, notes
+CORE  target/release/memgrep  7,664,496 B  creates: files, memories, notes
+installed ~/.cargo/bin/memgrep 8,239,376 B creates: atoms, files, memories, notes
+both binaries: `memgrep 0.1.0`
+```
+
+CORE's crate has **zero** references to `atoms` anywhere. So the prebuilt binaries CORE attaches
+to every release (`memgrep-{darwin-arm64,darwin-x64,linux-x64}.tar.gz`, installed in preference
+by `scripts/install-memgrep.sh`) create an index with **no `atoms` table at all** — wikimem lesson
+recall then returns nothing, silently, with no error. That is worse than the missing-column bug
+the tickets describe. The engine this machine actually runs is the **janitor's**.
+
+Nothing can detect this: both crates say `0.1.0`, both binaries print `memgrep 0.1.0`. It is the
+same shape as core#33/#35 — two copies of one artifact, the stale one still building, no way to
+tell which is live — only with a Rust crate instead of rule files.
+
+**NOT fixed unilaterally; asked instead** (`Emasoft/ai-maestro-janitor#122`): who owns memgrep?
+(a) the janitor owns it → CORE drops the crate + release assets and corrects its README hosting
+claim; or (b) CORE owns it → CORE takes the current source and the janitor consumes CORE's
+releases. Either way the version must move when the schema moves, and the retired copy must be
+REMOVED rather than left building. Deleting or replacing CORE's crate is a cross-repo contract
+change, not local cleanup — hence the question rather than a commit.
+
+Do NOT "fix" this by re-vendoring the janitor's source into CORE before that answer lands; that
+picks option (b) by accident and leaves two maintainers unaware.
 
 **Load-bearing facts / gotchas:**
 
