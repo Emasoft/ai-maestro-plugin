@@ -150,6 +150,12 @@ jobs:
           # integrity fetch (a live urlopen to raw.githubusercontent.com) adds
           # no security but real latency/hang risk. Skip it.
           PLUGIN_SKIP_GITHUB_INTEGRITY: "1"
+          # Python block-buffers stdout when it is not a tty, so on a hang the
+          # log stays empty right up until the run you actually need it for.
+          # Without this the step's output only appears at exit — which is
+          # exactly what made the 25-min timeouts look like "zero output".
+          # (CPV#180; CPV ships this at all four of its own sites since v3.22.3.)
+          PYTHONUNBUFFERED: "1"
           # Do NOT set CLAUDE_PRIVATE_USERNAMES to the repo owner. That var marks
           # names as PRIVATE (to FLAG as leaks), NOT public — the canon template's
           # comment had the semantics backwards. Setting it to
@@ -160,7 +166,7 @@ jobs:
           # env and validates clean (CRITICAL 0); CI now matches it.
         run: |
           set +e
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0 \
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.22.3 \
               --with pyyaml \
               cpv-remote-validate plugin . --strict
           exit_code=$?

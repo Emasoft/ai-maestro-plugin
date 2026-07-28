@@ -77,6 +77,20 @@ from pathlib import Path
 PRE_PUSH_HOOK_REL = ".githooks/pre-push"
 PRE_PUSH_HOOK_PIN_REL = ".githooks/pre-push.sha256"
 
+# The pinned CPV ref, as ONE constant for the same reason as the hook paths
+# above: this pin was previously hardcoded at three call sites here plus two in
+# .github/workflows/, and a bump that missed one would leave the local G3 gate
+# and CI validating with DIFFERENT validators while both reported "passed".
+#
+# v3.5.0 -> v3.22.3 (CPV#180): v3.22.0 gives the markdown dead-link phase ONE
+# deadline spanning every file. Its per-host semaphores were scoped to a single
+# `validate_md_urls` call, so throttling reset per file and the phase grew with
+# (files x URLs) — bounded per request, unbounded in aggregate. That, not the
+# on-demand linters, is what pushed CI's validate step past its 25-min cap and
+# once shipped a release with no assets. v3.22.3 adds PYTHONUNBUFFERED so a
+# killed run's log is not empty. The workflow pins must move WITH this one.
+CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v3.22.3"
+
 # Load gh / git retry wrappers from the sibling module so every push +
 # `gh release create` survives transient github.com hiccups (the retry
 # pattern from ~/.claude/rules/github-timeouts.md). Shipped verbatim
@@ -695,7 +709,7 @@ def install_branch_rules(root: Path) -> int:
             [
                 "uvx",
                 "--from",
-                "git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0",
+                CPV_REF,
                 "--with",
                 "pyyaml",
                 "cpv-setup-branch-rules",
@@ -894,7 +908,7 @@ def run_gate(root: Path) -> int:
         return 1
     ve = subprocess.run(
         ["uvx", "--from",
-         "git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0",
+         CPV_REF,
          "--with", "pyyaml",
          "cpv-remote-validate", "plugin", ".", "--strict"],
         cwd=str(root), timeout=600).returncode
@@ -1063,7 +1077,7 @@ def stage_validate(root: Path) -> None:
     # on CRITICAL(1), MAJOR(2), MINOR(3), NIT(4); WARNING(5+) passes.
     run([
         "uvx", "--from",
-        "git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0",
+        CPV_REF,
         "--with", "pyyaml",
         "cpv-remote-validate", "plugin", ".", "--strict",
     ], cwd=root)

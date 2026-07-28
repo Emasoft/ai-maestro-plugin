@@ -78,12 +78,34 @@ jobs:
         # MAJOR / MINOR / NIT (exit codes 1-4); WARNING (exit 5+) is
         # advisory only. Issue #11: removed the local validator
         # invocation entirely; always go through the remote uvx entry.
+        env:
+          # See the ci.yml validate step: without this, `tee` below forwards a
+          # buffer nothing has flushed, so a killed run still shows nothing.
+          PYTHONUNBUFFERED: "1"
         run: |
           set +e
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.5.0               --with pyyaml               cpv-remote-validate plugin . --strict               > validation-report.txt 2>&1
+          # NOTE: no backticks anywhere in these comments. Backticks are
+          # command-substitution syntax to a shell, so CPV's injection scanner
+          # flags them inside a run: block even in a comment -- an earlier
+          # draft of this block scored a CMD_INJECTION NIT for the word "cat"
+          # in markdown quotes, which is a real red gate for a fake problem.
+          #
+          # Piping to tee, rather than redirecting to a file and cat-ing it
+          # afterwards: with the redirect a killed job never reaches the cat
+          # and the log is EMPTY -- which is how the v2.11.0 timeout hid its
+          # own cause. With tee, whatever flushed is already in the log.
+          #
+          # pipefail is LOAD-BEARING, not tidiness: GitHub's default run:
+          # shell is "bash -e {0}" WITHOUT it, so after a pipe the exit status
+          # is TEE's (~always 0) and this gate would report success for every
+          # failed validation. Do not remove it while the pipe is here.
+          set -o pipefail
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.22.3 \
+              --with pyyaml \
+              cpv-remote-validate plugin . --strict 2>&1 | tee validation-report.txt
           exit_code=$?
+          set +o pipefail
           set -e
-          cat validation-report.txt
           if [ $exit_code -ge 1 ] && [ $exit_code -le 4 ]; then
             echo "::error::Validation failed with exit code $exit_code (CRITICAL/MAJOR/MINOR/NIT found)"
             exit $exit_code
