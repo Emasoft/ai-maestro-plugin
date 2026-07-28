@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-28T19:27:43+0200
+updated: 2026-07-28T19:39:07+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -165,6 +165,24 @@ Nothing can detect this: both crates say `0.1.0`, both binaries print `memgrep 0
 same shape as core#33/#35 — two copies of one artifact, the stale one still building, no way to
 tell which is live — only with a Rust crate instead of rule files.
 
+**REVISED 2026-07-28 (measured) — it is THREE copies at THREE schema levels, not two, and the
+one that INSTALLS is stale:**
+
+| source | lines | `SCHEMA_VERSION` | `atoms` refs |
+|---|---|---|---|
+| janitor **repo worktree** | 2288 | **6** | 90 |
+| janitor **cached plugin `0.60.1`** — what an install actually gets | 1846 | **5** | 67 |
+| **CORE** `scripts/memgrep` | 544 | *(no ladder)* | **0** |
+
+`~/.cargo/bin/memgrep` creates `atoms` + knows `superseded_by` ⇒ built from the **v6** source.
+All three crates say `0.1.0`. **This is the mechanical cause of the whole MEMGREP-004 ticket
+cluster** — a v5-shipping plugin against a v6 binary on PATH is precisely the version skew that
+`validate_db`'s check ordering (janitor#123) reports as a critical shape defect. Surfaced only
+because two repair agents cited `index.rs:717/:773` while I had measured `:788/:839` for the same
+defect: **a line-number disagreement about one file is evidence of more than one file.** Posted
+to `janitor#122`; the version-discipline half (ship the crate the binary was built from; move
+`--version` with `SCHEMA_VERSION`) is fixable upstream **without** deciding ownership.
+
 **NOT fixed unilaterally; asked instead** (`Emasoft/ai-maestro-janitor#122`): who owns memgrep?
 (a) the janitor owns it → CORE drops the crate + release assets and corrects its README hosting
 claim; or (b) CORE owns it → CORE takes the current source and the janitor consumes CORE's
@@ -235,7 +253,14 @@ rules. The by-NAME sweep the janitor proposed is the correct mechanism.
 · ~~no `.github/dependabot.yml`~~ **DONE 2026-07-25** (`886778d`) — github-actions +
 cargo + uv; it immediately opened 10 PRs, 4 of them cargo
 · stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)
-· 15 skills carry the retired `Loaded by …` description suffix.
+· ~~15~~ **16 skills (verified 2026-07-28** — `grep -rl 'Loaded by' skills/*/SKILL.md`; the
+audit's 15 was the second soft count it produced, after the "13 terminal TRDDs" that were 6)
+carry the retired `Loaded by ai-maestro-plugin` description suffix. **Deliberately NOT swept.**
+It is 16 files of consumer-visible metadata, the descriptions are what drive skill *triggering*,
+and nothing forces it — CPV v3.22.3 validates **exit 0** with the suffix present. An unrequested
+16-file description sweep buys a few tokens and risks shifting skill selection; it is backlog,
+not autonomous work. Note two of the 16 (`graph-query`, `docs-search`) are the RETIRED skills
+already inside **D1**'s scope — sweep them there or not at all, so the two edits do not collide.
 
 NIT: untracked `.bak` clutter · empty `agents/` dir · root `.DS_Store` · thin
 skill-level test coverage (9 test files, 180 tests passing, well-aimed at the risky
