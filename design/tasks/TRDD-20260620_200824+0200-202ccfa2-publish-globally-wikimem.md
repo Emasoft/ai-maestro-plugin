@@ -87,7 +87,9 @@ recall walk, link handling; implement §3. Await user "go" before writing Rust
 - No git remote → derive slug from PRRD `project-id`, else dir basename, else a realpath
   hash. All machine-local; still never committed.
 
-**Durable artifacts to read before acting:** this TRDD; `scripts/memgrep/SKILL.md`;
+**Durable artifacts to read before acting:** this TRDD; `scripts/memgrep/README.md`
+(renamed from `SKILL.md` on 2026-07-27 — it never had frontmatter, so it was never a
+loadable skill);
 `~/.claude/rules/markdown-memory-recall.md` (scope model + roots).
 
 ---

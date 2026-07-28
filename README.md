@@ -103,7 +103,7 @@ note-memory skills were retired in favor of it; `memory-search`
 (transcript search) stays and names the global skills as its complement.
 
 This plugin still **HOSTS the `memgrep` engine** the wiki recall depends on —
-[`memgrep`](scripts/memgrep/SKILL.md) is a markdown-aware search engine whose
+[`memgrep`](scripts/memgrep/README.md) is a markdown-aware search engine whose
 source ships in `scripts/memgrep/` and is consumed across the ecosystem. Install
 it with:
 

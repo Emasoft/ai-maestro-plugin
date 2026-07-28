@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-26T06:50:27+0200
+updated: 2026-07-28T15:56:21+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -96,9 +96,13 @@ reproduce on a fresh ubuntu runner (not macOS) before filing.
 
 ## Lower-severity backlog (from the same audit)
 
-MINOR: stray `scripts/memgrep/SKILL.md` with no frontmatter (rename to `README.md`)
-· 13 terminal TRDDs parked in `design/tasks/` instead of `design/archived/`
-· no `.github/dependabot.yml` (100% SHA-pinned actions with no update channel = pins rot)
+MINOR: ~~stray `scripts/memgrep/SKILL.md` with no frontmatter~~ **DONE 2026-07-27** —
+renamed to `scripts/memgrep/README.md`, 2 referrers repointed
+· ~~13 terminal TRDDs parked in `design/tasks/`~~ **the count is WRONG — 6, not 13, and
+the move is BLOCKED** on the archival-vocabulary ruling (`Emasoft/ai-maestro#93`); see
+the conflict analysis there
+· ~~no `.github/dependabot.yml`~~ **DONE 2026-07-25** (`886778d`) — github-actions +
+cargo + uv; it immediately opened 10 PRs, 4 of them cargo
 · stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)
 · 15 skills carry the retired `Loaded by …` description suffix.
 
