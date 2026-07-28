@@ -95,17 +95,31 @@ jobs:
           # and the log is EMPTY -- which is how the v2.11.0 timeout hid its
           # own cause. With tee, whatever flushed is already in the log.
           #
-          # pipefail is LOAD-BEARING, not tidiness: GitHub's default run:
-          # shell is "bash -e {0}" WITHOUT it, so after a pipe the exit status
-          # is TEE's (~always 0) and this gate would report success for every
-          # failed validation. Do not remove it while the pipe is here.
-          set -o pipefail
+          # Reading the exit status is LOAD-BEARING and must use PIPESTATUS.
+          # GitHub's default run: shell is "bash -e {0}" WITHOUT -o pipefail,
+          # so a bare exit_code=$? after the pipe captures TEE's status
+          # (~always 0) and this gate would report success for EVERY failed
+          # validation -- strictly worse than the hang it replaced, because a
+          # hang is loud. pipefail alone is not enough either: it yields the
+          # RIGHTMOST non-zero status, so a tee write error would mask CPV's
+          # real severity (a NIT=4 reported as 1=CRITICAL). PIPESTATUS[0] is
+          # CPV's own verdict regardless of tee.
+          #
+          # The array must be captured in ONE expansion: any later command --
+          # including a plain assignment -- resets PIPESTATUS.
           uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.22.3 \
               --with pyyaml \
               cpv-remote-validate plugin . --strict 2>&1 | tee validation-report.txt
-          exit_code=$?
-          set +o pipefail
+          pipe_rc=("${PIPESTATUS[@]}")
+          exit_code="${pipe_rc[0]}"
+          tee_rc="${pipe_rc[1]}"
           set -e
+          # A failed tee means the report was never written. Fail loudly rather
+          # than let a silent write error look like a clean validation.
+          if [ "$tee_rc" -ne 0 ]; then
+            echo "::error::tee failed (exit $tee_rc) -- validation-report.txt is unreliable"
+            exit 1
+          fi
           if [ $exit_code -ge 1 ] && [ $exit_code -le 4 ]; then
             echo "::error::Validation failed with exit code $exit_code (CRITICAL/MAJOR/MINOR/NIT found)"
             exit $exit_code
