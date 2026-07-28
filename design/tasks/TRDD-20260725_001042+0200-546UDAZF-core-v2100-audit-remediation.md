@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-28T18:38:56+0200
+updated: 2026-07-28T19:18:00+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -43,7 +43,41 @@ CORE's public surface, so they were deliberately NOT taken):
 | D3 | MAJOR-5 (= warning #20, highest-value): add a push/PR smoke job that builds ONE memgrep target and runs the staged binary `--version` | a CI change; the payoff is ecosystem-wide |
 | D4 | warning #28: replace `.markdownlint.json`'s `{"default": false}` with canon's explicit per-rule opt-out list | flipping linting on surfaces a backlog of existing violations — expect CI churn before green |
 
-**OPEN DEFECT found while publishing v2.11.0 (2026-07-26) — CI `Validate` intermittently
+**RESOLVED 2026-07-28 — root cause found upstream and CORE's pin bumped to `v3.22.3`.**
+The CPV maintainer answered `claude-plugins-validation#180`: it was **never the linters**. It is
+the markdown **dead-link checker**. `validate_md_urls` is called once *per markdown file* and its
+per-host semaphores are scoped to a **single call**, so the throttling that would pace a burst
+**resets on every file** and the phase grows with (files × URLs). Each request was bounded (8s +
+bounded retries); their *sum* was bounded nowhere. That is the same "bounded per item, unbounded in
+aggregate" defect CPV#162 fixed for REPO LINT — which is exactly why the `v3.5.0` pin already
+carried the #162 remedy and it did not help: that remedy covered a different phase.
+`v3.22.0` gives the phase **one deadline spanning every file** (300s, override
+`PLUGIN_URL_CHECK_PHASE_TIMEOUT`); a URL past budget is reported **skipped, never dead**.
+`v3.22.3` adds `PYTHONUNBUFFERED=1`.
+
+> **This SUPERSEDES the "Do NOT bump the CPV pin" line below — but not the measurement behind it.**
+> That measurement stands and was right: at the time, *no released version contained a fix*, so
+> bumping was cargo-culting. What changed is not my confidence, it is the world — a version now
+> exists that fixes this named defect. Bumping for a **named, causally-established fix** is a
+> different act from bumping in hope. Do not read this as licence to bump the pin speculatively.
+
+Measured here after the bump: cold `v3.22.3` = **19–36 s, exit 0**. Changes landed:
+pins `v3.5.0 → v3.22.3` at all five sites (the three in `publish.py` collapsed into one `CPV_REF`
+constant, because a bump that missed one would leave the local G3 gate and CI validating with
+**different** validators while both reported "passed"); `PYTHONUNBUFFERED: "1"` in both workflows;
+and `release.yml`'s `> file 2>&1` + trailing `cat` replaced with `| tee` + **`set -o pipefail`**.
+That pipefail is load-bearing: GitHub's default `run:` shell is `bash -e {0}` **without** it, so
+after a pipe the captured status is `tee`'s (~always 0) and the gate would have reported success
+for **every failed validation**.
+
+**Trap hit while doing it, worth keeping:** the first draft of those `tee` comments used markdown
+backticks, and backticks are command-substitution syntax to a shell — CPV's scanner flagged a
+**comment** as `CMD_INJECTION` and `--strict` turned that NIT into a red gate (exit 4). Proven mine,
+not the version's, by re-running `v3.22.3` against the pre-edit workflows: **exit 0**. Never write
+backticks inside a `run:` block, comments included. Same class as the blockquote-`>`-read-as-redirect
+false positive noted below.
+
+**Original diagnosis (2026-07-26), kept for the record — CI `Validate` intermittently
 exceeds its 30-min cap.** MAJOR-5 stopped being hypothetical: the `v2.11.0` release run
 timed out at 25 min on `Run full plugin validation (remote CPV, --strict)` and shipped a
 release with **no memgrep binaries**; a re-run passed and attached all assets. `ci.yml`'s
@@ -72,9 +106,37 @@ reproduce on a fresh ubuntu runner (not macOS) before filing.
 
 **OPEN DEFECT (2026-07-28) — CORE publishes a memgrep that cannot index lesson atoms.**
 Surfaced sideways, from three janitor `MEMGREP-004` tickets about `atoms` missing a `status`
-column. Those are the janitor's to fix (their validator raised them, their source already has
-`status` + `superseded_by`, the tickets say the janitor self-repairs). Underneath them is a
-defect that is **ours**:
+column.
+
+> **CORRECTION (2026-07-28, later) — the three tickets were FALSE POSITIVES, and my first
+> reading of them here was wrong.** I wrote that "a migration failed" and that they were "the
+> janitor's to fix … the janitor self-repairs". Two `janitor-repair-agent` runs
+> (**T-7MTSGLOU**, **T-E0DR0WTS**) independently established that **no migration ever failed**:
+> the index was a complete, integrity-clean **v5** DB that had simply not been write-opened
+> since `~/.cargo/bin/memgrep` was rebuilt at `SCHEMA_VERSION = 6`. One `memgrep reindex`
+> applied the v6 ladder cleanly. `.memgrep/self-heal.log` **does not exist** — proof no repair
+> path was ever taken. Verified here: `user_version=6`, `atoms` carries `status` +
+> `superseded_by`, `memgrep validate` exits 0.
+>
+> The real defect is **check ordering** in the janitor's `validate_db`
+> (`scripts/memgrep/src/index.rs`): step 0 guards `ver > expect_version` (`MEMGREP-010`) but
+> there is **no symmetric guard for `ver < expect_version`**, and the base-table shape check
+> (`MEMGREP-004`, line 788) runs *before* the version stamp is read (`MEMGREP-006`, line 839).
+> A DB one version behind necessarily lacks the column the pending step adds — so **every
+> schema bump manufactures one critical ticket per not-yet-written corpus.**
+> Cross-project ⇒ FLAGGED, not patched. Already filed upstream as
+> **`Emasoft/ai-maestro-janitor#123`** by a sibling agent with a line-for-line matching
+> diagnosis; **do not file a duplicate.** Reports:
+> `reports/janitor-repair-agent/20260728_18{5920,5934}+0200-T-*.md`.
+>
+> Lesson: a critical *shape* complaint arriving right after a binary upgrade is version skew
+> until the stamp is read. Do not infer damage from a shape check that runs before the version
+> check — and do not follow a ticket's prescribed remedy ("repair the migration ladder, rebuild
+> from the notes") when the ladder is correct: that edits a shipped immutable migration step
+> and destroys the evidence. Both agents correctly refused.
+
+**The CORE-side defect underneath them is unaffected by that correction and still stands** —
+it is about a missing *table*, not a missing column, and was measured directly:
 
 ```
 CORE  scripts/memgrep   Cargo.toml 0.1.0   creates: files, memories, notes          <- NO atoms
