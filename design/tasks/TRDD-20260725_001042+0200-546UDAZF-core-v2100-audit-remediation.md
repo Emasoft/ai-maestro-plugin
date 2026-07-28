@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-28T18:38:28+0200
+updated: 2026-07-28T18:38:56+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -114,9 +114,13 @@ picks option (b) by accident and leaves two maintainers unaware.
 - **Warnings #23 / #24 are false positives that must NOT be "fixed"** — the validator
   itself says `ci.yml` / `release.yml` carry hardening the canonical template lacks.
   Aligning them to canon would be a **downgrade**.
-- **Warning #19** (memgrep compile source shipping in-tree) is a **deliberate,
-  accepted architectural deviation** — CORE hosts the memgrep engine for the whole
-  ecosystem. Decide it once here rather than re-triaging it every release.
+- **Warning #19** (memgrep compile source shipping in-tree) was triaged on 2026-07-24 as a
+  *deliberate, accepted architectural deviation* on the grounds that "CORE hosts the memgrep
+  engine for the whole ecosystem". **That premise is now DISPROVEN** (see the 2026-07-28
+  defect above): CORE hosts a memgrep that lacks the `atoms` table entirely, while the
+  ecosystem runs the janitor's build. So #19 is no longer "accepted" — it is **pending**
+  the ownership answer in `Emasoft/ai-maestro-janitor#122`, and under option (a) the crate
+  leaves CORE and the warning disappears with it.
 - Warning counts: **28 triaged → 9 genuine · 13 false-positive · 6 cosmetic.**
 
 **SUPERSEDED — do NOT carry forward:**
