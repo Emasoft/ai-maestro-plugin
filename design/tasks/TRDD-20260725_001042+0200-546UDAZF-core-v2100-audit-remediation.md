@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-28T19:39:07+0200
+updated: 2026-07-29T03:39:47+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -225,9 +225,20 @@ picks option (b) by accident and leaves two maintainers unaware.
 
 MINOR: ~~stray `scripts/memgrep/SKILL.md` with no frontmatter~~ **DONE 2026-07-27** —
 renamed to `scripts/memgrep/README.md`, 2 referrers repointed
-· ~~13 terminal TRDDs parked in `design/tasks/`~~ **the count is WRONG — 6, not 13, and
-the move is BLOCKED** on the archival-vocabulary ruling (`Emasoft/ai-maestro#93`); see
-the conflict analysis there.
+· **13 terminal TRDDs parked in `design/tasks/`, and the move is BLOCKED** on the
+archival-vocabulary ruling (`Emasoft/ai-maestro#93`); see the conflict analysis there.
+
+> **I was wrong to "correct" this to 6, and the audit's original 13 was right (fixed
+> 2026-07-29).** Measured: `design/tasks/` holds 15 files — **8 `complete` + 5 `published`**
+> + 1 `planned` (TRDD-202ccfa2, the only genuinely open card) + 1 `backburner` (this one).
+> 8 + 5 = **13 terminal**. My error was reasoning from `kanban.py`'s `WORKING_COLUMNS` — which
+> governs **board rendering**, a different question — instead of from the governing text.
+> `trdd-design-tasks` **§12** settles it: *"Terminal columns are frozen. Do not edit the body of
+> a `complete` / `failed` / `superseded` / `published` / `live` TRDD."* `complete` and
+> `published` are both named terminal. **Lesson: when a count disagrees with a spec, check which
+> document actually governs the question before "correcting" the spec's number** — I overruled a
+> correct audit finding with a rendering constant. The wrong figure reached
+> `ai-maestro#93` and `#98`; corrected on-thread.
 **2026-07-28 — premise CHALLENGED then RE-CONFIRMED; a fix is now drafted upstream.** The
 janitor (`ai-maestro#98` §1) argued #93 might be arguing with a DEAD FILE: the
 `trdd-approval-tiers.md` I cited carries no janitor provenance marker and is the retired
