@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-29T03:39:47+0200
+updated: 2026-07-29T16:08:45+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -225,8 +225,22 @@ picks option (b) by accident and leaves two maintainers unaware.
 
 MINOR: ~~stray `scripts/memgrep/SKILL.md` with no frontmatter~~ **DONE 2026-07-27** —
 renamed to `scripts/memgrep/README.md`, 2 referrers repointed
-· **13 terminal TRDDs parked in `design/tasks/`, and the move is BLOCKED** on the
+· **13 terminal TRDDs parked in `design/tasks/`, and the move is GATED** on the
 archival-vocabulary ruling (`Emasoft/ai-maestro#93`); see the conflict analysis there.
+
+> **Vocabulary note — do NOT "fix" this card to `column: blocked` (2026-07-29).** The
+> `trdd-state-reconciliation` detector flagged TRDD-546UDAZF as a prose-frontmatter mismatch:
+> *"prose says blocked; frontmatter column != blocked & blocked-by: []"*. The frontmatter is
+> **correct** and the prose was the defect. Per the schema, `blocked-by` is
+> **`list[trdd-ref]`** — TRDD references only — and column-transition **28** requires it
+> non-empty to enter `blocked`. This card's gates are a USER decision (D1–D4) and rulings in
+> **other repos** (`ai-maestro#93/#98`, `janitor#122/#135`); none is a TRDD, so `blocked-by:`
+> cannot legally hold them and `blocked` is the wrong column. `backburner` — authored/parked,
+> promoted to `todo` when it is next-up — is right. The single word "BLOCKED" above was
+> describing the **other 13 cards'** archival move, not this card's own state; it is now
+> "GATED" so the reserved term is not overloaded. **Lesson: `blocked` is a reserved column
+> name, not an English adjective — in TRDD prose say gated/parked/awaiting unless you mean
+> the state machine's `blocked`.**
 
 > **I was wrong to "correct" this to 6, and the audit's original 13 was right (fixed
 > 2026-07-29).** Measured: `design/tasks/` holds 15 files — **8 `complete` + 5 `published`**
