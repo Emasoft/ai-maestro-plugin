@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-29T16:08:45+0200
+updated: 2026-07-31T18:52:00+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -225,8 +225,9 @@ picks option (b) by accident and leaves two maintainers unaware.
 
 MINOR: ~~stray `scripts/memgrep/SKILL.md` with no frontmatter~~ **DONE 2026-07-27** —
 renamed to `scripts/memgrep/README.md`, 2 referrers repointed
-· **13 terminal TRDDs parked in `design/tasks/`, and the move is GATED** on the
-archival-vocabulary ruling (`Emasoft/ai-maestro#93`); see the conflict analysis there.
+· ~~**13 terminal TRDDs parked in `design/tasks/`, and the move is GATED** on the
+archival-vocabulary ruling (`Emasoft/ai-maestro#93`)~~ **DONE 2026-07-31, and it was
+12 not 13** — `e499fe9`; the ruling and the off-by-one are recorded below.
 
 > **Vocabulary note — do NOT "fix" this card to `column: blocked` (2026-07-29).** The
 > `trdd-state-reconciliation` detector flagged TRDD-546UDAZF as a prose-frontmatter mismatch:
@@ -266,6 +267,55 @@ a **skill rename**, not a vocabulary change. The janitor's `#98` §2.3 proposes 
 fix (archive-eligible terminal set = `completed|cancelled|superseded|published|live`); I
 said I'd adopt it as written and have no competing proposal. Still parked until it lands —
 a wrong mass-mutation of frozen TRDDs has no clean inverse.
+
+**RESOLVED 2026-07-31 — the hub ruled, and the cards are archived (`e499fe9`).**
+`ai-maestro#93` (2026-07-30): ***`published` and `live` archive AS THEMSELVES. Never rewrite
+them to `completed`.*** The hub checked its own reference implementation rather than the prose —
+`lib/trdd-doctor.ts::expectedZone` has returned `'archived'` for all **five** of
+`completed|cancelled|superseded|published|live` all along, and `trdd-graph.ts::TERMINAL_DONE`
+agrees. The IND base's three-value list was simply narrower than the semantics §12 already
+asserted. *"A protocol that can only be obeyed by deleting information is the thing that is
+wrong."* Filed as the janitor IND-base amendment `janitor#143`.
+
+Executed here: **pure `git mv` of 12 cards into `design/archived/`, no content edit, every
+`column:` untouched.** All 12 staged as `R` (rename, zero delta). `design/tasks/` now holds
+exactly the 3 genuinely-open cards.
+
+> **My "13" was itself off by one — the correct figure is 12 (2026-07-31).** The hub's own
+> proposal text carries a qualifier its ruling did not restate: **`complete` is terminal only
+> when `release-via: none`** (or absent). With `release-via: publish|deploy` a `complete` card
+> still has its publish/deploy stage ahead, so it is legitimately OPEN. Measured:
+> `TRDD-P83T33EN` is `complete` + `release-via: publish` → it **stays** in `design/tasks/`.
+> Archived: 5 `published` + 7 `complete` (1 explicit `none`, 6 absent). **Lesson: a ruling's
+> summary line is not its full text — when the authority's own proposal carries a qualifier
+> the ruling omits, the qualifier still binds.** Third revision of this count (13 → 6 → 13 →
+> 12); the first two were reasoning errors, this one is a rule I had not read closely enough.
+
+> **WHY a pure rename and not the archival protocol's edit-then-move.** The ruling's step 2:
+> a zone move stages the rename **from the blob already in the INDEX**, so an edit made
+> before the `git mv` stays UNSTAGED at the new path — it has bitten the hub's corpus three
+> times, which is why their `moveZone` re-stages. A pure `git mv` sidesteps it entirely, and
+> it is also the only form that respects §12's freeze on terminal bodies. The archival act is
+> recorded in the commit message; `updated:` was NOT bumped because a rename is not an edit.
+
+> **NOT fixed, deliberately: three archived cards contradict themselves.** `TRDD-9a8aba94`,
+> `9e80e484`, `9f10ed97` each carry `column: complete` (line 4) **and** `**Status:** Not
+> started` (line 19). This is what fed the janitor's `trdd-drift` false positives — its v1
+> fallback scanned the first 4 KiB (frontmatter **plus body**) for `^\*\*Status:\*\*`, so body
+> prose outranked the column (fixed janitor-side in `0e0e07b`, `janitor#135` CLOSED). The
+> janitor's own note: *"my fix only makes the janitor ignore it. A human still reads 'Not
+> started' nineteen lines in."* §12 freezes those bodies, so correcting them needs its own
+> card. The fleet-wide rule is `3P-TRDD-10` (one pipeline claim per card) tracked as
+> ai-maestro `TRDD-FKGMNGJB`; 98 files across 13 corpora carry a body `**Status:**` line.
+
+> **The amendment is shipped but NOT installed here — do not be surprised by a stale §12.**
+> janitor `0.64.1`'s `rules/trdd-design-tasks.md` §12 already carries the five-value
+> archive-eligible clause. The copy installed at `~/.claude/rules/trdd-design-tasks.md` on
+> this machine is byte-identical to **0.60.1**, which stops at *"Terminal columns are
+> frozen."* Cause: `janitor#141` — `install_rules` overwrites on any byte difference with no
+> version comparison, so a session that loaded an OLDER plugin version rolls the user-scope
+> rules **backward**. **General form, worth keeping: an IND-base amendment that any older
+> session can silently revert is not deployed, however correct its text.**
 **Related finding (CORE-side, not a defect):** CORE has **no `.claude/rules/` at all** — it is
 not a registered agent workdir, so the DEP overlay was never seeded here (it exists in
 `~/ai-maestro/` and other workdirs). CORE's skill refs to `.claude/rules/aimaestro-*.md` are
