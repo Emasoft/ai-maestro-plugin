@@ -228,6 +228,33 @@ renamed to `scripts/memgrep/README.md`, 2 referrers repointed
 · ~~**13 terminal TRDDs parked in `design/tasks/`, and the move is GATED** on the
 archival-vocabulary ruling (`Emasoft/ai-maestro#93`)~~ **DONE 2026-07-31, and it was
 12 not 13** — `e499fe9`; the ruling and the off-by-one are recorded below.
+· ~~stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)~~
+**DONE 2026-07-31** — `dee2bf3`; copies preserved at `reports/legacy-root-artifacts-20260410/`.
+
+> **⚠ THE PUBLISH GATE IS RED, and archiving is what turned it red — `CPV#184` (2026-07-31).**
+> Do NOT "fix" this by editing archived TRDD bodies or adding a suppression. **CPV `--strict`
+> scans `design/archived/` but NOT `design/tasks/`.** Proved by A/B on one file, zero content
+> change, one variable:
+>
+> ```
+> design/archived/TRDD-899317b3-…-aegis-bash-analyzer-regex-gaps.md  → [NIT] FS_WRITE   NIT=3
+> git mv → design/tasks/…                                           → not flagged      NIT=2
+> git mv → design/archived/…  (restored)                            → flagged again    NIT=3
+> ```
+>
+> So CORE went **exit 0 → exit 4 (NIT=3)** purely by obeying the `ai-maestro#93` archival
+> ruling. All three findings are prose in design docs: the word *sudo* in a sentence; a table
+> row **documenting a guard-bypass vector** (inverted polarity, same class as `CPV#170/#177/
+> #178`); and prose defining what counts as executable. **There is no source fix — §12 freezes
+> terminal TRDD bodies**, exactly the shape of `CPV#176` case 2 ("fixing the fixture mutates
+> the input the tests parse; the scope is what's wrong"). `design/proposals/` and
+> `design/refused/` share the property; `refused/` is empty here, which is the only reason this
+> is 3 findings and not more.
+>
+> **Lesson: when a scope exclusion names ONE member of a set the ecosystem defines as a set,
+> the excluded member is a coincidence and the rest are a latent gate failure** — armed the
+> first time anyone follows the lifecycle to its end. Held honestly red rather than green by
+> suppression; publish is gated until CPV scopes it.
 
 > **Vocabulary note — do NOT "fix" this card to `column: blocked` (2026-07-29).** The
 > `trdd-state-reconciliation` detector flagged TRDD-546UDAZF as a prose-frontmatter mismatch:
