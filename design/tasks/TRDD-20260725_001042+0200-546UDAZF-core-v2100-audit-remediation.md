@@ -403,7 +403,11 @@ means *not janitor-installed*, NOT *orphan*; a sweep by marker-absence would del
 rules. The by-NAME sweep the janitor proposed is the correct mechanism.
 · ~~no `.github/dependabot.yml`~~ **DONE 2026-07-25** (`886778d`) — github-actions +
 cargo + uv; it immediately opened 10 PRs, 4 of them cargo
-· stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)
+· ~~stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)~~
+**DONE 2026-07-31** — `dee2bf3`. (This was the SECOND listing of the same item; I struck only
+the first and left this one reading as open work. **Lesson: after resolving a backlog line,
+grep the document for the item — a backlog that lists a thing twice will report it undone
+once.**)
 · ~~15~~ **16 skills (verified 2026-07-28** — `grep -rl 'Loaded by' skills/*/SKILL.md`; the
 audit's 15 was the second soft count it produced, after the "13 terminal TRDDs" that were 6)
 carry the retired `Loaded by ai-maestro-plugin` description suffix. **Deliberately NOT swept.**
@@ -413,9 +417,17 @@ and nothing forces it — CPV v3.22.3 validates **exit 0** with the suffix prese
 not autonomous work. Note two of the 16 (`graph-query`, `docs-search`) are the RETIRED skills
 already inside **D1**'s scope — sweep them there or not at all, so the two edits do not collide.
 
-NIT: untracked `.bak` clutter · empty `agents/` dir · root `.DS_Store` · thin
-skill-level test coverage (9 test files, 180 tests passing, well-aimed at the risky
-surfaces — the gap is skill behaviour).
+NIT: ~~untracked `.bak` clutter · empty `agents/` dir · root `.DS_Store`~~ **NOT APPLICABLE
+to the artifact — measured 2026-07-31, do not "fix" these.** The ship surface is the git
+archive, which contains only TRACKED files. Measured: `.bak` tracked **0** (all 14 untracked
+AND gitignored), `.DS_Store` tracked **0** (gitignored at `.gitignore:2`), `agents/` tracked
+**0** (empty, and git does not track empty directories). So all three are local
+working-directory clutter that no consumer ever receives. **Deleting them would be a RULE 0
+violation** — every one is untracked, and two live in never-delete zones (`reports_dev/`,
+`.trashcan/`). **Lesson: before actioning a housekeeping finding, ask whether the artifact
+can even carry it — an auditor walking the worktree sees files the package never ships.**
+· Still open: thin skill-level test coverage (9 test files, 180 tests passing, well-aimed at
+the risky surfaces — the gap is skill behaviour).
 
 ## Verified clean (do not re-audit without cause)
 
