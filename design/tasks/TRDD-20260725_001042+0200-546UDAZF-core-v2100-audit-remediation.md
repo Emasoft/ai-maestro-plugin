@@ -316,6 +316,43 @@ exactly the 3 genuinely-open cards.
 > version comparison, so a session that loaded an OLDER plugin version rolls the user-scope
 > rules **backward**. **General form, worth keeping: an IND-base amendment that any older
 > session can silently revert is not deployed, however correct its text.**
+
+**2026-07-31 — `ai-maestro#97` ANSWERED, and exercising the answer found a false green.**
+The hub gave CORE the SPEC pointer and a change signal it asked for. Both respond. Together
+they currently report "current" for a spec that is three minor versions stale:
+
+| | value | measured |
+|---|---|---|
+| authority URL (`governance-rules` branch) | `spec-version: 1.1.1` | spec file last committed there `e3968343`, **2026-07-22** |
+| hub's working copy | `spec-version: 1.4.0` | `updated: 2026-07-31T07:03` |
+| the 3 commits carrying 1.2.0→1.4.0 | `532bfc2b` `0a02f6f9` `d255b52a` | **HTTP 422 "No commit found"** on the remote — committed, never pushed |
+
+The signal the hub documented — `gh api repos/Emasoft/ai-maestro/commits/governance-rules
+--jq .sha` — **did** move (`7b1a3e64` → `ea97c73c`). Its four commits are `docs(lessons)`,
+`docs(pm2)`, `fix(oauth-rotator)` and a TRDD zone move: real, none governance. So a
+conforming consumer polls, sees movement, refetches, gets the same 1.1.1, and records
+"checked, current." `3P-TRDD-09/10/11` — the clauses the hub told the janitor to conform to
+on `janitor#135`, citing `3P-CHK-03` — `grep` to **0** hits at the authority URL.
+
+**Use this instead (verified before proposing it on the thread) — the blob sha, which moves
+if and only if those bytes move, and unlike `spec-version:` also covers the unversioned
+overlays:**
+
+```bash
+gh api "repos/Emasoft/ai-maestro/contents/design/specs/3-pillars-spec.md?ref=governance-rules" --jq .sha
+gh api "repos/Emasoft/ai-maestro/contents/rules/aimaestro?ref=governance-rules" --jq '.[] | "\(.sha[0:12])  \(.name)"'
+```
+
+> **The pattern, three instances in one day — this is the durable part.** `janitor#141` (rule
+> ships in 0.64.1, installs as 0.60.1) · `janitor#143` (§12 amended, the archival section a
+> reader follows maybe not) · `#97` (spec at 1.4.0, authority serves 1.1.1). Same shape:
+> **an amendment the designated authority does not serve is not published, however correct
+> its text** — and in two of the three the consumer had a green check saying otherwise.
+> **Lesson: a coarse change-signal is self-correcting only if the watched location is
+> AUTHORITATIVE. If it can lag its own source, "diff and see nothing" confirms the mirror and
+> reads as "source unchanged" — noise becomes a false GREEN.** Captured as
+> `ATOM-OK89-R1S5` on the USER-scope `debugging-methodology-causal-attribution-and-design`
+> page, qualifying an atom written the same day that called coarse signals merely "annoying".
 **Related finding (CORE-side, not a defect):** CORE has **no `.claude/rules/` at all** — it is
 not a registered agent workdir, so the DEP overlay was never seeded here (it exists in
 `~/ai-maestro/` and other workdirs). CORE's skill refs to `.claude/rules/aimaestro-*.md` are
