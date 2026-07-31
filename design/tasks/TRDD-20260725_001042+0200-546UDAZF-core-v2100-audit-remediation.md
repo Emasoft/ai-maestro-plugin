@@ -256,6 +256,18 @@ archival-vocabulary ruling (`Emasoft/ai-maestro#93`)~~ **DONE 2026-07-31, and it
 > first time anyone follows the lifecycle to its end. Held honestly red rather than green by
 > suppression; publish is gated until CPV scopes it.
 
+> **⚠ THE PROTECTED STASH MOVED — identify it by MESSAGE, never by index (2026-07-31).** For six
+> weeks the memgrep publish-globally WIP (`TRDD-202ccfa2`, `core#18/#45`) was `stash@{0}`, and
+> every handoff said *"never drop `stash@{0}`"*. Today an `auto-backup-checkout-*` stash was
+> created by a hook during a `git mv` and pushed the WIP to **`stash@{1}`**. That instruction is
+> now not merely stale but **inverted**: followed literally it protects the throwaway and leaves
+> the irreplaceable one looking like "the other stash". Resolve it before touching anything —
+> `git stash list | grep -n 'memgrep publish-globally'`. **Lesson: a protection rule must name
+> its object by CONTENT, never by POSITION in a mutable list** — the list reorders without
+> announcing it, and the rule keeps reading as though it were still true. Same failure class as
+> `kanban.py`'s `WORKING_COLUMNS` adjudicating terminality: an identifier that is really a
+> coincidence of ordering.
+
 > **Vocabulary note — do NOT "fix" this card to `column: blocked` (2026-07-29).** The
 > `trdd-state-reconciliation` detector flagged TRDD-546UDAZF as a prose-frontmatter mismatch:
 > *"prose says blocked; frontmatter column != blocked & blocked-by: []"*. The frontmatter is
