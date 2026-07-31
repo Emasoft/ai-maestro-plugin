@@ -426,8 +426,32 @@ working-directory clutter that no consumer ever receives. **Deleting them would 
 violation** — every one is untracked, and two live in never-delete zones (`reports_dev/`,
 `.trashcan/`). **Lesson: before actioning a housekeeping finding, ask whether the artifact
 can even carry it — an auditor walking the worktree sees files the package never ships.**
-· Still open: thin skill-level test coverage (9 test files, 180 tests passing, well-aimed at
-the risky surfaces — the gap is skill behaviour).
+· **Still open — thin skill-level test coverage, now MEASURED (2026-07-31) so it is scopeable
+rather than a vibe.** The audit's wording was right; here are the numbers behind it.
+
+| surface | count | behavioural tests |
+|---|---|---|
+| skills | **26** | 0 files target a named skill's behaviour |
+| commands | **12** | 0 |
+| hook entries (`hooks/hooks.json`) | **13** | covered only via `test_ai_maestro_hook.py` (the dispatcher, not each entry) |
+
+The suite is **99 declared test functions → 180 collected** (10 `parametrize` decorators
+account for the difference — not 180 independent cases). Its 9 files aim at *scripts, hooks
+and governance logic*: `cpv_network_resilience` (17), `prrd_trdd_pillars` (32),
+`ai_maestro_hook` (11), `pre_push_gate` (8), `directory_guard_bash` (7),
+`memory_protocol_components` (8), `pre_push_hook_integrity` (5), `publish_dependency_tag` (5),
+`publish_uv_lock_sync` (6). Three of them glob over directories, so some structural checks do
+reach every skill; **none exercises a skill's behaviour.** 6 of 26 skills are so much as NAMED
+in `tests/`.
+
+**Why this is recorded and NOT started autonomously.** `~/.claude/rules/plugin-tests-are-the-
+plugins-job.md` is unambiguous — *"a test file for every skill, command, hook … no skill is
+exempt"* — so the obligation is real and this is a genuine gap, not a nitpick. But it is
+~50 new test files; that is a scope decision, and the standing guidance is to specify the
+number of tests up front rather than let a test-writer agent emit ~30 per function. **Needs
+one policy call from the USER** (which surfaces first, how deep, how many per skill), then it
+is a `python-test-writer` fan-out. **Lesson: "thin coverage" is not actionable; 26/12/13 with
+zero behavioural files is.** Measuring cost nothing and converted a NIT into a decision.
 
 ## Verified clean (do not re-audit without cause)
 
