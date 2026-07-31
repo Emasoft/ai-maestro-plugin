@@ -55,7 +55,9 @@ Finding is allowed for **every** role — no gate.
    python3 "$DIR/findtrdd.py" --where "column=dev AND priority<3"
    python3 "$DIR/findtrdd.py" --grep "auth"           # regex over title + body
    python3 "$DIR/findtrdd.py" --format table          # paths | json | table
-   python3 "$DIR/findtrdd.py" --validate design/tasks/TRDD-9a8aba94-*.md   # frontmatter check
+   python3 "$DIR/findtrdd.py" --validate design/*/TRDD-9a8aba94-*.md   # frontmatter check
+   #                                            ^ every zone, not just tasks/ — a terminal
+   #                                              card lives in design/archived/
    ```
 
    Resolving a TRDD from a todo-list reference: the todo entry carries

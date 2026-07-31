@@ -210,7 +210,7 @@ kanban.py --red
 get-prrd.py --cite 64.134
 
 # INTEGRATOR validates a TRDD before deploying
-findtrdd.py --validate design/tasks/TRDD-9a8aba94-*.md
+findtrdd.py --validate design/*/TRDD-9a8aba94-*.md   # every zone, not just tasks/
 
 # MEMBER files a proposal to revise rule S70
 prrd-edit.py propose silver "new wording" --target 70 \

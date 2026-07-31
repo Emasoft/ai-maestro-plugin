@@ -140,7 +140,7 @@ Every field is engineered to answer a real grep question in one line.
 | `test-failures` | int | 0 | Cumulative test failure count. Used by transition #10 (auto-fail threshold). |
 | `last-test-result` | enum | `not-run` | `not-run`, `pass`, `fail`, `partial`. Updated by test runner. |
 | `last-test-at` | datetime \| null | null | Updated by test runner. |
-| `implementation-commits` | list[sha] | `[]` | **The backtracking field.** SHAs where this TRDD's code landed. A future bug discovered in commit X can locate the TRDD via `grep -l "implementation-commits:.*X" design/tasks/*.md`. |
+| `implementation-commits` | list[sha] | `[]` | **The backtracking field.** SHAs where this TRDD's code landed. A future bug discovered in commit X can locate the TRDD via `grep -l "implementation-commits:.*X" design/*/*.md` — glob **every zone**, not just `design/tasks/`: a shipped TRDD has been archived, and an old commit's card is the one most likely to have left `tasks/`. |
 | `pr-url` | url \| null | null | Populated once a PR is opened. |
 | `ci-runs` | list[url] | `[]` | CI run URLs/IDs. Grows as the TRDD cycles through testing. |
 | `published-version` | semver \| null | null | Populated on `publish → published`. The version users can install. |
