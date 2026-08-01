@@ -107,7 +107,7 @@ jobs:
           #
           # The array must be captured in ONE expansion: any later command --
           # including a plain assignment -- resets PIPESTATUS.
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v3.22.3 \
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v4.2.1 \
               --with pyyaml \
               cpv-remote-validate plugin . --strict 2>&1 | tee validation-report.txt
           pipe_rc=("${PIPESTATUS[@]}")

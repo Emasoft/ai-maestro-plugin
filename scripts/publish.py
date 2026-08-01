@@ -89,7 +89,17 @@ PRE_PUSH_HOOK_PIN_REL = ".githooks/pre-push.sha256"
 # on-demand linters, is what pushed CI's validate step past its 25-min cap and
 # once shipped a release with no assets. v3.22.3 adds PYTHONUNBUFFERED so a
 # killed run's log is not empty. The workflow pins must move WITH this one.
-CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v3.22.3"
+#
+# v3.22.3 -> v4.2.1 (CPV#184): --strict scanned design/archived/ but NOT
+# design/tasks/, so obeying the ai-maestro#93 archival ruling turned this repo
+# exit 0 -> exit 4 (NIT=3) with a pure `git mv` and zero content change. The
+# exclusion was keyed on the LITERAL path "design/tasks" rather than on the
+# lifecycle corpus; upstream fixed all four zones and kept a design/notes/
+# control firing so it cannot decay into a blanket design/ mute. Bumped only
+# after measuring it here: v4.2.1 --strict -> exit 0, NIT=0 (WARNING=28
+# unchanged, advisory). This is a named, causally-established fix — NOT a
+# licence to bump the pin speculatively.
+CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v4.2.1"
 
 # Load gh / git retry wrappers from the sibling module so every push +
 # `gh release create` survives transient github.com hiccups (the retry
