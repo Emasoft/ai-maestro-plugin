@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-07-31T18:52:00+0200
+updated: 2026-08-01T06:05:13+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -85,6 +85,33 @@ backticks, and backticks are command-substitution syntax to a shell — CPV's sc
 not the version's, by re-running `v3.22.3` against the pre-edit workflows: **exit 0**. Never write
 backticks inside a `run:` block, comments included. Same class as the blockquote-`>`-read-as-redirect
 false positive noted below.
+
+**RESOLVED 2026-08-01 — `CPV#184` is fixed upstream and the publish gate is GREEN again; pin bumped
+`v3.22.3` → `v4.2.1` in `2ebabc4`.** The maintainer reproduced my A/B at their HEAD (same bytes, one
+variable) and confirmed the hypothesis I filed but deliberately did not assert as mechanism: the
+exclusion was keyed on the **literal path `design/tasks`**, not on the lifecycle corpus. They had
+nearly closed it unreproducible — a static read found the literal in four places, three
+hash-anchored to CPV's own manifest and the fourth (`_DEV_SCRATCH_DIR_PARTS`) followed to
+`check_tirith_scanner`, which governs only EXTERNAL scanner output, while my findings are in-process
+skillaudit. Probing, not reading, settled it: `scan_content` fires identically in all five zones, so
+the decision had to be in a downstream consumer —
+`validate_plugin._run_skillaudit_native._should_skip`, which also calls `_is_dev_scratch_path`. All
+four lifecycle zones now clear, and a non-lifecycle `design/notes/` control still fires all three
+findings so the fix cannot decay into a blanket `design/` mute.
+
+Measured HERE before bumping, not taken on trust: `v4.2.1 --strict` → **EXIT=0, NIT=0**
+(`CRITICAL=0 MAJOR=0 MINOR=0`, `WARNING=28` unchanged and advisory; cache audit clean). Report:
+`reports/cpv-pin-verify/20260801_060157+0200-cpv-v4.2.1-strict.txt`. Then ruff clean, mypy clean
+(10 files), pytest **180 passed**. All three pin sites moved in one commit for the reason `CPV_REF`
+exists — a partial bump leaves local G3 and CI on different validators while both report "passed".
+
+> **Lesson — a filed hypothesis is worth more than a filed guess.** I wrote the A/B and the one-line
+> suspicion ("*if the exclusion is keyed on a literal `design/tasks` rather than the corpus, that is
+> the whole gap*") but did **not** claim the mechanism, because I could not see their source. The
+> maintainer's reply says that is why it got fixed correctly rather than plausibly: my A/B survived
+> their static reading, which had concluded *unreproducible*. **Report the reproduction you can
+> prove and the hypothesis as a hypothesis; a confident wrong mechanism would have been argued
+> with instead of tested.**
 
 **Original diagnosis (2026-07-26), kept for the record — CI `Validate` intermittently
 exceeds its 30-min cap.** MAJOR-5 stopped being hypothetical: the `v2.11.0` release run
@@ -231,6 +258,12 @@ archival-vocabulary ruling (`Emasoft/ai-maestro#93`)~~ **DONE 2026-07-31, and it
 · ~~stale tracked `validation-report.md` + `fix-log.md` (2026-04-10, ship to every consumer)~~
 **DONE 2026-07-31** — `dee2bf3`; copies preserved at `reports/legacy-root-artifacts-20260410/`.
 
+> **✅ RESOLVED 2026-08-01 — fixed upstream in CPV `v4.2.1`, pin bumped in `2ebabc4`, gate measured
+> GREEN here (exit 0, NIT=0). Full account in the STATE block above.** The record below is kept
+> because the REASONING is what mattered: it is why the gate was held honestly red for a day instead
+> of being turned green by a suppression that would have hidden a real scope bug from every other
+> plugin that ever archives a TRDD.
+>
 > **⚠ THE PUBLISH GATE IS RED, and archiving is what turned it red — `CPV#184` (2026-07-31).**
 > Do NOT "fix" this by editing archived TRDD bodies or adding a suppression. **CPV `--strict`
 > scans `design/archived/` but NOT `design/tasks/`.** Proved by A/B on one file, zero content
