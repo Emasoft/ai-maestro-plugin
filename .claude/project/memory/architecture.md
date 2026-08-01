@@ -37,8 +37,10 @@ binaries) consumed by the other ecosystem plugins.
   `>=0.58.0`), so the janitor — and therefore its `~/.claude/rules/` IND bases — is
   GUARANTEED installed+enabled wherever CORE is, not merely assumed present.
 - **Publish / CI pipeline** — `scripts/publish.py` is the canonical CPV release
-  pipeline, aligned to **CPV canonical v3.5.0** (2026-07-24): the CPV-validator ref is
-  pinned `@v3.5.0` across `.github/workflows/{ci,release}.yml` and `publish.py`; local
+  pipeline. **The validator pin and this gate's failure modes live on
+  [[publish-and-validation-gate]]** — do not restate the version here; it has already
+  gone stale once (this bullet still read `@v3.5.0` after two bumps). The ref is one
+  constant mirrored at three sites, all of which move together; local
   `--gate` includes a **jscpd** copy-paste gate (**G3b**, #143) on top of the standard
   version/lint/validate gates. The **type gate is mypy** (`mypy scripts/
   --ignore-missing-imports`, in `release.yml` + publish.py G2), **not Pyright**.[^2]
@@ -52,6 +54,9 @@ binaries) consumed by the other ecosystem plugins.
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
 ## Applies to
+- [[publish-and-validation-gate]] — the release/validate gate: where the CPV validator
+  ref is pinned (one constant, three sites) and why a `--strict` run can go red with
+  zero content change.
 - [[trdd-id-and-approval-vocabulary]] — the two ratified governance models CORE taught
   wrongly until 2026-07-21/22: the TRDD id (UPPERCASE base36, legacy lowercase ids
   permanently valid) and `min-approval-requirement:` (titles, not the retired numeric tiers).

@@ -1,0 +1,31 @@
+---
+name: publish-and-validation-gate
+description: "why does local publish.py validate disagree with CI / which CPV version does this repo validate against and where is it pinned / the strict gate went red and I changed no code / is exit 4 a real failure or a NIT / when may I bump the CPV pin"
+ocd: 2026-08-01
+lmd: 2026-08-01
+metadata:
+  node_type: memory
+  type: project
+  tier: component
+---
+
+# publish-and-validation-gate
+
+## Governed by
+- [[architecture]] — the hub; `scripts/publish.py` is the canonical CPV release
+  pipeline listed in its parts map. The hub points here for the validator pin and
+  the gate's failure modes rather than restating them.
+
+
+^ATOM-5EQC-RUFU [desc:"the CPV validator ref is ONE constant mirrored at 3 sites; a partial bump silently splits local G3 from CI while both report passed", keywords: local_validate_and_ci_validate_disagree both_gates_said_passed_but_used_different_validators where_is_the_cpv_version_pinned i_bumped_the_validator_and_ci_still_uses_the_old_one cpv_ref_constant, type: project, ocd: 2026-08-01, lmd: 2026-08-01]
+
+The CPV validator ref lives as ONE constant, `CPV_REF` in `scripts/publish.py`, and is mirrored verbatim in `.github/workflows/ci.yml` and `.github/workflows/release.yml`. All three MUST move in the same commit. A bump that misses one leaves the local G3 gate and CI validating with DIFFERENT validators while both report "passed" — that silent split is the whole reason the constant exists. Verify with `grep -rn "claude-plugins-validation@v" scripts/publish.py .github/workflows/*.yml` and confirm exactly one distinct version. [^1]
+
+
+^ATOM-GL5C-YX00 [desc:"a red --strict gate after a pure git mv was CPV scoping design/archived/ but not design/tasks/; fixed upstream in CPV v4.2.1", keywords: strict_gate_went_red_and_i_changed_no_code exit_4_nit_3_after_moving_files git_mv_turned_validation_red validator_scans_one_lifecycle_folder_but_not_its_sibling is_a_nit_a_real_failure, type: project, ocd: 2026-08-01, lmd: 2026-08-01]
+
+Archiving terminal TRDDs (a pure `git mv` into `design/archived/`, zero content change) once took this repo from exit 0 to exit 4 / NIT=3: CPV `--strict` scanned `design/archived/` but NOT `design/tasks/`, because the exclusion was keyed on the LITERAL path `design/tasks` rather than on the lifecycle corpus. The findings were prose inside terminal TRDD bodies, which the TRDD rules freeze, so there was no source-side fix and the gate was held honestly red rather than green by suppression. Fixed upstream in CPV v4.2.1 — all four lifecycle zones clear, with a non-lifecycle `design/notes/` control still firing so it cannot decay into a blanket `design/` mute. Filed as `Emasoft/claude-plugins-validation#184`.
+
+## Notes and lessons learned
+
+[^1]: [id:ATOM-998W-KR6T, status:valid, desc:"a version restated in a second page is a fact that will go stale silently — name the owning page instead", keywords:"the_docs_say_one_version_and_the_code_says_another my_architecture_page_still_cites_the_old_pin where_should_a_version_number_live two_pages_disagree_about_a_dependency_version stale_version_in_an_overview_page", ocd:2026-08-01, lmd:2026-08-01] DO NOT restate a pinned version number in an overview/hub page that another page already owns, BECAUSE nothing fails when the copy rots — `architecture.md` still read "pinned `@v3.5.0`" after two bumps (v3.5.0 -> v3.22.3 -> v4.2.1) and would have told the next reader to validate against a version this repo has not used since 2026-07-26. DO name the owning page ([[publish-and-validation-gate]]) and let the version live in exactly one place, next to the command that proves it.
