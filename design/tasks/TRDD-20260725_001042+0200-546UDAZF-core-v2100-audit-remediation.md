@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-08-01T06:05:13+0200
+updated: 2026-08-02T00:23:00+0200
 current-owner: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
@@ -40,8 +40,21 @@ CORE's public surface, so they were deliberately NOT taken):
 |---|---|---|
 | D1 | MAJOR-3 + MAJOR-4 (one coupled edit): delete the RETIRED `docs-search` + `graph-query` skills, then regenerate the README skills table (`/cpv-refresh-readme`) | removes two shipped capability rows — a consumer-visible deletion |
 | D2 | MAJOR-2: reconcile 13 skills whose description promises `/<name>` while `user-invocable: false` and no `commands/<name>.md` exists | three valid fixes per skill (flip the flag / add the wrapper / reword to a natural-language trigger) — needs ONE policy choice, not 13 ad-hoc ones |
-| D3 | MAJOR-5 (= warning #20, highest-value): add a push/PR smoke job that builds ONE memgrep target and runs the staged binary `--version` | a CI change; the payoff is ecosystem-wide |
+| D3 | MAJOR-5 (= warning #20, highest-value): add a push/PR smoke job that builds ONE memgrep target and asserts the staged binary's **`--help` SURFACE** | a CI change; the payoff is ecosystem-wide. **AMENDED 2026-08-01 — `--version` is NOT sufficient**, see below |
 | D4 | warning #28: replace `.markdownlint.json`'s `{"default": false}` with canon's explicit per-rule opt-out list | flipping linting on surfaces a backlog of existing violations — expect CI churn before green |
+
+> **D3 AMENDED 2026-08-01 — the `--version` assertion would pass on a broken build.**
+> Measured while investigating `core#52`: this repo's vendored `scripts/memgrep/`
+> (4806 LOC) implements only `find`/`recall`/`reindex`, while the janitor's crate
+> (12354 LOC) additionally implements `lint`, `validate`, `add-atom`, `add-lesson`,
+> `new-page`, `overview`, `migrate` — and **both declare `version = "0.1.0"`**. Since
+> `release.yml:272` builds the shipped assets from the vendored copy, CORE ships the
+> subset on every release, and a `--version` smoke check reports `0.1.0` and goes green.
+> D3 must therefore assert the **surface**: require the built binary's `--help` to list
+> the verbs the memory skills actually invoke, and fail when one disappears. A gate that
+> cannot fail on the defect it was written for is worse than no gate — it converts an
+> unnoticed problem into an audited-and-approved one. Do NOT implement D3 as originally
+> written. Root cause + the two-crate table: `core#52`.
 
 **RESOLVED 2026-07-28 — root cause found upstream and CORE's pin bumped to `v3.22.3`.**
 The CPV maintainer answered `claude-plugins-validation#180`: it was **never the linters**. It is
