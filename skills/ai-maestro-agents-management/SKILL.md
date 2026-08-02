@@ -1,7 +1,7 @@
 ---
 name: ai-maestro-agents-management
 user-invocable: false
-description: "Manage AI agent lifecycle via CLI. Use when creating, listing, deleting, configuring, or looking up an agent's consolidated config (launch args, title, role-plugin, teams, GitHub repo, Docker, pending tasks, AID public key). Trigger with /ai-maestro-agents-management. Loaded by ai-maestro-plugin"
+description: "Manage AI agent lifecycle via CLI. Use when creating, listing, deleting, configuring, or looking up an agent's consolidated config (launch args, title, role-plugin, teams, GitHub repo, Docker, pending tasks, AID public key). Trigger with 'create an agent', 'list the agents', 'delete this agent', 'what is this agent's config / title / teams / AID key'. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-agent.sh:*), Bash(jq:*), Bash(tmux:*), Read, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"

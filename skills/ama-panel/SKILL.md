@@ -1,7 +1,7 @@
 ---
 name: ama-panel
 user-invocable: false
-description: "Drive an agent's HTML dashboard side panel via the frozen aimaestro-panel.sh CLI — push HTML or a live URL, open/close/refresh the panel, check how many dashboard clients are connected, and drain feedback events the panel's HTML posted back. Use when an agent wants to render a status view, a form, or a live page in its own dashboard panel. Trigger with /ama-panel, 'show this in my side panel', 'push this HTML to my panel', 'check if anyone is watching my panel', 'read panel feedback'. CRITICAL gotcha: 'delivered: 0' from open/set means the content was DROPPED, not queued — always check status first when delivery matters. Loaded by ai-maestro-plugin"
+description: "Drive an agent's HTML dashboard side panel via the frozen aimaestro-panel.sh CLI — push HTML or a live URL, open/close/refresh the panel, check how many dashboard clients are connected, and drain feedback events the panel's HTML posted back. Use when an agent wants to render a status view, a form, or a live page in its own dashboard panel. Trigger with 'show this in my side panel', 'push this HTML to my panel', 'check if anyone is watching my panel', 'read panel feedback'. CRITICAL gotcha: 'delivered: 0' from open/set means the content was DROPPED, not queued — always check status first when delivery matters. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-panel.sh:*), Bash(jq:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"

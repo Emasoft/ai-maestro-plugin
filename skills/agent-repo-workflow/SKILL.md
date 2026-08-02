@@ -1,7 +1,7 @@
 ---
 name: agent-repo-workflow
 user-invocable: false
-description: "Use when an agent needs to clone or create repos, branch, open PRs, list project repos/team members, or report task done/blocked to its orchestrator via AMP. Trigger with /agent-repo-workflow. Loaded by ai-maestro-plugin"
+description: "Use when an agent needs to clone or create repos, branch, open PRs, list project repos/team members, or report task done/blocked to its orchestrator via AMP. Trigger with 'clone the project repo', 'open a PR for this task', 'list my team's repos', 'report this task blocked to my orchestrator'. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(amp-*:*), Bash(jq:*), Bash(git:*), Read, Grep, Glob"
 license: Apache-2.0
 compatibility: Requires git, gh, and jq CLI tools, plus the installed amp-* scripts on PATH. macOS and Linux supported.
