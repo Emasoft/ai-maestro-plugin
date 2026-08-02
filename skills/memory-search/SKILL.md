@@ -17,7 +17,7 @@ index) has been permanently removed — there is no replacement CLI for it and
 none is planned.** This skill is reimplemented around the two memory systems
 that actually exist and are actively maintained:
 
-1. **`memgrep`** (hosted in this repo at `scripts/memgrep/`) — a
+1. **`memgrep`** (owned and published by the **ai-maestro-janitor**) — a
    markdown-AST-aware grep over the curated wiki-memory corpus: symptom-indexed
    notes with `[^N]` lessons-learned, a persistent SQLite query index, and a
    keyword/boolean query DSL.
@@ -35,11 +35,12 @@ jargon. Full protocol: `~/.claude/rules/markdown-memory-recall.md`.
 
 ## Prerequisites
 
-- `memgrep` on `PATH` — install with `scripts/install-memgrep.sh` (downloads a
-  prebuilt binary to `~/.local/bin/memgrep`, falls back to
-  `cargo install --path scripts/memgrep` if no prebuilt asset exists for the
-  platform). If `memgrep` is unavailable, recall degrades to plain `grep` —
-  it never blocks.
+- `memgrep` on `PATH` — published by the **ai-maestro-janitor**, which CORE
+  declares as a plugin dependency, so it is normally already installed. If it is
+  missing, install it from the janitor (its release assets cover darwin
+  arm64/x64 and linux arm64/x64), NOT from this repo — CORE deliberately ships
+  no memgrep (`Emasoft/ai-maestro#106`). If `memgrep` is unavailable, recall
+  degrades to plain `grep` — it never blocks.
 - The `ai-maestro-janitor` plugin, if you want the `/janitor-memory-*` authoring
   skills (optional — `memgrep recall`/`find` work standalone against any
   directory of markdown notes).
@@ -114,7 +115,7 @@ not a failure).
 
 | Problem | Solution |
 |---------|----------|
-| `memgrep` not found | Run `scripts/install-memgrep.sh`; use the `grep -rliE` fallback above until it's installed |
+| `memgrep` not found | Install it from the **ai-maestro-janitor** (CORE ships none); use the `grep -rliE` fallback above meanwhile |
 | No results | Broaden or reword — `recall` ranks on `description + title + tags`, not full body text; a genuinely new topic is valid, don't force a match |
 | Wrong/stale-looking results | `memgrep reindex <memdir>` to refresh the SQLite sidecar |
 | No memory directory exists yet for this project | Run `/janitor-memory-bootstrap` (if the janitor plugin is installed) to stand up the project's wikimem, or just start writing notes — the directories are created on first write |

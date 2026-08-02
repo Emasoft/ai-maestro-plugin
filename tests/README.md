@@ -39,7 +39,7 @@ uv run pytest tests/test_cpv_network_resilience.py -q
 | File | Scope |
 |------|-------|
 | `test_prrd_trdd_pillars.py` | PRRD/TRDD/Kanban pillar scripts in `scripts/prrd-trdd/` — `get-prrd.py`, `prrd-edit.py`, `findprrd.py`, `findtrdd.py`, `kanban.py`, `amama_proposal_approvals.py`, `bootstrap_design.py`, `resolve_pillar_scripts.sh`. Real subprocess invocation against fresh git-backed temp projects. |
-| `test_memory_protocol_components.py` | Memory-protocol components (issue #4): `install-memgrep.sh` deterministic paths + structural checks on the canonical skills/rule/crate. |
+| `test_memory_protocol_components.py` | Memory-protocol surface: the `memory-search` skill, plus a regression guard that CORE ships no rival `memgrep` (crate, installer, or release job) — the janitor owns it, `ai-maestro#106`. |
 | `test_cpv_network_resilience.py` | The transient-error classifiers in `scripts/cpv_network_resilience.py`. |
 
 ## Conventions

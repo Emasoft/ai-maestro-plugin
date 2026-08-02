@@ -10,8 +10,7 @@ The umbrella core plugin for the AI Maestro ecosystem — shared skills, AMP
 messaging, AID identity, governance, kanban, and the universal PRRD/TRDD/Kanban
 workflow that every role plugin inherits.
 
-**Skills:** 22 | **Commands:** 12 | **Scripts:** 15 Python/shell (+ the bundled
-`memgrep` Rust crate under `scripts/memgrep/`)
+**Skills:** 24 | **Commands:** 14 | **Scripts:** 15 Python/shell
 
 Last updated: 2026-06-16
 
@@ -37,9 +36,9 @@ directory guard stops enforcing.
 
 The PRRD/TRDD/Kanban pillar scripts need Python 3.10+ on `PATH`. The AMP/AID
 shell scripts need the `curl, jq, openssl, base64` CLI tools. The optional `memgrep`
-note-recall engine installs from a prebuilt release binary via
-`scripts/install-memgrep.sh` (cargo-build fallback; recall degrades to plain
-grep without it). Most messaging features also require a running AI Maestro
+note-recall engine is published by the **ai-maestro-janitor** (which CORE declares
+as a plugin dependency, so it is present wherever CORE is); recall degrades to plain
+grep without it. Most messaging features also require a running AI Maestro
 server on `http://localhost:23000`.
 
 ## Usage
@@ -103,18 +102,17 @@ governed by `~/.claude/rules/markdown-memory-recall.md`). This plugin's own
 note-memory skills were retired in favor of it; `memory-search`
 (transcript search) stays and names the global skills as its complement.
 
-This plugin still **HOSTS the `memgrep` engine** the wiki recall depends on —
-[`memgrep`](scripts/memgrep/README.md) is a markdown-aware search engine whose
-source ships in `scripts/memgrep/` and is consumed across the ecosystem. Install
-it with:
+The `memgrep` engine that recall depends on is **owned and published by the
+[ai-maestro-janitor](https://github.com/Emasoft/ai-maestro-janitor)**, which CORE
+declares as a plugin dependency — so it is installed wherever CORE is. Recall
+degrades to plain `grep` without it.
 
-```bash
-scripts/install-memgrep.sh    # prebuilt sha256-verified binary (macOS arm64/x64, linux x64);
-                              # cargo-build fallback; recall degrades to plain grep without it
-```
-
-Prebuilt binaries are attached to each GitHub release as
-`memgrep-<platform>.tar.gz` + `.sha256` — end-users need no Rust toolchain.
+CORE used to vendor its own copy and ship rival binaries; ownership was ruled to
+the janitor in [ai-maestro#106](https://github.com/Emasoft/ai-maestro/issues/106)
+and CORE's copy was removed. It was a strict subset — no `validate`, `lint`,
+`new-page`, `add-atom`, `add-lesson` — published under the same binary name and the
+same `version = "0.1.0"`, so whichever build landed last silently decided whether
+the machine-wide memory protocol could run.
 
 ## AMP Commands (Agent Messaging Protocol)
 

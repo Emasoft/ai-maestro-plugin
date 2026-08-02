@@ -33,7 +33,7 @@ this reference documents that system.
 
 ## memgrep Command Reference
 
-`memgrep` (`scripts/memgrep/`, Rust) is grep/rg for markdown, plus memory
+`memgrep` (Rust; owned and published by the **ai-maestro-janitor**) is grep/rg for markdown, plus memory
 subcommands layered on top. Base grep flags (`-i -w -n -l -c -e PATTERN
 [PATH...]`, `--json`, `--hidden`) all work as expected; the memory-relevant
 subcommands are:
@@ -179,9 +179,7 @@ tldr search "authentication" src/
 ### `memgrep` not found
 
 ```bash
-which memgrep
-bash scripts/install-memgrep.sh          # prebuilt binary -> ~/.local/bin/memgrep
-bash scripts/install-memgrep.sh --force  # reinstall even if already on PATH
+which memgrep      # CORE ships no installer — memgrep comes from the ai-maestro-janitor
 ```
 
 If every install path fails, degrade to `grep -rliE "<symptom>" "${ROOTS[@]}"`
@@ -218,16 +216,17 @@ still work standalone against any directory of markdown notes — point
 
 ## Installation
 
-```bash
-scripts/install-memgrep.sh                # install order: PATH -> prebuilt release asset -> cargo build
-scripts/install-memgrep.sh --version v1.2.3  # pin a specific plugin release tag
-```
+**CORE does not install memgrep and ships no crate.** Ownership belongs to the
+**ai-maestro-janitor** (`Emasoft/ai-maestro#106`), which publishes prebuilt
+binaries for darwin arm64/x64 and linux arm64/x64. CORE declares the janitor as
+a plugin dependency, so on a normal install memgrep is already present.
 
-Install order (first success wins): (1) already on `PATH` — idempotent
-no-op; (2) prebuilt release binary from this plugin's GitHub releases,
-sha256-verified, installed to `~/.local/bin` — no Rust toolchain needed;
-(3) `cargo install --path scripts/memgrep` — local build fallback for
-platforms without a prebuilt asset.
+Do NOT re-introduce a CORE-side installer or crate. The removed copy was a strict
+subset — no `validate`, `lint`, `new-page`, `add-atom`, `add-lesson` — published
+under the same binary name and the same `version = "0.1.0"`, so whichever build
+landed last silently decided whether the memory protocol in
+`~/.claude/rules/markdown-memory-recall.md` (which MANDATES those verbs after
+every edit) could run at all.
 
 If every path fails, the script exits non-zero but the recall protocol
 still works — it degrades to plain `grep` over the notes. Degrade, never

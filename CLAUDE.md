@@ -86,7 +86,14 @@ systems:
 
 For "what did we SAY / decide in chat?" there is no transcript-search backend
 anymore — use Claude Code's own conversation history and project `CLAUDE.md`. The
-`memgrep` engine that powers recall is hosted by THIS plugin (`scripts/memgrep/`,
-installer `scripts/install-memgrep.sh`, prebuilt release-asset binaries) and
-consumed across the ecosystem; recall degrades to plain `grep` when memgrep is
-absent.
+`memgrep` engine that powers recall is owned and published by the
+**ai-maestro-janitor**, NOT by this plugin (ownership ruling: `Emasoft/ai-maestro#106`).
+CORE only CONSUMES it; recall degrades to plain `grep` when memgrep is absent.
+
+CORE once vendored its own copy and shipped rival binaries. Do NOT re-add one:
+that crate was a strict subset missing `validate`, `lint`, `new-page`, `add-atom`
+and `add-lesson`, under the SAME binary name and the SAME `version = "0.1.0"`, so
+whichever build won `cargo install` last silently decided whether the memory
+protocol in `~/.claude/rules/markdown-memory-recall.md` — which MANDATES those
+verbs after every memory edit — could run at all. `tests/test_memory_protocol_components.py`
+fails if the crate, the installer, or the release job comes back.

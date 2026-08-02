@@ -21,10 +21,16 @@ binaries) consumed by the other ecosystem plugins.
   search, code-graph query, MCP discovery, planning, network security,
   conversation-transcript memory search (`memory-search`), and the `ama-*`
   PRRD/TRDD/Kanban governance skills.
-- **Commands** (`commands/`) — the 12 `/amp-*` AMP slash commands.
+- **Commands** (`commands/`) — 14: the 12 `/amp-*` AMP slash commands plus
+  `/memory-search` and `/team-governance` (added 2026-08-02, D2).
 - **Scripts** (`scripts/`) — AMP/AID shell scripts installed to PATH, the
-  PRRD/TRDD/Kanban Python pillar scripts, `publish.py` (release pipeline),
-  `install-memgrep.sh`, and the bundled `memgrep` Rust crate.
+  PRRD/TRDD/Kanban Python pillar scripts, and `publish.py` (release pipeline).
+  **No memgrep crate and no installer**: ownership was ruled to the
+  ai-maestro-janitor (`ai-maestro#106`, 2026-08-02) and CORE's copy — a strict
+  subset under an identical `version = "0.1.0"` — was removed. CORE CONSUMES
+  memgrep, it does not ship it. The guardrail is executable, not prose:
+  `tests/test_memory_protocol_components.py::test_core_does_not_ship_a_rival_memgrep`
+  fails if the crate, the installer, or the release job returns.
 - **Rules** — CORE ships **zero** governance rules (retired core#35/#33, 2026-07-23).
   Per the 3-pillars SPEC ownership split: the IND universal bases
   (`trdd-design-tasks`, `prrd-design-rules`, `universal-kanban`) are shipped
@@ -52,11 +58,11 @@ binaries) consumed by the other ecosystem plugins.
   version/lint/validate gates. The **type gate is mypy** (`mypy scripts/
   --ignore-missing-imports`, in `release.yml` + publish.py G2), **not Pyright**.[^2]
 - **Dependency scanning** — `.github/dependabot.yml` (added 2026-07-25, `886778d`)
-  covers **github-actions**, **cargo** (`/scripts/memgrep`) and **uv**. Note that
-  Dependabot **ALERTS** are a separate mechanism from this config, and for the Rust
-  surface they are **blind**: the dependency graph resolves 0 cargo packages against
-  125 crates in `scripts/memgrep/Cargo.lock`. Audit crates with **OSV**, never with
-  the alert count.[^3]
+  covers **github-actions** and **uv**. The **cargo** entry was REMOVED 2026-08-02
+  with the crate: an ecosystem pointing at a deleted directory scans nothing while
+  still looking like Rust coverage. The Rust-blindness lesson below is now the
+  **janitor's** to own, and it transfers wholesale — that crate is what ships as
+  prebuilt binaries ecosystem-wide.[^3]
 - **Memory** — this plugin USES the janitor's global wiki-memory system (recall /
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
