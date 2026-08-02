@@ -35,13 +35,35 @@ Organization** (verified: `gh api users/owner` → `login: owner, type: Organiza
 agent that pastes the template verbatim — rather than substituting the real handle — **pages
 an unrelated third party**.
 
-This is not hypothetical. Measured 2026-08-02:
+This is not hypothetical, and it is **ACTIVE — it fired again while this card was being
+written.** Measured 2026-08-02:
 
-| when | where | who |
-|---|---|---|
-| `05:51:22Z` | [ai-maestro-janitor#106 comment](https://github.com/Emasoft/ai-maestro-janitor/issues/106#issuecomment-5155760825) | the **ai-maestro-autonomous-agent** Claude, line reading `(via the shared @owner gh auth)` verbatim |
+| when | handle | resolves to | where |
+|---|---|---|---|
+| `05:51:22Z` | `@owner` | **REAL Organization** | [janitor#106 comment](https://github.com/Emasoft/ai-maestro-janitor/issues/106#issuecomment-5155760825) — **ai-maestro-autonomous-agent**, `(via the shared @owner gh auth)` verbatim |
+| `10:41:37Z` | `@role` | **REAL Organization "ROLE"** | [plugin#36 comment](https://github.com/Emasoft/ai-maestro-plugin/issues/36#issuecomment-5157261596) — another agent, minutes after the USER complained |
 
-**CORE hosts the rule, so CORE hosts the cause.** Every plugin in the fleet inherits G1.1.
+**ONE golden line is the source of BOTH.** `PRRD.md:30` carries the `@owner` self-ID template
+*and* the `Agent: <role>` commit-trailer guidance; grep confirms it is the only site in CORE
+for either. Verified with `gh api users/<h>`:
+
+```
+@owner              REAL — owner (Organization)
+@role               REAL — ROLE  (Organization)
+@gmail              REAL — gmail (User)          <- via `fmuaddib@gmail.com` in comment bodies
+@ai-maestro-plugins does not exist (safe)
+```
+
+**CORE hosts the rule, so CORE hosts the cause.** Every plugin in the fleet inherits G1.1, and
+the two pages above came from two *different* agents — so this is a class defect, not one
+agent misbehaving. **The rate is roughly one third-party page per few hours of fleet activity.**
+
+## Why a placeholder that is a valid username is the actual bug
+
+`<plugin-or-role>` is safe: the angle brackets make it obviously a slot, and no agent posts it
+literally. `@owner` and `@role` are unsafe for the opposite reason — they *look* like finished
+text, so an agent reasonably copies them as-is. **A template is only safe if its literal form
+is harmless**, because literal pasting is the expected failure mode, not an aberration.
 
 ## Second-order: the substituted form pages the OWNER on every post
 
@@ -61,10 +83,15 @@ handle renders visibly but pages nobody.
 | B | ``(via the shared `@Emasoft` gh auth)`` — backticked **and** pre-substituted, removing the substitution step agents get wrong | nobody |
 | C | `(via the shared Emasoft gh auth)` — no `@` at all; survives any renderer that ignores code spans | nobody |
 
-**Recommendation: B.** It fixes both failures at once — the stranger-page *and* the
-owner-page — and it deletes the step that actually failed. The agent that broke this did not
-misunderstand the rule; it copied a template containing a placeholder that is itself a valid
-username. A template whose literal form is harmful will keep being pasted literally.
+**The `Agent: <role>` trailer needs the same treatment** — it is on the same line and produced
+the `@role` page. Written as `` `Agent: <role>` `` (backticked) it cannot linkify either.
+
+**Recommendation: B + backtick the trailer.** It fixes all three failures at once — the
+stranger-pages (`@owner`, `@role`) *and* the owner-page (`@Emasoft`) — and it deletes the
+substitution step that actually failed. Neither agent misunderstood the rule; each copied a
+template whose placeholder is itself a valid GitHub account. **A template whose literal form
+is harmful will keep being pasted literally**, so the fix has to be in the template, not in
+the agents.
 
 ## Scope of the change if approved
 
