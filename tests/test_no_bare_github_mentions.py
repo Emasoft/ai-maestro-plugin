@@ -29,8 +29,12 @@ that happened to be a valid username.
 
 WHAT IS EXEMPT, AND WHY EACH EXEMPTION IS SAFE
 
-  * inside a code span (`@x`) or a fenced block -- GitHub does not linkify there. This is
-    the fix the directive prescribes, so it must not also be a finding.
+  * inside a code span (`@x`) or an INERT fenced block -- GitHub does not linkify there.
+    This is the fix the directive prescribes, so it must not also be a finding.
+    EXCEPTION: a fence that BUILDS a GitHub body (`gh issue comment --body …`) is an
+    EMITTER and IS scanned -- inert where it sits, but its output posts the handle bare.
+    See `_strip_code`; credit to the MANAGER (ai-maestro#109), whose prose-only audit
+    found 5 of 8 real leaks because the other 3 lived in runnable command examples.
   * an email address (`user@gmail.com`) -- not a mention; the `@` is preceded by a word
     character, which is exactly what distinguishes it.
   * a version/ref suffix (`actions/checkout@v5`, `pkg@1.2.3`, `x@sha256`) -- same test:
@@ -57,20 +61,49 @@ _BARE_MENTION = re.compile(r"(?<![\w/@.\-])@([A-Za-z][A-Za-z0-9-]{1,38})\b")
 _DANGEROUS = frozenset({"manager", "janitor", "owner", "role", "core", "orchestrator", "gmail", "default", "other"})
 
 
+# A fenced block that BUILDS a GitHub body is an EMITTER, not an exempt zone. Inside the
+# document the handle is inert; the command's OUTPUT is a comment body carrying it bare.
+# The doc is safe, running the doc is not -- so an emitter fence is scanned like prose.
+_EMITS_GITHUB_BODY = re.compile(r"\bgh\s+(issue|pr|api)\b[^\n]*--(body|field|raw-field)\b")
+
+
 def _strip_code(text: str) -> str:
-    """Blank out fenced blocks and code spans -- the exempt zones.
+    """Blank out fenced blocks and code spans -- EXCEPT fences that emit a GitHub body.
 
     Replaced with spaces rather than deleted so reported line numbers stay truthful; a
     finding that points at the wrong line sends the reader to innocent text.
+
+    THE EMITTER CARVE-OUT (credit: the MANAGER, ai-maestro#109). Exempting every fence was
+    wrong. Three of their eight leaks lived inside `gh issue comment --body "$(printf …)"`
+    blocks: inert where they sat, so a prose-only audit correctly cleared the page -- while
+    running it posted the handle bare. An audit of prose alone found 5 of 8. CORE has no
+    such instance today (1 emitter line, and it builds no mention), but the hole was in the
+    DETECTOR, and a detector is worth more than the absence of a current instance.
     """
-    out = []
-    in_fence = False
-    for raw in text.splitlines():
+    lines = text.splitlines()
+    # First pass: mark which fenced regions are emitters, so we know before blanking.
+    emitter_line = [False] * len(lines)
+    start, in_fence = 0, False
+    for i, raw in enumerate(lines):
+        if raw.lstrip().startswith("```"):
+            if in_fence and _EMITS_GITHUB_BODY.search("\n".join(lines[start:i])):
+                for j in range(start, i):
+                    emitter_line[j] = True
+            start, in_fence = i + 1, not in_fence
+    if in_fence and _EMITS_GITHUB_BODY.search("\n".join(lines[start:])):
+        for j in range(start, len(lines)):
+            emitter_line[j] = True
+
+    out, in_fence = [], False
+    for i, raw in enumerate(lines):
         if raw.lstrip().startswith("```"):
             in_fence = not in_fence
             out.append("")
             continue
-        out.append("" if in_fence else re.sub(r"`[^`]*`", lambda m: " " * len(m.group(0)), raw))
+        if in_fence:
+            out.append(raw if emitter_line[i] else "")
+        else:
+            out.append(re.sub(r"`[^`]*`", lambda m: " " * len(m.group(0)), raw))
     return "\n".join(out)
 
 
@@ -121,7 +154,7 @@ def test_the_scanner_actually_scans() -> None:
     ],
 )
 def test_detector_classifies_known_shapes(sample: str, should_flag: bool, why: str) -> None:
-    """Falsified in BOTH directions — must fire, and must not over-fire.
+    """Falsifies the detector in BOTH directions — must fire, and must not over-fire.
 
     The three non-flagging cases are load-bearing: an email address and a pinned action
     version both contain `name@word`, and flagging either would train everyone to ignore
@@ -130,3 +163,40 @@ def test_detector_classifies_known_shapes(sample: str, should_flag: bool, why: s
     stripped = _strip_code(sample)
     hit = any(m.group(1).lower() in _DANGEROUS for m in _BARE_MENTION.finditer(stripped))
     assert hit is should_flag, f"misclassified ({why}): {sample!r}"
+
+
+@pytest.mark.parametrize(
+    ("block", "should_flag", "why"),
+    [
+        (
+            '```bash\ngh issue comment 1 --body "posted by @manager"\n```',
+            True,
+            "EMITTER: the fence builds a GitHub body carrying the handle bare",
+        ),
+        (
+            "```bash\ngh api users/manager --jq .login\n```",
+            False,
+            "reads a user, emits no body — and carries no bare handle anyway",
+        ),
+        (
+            "```bash\ngrep -rn '@manager' .\n```",
+            False,
+            "an ordinary fence is inert; exempting it is correct",
+        ),
+        (
+            "```text\n_Posted by the Claude developing X (via the shared @owner gh auth)._\n```",
+            False,
+            "quoted DOC of the defect (archived TRDD) — inert, must not be flagged",
+        ),
+    ],
+)
+def test_an_emitter_fence_is_scanned_but_an_inert_fence_is_not(block: str, should_flag: bool, why: str) -> None:
+    """The carve-out the MANAGER's data forced (ai-maestro#109).
+
+    Both directions matter. Missing an emitter posts a real page; flagging an inert fence
+    would redden the archived TRDD that documents this very defect, and a guard that
+    reddens on its own post-mortem gets deleted.
+    """
+    stripped = _strip_code(block)
+    hit = any(m.group(1).lower() in _DANGEROUS for m in _BARE_MENTION.finditer(stripped))
+    assert hit is should_flag, f"misclassified ({why}): {block!r}"
