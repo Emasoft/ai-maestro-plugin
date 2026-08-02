@@ -33,9 +33,16 @@ binaries) consumed by the other ecosystem plugins.
   per agent-workdir by **ai-maestro**. CORE's skills reference those homes; the old
   `rules/` dir + `install-governance-rules.cjs` SessionStart installer were removed.
   CORE **declares a plugin dependency on `ai-maestro-janitor`** in
-  `.claude-plugin/plugin.json` (`dependencies[]`, marketplace `ai-maestro-plugins`,
-  `>=0.58.0`), so the janitor — and therefore its `~/.claude/rules/` IND bases — is
+  `.claude-plugin/plugin.json` (`dependencies[]`, marketplace `ai-maestro-plugins`),
+  so the janitor — and therefore its `~/.claude/rules/` IND bases — is
   GUARANTEED installed+enabled wherever CORE is, not merely assumed present.
+  The entry carries **no `version` key** — read the manifest for the current shape
+  rather than trusting a number quoted here (this bullet claimed `>=0.58.0` until
+  2026-08-01, a constraint the manifest has never contained — the SECOND fact on this
+  bullet to rot this way, after the CPV pin; the lesson lives on
+  [[publish-and-validation-gate]]). Unconstrained is also the *safer* shape: a version-constrained
+  dependency that cannot resolve **disables** the depending plugin rather than
+  degrading, so a pin is a liability unless something actually needs it.
 - **Publish / CI pipeline** — `scripts/publish.py` is the canonical CPV release
   pipeline. **The validator pin and this gate's failure modes live on
   [[publish-and-validation-gate]]** — do not restate the version here; it has already
