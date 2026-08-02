@@ -3,7 +3,7 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-08-02T03:12:00+0200
+updated: 2026-08-02T03:44:00+0200
 current-owner: ai-maestro-plugin (core)
 assignee: ai-maestro-plugin (core)
 task-type: refactor
@@ -34,20 +34,21 @@ Report: `reports/cpv-doctor-agent/20260724_213106+0200-core-full-audit.md`
   Requirements now states it explicitly. This was the only finding that was a live
   silent-failure risk (hooks fail quietly; `directory-guard.cjs` fails **open**).
 
-**STILL OPEN: D3 only.** It is AMENDED (do NOT implement as originally written) and
-waits on an ecosystem ownership ruling — `ai-maestro#106`, "which component owns
-memgrep". That is an external GitHub issue, NOT a TRDD, so it deliberately does not
-appear in `blocked-by:` (that field takes TRDD ids; an issue ref there resolves to a
-phantom card). The card therefore stays in `backburner` rather than `blocked`.
+**ALL FOUR DECISIONS ARE RESOLVED (2026-08-02).** D1, D2 and D4 were decided on
+measurement and executed; D3 was amended and then dissolved when `ai-maestro#106`
+moved memgrep ownership to the janitor, taking the thing D3's gate would have built.
+Decided under the USER's standing authority ("decide on your own, base your decisions
+on verified facts").
 
-D1, D2 and D4 were decided on measurement and executed 2026-08-02 under the USER's
-standing authority ("decide on your own, base your decisions on verified facts").
+**What is left on this card is NOT a decision — it is the lower-severity backlog below**
+(§ the MINOR/NIT list), most of which is already struck as done or explicitly
+do-not-fix. Nothing here is blocked on a human.
 
 | # | Outcome |
 |---|---|
 | **D1** | ✅ `e8a5315` — both RETIRED skills removed (staged via safe-delete batch `20260802_030400+0200`). The README table had drifted BOTH ways: 2 phantom rows, 3 missing skills, 1 stale row. Now an exact 24/24 match asserted in both directions. |
 | **D2** | ✅ `fbe7670` — ONE policy, with a verifiable discriminator: *the description must match the declared surface*, and CORE's own docs decide which way. Docs promise `/name` → add the wrapper (2: `memory-search`, `team-governance`); they don't → `user-invocable:false` is the intent, drop the slash promise (9). 13 → 0. |
-| **D3** | ⏸ AMENDED (`e9a4fdb`) — `--version` cannot fail on the defect it exists for. Must assert the `--help` SURFACE. Implementation waits on `ai-maestro#106`, since which repo owns memgrep decides what the gate builds. |
+| **D3** | ✅ CLOSED as OBSOLETE-IN-CORE 2026-08-02 — amended first (`e9a4fdb`: `--version` cannot fail on the defect it exists for; must assert the `--help` SURFACE), then dissolved by `ai-maestro#106`. The gate was "build ONE memgrep target and assert it"; CORE no longer HAS a memgrep target (`6cceb62`), so there is nothing here to build. The need did not vanish — it MOVED to the janitor with the crate, and is carried there by `ai-maestro-janitor#164`. Do NOT implement a memgrep build gate in CORE; the regression guard CORE needs is the opposite one, `test_core_does_not_ship_a_rival_memgrep`, which already exists. |
 | **D4** | ✅ `f1b1d40` — the "expect CI churn" premise was FALSE: nothing runs markdownlint here (CPV's warning compares the file, never executes the linter). Adopted canon's config; the real find was a table row whose unescaped `\|` silently dropped a governance rule's text. 47 cosmetic findings LEFT and counted, not swept. |
 
 **Superseded — the original framing, kept because the reasoning is the durable part:**
