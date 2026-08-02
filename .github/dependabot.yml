@@ -25,21 +25,14 @@ updates:
       - dependencies
       - github-actions
 
-  # The memgrep engine. CORE hosts it for the whole ecosystem and ships it as
-  # prebuilt release assets, so a vulnerable crate here reaches every consumer
-  # that installs the binary -- not just this repo.
-  - package-ecosystem: cargo
-    directory: /scripts/memgrep
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:23"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps"
-    labels:
-      - dependencies
-      - rust
+  # NO cargo ecosystem here. CORE used to vendor the memgrep crate at
+  # /scripts/memgrep and ship prebuilt binaries; ownership moved to the
+  # ai-maestro-janitor (Emasoft/ai-maestro#106) and the crate was removed, so a
+  # cargo entry pointing at a directory that no longer exists would scan nothing
+  # while still LOOKING like Rust coverage -- the exact false-assurance shape
+  # that let a vulnerable crate sit unnoticed here before (see architecture.md
+  # ATOM-ARCH-0003: 0 open alerts while 5 of 141 packages carried advisories).
+  # The janitor owns that scanning now.
 
   - package-ecosystem: uv
     directory: /

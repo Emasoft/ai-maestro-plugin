@@ -1,113 +1,25 @@
-"""Tests for the memgrep memory-hosting components this plugin ships.
+"""Tests for this plugin's memory-protocol surface.
 
-Real tests only (no mocks, per this project's no-mock rule):
+Real tests only (no mocks, per this project's no-mock rule).
 
-- `scripts/install-memgrep.sh` is exercised as a real subprocess. The
-  network-download path is NOT tested here (it would race the very release
-  that publishes the assets — see release.yml `build-memgrep`); instead we
-  test the deterministic paths: idempotency when a memgrep binary is on
-  PATH, argument validation, and bash syntax.
-- The vendored crate (`scripts/memgrep/`) is verified structurally — files
-  exist, the release workflow attaches checksummed binaries.
-- The memgrep crate's own behavior is covered by its bundled Rust suite
-  (`cargo test --manifest-path scripts/memgrep/Cargo.toml`, run by CI's
-  test-memgrep job), not duplicated here.
-
-Note: the curated-note memory protocol itself (recall/write/update) was
-retired from this plugin in favor of the janitor's GLOBAL wiki-memory skills
-(`/janitor-memory-{recall,write,update}`); this plugin now only HOSTS the
-memgrep engine those skills depend on. The transcript-search skill
-(`memory-search`) stays and points at the global skills as its complement.
+CORE no longer hosts or ships `memgrep`. Per the ai-maestro ownership ruling
+(`Emasoft/ai-maestro#106`) the **ai-maestro-janitor** owns the crate and
+publishes the binaries; CORE's vendored copy was a 4806-LOC subset of the
+janitor's 12354-LOC crate, shipped under the same binary name and the same
+`version = "0.1.0"`. What remains here is the `memory-search` skill, which
+CONSUMES that binary, plus a regression guard proving CORE does not ship a
+rival one.
 """
 
 from __future__ import annotations
 
-import os
-import stat
-import subprocess
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
-INSTALL_SCRIPT = PLUGIN_ROOT / "scripts" / "install-memgrep.sh"
-
-
-def _run(
-    *args: str, env_overrides: dict[str, str] | None = None
-) -> subprocess.CompletedProcess[str]:
-    """Run install-memgrep.sh with optional env overrides, capturing output."""
-    env = os.environ.copy()
-    if env_overrides:
-        env.update(env_overrides)
-    return subprocess.run(
-        ["bash", str(INSTALL_SCRIPT), *args],
-        capture_output=True,
-        text=True,
-        env=env,
-        timeout=120,
-        check=False,
-    )
-
-
-class TestInstallScript:
-    """install-memgrep.sh deterministic paths — syntax, idempotency, arg guard."""
-
-    def test_script_exists_and_is_executable(self) -> None:
-        """The installer ships with the plugin and carries the exec bit."""
-        assert INSTALL_SCRIPT.is_file()
-        assert INSTALL_SCRIPT.stat().st_mode & stat.S_IXUSR
-
-    def test_bash_syntax_is_valid(self) -> None:
-        """bash -n parses the installer without errors."""
-        proc = subprocess.run(
-            ["bash", "-n", str(INSTALL_SCRIPT)],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        assert proc.returncode == 0, proc.stderr
-
-    def test_idempotent_when_memgrep_on_path(self, tmp_path: Path) -> None:
-        """A memgrep already on PATH short-circuits the installer with exit 0."""
-        # A REAL executable on PATH (not a mock of the script under test):
-        # the script's `command -v memgrep` check must find this and exit 0
-        # without attempting any download or build.
-        fake_bin = tmp_path / "memgrep"
-        fake_bin.write_text("#!/bin/sh\necho 'memgrep 0.0-test'\n")
-        fake_bin.chmod(0o755)
-        proc = _run(env_overrides={"PATH": f"{tmp_path}:{os.environ['PATH']}"})
-        assert proc.returncode == 0, proc.stderr
-        assert "already installed" in proc.stdout
-
-    def test_unknown_argument_is_rejected(self) -> None:
-        """An unrecognized flag fails fast with exit 2 (fail-fast contract)."""
-        proc = _run("--definitely-not-a-flag")
-        assert proc.returncode == 2
-        assert "unknown argument" in proc.stderr
-
-    def test_version_flag_requires_value(self) -> None:
-        """--version with no tag argument exits non-zero instead of proceeding."""
-        proc = _run("--version")
-        assert proc.returncode != 0
 
 
 class TestCanonicalArtifacts:
-    """The memgrep memory-hosting artifacts this plugin ships for the ecosystem."""
-
-    def test_memgrep_crate_is_vendored_complete(self) -> None:
-        """scripts/memgrep ships Cargo.toml + Cargo.lock + README + sources + its own tests."""
-        crate = PLUGIN_ROOT / "scripts" / "memgrep"
-        assert (crate / "Cargo.toml").is_file()
-        assert (crate / "Cargo.lock").is_file()  # --locked builds need it
-        # README.md, NOT SKILL.md: the file was renamed in cabe004 because it
-        # carried no YAML frontmatter and so was never loadable as a skill.
-        # This assertion is why a rename must be grepped by BASENAME as well as
-        # by full path — the path here is JOINED, so grepping the old string
-        # "scripts/memgrep/SKILL.md" could not match it, and the rename shipped
-        # a red test that only an unpushed-commit accident kept out of CI.
-        assert (crate / "README.md").is_file()
-        assert (crate / "src" / "main.rs").is_file()
-        assert (crate / "tests" / "cli.rs").is_file()
+    """CORE's memory-protocol surface: what it consumes, and what it must NOT ship."""
 
     def test_memory_search_disambiguates_from_global_wiki_recall(self) -> None:
         """memory-search points at the janitor GLOBAL wiki-memory skills as its complement."""
@@ -115,10 +27,20 @@ class TestCanonicalArtifacts:
         assert "/janitor-memory-recall" in text
         assert "/janitor-memory-write" in text
 
-    def test_release_workflow_builds_checksummed_binaries(self) -> None:
-        """release.yml has the build-memgrep matrix attaching tarball + sha256 per platform."""
+    def test_core_does_not_ship_a_rival_memgrep(self) -> None:
+        """CORE vendors no memgrep crate and publishes no memgrep asset (ai-maestro#106).
+
+        This is a REGRESSION GUARD, not bookkeeping. CORE once vendored a 4806-LOC
+        subset of the janitor's crate under the SAME binary name and the SAME
+        `version = "0.1.0"`, and release.yml shipped it. Whichever build won
+        `cargo install` last owned `~/.cargo/bin/memgrep`, and `--version` could not
+        tell them apart — so a host that installed CORE's could not run
+        `memgrep validate|lint|add-atom|add-lesson|new-page`, which
+        `~/.claude/rules/markdown-memory-recall.md` MANDATES after every memory edit.
+        Re-vendoring it would silently break that machine-wide protocol again.
+        """
+        assert not (PLUGIN_ROOT / "scripts" / "memgrep").exists()
+        assert not (PLUGIN_ROOT / "scripts" / "install-memgrep.sh").exists()
         wf = (PLUGIN_ROOT / ".github" / "workflows" / "release.yml").read_text()
-        assert "build-memgrep:" in wf
-        for platform in ("darwin-arm64", "darwin-x64", "linux-x64"):
-            assert platform in wf
-        assert ".sha256" in wf
+        assert "build-memgrep:" not in wf
+        assert "memgrep-darwin-arm64" not in wf

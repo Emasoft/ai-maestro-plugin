@@ -1,2 +1,0 @@
-- [OAuth rotator note](recall_a.md) — oauth rotation failed; read before debugging the rotator.
-- [Tables note](recall_b.md) — how markdown tables render in the viewer.
