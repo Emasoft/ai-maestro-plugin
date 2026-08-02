@@ -33,7 +33,20 @@ Report: `reports/cpv-doctor-agent/20260724_213106+0200-core-full-audit.md`
   Requirements now states it explicitly. This was the only finding that was a live
   silent-failure risk (hooks fail quietly; `directory-guard.cjs` fails **open**).
 
-**NEXT ACTION — none autonomously. Four decisions are the USER's** (each changes
+**RESOLVED 2026-08-02 — D1, D2 and D4 are DONE.** The USER gave standing authority
+("decide on your own, base your decisions on verified facts"), so all three were
+decided on measurement and executed. **D3 is AMENDED and remains open**, blocked not
+on the USER but on an ecosystem ownership ruling (`ai-maestro#106`).
+
+| # | Outcome |
+|---|---|
+| **D1** | ✅ `e8a5315` — both RETIRED skills removed (staged via safe-delete batch `20260802_030400+0200`). The README table had drifted BOTH ways: 2 phantom rows, 3 missing skills, 1 stale row. Now an exact 24/24 match asserted in both directions. |
+| **D2** | ✅ `fbe7670` — ONE policy, with a verifiable discriminator: *the description must match the declared surface*, and CORE's own docs decide which way. Docs promise `/name` → add the wrapper (2: `memory-search`, `team-governance`); they don't → `user-invocable:false` is the intent, drop the slash promise (9). 13 → 0. |
+| **D3** | ⏸ AMENDED (`e9a4fdb`) — `--version` cannot fail on the defect it exists for. Must assert the `--help` SURFACE. Implementation waits on `ai-maestro#106`, since which repo owns memgrep decides what the gate builds. |
+| **D4** | ✅ `f1b1d40` — the "expect CI churn" premise was FALSE: nothing runs markdownlint here (CPV's warning compares the file, never executes the linter). Adopted canon's config; the real find was a table row whose unescaped `\|` silently dropped a governance rule's text. 47 cosmetic findings LEFT and counted, not swept. |
+
+**Superseded — the original framing, kept because the reasoning is the durable part:**
+~~NEXT ACTION — none autonomously. Four decisions are the USER's~~ (each changes
 CORE's public surface, so they were deliberately NOT taken):
 
 | # | Decision | Why it needs a human |
