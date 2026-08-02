@@ -60,8 +60,9 @@ binaries) consumed by the other ecosystem plugins.
   gone stale once (this bullet still read `@v3.5.0` after two bumps). The ref is one
   constant mirrored at three sites, all of which move together; local
   `--gate` includes a **jscpd** copy-paste gate (**G3b**, #143) on top of the standard
-  version/lint/validate gates. The **type gate is mypy** (`mypy scripts/
-  --ignore-missing-imports`, in `release.yml` + publish.py G2), **not Pyright**.[^2]
+  version/lint/validate gates. The **type gate is mypy**
+  (`mypy scripts/ --ignore-missing-imports`, in `release.yml` + publish.py G2),
+  **not Pyright**.[^2]
 - **Dependency scanning** — `.github/dependabot.yml` (added 2026-07-25, `886778d`)
   covers **github-actions** and **uv**. The **cargo** entry was REMOVED 2026-08-02
   with the crate: an ecosystem pointing at a deleted directory scans nothing while
@@ -81,6 +82,40 @@ binaries) consumed by the other ecosystem plugins.
 
 ## See also
 - (lateral links to other functionality hubs, once they exist)
+
+
+^ATOM-KHHQ-8HU7 [desc:"three test layers guard the 28 skills: structural contracts, frozen-CLI behavioural contracts, and the executable no-direct-API iron rule", keywords: what_tests_guard_the_skills is_there_a_check_that_skills_teach_real_commands how_is_the_no_direct_api_rule_enforced why_does_my_new_skill_fail_the_test_suite skill_contract_tests_layers, ocd: 2026-08-02, lmd: 2026-08-02]
+
+Three layers guard the 28 skills / 14 commands. They are complementary — none subsumes another:
+
+| file | layer | catches |
+|---|---|---|
+| `tests/test_skill_and_command_contracts.py` | **structural** (78) | `name:`/dir drift, empty description, a `/name` promise with no surface, README-vs-disk in BOTH directions, `allowed-tools` missing the script a wrapper teaches |
+| `tests/test_skill_cli_contracts.py` | **behavioural** (15) | a taught flag or subcommand that does not exist in the frozen CLI's own `--help` — see [[publish-and-validation-gate]] for why publish runs it strictly |
+| `tests/test_no_direct_api_calls.py` | **governance** (9) | any runnable instruction to call the ai-maestro server API directly (the iron rule; `core#11`) |
+
+Each sweep layer also ships a **never-skipped anti-vacuity guard** — see the next atom.
+
+
+^ATOM-KHHQ-8HU8 [desc:"every sweep-style skill test ships a never-skipped anti-vacuity guard, and the two extractors' scoping rules must not be tightened", keywords: my_skill_test_passes_but_checks_nothing anti_vacuity_guard_in_the_test_suite why_does_the_api_guard_ignore_comments extractor_scoping_rules_that_look_like_bugs indented_bash_fence_not_detected, ocd: 2026-08-02, lmd: 2026-08-02]
+
+**Every sweep-style layer ships a never-skipped anti-vacuity guard**
+(`test_the_corpus_is_not_empty`, `test_the_extractor_actually_extracts`,
+`test_the_scanner_actually_scans`). Not ceremony: a sweep asserts only over what its extractor
+returns, so an extractor that silently finds nothing turns every assertion above it into an
+unconditional green. That bug has already happened here — an indented ```` ```bash ```` fence
+inside a numbered list was invisible to the extractor, so the CLI contracts passed while
+checking nothing, and only the guard caught it.
+
+**Two scoping rules that look like bugs and are not** — do not "tighten" either:
+
+- The API guard counts only RUNNABLE context (fenced blocks; non-comment code lines). A bare
+  `grep '/api/'` matches 75 sites in this repo and **all 75 are the rule being stated**, not
+  broken, so a content-only guard would redden loudest on its own prohibitions.
+- The CLI extractor requires the CLI token on the same line, strips `$(...)` first, and cuts at
+  shell separators. Without those it attributes a nested or piped command's flags to the outer
+  CLI — it once reported `aimaestro-session.sh --cwd` when `--cwd` belonged to a nested
+  `aimaestro-agent.sh`, and "fixing" that would have deleted a correct flag from a correct skill.
 
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]

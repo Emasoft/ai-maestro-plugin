@@ -26,6 +26,21 @@ The CPV validator ref lives as ONE constant, `CPV_REF` in `scripts/publish.py`, 
 
 Archiving terminal TRDDs (a pure `git mv` into `design/archived/`, zero content change) once took this repo from exit 0 to exit 4 / NIT=3: CPV `--strict` scanned `design/archived/` but NOT `design/tasks/`, because the exclusion was keyed on the LITERAL path `design/tasks` rather than on the lifecycle corpus. The findings were prose inside terminal TRDD bodies, which the TRDD rules freeze, so there was no source-side fix and the gate was held honestly red rather than green by suppression. Fixed upstream in CPV v4.2.1 — all four lifecycle zones clear, with a non-lifecycle `design/notes/` control still firing so it cannot decay into a blanket `design/` mute. Filed as `Emasoft/claude-plugins-validation#184`.
 
+
+^ATOM-C2YQ-S4MC [desc:"publish.py G4 sets AIMAESTRO_CLI_REQUIRED=1 so absent frozen CLIs FAIL the release gate instead of silently skipping the skill contracts", keywords: why_does_publish_set_aimaestro_cli_required skill_cli_contracts_skipped_during_publish tests_passed_but_the_cli_checks_never_ran release_gate_green_with_skipped_tests publish_g4_env_var, ocd: 2026-08-02, lmd: 2026-08-02]
+
+**`publish.py` G4 runs `pytest tests/` with `AIMAESTRO_CLI_REQUIRED=1`** (`ce2cd41`).
+
+G4 is MANDATORY and blocks on failures and on zero-collected — but **not on SKIPS**. The
+frozen-CLI contracts in `tests/test_skill_cli_contracts.py` skip when a CLI is off `PATH`,
+which is correct in CI (the runner has no ai-maestro) and *wrong at publish*: publish runs on
+a developer machine where all six CLIs exist, so a skip there means the install broke — and
+the release would ship skills whose taught flags and subcommands were never verified, with
+the gate still green.
+
+The var is set BY `publish.py`, not left to a human to export: a guard nobody enables is not
+a guard. CI leaves it unset and keeps skipping.
+
 ## Notes and lessons learned
 
 [^1]: [id:ATOM-998W-KR6T, status:valid, desc:"a version restated in a second page is a fact that will go stale silently — name the owning page instead", keywords:"the_docs_say_one_version_and_the_code_says_another my_architecture_page_still_cites_the_old_pin where_should_a_version_number_live two_pages_disagree_about_a_dependency_version stale_version_in_an_overview_page", ocd:2026-08-01, lmd:2026-08-01] DO NOT restate a pinned version number in an overview/hub page that another page already owns, BECAUSE nothing fails when the copy rots — `architecture.md` still read "pinned `@v3.5.0`" after two bumps (v3.5.0 -> v3.22.3 -> v4.2.1) and would have told the next reader to validate against a version this repo has not used since 2026-07-26. DO name the owning page ([[publish-and-validation-gate]]) and let the version live in exactly one place, next to the command that proves it.
