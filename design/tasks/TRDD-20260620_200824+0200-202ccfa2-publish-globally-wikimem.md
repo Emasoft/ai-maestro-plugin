@@ -197,7 +197,8 @@ context. Read-only from any foreign project. Enforced:
   the boolean is written to the source file**); update memgrep docs for the new verbs.
   Commit. (Await user "go" before Rust.)
 - **Phase 2 (coordination):** file the janitor coordination issue (§5 janitor items + §4
-  invariant + 🔒 privacy invariant); self-identify per R22/G1.1.
+  invariant + 🔒 privacy invariant); self-identify per R22/G1.2 — and never write a bare
+  `@<name>` in the issue body (G1.2: it pages a real GitHub user).
 - **Phase 3:** file the SEPARATE discoverability issue on the janitor (complaint A). ✅ FILED 2026-06-24 — `Emasoft/ai-maestro-janitor#62` (independent of the gated Phase 1 build; raises the concern + landscape + candidate gaps for the janitor to scope).
 
 ## 7. Derived tasks / risks

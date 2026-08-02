@@ -70,7 +70,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
    done
    ```
 
-   Per PRRD G1.1, begin every GitHub post (broadcast/issue/PR comment/review) with a one-line self-identification of the authoring agent, since all agents share the one owner identity.
+   Per PRRD G1.2, begin every GitHub post (broadcast/issue/PR comment/review) with a one-line self-identification of the authoring agent, since all agents share the one owner identity. **Never write `@<name>` outside a code span — it pages a real user.** This bites governance prose hardest: every TITLE is also a registered GitHub account (`@manager`, `@orchestrator`, `@owner`, `@role`, `@core` all resolve), so a sentence like `the @manager ruled X` notifies a stranger. Backtick the handle, or just write the title with no `@`.
 
 6. **Respect messaging isolation** for closed teams. See reference for full rules.
 

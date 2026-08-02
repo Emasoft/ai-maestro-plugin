@@ -53,9 +53,9 @@ what the agent should be doing — corrections, bug reports, completions it is
 waiting on, or blockers. Continuing to work while unread messages sit in the
 inbox risks doing the wrong thing.
 
-**Self-id in the AMP body (G1.1 extended).** Because all AI Maestro agents share
+**Self-id in the AMP body (G1.2 extended).** Because all AI Maestro agents share
 the single human-owner identity, every AMP message body MUST begin with a
-one-line self-identification of the sending role/plugin — the same G1.1
+one-line self-identification of the sending role/plugin — the same G1.2
 discipline applied to GitHub posts, extended to AMP. Recommended leading line:
 
 ```

@@ -27,7 +27,7 @@ spec: `~/.claude/rules/prrd-design-rules.md`.
 
 ## 🥇 GOLDEN — set by the USER (immutable to MANAGER)
 
-- **G1.1** — Every agent that writes to GitHub (issue, issue comment, PR, PR comment, PR review, discussion, release note) MUST begin the body with a one-line self-identification of which agent/role/plugin authored it, because all AI Maestro agents share the single human-owner GitHub identity (the owner's gh CLI auth). Recommended leading line: _Posted by the Claude developing **<plugin-or-role>** (via the shared @owner gh auth)._ Commit messages SHOULD carry an `Agent: <role>` trailer.
+- **G1.2** — Every agent that writes to GitHub (issue, issue comment, PR, PR comment, PR review, discussion, release note) MUST begin the body with a one-line self-identification of which agent/role/plugin authored it, because all AI Maestro agents share the single human-owner GitHub identity (the owner's gh CLI auth). Recommended leading line: _Posted by the Claude developing **<plugin-or-role>** (via the shared `@Emasoft` gh auth)._ Commit messages SHOULD carry an `Agent: <role>` trailer. **NEVER write `@<name>` outside a code span or code block in any GitHub body — it pages a real user.** Every AI Maestro role name is a registered GitHub account (`@manager`, `@janitor`, `@owner`, `@role`, `@core`, `@orchestrator` all resolve), so an unbackticked role name in prose notifies a stranger. Backtick every handle (`` `@manager` ``), including the owner's — GitHub does not linkify inside code. (USER directive 2026-08-02, after `@owner`, `@role`, `@manager` and `@janitor` were each paged by mistake; see TRDD-NRQ5CG6I.)
 
 ## 🥈 SILVER — MANAGER-mutable (agents propose via COS)
 
