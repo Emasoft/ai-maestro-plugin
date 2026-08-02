@@ -25,6 +25,11 @@ the reporting steps (`amp-task-done.sh`, `amp-task-blocked.sh`) talk to the AI
 Maestro server and the team's AMP mesh, so the orchestrator always knows where
 the work stands.
 
+**Those steps reach the server ONLY through the `amp-*` CLIs — never call the ai-maestro
+server API directly.** The CLIs resolve the API base and your agent identity internally
+(core#11 / R23). `git` and `gh` are unaffected: the GitHub API is explicitly out of scope,
+and this rule is about ai-maestro's own server.
+
 > **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
 
 ## Prerequisites

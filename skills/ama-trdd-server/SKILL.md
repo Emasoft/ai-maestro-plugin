@@ -20,6 +20,12 @@ the **read** surface (`search`, `read`, `verify`) and the **write** surface
 (`edit`, `approve`, `refuse`, `promote`, `archive`) — the latter being the
 server-side, authorization-checked, token-minting path.
 
+**Never call the ai-maestro server API directly** — `aimaestro-trdd.sh` is the only
+sanctioned path to the server-mediated surface, and it resolves the API base and your
+agent identity internally (core#11 / R23). This matters more here than elsewhere: the
+write verbs are authorization-checked and token-minting, so bypassing the CLI does not
+just skip a wrapper — it skips the governance check the write was supposed to pass.
+
 **Local files remain the single source of truth.** TRDD files under
 `design/` — searched/read/edited by `ama-trdd-find` / `ama-trdd-write` /
 `ama-trdd-update` / `ama-trdd-transition` — are authoritative. The

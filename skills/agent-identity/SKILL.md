@@ -26,6 +26,13 @@ protocol. AID uses Ed25519 cryptographic identity documents and proof of
 possession to obtain scoped JWT tokens via OAuth 2.0 token exchange. It is
 self-contained and works independently without other protocols.
 
+**Boundary — read this before reaching for `curl`.** The AID protocol's own OAuth calls to
+an *auth server* are this skill's legitimate business, and the `aid-*` CLIs make them.
+What is forbidden is different: **never call the ai-maestro server API directly** — go
+through the frozen `aimaestro-*` / `amp-*` CLIs, which resolve the API base and your agent
+identity internally (core#11 / R23). Concretely, `AID_AUTH` comes from
+`aid-maestro-token.sh`, not from a hand-rolled request at ai-maestro's `/api/*`.
+
 ## Prerequisites
 
 Copy this checklist and track your progress:

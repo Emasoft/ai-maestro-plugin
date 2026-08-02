@@ -113,6 +113,68 @@ def test_no_shipped_surface_calls_the_ai_maestro_api_directly() -> None:
     )
 
 
+# A skill that NAMES a frozen CLI is teaching the boundary whether it means to or not.
+_FROZEN_CLI_NAMED = re.compile(r"\b(aimaestro-[a-z-]+\.sh|amp-[a-z-]+\.sh|aid-[a-z-]+\.sh)\b")
+# Accepted ways of stating the boundary. Deliberately permissive on WORDING and strict on
+# MEANING: each pattern pairs a negation with the API. Prose is preferred, but an HTML
+# comment counts -- it is still text the reading agent receives.
+_BOUNDARY_STATED = re.compile(
+    r"never (call |curl |its |the )?[^.]{0,40}api"
+    r"|not (call|curl) [^.]{0,40}api"
+    r"|must not call[^.]{0,40}api"
+    r"|forbidden[^.]{0,40}api"
+    r"|may (curl|call)[^.]{0,40}api directly"
+    r"|/api/\*? directly"
+    r"|decoupl[^.]{0,60}api"
+    r"|decoupled per manager core#11",
+    re.I,
+)
+
+
+def _prose(text: str) -> str:
+    """Collapse newlines so a boundary sentence that WRAPS still matches.
+
+    Markdown prose is hard-wrapped, so `ama-statusline` states the rule as
+    "...may curl the AI\\nMaestro API directly" -- a matcher bounded by `\\n` calls that
+    skill silent and sends someone to "fix" a skill that is already correct. Bounding on
+    `.` only (sentence end) after collapsing is what makes the check about MEANING rather
+    than about where the author happened to wrap.
+    """
+    return " ".join(text.split())
+
+
+def test_every_skill_naming_a_frozen_cli_also_states_the_boundary() -> None:
+    """The INSTRUCT half of the iron rule -- not offending is not instructing.
+
+    USER directive (2026-08-02): "all plugins must instruct in their skills to use the
+    ai-maestro scripts, never the api directly". `test_no_shipped_surface_calls_...` above
+    only proves CORE does not OFFEND. That is the easy half, and it is greppable.
+
+    This is the half that is NOT greppable as an absence: a skill that names
+    `aimaestro-agent.sh` in a routing table while never saying the API is off-limits teaches
+    the reader that the script is one option among several. The reader then reaches for the
+    API the first time the CLI lacks a verb -- which is exactly the situation that arises in
+    practice (ai-maestro-janitor#167: a wake-gate field with no CLI flag).
+
+    Credit: this gap was identified by the ai-maestro-janitor Claude on janitor#168 after CORE's
+    own audit missed it; measured here it held for 9 of the 13 CORE skills that name a CLI,
+    three of them written the same day. Verified independently before acting on it.
+    """
+    silent: list[str] = []
+    for skill in sorted((PLUGIN_ROOT / "skills").glob("*/SKILL.md")):
+        text = _prose(skill.read_text())
+        if not _FROZEN_CLI_NAMED.search(text):
+            continue  # does not touch the boundary; nothing to state
+        if not _BOUNDARY_STATED.search(text):
+            silent.append(skill.parent.name)
+    assert not silent, (
+        "These skills name a frozen ai-maestro CLI but never tell the reader the API is "
+        "off-limits. Naming the script is not the same as forbidding the alternative -- add "
+        "one sentence (e.g. 'Never call the ai-maestro server API directly; this CLI resolves "
+        "the API base and your identity internally (core#11).'):\n  " + "\n  ".join(silent)
+    )
+
+
 def test_the_scanner_actually_scans() -> None:
     """Never-vacuous guard: the sweep above asserts nothing if the corpus reads as empty."""
     files = _shipped_files()

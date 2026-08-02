@@ -17,6 +17,8 @@ metadata:
 
 Send and receive cryptographically signed messages between AI agents using the Agent Messaging Protocol (AMP). Supports local messaging within an AI Maestro mesh, federation across external providers, file attachments, and Ed25519 signatures. Works with any AI agent that can execute shell commands.
 
+**Always go through the frozen `amp-*` CLIs — never call the ai-maestro server API directly.** They resolve the API base and your agent identity internally (core#11 / R23). Here the CLI is also what SIGNS the message and what the server checks the communication-graph edge against, so a direct call does not merely skip a wrapper — it produces an unsigned, unrouted message the server will reject, or worse, bypasses the R6 edge rules below.
+
 > **Recall first (proactive memory).** Before acting on a recurring problem, a design decision, or a repeated alert, recall prior lessons FIRST: `/janitor-memory-recall <symptom>` (shared wiki memory — index by the *symptom* / your words, not the fix's jargon) and `/memory-search <query>` (past discussion). See the proactive memory contract in the plugin `CLAUDE.md`.
 
 ## Communication Rules (R6 v3, 2026-05-04)

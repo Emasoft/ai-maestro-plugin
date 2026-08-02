@@ -17,6 +17,11 @@ gated editor for `settings.json` / `settings.local.json` (no HTTP). Use it
 instead of hand-editing the JSON — it parses, mutates and writes atomically,
 so a malformed hand-edit cannot leave a settings file the harness refuses to load.
 
+**Never call the ai-maestro server API directly** — this CLI is the only sanctioned
+surface, and it resolves the API base and your agent identity internally (core#11 / R23).
+That holds even when the CLI lacks a verb you want: the fix is a new CLI verb, not a
+bypass.
+
 ## THE GOTCHA — `--key` splits on EVERY dot, including dots inside the key NAME
 
 `--key a.b.c` means "path `a` → `b` → `c`". That is fine until the key you want
