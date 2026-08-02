@@ -1,11 +1,11 @@
 ---
 name: ama-trdd-find
-description: "Find TRDD task-design documents under design/ — by 8-char id (TRDD-9a8aba94), column, assignee, blocked-by, cited PRRD rule, a SQL-ish --where filter, or free-text; also --validate a TRDD's frontmatter. Read-only, allowed for every role. Use when locating a task spec before working on it, resuming a TRDD from a todo-list id, or auditing the backlog. Trigger with /ama-trdd-find, 'find the TRDD for X', or 'which TRDDs are blocked'. Authoring is /ama-trdd-write, editing /ama-trdd-update, column moves /ama-trdd-transition."
-allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(findtrdd.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
+description: "Find TRDD task-design documents under design/ — by 8-char id (TRDD-9a8aba94), column, assignee, blocked-by, cited PRRD rule, a SQL-ish --where filter, or free-text; also validate a TRDD's frontmatter. Prefer the on-PATH `trddgrep` (board, next, why, show, lint, validate, fix); `findtrdd.py` remains for the --where/--relevant-rule filters. Read-only, allowed for every role. Use when locating a task spec before working on it, resuming a TRDD from a todo-list id, or auditing the backlog. Trigger with /ama-trdd-find, 'find the TRDD for X', or 'which TRDDs are blocked'. Authoring is /ama-trdd-write, editing /ama-trdd-update, column moves /ama-trdd-transition."
+allowed-tools: "Bash(trddgrep:*), Bash(python3:*), Bash(sh:*), Bash(findtrdd.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"
 metadata:
   author: "Emasoft"
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # ama-trdd-find — find TRDDs (READ-ONLY)
@@ -37,6 +37,38 @@ Finding is allowed for **every** role — no gate.
   AUTONOMOUS / MAINTAINER) — this skill's permission matrix is keyed on it.
 
 ## Instructions
+
+**Start with `trddgrep`** — it is on PATH for every agent (installed by ai-maestro's
+`install-messaging.sh`), needs no script resolution, and defaults its corpus to
+**your own project** (`$PWD/design`), never ai-maestro's. It is to the TRDD corpus
+what `memgrep` is to the memory corpus.
+
+```bash
+trddgrep                  # this project's board
+trddgrep next             # what is workable now, ranked by what finishing it frees
+trddgrep show <id8>       # the card + its STATE block  <- read this BEFORE resuming a task
+trddgrep why <id8>        # the transitive blocker chain, to the root cause
+trddgrep <pattern>        # ranked search over title, labels, id, body
+trddgrep lint             # findings grouped by rule, errors first
+trddgrep validate         # the WRITE GATE — TAB rows, machine-readable
+trddgrep env              # which corpus this is, when the answers look wrong
+```
+
+> **Exit codes are `grep`'s trichotomy: `0` clean · `1` findings · `2` THE CHECK COULD NOT RUN.**
+> **Never write `trddgrep validate || …`** — `||` fires on both 1 and 2, collapsing
+> *could-not-run* into *found-findings*, which is the exact conflation the third code
+> exists to prevent. Branch on the status explicitly:
+> ```bash
+> trddgrep validate; rc=$?
+> case $rc in 0) : ;; 1) echo "findings" ;; *) echo "validate could not run" >&2; exit 2 ;; esac
+> ```
+> If `trddgrep` seems to know nothing here, run `trddgrep env` before puzzling: it reports
+> `mode=standalone` (a plain project — full 3-pillar surface, never degraded) or
+> `mode=agent <name>` (a registered workdir), plus the corpus path it resolved.
+
+`trddgrep` not on PATH (older ai-maestro, or messaging never installed)? Fall back to
+`findtrdd.py` below — it is also the route for `--where` / `--relevant-rule`, which
+`trddgrep` does not cover.
 
 1. Resolve the pillar-scripts directory:
 
@@ -72,7 +104,15 @@ success. `--validate` exits non-zero if the frontmatter violates the schema.
 
 <example>
 User: resume the task TRDD-9a8aba94 from my todo list
-→ resolve DIR, `findtrdd.py 9a8aba94` → the file path; read it top-down (STATE block first).
+→ `trddgrep show 9a8aba94` → the card with its STATE block, which is authoritative on resume
+  and supersedes the body. (No `trddgrep`? resolve DIR, `findtrdd.py 9a8aba94` → the path;
+  read it top-down, STATE block first.)
+</example>
+
+<example>
+User: what should I pick up next?
+→ `trddgrep next` → workable cards ranked by what finishing each one unblocks; `trddgrep why <id8>`
+  on anything that looks stuck, to get the blocker chain rather than guessing at it.
 </example>
 
 <example>
@@ -96,6 +136,10 @@ a partial failure.
 
 ## Resources
 
+- `trddgrep --help` — the live surface, and the cheapest place to learn it. The corpus tools
+  follow the USER's `<document type>grep` naming law (`memgrep`, `trddgrep`, and
+  `prrdgrep`/`specgrep` as their implementations land), so `--help` stays current as that
+  family grows; this skill deliberately does not restate it.
 - `~/.claude/rules/trdd-design-tasks.md` — canonical TRDD v2 format + the 8-char hash ref syntax + grep cheat-sheet (shipped globally by the ai-maestro-janitor (IND base)).
 - [../ama-trdd-transition/references/trdd-frontmatter-schema.md](../ama-trdd-transition/references/trdd-frontmatter-schema.md) — field-by-field schema (what `--validate` checks).
   > Contents · Schema invariants (grep-friendliness) · Field schema · 1. Identity (mandatory on every TRDD) · 2. Ownership · 3. Classification · 4. Relationships · 5. Delivery · 6. Verification requirements · 7. Impact · 8. Runtime evidence · 9. Audit-flow · 10. External · Type forms · Schema extension · Validation · Migration from v1 · Anti-patterns
