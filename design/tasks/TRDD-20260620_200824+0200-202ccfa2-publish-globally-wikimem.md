@@ -3,7 +3,7 @@ trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 column: planned
 created: 2026-06-20T20:08:24+0200
-updated: 2026-06-24T04:58:02+0200
+updated: 2026-08-02T03:34:00+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -66,14 +66,32 @@ at sync time and lives ONLY in the machine-local USER memdir (never committed).
   slug derived machine-locally at sync. The `project:`/`link:` QUERY syntax still exists,
   but its slug is the machine-local published-subdir name, not a committed field.
 
-**Cross-repo split (HARD constraint — `how-to-fix-issues-of-other-projects.md`):**
-- THIS repo (`ai-maestro-plugin`) HOSTS memgrep (`scripts/memgrep/`) → all ENGINE work here.
-- `ai-maestro-janitor` owns the wikimem schema doc, the write/update skills, the
-  heartbeat, and the recall-protocol rule → COORDINATION ISSUE on the janitor.
+> ## ⚠ PREMISE INVERTED 2026-08-02 — this card cannot be worked HERE as written
+>
+> The cross-repo split below is **backwards as of `Emasoft/ai-maestro#106`**: the
+> **ai-maestro-janitor owns memgrep**, and CORE's `scripts/memgrep/` was removed
+> (`6cceb62`). So "all ENGINE work here" now routes every Rust change to a repo that
+> ships no crate, and the NEXT ACTION says to read a directory that no longer exists.
+>
+> Under `how-to-fix-issues-of-other-projects.md` — the very rule this card cites — the
+> engine work is now **PROJECT B work** and must NOT be done from this session. This
+> card's options are: move it to the janitor, or reduce it to a coordination issue
+> filed there. Either way the Rust half does not belong to CORE any more.
+>
+> Left `planned` rather than cancelled: the *goal* (cross-project visibility for
+> PROJECT-scope wikimem) is untouched by the ruling — only the ownership of the code
+> that would implement it changed.
 
-**NEXT ACTION:** Phase 1 — read `scripts/memgrep/` to map CLI dispatch, frontmatter parser,
-recall walk, link handling; implement §3. Await user "go" before writing Rust
-(plan-and-build-separate).
+**Cross-repo split (HARD constraint — `how-to-fix-issues-of-other-projects.md`):**
+~~- THIS repo (`ai-maestro-plugin`) HOSTS memgrep (`scripts/memgrep/`) → all ENGINE work here.~~
+**SUPERSEDED — the janitor hosts memgrep; CORE hosts none.**
+- `ai-maestro-janitor` owns the wikimem schema doc, the write/update skills, the
+  heartbeat, the recall-protocol rule, **and now the engine itself**.
+
+~~**NEXT ACTION:** Phase 1 — read `scripts/memgrep/` to map CLI dispatch, frontmatter parser,
+recall walk, link handling; implement §3.~~ **Not runnable here — that path is gone.**
+**NEXT ACTION:** decide whether this card moves to the janitor or becomes a coordination
+issue on it. Do not start Rust work in CORE.
 
 **Load-bearing facts / gotchas:**
 - USER memdir = `~/.claude/plugins/data/ai-maestro-janitor-ai-maestro-plugins/memory/`
