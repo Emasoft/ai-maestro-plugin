@@ -94,13 +94,21 @@ def _strip_code(text: str) -> str:
         for j in range(start, len(lines)):
             emitter_line[j] = True
 
+    # An UNTERMINATED trailing fence is scanned as PROSE, not exempted (credit: the MANAGER,
+    # ai-maestro-janitor#171). A body ending mid-fence is malformed and the two guesses are not
+    # symmetric: "exempt" silently drops the last block of the file from the scan, while "prose"
+    # costs at most a false positive on text that is already broken. This guard's whole premise
+    # is that a silent miss is the expensive failure, so it fails toward the noisy answer.
+    fences = [i for i, raw in enumerate(lines) if raw.lstrip().startswith("```")]
+    unterminated_from = fences[-1] if len(fences) % 2 else len(lines)
+
     out, in_fence = [], False
     for i, raw in enumerate(lines):
         if raw.lstrip().startswith("```"):
             in_fence = not in_fence
             out.append("")
             continue
-        if in_fence:
+        if in_fence and i < unterminated_from:
             out.append(raw if emitter_line[i] else "")
         else:
             out.append(re.sub(r"`[^`]*`", lambda m: " " * len(m.group(0)), raw))
@@ -187,6 +195,16 @@ def test_detector_classifies_known_shapes(sample: str, should_flag: bool, why: s
             "```text\n_Posted by the Claude developing X (via the shared @owner gh auth)._\n```",
             False,
             "quoted DOC of the defect (archived TRDD) — inert, must not be flagged",
+        ),
+        (
+            "intro\n```text\nthe @manager ruled on this",
+            True,
+            "UNTERMINATED fence — malformed, so scanned as prose rather than silently exempted",
+        ),
+        (
+            "intro\n```text\nthe @manager ruled\n```\ntail",
+            False,
+            "the SAME text in a CLOSED fence stays exempt — the fix must not break the normal case",
         ),
     ],
 )
