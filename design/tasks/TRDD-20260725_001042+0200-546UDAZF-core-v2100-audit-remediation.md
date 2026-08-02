@@ -1,9 +1,10 @@
 ---
 trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
-column: backburner
+column: complete
+implementation-commits: [2ebabc4, fbe7670, f1b1d40, e8a5315, 6cceb62, c3dc41b]
 created: 2026-07-25T00:10:42+0200
-updated: 2026-08-02T03:44:00+0200
+updated: 2026-08-02T03:52:00+0200
 current-owner: ai-maestro-plugin (core)
 assignee: ai-maestro-plugin (core)
 task-type: refactor
