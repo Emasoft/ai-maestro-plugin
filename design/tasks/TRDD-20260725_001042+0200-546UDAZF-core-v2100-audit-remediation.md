@@ -3,8 +3,9 @@ trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
 column: backburner
 created: 2026-07-25T00:10:42+0200
-updated: 2026-08-02T00:23:00+0200
+updated: 2026-08-02T03:12:00+0200
 current-owner: ai-maestro-plugin (core)
+assignee: ai-maestro-plugin (core)
 task-type: refactor
 min-approval-requirement: none
 release-via: publish
@@ -33,10 +34,14 @@ Report: `reports/cpv-doctor-agent/20260724_213106+0200-core-full-audit.md`
   Requirements now states it explicitly. This was the only finding that was a live
   silent-failure risk (hooks fail quietly; `directory-guard.cjs` fails **open**).
 
-**RESOLVED 2026-08-02 — D1, D2 and D4 are DONE.** The USER gave standing authority
-("decide on your own, base your decisions on verified facts"), so all three were
-decided on measurement and executed. **D3 is AMENDED and remains open**, blocked not
-on the USER but on an ecosystem ownership ruling (`ai-maestro#106`).
+**STILL OPEN: D3 only.** It is AMENDED (do NOT implement as originally written) and
+waits on an ecosystem ownership ruling — `ai-maestro#106`, "which component owns
+memgrep". That is an external GitHub issue, NOT a TRDD, so it deliberately does not
+appear in `blocked-by:` (that field takes TRDD ids; an issue ref there resolves to a
+phantom card). The card therefore stays in `backburner` rather than `blocked`.
+
+D1, D2 and D4 were decided on measurement and executed 2026-08-02 under the USER's
+standing authority ("decide on your own, base your decisions on verified facts").
 
 | # | Outcome |
 |---|---|
