@@ -17,10 +17,15 @@ hosts the `memgrep` markdown-recall engine (Rust crate + prebuilt release-asset
 binaries) consumed by the other ecosystem plugins.
 
 ## Parts map
-- **Skills** (`skills/`) — AMP messaging, AID identity, agent management, docs
-  search, code-graph query, MCP discovery, planning, network security,
-  conversation-transcript memory search (`memory-search`), and the `ama-*`
-  PRRD/TRDD/Kanban governance skills.
+- **Skills** (`skills/`, 28) — AMP messaging, AID identity, agent management,
+  MCP discovery, planning, network security, wiki-memory recall
+  (`memory-search`), the `ama-*` PRRD/TRDD/Kanban governance skills, and the
+  `ama-*` wrappers over ai-maestro's **frozen CLI** layer. The frozen-CLI
+  wrappers are one-skill-per-script by convention (`ama-session`→`aimaestro-session.sh`,
+  `ama-panel`→`…-panel.sh`, `ama-continuity`, `ama-portfolio`, `ama-settings`,
+  `ama-statusline`), each declaring `allowed-tools: Bash(<script>:*)` — a skill
+  that names a script without that entry is permission-blocked in a way that
+  reads as "the tool is missing", so the allowed-tools line is not boilerplate.
 - **Commands** (`commands/`) — 14: the 12 `/amp-*` AMP slash commands plus
   `/memory-search` and `/team-governance` (added 2026-08-02, D2).
 - **Scripts** (`scripts/`) — AMP/AID shell scripts installed to PATH, the

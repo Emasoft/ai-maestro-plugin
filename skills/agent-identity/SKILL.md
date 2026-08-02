@@ -52,6 +52,34 @@ aid-status.sh --json   # JSON output
 
 For full command reference, flags, and parameters, see [detailed-guide](reference/detailed-guide.md).
 
+### Getting an AI Maestro governance token (`aid-maestro-token.sh`)
+
+`aid-token.sh` above is the generic AID exchange. For **AI Maestro** specifically
+there is a dedicated wrapper that does the PoP exchange and hands back a
+governance-scoped token:
+
+```bash
+aid-maestro-token.sh                       # human-readable
+TOKEN=$(aid-maestro-token.sh --quiet)      # just the token, for piping
+aid-maestro-token.sh --json                # full response
+aid-maestro-token.sh --no-cache            # force a fresh token
+aid-maestro-token.sh --scope <scope>       # default: governance
+```
+
+**This is where `AID_AUTH` comes from.** The ai-maestro CLIs
+(`aimaestro-portfolio.sh`, `aimaestro-continuity.sh`, `aimaestro-statusline.sh`,
+the pillar scripts) expect an agent caller to export it:
+
+```bash
+export AID_AUTH="$(aid-maestro-token.sh --quiet)"
+```
+
+An agent that skips this sees those CLIs fail in an auth-shaped way that looks
+like the tool is broken or missing, which is the expensive misread — the tool is
+fine, the caller has no identity. Tokens are cached until expiry, so calling it
+per-session rather than per-command is correct; `--no-cache` is for when you
+believe the cache is stale.
+
 ## Output
 
 - `aid-init.sh` — creates Ed25519 keypair and identity document in `~/.agent-messaging/agents/<name>/`
