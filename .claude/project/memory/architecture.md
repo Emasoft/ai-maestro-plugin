@@ -117,6 +117,21 @@ checking nothing, and only the guard caught it.
   CLI — it once reported `aimaestro-session.sh --cwd` when `--cwd` belonged to a nested
   `aimaestro-agent.sh`, and "fixing" that would have deleted a correct flag from a correct skill.
 
+
+^ATOM-QH18-L06J [desc:"the agent-facing CLI census must scan commands/ as well as skills/ — grepping only skills/ reports false coverage gaps", keywords: cli_not_covered_by_any_skill coverage_audit_reported_gaps_that_are_not_real is_this_script_skill_faced amp_statusline_looks_uncovered, ocd: 2026-08-02, lmd: 2026-08-02]
+
+**Scan BOTH `skills/` and `commands/` when auditing agent-facing CLI coverage.** A census over
+`skills/` alone reported 6 uncovered CLIs on 2026-08-02; all 6 resolved:
+
+- `amp-statusline.sh` — covered by `commands/amp-statusline.md`, invisible to a `skills/`-only grep
+- `aimaestro-agent.py` — same surface as the covered `aimaestro-agent` / `.sh`
+- `amp-helper.sh`, `amp-security.sh`, `aid-helper.sh`, `amp-name-resolve.sh` — internal libs,
+  correctly NOT skill-faced (TRDD-P83T33EN). `amp-name-resolve.sh` is *sourced* by 5 amp entry
+  points which expose `--name` themselves, so an agent never calls it directly.
+
+Record deliberate exclusions in the commit that makes them, or the next sweep re-files them as
+oversights.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to

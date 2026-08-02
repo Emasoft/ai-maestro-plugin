@@ -61,6 +61,24 @@ and point at the overlay by name.[^7]
 - [[architecture]] — the functionality hub this component sits under (its `## Applies to`
   carries the reciprocal link).
 
+
+^ATOM-0IT5-7SMY [desc:"the canonical column value is 'complete', NOT 'completed' — and a validate gated with ';' lets an invalid card commit", keywords: column_completed_not_in_canonical_enum findtrdd_validate_failed_but_the_commit_went_through which_column_value_closes_a_trdd my_trdd_validation_failed_and_i_committed_anyway, ocd: 2026-08-02, lmd: 2026-08-02]
+
+**`column: complete`** — the canonical terminal value (`findtrdd.py:33` `KNOWN_COLUMNS`).
+**`completed` is REJECTED** by the validator, even though the IND rule text and the archival
+prose both use it; 3 archived cards carry the invalid value (pre-existing drift, and they are
+§12-frozen so they stay).
+
+**Gate the commit on validation with `&&`, never `;`:**
+
+```bash
+python3 scripts/prrd-trdd/findtrdd.py --validate "$FN" && git add "$FN"
+```
+
+Measured 2026-08-02: with `;` the validate printed `column='completed' not in canonical enum`
+and the commit proceeded anyway — an invalid card landed and needed an amend. The failure is
+silent in the only place it matters, because the exit code is discarded.
+
 ## Notes and lessons learned
 
 [^1]: [id:ATOM-TRDD-ID-IMMUTABLE, status:valid, keywords:"can_i_rename_a_trdd_id_to_make_it_conformant normalize_lowercase_ids_migration_pass 76_percent_of_the_board_is_non_conformant should_i_clean_up_the_ids", ocd:2026-07-22, lmd:2026-07-22]

@@ -41,6 +41,24 @@ the gate still green.
 The var is set BY `publish.py`, not left to a human to export: a guard nobody enables is not
 a guard. CI leaves it unset and keeps skipping.
 
+
+^ATOM-ETJG-U10G [desc:"local and remote can report the SAME version, so only git ancestry proves a commit reached the remote", keywords: my_resolution_cites_a_commit_nobody_else_can_see is_this_commit_actually_pushed local_and_remote_both_say_the_same_version how_do_i_prove_a_fix_reached_the_remote, ocd: 2026-08-02, lmd: 2026-08-02]
+
+**A version string cannot tell local from remote.** Measured 2026-08-02: both local `main` and
+`origin/main` reported `2.11.0` while 54 commits were local-only.
+
+The only reliable test:
+
+```bash
+git merge-base --is-ancestor <sha> origin/main   # false => local-only, unverifiable outside
+```
+
+**Do not cite a LOCAL-ONLY sha as evidence when closing an issue.** `main` is protected and
+`publish.py` is the only path to the remote, so a batch can sit unpushed for days. An outside
+reviewer opened `core#36` after catching exactly this twice — resolution claims citing commits
+nobody else could see. Wait for the publish, or say explicitly that the commit is not yet on
+the remote.
+
 ## Notes and lessons learned
 
 [^1]: [id:ATOM-998W-KR6T, status:valid, desc:"a version restated in a second page is a fact that will go stale silently — name the owning page instead", keywords:"the_docs_say_one_version_and_the_code_says_another my_architecture_page_still_cites_the_old_pin where_should_a_version_number_live two_pages_disagree_about_a_dependency_version stale_version_in_an_overview_page", ocd:2026-08-01, lmd:2026-08-01] DO NOT restate a pinned version number in an overview/hub page that another page already owns, BECAUSE nothing fails when the copy rots — `architecture.md` still read "pinned `@v3.5.0`" after two bumps (v3.5.0 -> v3.22.3 -> v4.2.1) and would have told the next reader to validate against a version this repo has not used since 2026-07-26. DO name the owning page ([[publish-and-validation-gate]]) and let the version live in exactly one place, next to the command that proves it.
