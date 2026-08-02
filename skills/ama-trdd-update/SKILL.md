@@ -67,6 +67,24 @@ Editing rules (self-check):
      single source of truth (mandatory once the TRDD spans >1 session).
    - **Bump `updated:`** to a fresh ISO datetime.
 
+   **If the edit widens what the card DOES, re-check `min-approval-requirement:`.**
+   The field names the TITLE required before the card may execute, on the ladder
+   `none < orchestrator < chief-of-staff < manager < user`; **an absent field means
+   `none` — self-approvable.** A card authored as own-scope work and later edited
+   into something cross-team, destructive, or credential-touching keeps its original
+   `none` unless you raise it, so the widening silently escapes the approval it now
+   needs. Raise the rung in the same edit that widens the scope, not afterwards.
+
+   Two spellings to get right, because both fail silently:
+   - **`user` is canonical; `maestro` is a deprecated READ-alias** — normalize it on
+     read, never write it.
+   - **`approval-tier: N` is RETIRED** — decode a legacy number to its title
+     (`0→none, 1→chief-of-staff, 2→manager, 3→user`) and rewrite it as the title.
+
+   The authoritative rung semantics are DEP, not CORE's — see
+   [approval-tiers-and-zones](../ama-trdd-transition/references/approval-tiers-and-zones.md)
+   and ai-maestro's `aimaestro-trdd-approval.md`.
+
 3. Validate the frontmatter still satisfies the grep-first invariants, then
    commit by name:
 

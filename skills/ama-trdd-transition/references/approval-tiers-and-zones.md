@@ -86,6 +86,19 @@ and that is also what an ABSENT field means: a `none` task is authored directly 
 > `0→none, 1→chief-of-staff, 2→manager, 3→user` and rewrite it to the title.
 > `orchestrator` has no number: a 4-value numeric field structurally cannot express
 > it, which is exactly why the scheme was retired.
+>
+> **`user` is the canonical top rung. `maestro` is a deprecated READ-alias only.**
+> Accept `maestro` when READING a legacy card, normalize it to `user`, and **never
+> write it**. Two live spellings of the same rung silently break
+> `authority(mandated-by) >= authority(min-approval-requirement)` — the
+> highest-stakes comparison in the system — because an unrecognized spelling does not
+> compare equal to the rung it means. A card that says `maestro` is not "approved at
+> the top"; it is a card whose top-rung requirement may fail to match a genuine
+> top-rung approval.
+
+**`orchestrator` is NARROWER than `chief-of-staff`, not a synonym.** It covers only
+the dispatch subset — assignment, priority, sequencing **inside its own team**. Do
+not treat an orchestrator approval as satisfying a `chief-of-staff` requirement.
 
 **The authoritative rung semantics live in the ai-maestro DEP overlay, not here.**
 Per the 3-pillars SPEC `3P-BND-02`, `min-approval-requirement` / approval tiers /
