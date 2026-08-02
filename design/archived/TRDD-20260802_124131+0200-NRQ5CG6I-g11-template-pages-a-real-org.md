@@ -1,16 +1,40 @@
 ---
 trdd-id: NRQ5CG6I
 title: PRRD G1.1's mandated self-ID line pages a real third-party GitHub organization
-column: proposal
+column: complete
 created: 2026-08-02T12:41:31+0200
-updated: 2026-08-02T12:41:31+0200
+updated: 2026-08-02T13:02:00+0200
 current-owner: core-session
 task-type: security
 min-approval-requirement: user
+approved: true
 relevant-rules: [1]
+implementation-commits: [acbea84]
 npt: []
 eht: []
 ---
+
+## Approval log
+
+- 2026-08-02 — **APPROVED by USER** (min-approval-requirement: user). Directive, verbatim:
+  *"when writing in github issues and comments never use the `@<name>` syntax outside of a
+  code block, since it triggers paging of other users! Someone paged a `@manager` user and a
+  `@janitor` user by error!"* — the USER stated the governing rule, which both authorizes the
+  golden-rule edit and settles the A/B/C choice in favour of backticking. Executed in
+  `acbea84`: G1.1 → **G1.2**, handle pre-substituted and backticked, prohibition written into
+  the rule, all 7 citations re-pinned, executable guard added.
+
+## Resolution — what shipped
+
+Two handles beyond the two this card originally found were also being paged
+(`@manager`, `@janitor`, reported by the USER). **All six AI Maestro role names resolve to
+real GitHub accounts** — `@manager`/`@janitor` are Users, `@owner`/`@role`/`@core`/
+`@orchestrator` are Organizations — so the exposure was the whole role vocabulary, not two
+placeholders.
+
+`tests/test_no_bare_github_mentions.py` makes it executable, and **caught its own author
+within minutes**: writing the warning into `team-governance/SKILL.md` I typed an illustrative
+bare `@manager` in prose. Knowing the rule is demonstrably not sufficient.
 
 # G1.1's template literal `@owner` pages a real GitHub organization
 
