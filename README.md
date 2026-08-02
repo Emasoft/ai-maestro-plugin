@@ -68,10 +68,8 @@ are documented in the table below.
 | `agent-messaging`               | AMP inter-agent messaging                    |
 | `agent-repo-workflow`           | Agent repo/branch/PR + task done/blocked     |
 | `debug-hooks`                   | Hook debugging utilities                     |
-| `docs-search`                   | Documentation search                         |
-| `graph-query`                   | Code graph querying                          |
 | `mcp-discovery`                 | MCP server discovery                         |
-| `memory-search`                 | Conversation memory search                   |
+| `memory-search`                 | Wiki-memory recall via memgrep               |
 | `network-security`              | Network security checks                      |
 | `planning`                      | Task planning (persistent files)             |
 | `ama-prrd-get`                  | Read a PRRD rule by number (any role)        |
@@ -84,6 +82,9 @@ are documented in the table below.
 | `ama-trdd-transition`           | Move a TRDD between columns (matrix-enforced)|
 | `ama-kanban-render`             | Render the design/spec board (read-only)     |
 | `ama-proposal-approvals`        | Batch approve/refuse/archive (MANAGER-gated) |
+| `ama-trdd-server`               | TRDD dashboard: approve / search TRDDs       |
+| `ama-panel`                     | Push HTML to the agent's side panel          |
+| `ama-session`                   | Queue commands / answer pending prompts      |
 | `team-governance`               | Team governance and COS management           |
 | `team-kanban`                   | Team kanban boards and tasks                 |
 

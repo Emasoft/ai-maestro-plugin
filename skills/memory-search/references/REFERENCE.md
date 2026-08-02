@@ -156,8 +156,10 @@ memgrep index --markdown --write "${ROOTS[@]}"
 ## Combined Search Pattern
 
 For complete context on a topic, combine this skill with the code-structure
-tools (docs-search and graph-query are retired — see those skills' SKILL.md
-for their replacements):
+tools. (The former `docs-search` and `graph-query` skills are gone: the AI
+Maestro docs-indexing backend and the CozoDB graph backend were both retired
+permanently. Use the **tldr CLI** for code structure and the **codegraph MCP
+tools** for graph queries.)
 
 ```bash
 # 1. What did we LEARN about this? (curated notes — this skill)
