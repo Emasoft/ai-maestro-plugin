@@ -269,6 +269,12 @@ picks option (b) by accident and leaves two maintainers unaware.
   ecosystem runs the janitor's build. So #19 is no longer "accepted" — it is **pending**
   the ownership answer in `Emasoft/ai-maestro-janitor#122`, and under option (a) the crate
   leaves CORE and the warning disappears with it.
+  **✅ RESOLVED 2026-08-02 exactly as predicted: option (a) happened.** `ai-maestro#106`
+  ruled the janitor canonical, `6cceb62` removed the crate, and warning #19 disappeared
+  with it — there is no in-tree compile source left to warn about. `janitor#122` (the
+  ownership question this line was waiting on) is answered and closed. Note for the
+  record: `ai-maestro#106` was a DUPLICATE of `#122` that I filed without checking the
+  open one first; the ruling is sound, the process was not.
 - Warning counts: **28 triaged → 9 genuine · 13 false-positive · 6 cosmetic.**
 
 **SUPERSEDED — do NOT carry forward:**
