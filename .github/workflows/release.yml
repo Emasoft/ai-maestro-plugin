@@ -11,6 +11,8 @@ jobs:
     permissions:
       contents: write       # create/edit the GitHub Release + attach assets
       actions: read         # anchore/sbom-action needs this to attach the SBOM as a release asset
+      id-token: write       # attest-build-provenance: mint the OIDC token for the signed attestation
+      attestations: write   # attest-build-provenance: persist the build-provenance attestation
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
@@ -218,3 +220,20 @@ jobs:
           output-file: ai-maestro-plugin.cyclonedx.json
           artifact-name: ai-maestro-plugin.cyclonedx.json
           upload-release-assets: true
+
+      # Build-provenance attestation for the assets this release publishes.
+      # REGRESSION GUARD (2026-08-02): the ONLY attest-build-provenance step in
+      # this repo used to live in the build-memgrep job. Removing that job with
+      # the crate (6cceb62, ai-maestro#106) silently took CORE's provenance with
+      # it, while the release kept shipping validation-report.txt and the SBOM —
+      # caught by the janitor's provenance-audit as a MAJOR the same night.
+      # The lesson generalises: deleting a job deletes every CROSS-CUTTING
+      # control that happened to be hosted in it, not just the job's own
+      # purpose. Grep for the control, not for the feature, before removing.
+      # Runs LAST so both subject files exist in the workspace.
+      - name: Attest build provenance for release assets
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: |
+            validation-report.txt
+            ai-maestro-plugin.cyclonedx.json
