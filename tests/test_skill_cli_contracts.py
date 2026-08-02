@@ -31,6 +31,7 @@ D3  NOTHING a skill teaches is ever executed. Every check is static against --he
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -140,6 +141,32 @@ def _help_text(cli: str) -> str:
     return proc.stdout + proc.stderr
 
 
+def _require_cli(cli: str) -> None:
+    """Absent CLI: FAIL where absence is anomalous, SKIP where it is expected.
+
+    The card's criterion said "fail loudly, never skip silently", and the hazard is real --
+    a skipped contract is a green that verified nothing. But CI (ci.yml, release.yml) runs
+    on a runner with NO ai-maestro install, so an unconditional failure would redden every
+    run permanently and be suppressed within a day.
+
+    So the environment decides. `publish.py`'s G4 gate sets AIMAESTRO_CLI_REQUIRED=1,
+    because publish runs on a developer machine where these CLIs DO exist -- there, a skip
+    means the install broke, and shipping skills whose taught flags were never verified is
+    exactly what this suite exists to prevent. Set it locally too if you want the strict
+    behaviour. The reason string always names the CLI, so neither branch is ever silent.
+    """
+    if shutil.which(cli) is not None:
+        return
+    reason = f"{cli} is not on PATH -- install ai-maestro to run this contract"
+    if os.environ.get("AIMAESTRO_CLI_REQUIRED") == "1":
+        pytest.fail(
+            f"AIMAESTRO_CLI_REQUIRED=1 but {reason}. This contract cannot verify anything, "
+            f"and passing it as a skip would ship skills whose taught flags were never "
+            f"checked. Fix the install, or unset AIMAESTRO_CLI_REQUIRED to allow skipping."
+        )
+    pytest.skip(reason)
+
+
 def _teachings(cli: str) -> dict[Path, list[tuple[str | None, set[str]]]]:
     out: dict[Path, list[tuple[str | None, set[str]]]] = {}
     for skill in sorted(SKILLS_DIR.glob("*/SKILL.md")):
@@ -152,8 +179,7 @@ def _teachings(cli: str) -> dict[Path, list[tuple[str | None, set[str]]]]:
 @pytest.mark.parametrize("cli", FROZEN_CLIS)
 def test_every_flag_a_skill_teaches_is_advertised_by_the_cli(cli: str) -> None:
     """D2: each long flag taught for `cli` appears somewhere in that CLI's --help."""
-    if shutil.which(cli) is None:
-        pytest.skip(f"{cli} is not on PATH -- install ai-maestro to run this contract")
+    _require_cli(cli)
     help_text = _help_text(cli)
     assert help_text.strip(), f"{cli} --help produced nothing; cannot verify anything"
 
@@ -173,8 +199,7 @@ def test_every_flag_a_skill_teaches_is_advertised_by_the_cli(cli: str) -> None:
 @pytest.mark.parametrize("cli", FROZEN_CLIS)
 def test_every_subcommand_a_skill_teaches_is_advertised_by_the_cli(cli: str) -> None:
     """A renamed/removed subcommand is the loudest way a frozen CLI can break a skill."""
-    if shutil.which(cli) is None:
-        pytest.skip(f"{cli} is not on PATH -- install ai-maestro to run this contract")
+    _require_cli(cli)
     help_text = _help_text(cli)
 
     missing: list[str] = []

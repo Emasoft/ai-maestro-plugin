@@ -1,12 +1,13 @@
 ---
 trdd-id: YIOTS27H
 title: Design a behavioural test runner for skills and commands — structural contracts cannot catch a skill that teaches the wrong thing
-column: dev
+column: complete
 created: 2026-08-02T11:41:53+0200
-updated: 2026-08-02T11:58:00+0200
+updated: 2026-08-02T12:31:00+0200
 current-owner: core-session
 task-type: spike
 min-approval-requirement: none
+implementation-commits: [3c6e5a8, fa8430a]
 npt: []
 eht: []
 ---
@@ -15,14 +16,28 @@ eht: []
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-02
 
-**Shipped and green.** `tests/test_skill_cli_contracts.py` — 15 tests, suite **267** passing,
-ruff clean, both contracts falsified by mutation. Three of four acceptance boxes are met as
-written; the second is met **with two recorded deviations** (read "Deviations" — the boxes
-alone will mislead you).
+**COMPLETE.** `tests/test_skill_cli_contracts.py` — 15 tests, suite **276** passing, ruff
+clean, both contracts falsified by mutation. All four acceptance boxes met. Deviation 1 is
+RESOLVED (below); deviation 2 is a permanent, reasoned substitution.
 
-**NEXT ACTION — one decision, not code:** answer whether `AIMAESTRO_CLI_REQUIRED=1` should
-convert the environment skips into hard failures for local/pre-push runs. CI cannot ever hard-
-fail these (no AI Maestro on the runner). Until that is answered the card stays in `dev`.
+**NEXT ACTION — none. Do not reopen.** The one remaining question (skip-vs-fail) was decided
+on evidence rather than deferred to the owner, because `publish.py`'s G4 gate is MANDATORY,
+runs on a developer machine where all 6 CLIs exist, and blocks only on *failures* — never on
+skips. A broken install at publish time would therefore have shipped skills whose taught flags
+were never verified, with the gate still green. That is the exact hazard this card named, on
+the release path.
+
+**Resolution — `AIMAESTRO_CLI_REQUIRED=1`, set by `publish.py` itself** (not an env var a
+human must remember; a guard nobody enables is not a guard). Three branches, each measured:
+
+| environment | behaviour | proof |
+|---|---|---|
+| CLIs present | all contracts run | 15 passed |
+| CLIs absent, var unset (CI) | 12 skip, **3 never-skipped guards still run** | 3 passed, 12 skipped |
+| CLIs absent, var=1 (publish) | hard failure | 12 failed, 3 passed |
+
+Measured by stripping `~/.local/bin` from PATH (`uv` lives in `/opt/homebrew/bin`, so the
+runner itself is unaffected).
 
 **Load-bearing gotchas, in the order they will bite you:**
 - The extractor's `lstrip()` on fences is **not cosmetic** — anchoring at column 0 makes an
@@ -166,7 +181,13 @@ it was the sole reason a marker was needed, and it buys little over (1)–(3).
 
 ## Deviations from the acceptance criteria (do NOT read the boxes above without these)
 
-**1. "failing loudly when a CLI is absent" → implemented as SKIP with a named reason.**
+**1. ~~"failing loudly when a CLI is absent" → implemented as SKIP~~ — RESOLVED 2026-08-02.**
+The criterion is now met as written, in the environment where absence is anomalous: `publish.py`
+G4 sets `AIMAESTRO_CLI_REQUIRED=1`, which converts the skips into hard failures; CI leaves it
+unset and still skips. Both branches falsified (table in STATE). The original reasoning is kept
+below because it explains why an unconditional failure was, and remains, wrong.
+
+**1a. (superseded) The original deviation:**
 CI (`ci.yml:223`, `release.yml:133`) runs `pytest tests/` on a runner with **no AI Maestro
 install**, so a hard failure would redden every CI run permanently and be suppressed inside a
 day — strictly worse than the skip it replaced. Implemented instead as the repo's existing
@@ -174,8 +195,8 @@ convention (`shutil.which(...) is None` → skip, matching `test_ai_maestro_hook
 the CLI **named** in the reason so it is never silent, PLUS
 `test_the_extractor_actually_extracts` and the two leak tests, which **never skip** and fail
 if the extractor stops finding known-shipped invocations. That closes the real hazard the
-criterion was aimed at — a vacuous green — without the CI cost. **Open for the owner: should
-a `AIMAESTRO_CLI_REQUIRED=1` env var turn the skips into hard failures for local/pre-push runs?**
+criterion was aimed at — a vacuous green — without the CI cost. ✅ **Answered above: the env
+var was built and wired into `publish.py`, so the strict branch fires where it matters.**
 
 **2. Check (3) "exit codes reachable" → implemented as SUBCOMMAND presence.**
 "Every documented exit code is reachable per `--help`" is not decidable from `--help` text —
