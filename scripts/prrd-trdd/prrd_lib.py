@@ -134,9 +134,7 @@ def parse_prrd(path: Path | None = None) -> PRRDDoc:
 
 # ───────────────── TRDD parsing ─────────────────
 
-TRDD_FILENAME_RE = re.compile(
-    r"TRDD-(?P<ts>[\d_+\-]+)-(?P<uid8>[0-9a-fA-F]{8})-(?P<slug>[^.]+)\.md$"
-)
+TRDD_FILENAME_RE = re.compile(r"TRDD-(?P<ts>[\d_+\-]+)-(?P<uid8>[0-9a-fA-F]{8})-(?P<slug>[^.]+)\.md$")
 
 
 @dataclass
@@ -306,9 +304,7 @@ def _coerce_yaml_value(val: str) -> Any:
             items.append(_coerce_yaml_value(raw))
         return items
     # quoted string
-    if (s.startswith('"') and s.endswith('"')) or (
-        s.startswith("'") and s.endswith("'")
-    ):
+    if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
         return s[1:-1]
     # int?
     if re.fullmatch(r"-?\d+", s):
@@ -353,13 +349,35 @@ def write_prrd(doc: PRRDDoc, path: Path | None = None) -> None:
     Rules are sorted by number ascending within each section. The
     rest of the file body (non-rule lines) is preserved AS-IS via the
     raw_lines, with the rule lines re-rendered in place.
+
+    ATOMIC by temp+rename (#54). `render_prrd` re-emits the WHOLE document, so
+    the previous `write_text` truncated the target first: a crash, a full disk,
+    or a SIGKILL mid-write left the project's constitution PARTIALLY ERASED
+    rather than one rule wrong. Three details carry that guarantee and none is
+    incidental — the temp is a SIBLING so it shares a filesystem (`os.replace`
+    is atomic only within one), the fsync precedes the rename so the bytes are
+    durable before the name points at them, and the `finally` unlink is a no-op
+    after a successful replace but removes the temp on any failure path.
+
+    STILL UNLOCKED. Concurrent writers remain last-writer-wins over a full
+    re-emission, so the loser's rule disappears silently. That half of #54 needs
+    a lockdir string agreed byte-for-byte with the other writer and is NOT fixed
+    here; do not assume this function serialises anything.
     """
     p = path or doc.path or prrd_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     # We rewrite the GOLDEN and SILVER sections from doc.rules; other
     # sections (overview, §0, etc.) are preserved by walking raw_lines.
     # For simplicity, we delegate full re-emission via render_prrd().
-    p.write_text(render_prrd(doc), encoding="utf-8")
+    tmp = p.with_name(f"{p.name}.tmp.{os.getpid()}")
+    try:
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(render_prrd(doc))
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, p)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def render_prrd(doc: PRRDDoc) -> str:
@@ -438,9 +456,7 @@ def _render_yaml_value(v: Any) -> str:
         return "[" + ", ".join(_render_yaml_value(x) for x in v) + "]"
     s = str(v)
     # Quote only if the string contains characters that would confuse the parser
-    if any(ch in s for ch in (":", "#")) and not (
-        s.startswith('"') or s.startswith("'")
-    ):
+    if any(ch in s for ch in (":", "#")) and not (s.startswith('"') or s.startswith("'")):
         return f'"{s}"'
     return s
 
@@ -486,9 +502,7 @@ def _render_rule_line(r: PRRDRule) -> str:
     return f"- **{r.kind}{r.number}.{r.version}** — {r.text}"
 
 
-def _find_section_bounds(
-    lines: list[str], section_marker: str
-) -> tuple[int | None, int | None]:
+def _find_section_bounds(lines: list[str], section_marker: str) -> tuple[int | None, int | None]:
     """Find the index of the section header line containing `section_marker`,
     plus the index of the NEXT `## ` header (or EOF). Returns (start, end)
     where lines[start] is the header and lines[end] is the next header (or len).
