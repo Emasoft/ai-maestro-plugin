@@ -59,7 +59,29 @@ reviewer opened `core#36` after catching exactly this twice — resolution claim
 nobody else could see. Wait for the publish, or say explicitly that the commit is not yet on
 the remote. [^2]
 
+
+^ATOM-LIRS-K5Y5 [desc:"Mega-Linter lints only files changed vs the default branch, so a push TO main lints an EMPTY set and passes trivially while PRs inherit every latent finding in the files they touch.", keywords: ci_is_green_on_main_but_every_pr_fails_lint pr_fails_for_code_i_did_not_write megalinter_validate_all_codebase_false_changed_files_only local_publish_gate_passes_then_ci_goes_red why_main_never_catches_lint_errors, ocd: 2026-08-04, lmd: 2026-08-04]
+
+`.mega-linter.yml` sets `VALIDATE_ALL_CODEBASE: false`, so Mega-Linter lints only what changed
+against the default branch. On a push to `main` that set is EMPTY — it lints nothing and the Lint
+job passes trivially. On a PR it diffs against `main` and lints whatever that PR touches, so a
+one-line dependabot bump to `ci.yml` inherits every pre-existing finding in `ci.yml`. **Main is
+structurally incapable of catching these; contributors always do.** Measured 2026-08-04: 19 unique
+cspell errors (`anchore`, `PIPESTATUS`, `syft`, `Emasoft`, …) lived in `.github/workflows/` through
+many green main builds and surfaced only on dependabot PRs.
+
+The repo had already learned this for a DIFFERENT linter and written it into the same file:
+`PYTHON_BANDIT_ARGUMENTS` carries the note that this setting "hides the noise until someone edits a
+Python file — and then their PR fails CI for code they did not write (49 of the 57 findings on the
+PR that added this line predate it)". Nobody generalised it to `SPELL_CSPELL`. When a linter is
+added to `ENABLE_LINTERS`, sweep the whole tree with it ONCE and fix or dictionary the backlog,
+because the setting guarantees the backlog lands on whoever next edits the file.
+
+`publish.py` cannot substitute: it lints `scripts/` with ruff+mypy only. Workflow YAML, spelling,
+copy-paste and shell are CI's job, so a clean local publish says nothing about them. [^3]
+
 ## Notes and lessons learned
 
 [^1]: [id:ATOM-998W-KR6T, status:valid, desc:"a version restated in a second page is a fact that will go stale silently — name the owning page instead", keywords:"the_docs_say_one_version_and_the_code_says_another my_architecture_page_still_cites_the_old_pin where_should_a_version_number_live two_pages_disagree_about_a_dependency_version stale_version_in_an_overview_page", ocd:2026-08-01, lmd:2026-08-01] DO NOT restate a pinned version number in an overview/hub page that another page already owns, BECAUSE nothing fails when the copy rots — `architecture.md` still read "pinned `@v3.5.0`" after two bumps (v3.5.0 -> v3.22.3 -> v4.2.1) and would have told the next reader to validate against a version this repo has not used since 2026-07-26. DO name the owning page ([[publish-and-validation-gate]]) and let the version live in exactly one place, next to the command that proves it.
 [^2]: [id:ATOM-2LQ6-O5ZA, status:valid, desc:"mark a local sha AS local at the point of citation — knowing the rule did not stop me repeating it three times in one day", keywords:"i_cited_a_sha_nobody_can_fetch gh_api_commits_returns_422_no_commit_found they_cannot_see_the_commit_i_referenced how_should_i_cite_an_unpushed_commit my_memory_had_the_rule_and_i_broke_it_anyway", ocd:2026-08-02, lmd:2026-08-02] DO NOT cite a bare sha as evidence while the delivery gate is held, and DO NOT rely on REMEMBERING that rule, BECAUSE a bare sha reads as a promise the reader can verify — and the correct next step ("fetch it and check") silently cannot be taken, so the fallback is to trust the citation. Measured 2026-08-02: a peer ran `gh api repos/…/commits/07db70e` → **422 No commit found** and checked three repos before concluding it was a delivery gap, not a typo; **all SIX shas I cited that day were local-only**, and I had authored the atom above warning about this a few hours earlier. It did not fire because I wrote it about CLOSING issues and then cited shas in *discussion* — a rule scoped to one surface does not generalize itself. DO write the marker INTO the citation — `07db70e (local, unpushed)` — which is mechanical, needs no recall, and distinguishes "not fetched yet" from "not fetchable"; the peer proposed it after making the identical mistake, which is how a convention beats a memory.
+[^3]: [id:ATOM-L3C0-JQGE, status:valid, desc:"A fail-fast job reveals its next defect only after the previous one is fixed — so N red causes look like N regressions.", keywords:"i_fixed_the_ci_failure_and_a_new_one_appeared does_each_fix_cause_the_next_failure cheap_fail_first_job_aborts_before_later_steps three_red_causes_stacked_in_one_job is_the_job_clean_after_one_green_step", ocd:2026-08-04, lmd:2026-08-04] DO NOT read "I fixed it and now something ELSE fails" as having caused a regression, BECAUSE a cheap-fail-first job aborts at its first failing step, so every later step's defects are invisible until that one is green: on 2026-08-04 the Lint job hid three independent, all pre-existing causes behind each other — actionlint SC2086, then Commitlint's rejected `deps:` prefix, then 19 cspell words — and each fix looked like it broke the next thing. DO expect a fail-fast pipeline to reveal defects one at a time, budget for several rounds rather than one, and confirm a job is CLEAN by reading every step's status, never by seeing the previously-failing step turn green.
