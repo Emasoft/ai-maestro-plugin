@@ -280,7 +280,13 @@ tier check — are `ama-trdd-find` / `ama-trdd-write` / `ama-trdd-update` /
 - `Skill(skill: "ama-trdd-find")` — find a TRDD in the local `design/`
   corpus (the source of truth).
 - `Skill(skill: "ama-trdd-transition")` — the four zones + the `min-approval-requirement:`
-  ladder + the objective requirement-floor (approval-tiers-and-zones) the write verbs enforce.
+  ladder + the objective requirement-floor the write verbs enforce, in
+  [approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md):
+  - [A. The four design zones](#a-the-four-design-zones)
+  - [B. The `proposal → planned` lifecycle](#b-the-proposal--planned-lifecycle)
+  - [C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay)](#c-the-min-approval-requirement-field-rung-semantics-defer-to-the-dep-overlay)
+  - [D. Single-writer-per-domain (collision avoidance)](#d-single-writer-per-domain-collision-avoidance)
+  - [Batch approval syntax (the fast path)](#batch-approval-syntax-the-fast-path)
 - `Skill(skill: "ama-trdd-transition")` — move a TRDD between columns
   locally, with the full transition matrix (the local counterpart to
   `promote`).
