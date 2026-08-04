@@ -85,6 +85,8 @@ Editing rules (self-check):
    [approval-tiers-and-zones](../ama-trdd-transition/references/approval-tiers-and-zones.md)
    and ai-maestro's `aimaestro-trdd-approval.md`.
 
+   > Contents · A. The four design zones · B. The `proposal → planned` lifecycle · C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay) · D. Single-writer-per-domain (collision avoidance) · Batch approval syntax (the fast path)
+
 3. Validate the frontmatter still satisfies the grep-first invariants, then
    commit by name:
 
