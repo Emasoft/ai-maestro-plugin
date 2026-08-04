@@ -1,0 +1,18 @@
+# Governance artifacts are records, not shipped documentation.
+#
+# design/ holds TRDDs and the PRRD. Terminal TRDDs (column: complete / published /
+# superseded / cancelled) are FROZEN by the TRDD rules — their bodies must not be
+# edited after the transition that closed them, because they are the audit trail of
+# what was decided and when. Linting a file that may not be edited produces findings
+# that can never be cleared, which is the definition of a check that cannot pass: it
+# blocks the publish gate forever and trains everyone to bypass the gate.
+#
+# The PRRD is written by prrd-edit.py, not by hand, so its layout is the tool's to
+# decide and a hand-fix here would be reverted on the next rule edit anyway.
+design/
+
+# Regeneratable or private, never shipped.
+reports/
+reports_dev/
+.trashcan/
+node_modules/
