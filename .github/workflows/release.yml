@@ -122,9 +122,9 @@ jobs:
             echo "::error::tee failed (exit $tee_rc) -- validation-report.txt is unreliable"
             exit 1
           fi
-          if [ $exit_code -ge 1 ] && [ $exit_code -le 4 ]; then
+          if [ "$exit_code" -ge 1 ] && [ "$exit_code" -le 4 ]; then
             echo "::error::Validation failed with exit code $exit_code (CRITICAL/MAJOR/MINOR/NIT found)"
-            exit $exit_code
+            exit "$exit_code"
           fi
 
       - name: Run tests
