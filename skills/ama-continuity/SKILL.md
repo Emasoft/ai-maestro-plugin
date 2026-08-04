@@ -1,7 +1,7 @@
 ---
 name: ama-continuity
 user-invocable: false
-description: "Read this host's rate-limit and cache health, and keep the agent's own session alive, via the frozen aimaestro-continuity.sh CLI — the 5h/7d window percentages, cache TTL, and a next_action recommendation, plus idempotent self-resume and self-restart. Use before launching a long batch or agent fan-out, when a session may have stalled on a rate limit, or to decide whether there is budget to continue. Trigger with 'how much of my rate-limit window is left', 'am I about to hit the 5h cap', 'make sure I'm resumed', 'restart my own session'. R42 self-only: these verbs act on the CALLER, never on another agent. Loaded by ai-maestro-plugin"
+description: "Read this host's rate-limit and cache health, and keep the agent's own session alive, via the frozen aimaestro-continuity.sh CLI — the 5h/7d window percentages, cache TTL, and a next_action recommendation, plus idempotent self-resume and self-restart. Use before launching a long batch or agent fan-out, when a session may have stalled on a rate limit, or to decide whether there is budget to continue. Trigger with 'how much of my rate-limit window is left', 'am I about to hit the 5h cap', 'make sure I'm resumed', 'restart my own session'. R42 self-only. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-continuity.sh:*), Bash(aid-auth.sh:*), Bash(jq:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"

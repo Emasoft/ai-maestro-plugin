@@ -79,19 +79,14 @@ authorization dimension, prefer the local-file skills; reach for these
 server verbs when the tier matrix, the signed token, or the dashboard
 mirror is the point.
 
-## The write verbs — exact signatures (frozen, from SCRIPT-MANIFEST.md)
+## The write verbs — exact signatures
 
-| Verb | Signature | Effect |
-|---|---|---|
-| `edit <id>` | `--set k=v` (repeatable) | mutate frontmatter **in place**, no folder move |
-| `approve <id>` | `--approver W --tier N --rationale R` | proposal → planned; `git mv proposals/ → tasks/`; mints the signed token |
-| `refuse <id>` | `--approver W --tier N --reason R` | → `refused/` |
-| `promote <id> --column C` | `[--note N] [--approver W]` | advance the card in place to column `C` |
-| `archive <id> --state S` | `[--reason R] [--superseded-by ID] [--approver W]` | `S` ∈ `completed \| cancelled \| superseded` — **refuses `failed`** |
+The frozen signature table and flag semantics live in
+[references/write-verb-signatures.md](references/write-verb-signatures.md):
 
-`--approver W` names the approving authority; `--tier N` is the tier being
-exercised (which must meet the card's `min-approval-requirement:`). Global
-`--agent <uuid|name>` operates on that agent's `<workdir>/design` corpus.
+- [Signatures](#signatures)
+- [Flag semantics](#flag-semantics)
+
 Nothing is committed for you.
 
 ## The read verbs

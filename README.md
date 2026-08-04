@@ -114,9 +114,9 @@ degrades to plain `grep` without it.
 CORE used to vendor its own copy and ship rival binaries; ownership was ruled to
 the janitor in [ai-maestro#106](https://github.com/Emasoft/ai-maestro/issues/106)
 and CORE's copy was removed. It was a strict subset — no `validate`, `lint`,
-`new-page`, `add-atom`, `add-lesson` — published under the same binary name and the
-same `version = "0.1.0"`, so whichever build landed last silently decided whether
-the machine-wide memory protocol could run.
+`new-page`, `add-atom`, `add-lesson` — published under the same binary name and an
+identical `version` string (0.1.0 on both), so whichever build landed last silently
+decided whether the machine-wide memory protocol could run.
 
 ## AMP Commands (Agent Messaging Protocol)
 
