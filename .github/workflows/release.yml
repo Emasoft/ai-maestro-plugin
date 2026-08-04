@@ -58,7 +58,7 @@ jobs:
         # the warm ~/.cache/cpv the Release validate ran COLD and timed out). The
         # workflow fires ONLY on an owner tag push (never a fork PR), so there is
         # no untrusted-writer path to poison it; the key hashes .cpv-self-hashes.json.
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/cpv
           key: cpv-scan-cache-${{ runner.os }}-${{ hashFiles('**/.cpv-self-hashes.json') }}
