@@ -2,86 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [3.0.0] — 2026-08-04
+## [3.0.1] — 2026-08-04
 
 ### Bug Fixes
 
-- Bump CPV pin v3.5.0 -> v3.22.3; stream the validate log (CPV#180, TRDD-546UDAZF)
-- Assert memgrep ships README.md, not the renamed SKILL.md
-- Read CPV's verdict via PIPESTATUS[0], not $? or pipefail (CPV#180)
-- Glob every design/ zone, not just tasks/, when locating a TRDD
-- Bump the pin v3.22.3 -> v4.2.1 at all 3 sites (TRDD-546UDAZF)
-- D2 — a skill's description must match its declared surface (TRDD-546UDAZF)
-- D4 — adopt canon's markdownlint config; fix a table row that dropped its own text
-- Restore build-provenance attestation — removing build-memgrep took it with the crate
-- Teach min-approval-requirement in ama-trdd-update; pin user-vs-maestro (core#32)
-- G1.1 -> G1.2 — a bare @<name> in a GitHub body pages a real user
-- An UNTERMINATED fence is prose, not an exempt zone
-- Write_prrd is atomic — a failed write no longer truncates the PRRD ([#54](https://github.com/Emasoft/ai-maestro-plugin/issues/54))
-- Clear the four MAJORs blocking the publish validate gate
-- Embed the approval-tiers TOC — the MINOR does block --strict
-- Embed the approval-tiers TOC in the file that actually has the finding
-
-### Documentation
-
-- Record the CI Validate timeout found publishing v2.11.0 (TRDD-546UDAZF)
-- Rename SKILL.md -> README.md; it was never a loadable skill (audit MINOR-1)
-- CORE publishes a memgrep that cannot index lesson atoms (TRDD-546UDAZF)
-- Retract the 'CORE hosts memgrep' premise behind warning #19 (TRDD-546UDAZF)
-- CI timeout root-caused + the memgrep tickets were false positives (TRDD-546UDAZF)
-- #93 premise re-confirmed first-hand; PIPESTATUS supersedes pipefail (TRDD-546UDAZF)
-- Memgrep is THREE copies at three schema levels, not two (TRDD-546UDAZF)
-- 13 terminal cards blocked, not 6 — my correction was the error (TRDD-546UDAZF)
-- Say GATED, not BLOCKED — 'blocked' is a reserved column (TRDD-546UDAZF)
-- Archive 12 terminal cards as themselves per the ai-maestro#93 ruling
-- Record the ai-maestro#93 archival ruling and the 12-not-13 count
-- The ai-maestro#97 spec pointer works and currently reports a false green
-- The publish gate is red because archiving is scanned and tasks/ is not (CPV#184)
-- The protected stash moved to {1} — name it by message, never by index
-- Strike the duplicate backlog line; 3 NITs cannot reach the artifact
-- Measure the skill test-coverage gap instead of calling it "thin"
-- CPV#184 resolved — pin at v4.2.1, gate measured green (TRDD-546UDAZF)
-- PROJECT page for the publish/validate gate + correct a stale pin (TRDD-546UDAZF)
-- Teach trddgrep in ama-trdd-find, with the exit-code trichotomy (core#51)
-- Drop the phantom >=0.58.0 constraint from the architecture hub
-- D3's --version smoke check cannot fail on the defect it exists for (core#52)
-- D1/D2/D4 resolved under standing authority; D3 blocked on ai-maestro#106 (TRDD-546UDAZF)
-- Lead the STATE block with what is OPEN, and keep an issue ref out of blocked-by
-- CORE consumes memgrep, it does not host it (ai-maestro#106)
-- 202CCFA2's cross-repo split is inverted by the ownership ruling
-- D3 is obsolete in CORE — the ownership move took what its gate would build
-- Warning #19 resolved exactly as this card predicted; record the duplicate-filing error
-- Close TRDD-546UDAZF as complete with its implementation commits
-- Surface aid-maestro-token in agent-identity; README + architecture to 28 skills (core#31)
-- Add TRDD-YIOTS27H — behavioural skill-test runner
-- Record the 3-layer skill test architecture + the publish CLI gate
-- Propose TRDD-NRQ5CG6I — G1.1's template literal pages a real GitHub org
-- TRDD-NRQ5CG6I — @role is a REAL org too, and it fired minutes ago
-- Close TRDD-NRQ5CG6I complete — USER directive approved and executed (acbea84)
-- Harvest session state before /clear (link-only handoff)
-- Mark local shas AT the citation — the rule alone did not hold
-
-### Features
-
-- D1 — remove the two RETIRED skills and make the README table exact (TRDD-546UDAZF)
-- Stop shipping memgrep — the janitor owns it (ai-maestro#106)
-- Cover aimaestro-portfolio + aimaestro-continuity (core#31)
-- Cover aimaestro-settings + aimaestro-statusline (core#31)
-- AIMAESTRO_CLI_REQUIRED makes absent-CLI a hard failure at publish (TRDD-YIOTS27H)
-- Skills must INSTRUCT the API boundary, not merely avoid breaking it (core#11)
-
-### Miscellaneous Tasks
-
-- Untrack the stale root validation-report.md + fix-log.md (audit MINOR-4)
-- Stop markdownlinting design/ — frozen TRDDs cannot be fixed
-- Disable MD004/MD012/MD028 — every hit is in a frozen file
-
-### Testing
-
-- Contract tests for all 28 skills + 14 commands (174 -> 252)
-- Behavioural CLI contracts — taught flags/subcommands must exist (TRDD-YIOTS27H)
-- Make the no-direct-API iron rule executable (core#11)
-- An EMITTER fence is scanned, not exempt (ai-maestro#109)
-- Lock the Claude Code contracts a plugin breaks SILENTLY
+- Quote $exit_code in release.yml — actionlint SC2086 turned CI red
 ---
 *Generated by [git-cliff](https://git-cliff.org)*
