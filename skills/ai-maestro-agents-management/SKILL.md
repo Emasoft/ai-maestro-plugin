@@ -87,7 +87,7 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
    - `plugin marketplace list|add|remove|update <agent> <source>`
    - `skill list|install|uninstall|add|remove <agent> <skill>`
 3. **Verify the result** by running `aimaestro-agent.sh show <agent>` or `list`.
-4. **CRITICAL:** Never hibernate+wake for config changes. Use graceful restart (send `/exit`, re-launch) for plugin changes. Use `update` for property changes (no restart needed). `config` is **read-only** — it never mutates anything; it's the one-call answer to "what is this agent's whole setup," not a setter.
+4. **CRITICAL:** Never hibernate+wake for config changes. For plugin changes use a graceful restart — `aimaestro-continuity.sh restart-self [--force]` for your own session (feature-detect it first), or `aimaestro-agent.sh restart <agent>` for another agent. `/exit` + relaunch is the fallback for a host whose installed CLI predates `restart-self`, not the primary path. Use `update` for property changes (no restart needed). `config` is **read-only** — it never mutates anything; it's the one-call answer to "what is this agent's whole setup," not a setter.
 5. **CRITICAL — self-configuration is always refused.** `config <agent>` is a read; it's fine on self. But **no agent may reconfigure itself** — role plugin, extensions, MCP, hooks, sub-agents, title, or team changes are refused on self for every title, MANAGER included (`TRDD-D3RP7KQZ`). Configuration changes on **another** agent go through this skill under the identity-immutability rules below (R26–R28) — never through `ama-session`'s terminal-drive verbs, which only reach an agent's own surface.
 
 ## Output
@@ -100,7 +100,7 @@ CLI returns formatted tables or JSON (`--format json`). API returns JSON. On suc
 - If API not responding: `pm2 restart ai-maestro`
 - If agent not found: check `aimaestro-agent.sh list` and `tmux list-sessions`
 - If plugin not loading after install: run `aimaestro-agent.sh restart <agent>`
-- Cannot restart own session: exit Claude Code (`/exit`), then run `claude` again
+- Restart own session: `aimaestro-continuity.sh restart-self [--force]` — it takes no target (the server derives the caller from its AID). Feature-detect it (`aimaestro-continuity.sh restart-self --help`) and only fall back to `/exit` + relaunch if the installed CLI lacks it; nothing propagates `scripts/*.sh` to `~/.local/bin` automatically (ai-maestro#56 §3)
 
 ## Examples
 

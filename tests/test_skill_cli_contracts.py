@@ -68,7 +68,18 @@ _SEPARATOR = re.compile(r"(?:\|\||&&|[|;&><#])")
 _CMD_SUBSTITUTION = re.compile(r"\$\([^()]*\)")
 
 # Flags that belong to the SHELL or to a placeholder, not to the CLI under test.
-_NOT_CLI_FLAGS = frozenset({"--"})
+#
+# `--help` is excluded because it is UNIVERSAL and conventionally NOT self-documented: a
+# CLI's help text lists the flags it accepts and almost never lists `--help` itself. So a
+# skill that teaches `<cli> <verb> --help` -- which is exactly how you feature-detect a verb
+# on a host whose installed copy may predate it -- would be reported as teaching a flag the
+# CLI does not advertise. Measured on aimaestro-continuity.sh: `--help` exits 0 and prints
+# 732 bytes, and the word `--help` appears 0 times in that output.
+#
+# Verified this is an extractor bug, not a doc bug, before excluding it -- the same check
+# this file's other comments describe. Deleting the `--help` from the skill would have made
+# the suite green while removing the one instruction that makes feature-detection possible.
+_NOT_CLI_FLAGS = frozenset({"--", "--help"})
 
 
 def _candidate_lines(text: str) -> list[str]:

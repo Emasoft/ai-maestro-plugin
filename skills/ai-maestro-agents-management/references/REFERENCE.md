@@ -77,7 +77,7 @@
 
 | Operation | Session Impact | Use Instead |
 |-----------|---------------|-------------|
-| Install/uninstall/switch plugin | Graceful restart (send `/exit`, re-launch `claude` in same session) | NEVER hibernate+wake |
+| Install/uninstall/switch plugin | Graceful restart: `restart-self` (own session) or `aimaestro-agent.sh restart <agent>`; `/exit` + relaunch only as the pre-`restart-self` fallback | NEVER hibernate+wake |
 | Update settings (task, model, tags, args) | No restart needed | Direct API/CLI update |
 | Change role plugin | Uninstall old, install new, graceful restart | NEVER hibernate+wake |
 | Rename agent | `tmux rename-session` (preserves session) | NEVER delete+recreate |
@@ -716,7 +716,9 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 
 **Plugin not loading:** `aimaestro-agent.sh plugin validate my-api /path` then restart.
 
-**Cannot restart self:** Exit Claude Code (`/exit` or Ctrl+C), then run `claude` again.
+**Restart self:** `aimaestro-continuity.sh restart-self [--force]`. It takes **no target** — the server derives the caller from `auth.agentId`, so an agent can only ever restart itself. It refuses while the agent still has running subagents; `--force` overrides. Shipped 2026-07-17 (`TRDD-4P1M8I18`).
+
+Feature-detect before relying on it — nothing propagates `scripts/*.sh` into `~/.local/bin` automatically, so an older host may lack the verb (ai-maestro#56 §3). Only if the probe fails is `/exit` + relaunch the fallback; do **not** teach that as the primary path, and never spawn a second `claude` against one transcript.
 
 ---
 
