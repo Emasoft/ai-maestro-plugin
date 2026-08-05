@@ -50,6 +50,21 @@ _TERMINAL_BUILTINS = frozenset(
     {"help", "feedback", "clear", "compact", "config", "model", "status", "resume", "login", "logout", "doctor"}
 )
 
+# Every hook event Claude Code dispatches, taken from the 2.1.222 binary's own event enum
+# rather than from docs -- docs lag, and this list decides whether a hook ever runs.
+# Refresh when a release adds events (the block is contiguous, starting at PreToolUse):
+#   strings -a "$(readlink "$(command -v claude)")" | grep -A18 -x 'PreToolUse'
+_KNOWN_HOOK_EVENTS = frozenset(
+    {
+        "PreToolUse", "PostToolUse", "PostToolUseFailure", "PostToolBatch", "PermissionDenied",
+        "Notification", "UserPromptSubmit", "UserPromptExpansion", "SessionStart", "SessionEnd",
+        "Stop", "StopFailure", "SubagentStart", "SubagentStop", "PreCompact", "PostCompact",
+        "PermissionRequest", "Setup", "TeammateIdle", "TaskCreated", "TaskCompleted",
+        "Elicitation", "ElicitationResult", "ConfigChange", "InstructionsLoaded", "CwdChanged",
+        "FileChanged", "DirectoryAdded", "MessageDisplay",
+    }
+)
+
 
 def _hook_entries() -> list[tuple[str, dict]]:
     """(event, hook-entry) for every hook this plugin registers."""
@@ -89,6 +104,34 @@ def test_hooks_json_and_handler_cases_agree_in_both_directions() -> None:
 
     assert not (events - cases - guarded), f"hooks.json events with no handler: {sorted(events - cases - guarded)}"
     assert not (cases - events), f"handler cases no event reaches: {sorted(cases - events)}"
+
+
+def test_every_registered_hook_event_is_one_claude_code_actually_dispatches() -> None:
+    """A hook on an event name Claude Code does not have is DEAD CONFIG, and it is silent.
+
+    The parity test above proves hooks.json and the handler agree with EACH OTHER. Both can
+    agree on a name the platform never dispatches -- a typo, or an event renamed by a
+    release. Nothing warns: registration succeeds, the handler is present and reachable in a
+    code read, and it simply never runs. That is indistinguishable from a handler whose
+    condition never matched, which is why it can sit dead for months.
+
+    Verified 2026-08-05 against 2.1.222: all 12 registered events are valid, so this locks a
+    passing state rather than reporting a defect. The 17 unused events are deliberate -- a
+    hook costs a process spawn on every occurrence, so coverage is a design choice, not a
+    completeness target. This test says nothing about which events SHOULD be registered.
+    """
+    declared = set(json.loads(HOOKS_JSON.read_text())["hooks"])
+    assert declared, "hooks.json registered no events at all -- this contract would pass vacuously"
+
+    unknown = sorted(declared - _KNOWN_HOOK_EVENTS)
+    assert not unknown, (
+        f"hooks.json registers {unknown}, which Claude Code does not dispatch. Either the name "
+        f"is a typo, or a release renamed the event -- in both cases the handler never runs and "
+        f"nothing reports it. Check the current enum with:\n"
+        f"  strings -a \"$(readlink \"$(command -v claude)\")\" | grep -A18 -x 'PreToolUse'\n"
+        f"If the event is genuinely new, add it to _KNOWN_HOOK_EVENTS; do NOT delete the hook "
+        f"to make this pass without confirming which of the two causes it is."
+    )
 
 
 def test_no_agent_name_contains_a_colon() -> None:
