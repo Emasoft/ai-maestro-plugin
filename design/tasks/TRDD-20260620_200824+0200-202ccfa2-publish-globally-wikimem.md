@@ -3,7 +3,7 @@ trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 column: planned
 created: 2026-06-20T20:08:24+0200
-updated: 2026-08-02T03:34:00+0200
+updated: 2026-08-05T09:28:51+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -90,8 +90,17 @@ at sync time and lives ONLY in the machine-local USER memdir (never committed).
 
 ~~**NEXT ACTION:** Phase 1 — read `scripts/memgrep/` to map CLI dispatch, frontmatter parser,
 recall walk, link handling; implement §3.~~ **Not runnable here — that path is gone.**
-**NEXT ACTION:** decide whether this card moves to the janitor or becomes a coordination
-issue on it. Do not start Rust work in CORE.
+~~**NEXT ACTION:** decide whether this card moves to the janitor or becomes a coordination
+issue on it.~~ **DECIDED AND EXECUTED — verified 2026-08-05: both issues already exist and are
+OPEN.** Coordination: `Emasoft/ai-maestro-janitor#52` (confirmed as this card's child — janitor
+`#62` names itself "split from TRDD-202ccfa2 / #52"). Engine: `Emasoft/ai-maestro-janitor#111`.
+
+**NEXT ACTION:** nothing is runnable in CORE. Track those two issues. Do **NOT** file a third
+coordination issue — the stale action line above caused one near-duplicate already, which is
+why it is struck rather than deleted. Do NOT start Rust work here (`how-to-fix-issues-of-other-projects.md`).
+This card stays `planned` solely to carry the user-LOCKED design (D1/D2 + the privacy
+invariant) that `#52` relays; close it when `#111` ships, or supersede it if the janitor
+lands a different design.
 
 **Load-bearing facts / gotchas:**
 - USER memdir = `~/.claude/plugins/data/ai-maestro-janitor-ai-maestro-plugins/memory/`
