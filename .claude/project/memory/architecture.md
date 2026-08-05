@@ -217,6 +217,22 @@ The mirror's own update procedure (its §0 banner) is NOT a `cp`: step 2 require
 cross-reference index — every mirror, persona, enforcement site, API route, UI component, scenario
 test — which spans repos and is why this is a reviewed change, never a drive-by.
 
+
+^ATOM-SBNM-OHF2 [desc:"the v5.2.0 governance contradiction sweep (R41-R52 vs CORE skills) COMPLETED 2026-08-05: 3 real violations found and fixed (R42, R49, R44/R50.4), all other rules verified clean - do not re-run it", keywords: did_we_check_the_new_governance_rules_against_the_skills is_the_v5.2.0_contradiction_sweep_done which_rules_had_violations_in_core_skills R44_migrate_export_import_violation governance_mirror_lag_sweep_result do_not_redo_the_R41_R43_R48_R50_R51_checks, ocd: 2026-08-05, lmd: 2026-08-05]
+
+The ATOM-GFBT-KR76 method (grep skills for what the new rules contradict BEFORE syncing the
+mirror) was run to completion on 2026-08-05 across all 12 rules the bundled mirror (v4.0.2)
+lags behind the canonical v5.2.0. Yield: R42 (3 skills taught cross-agent driving — fixed,
+shipped v3.0.4), R49 (bare refusals in ama-proposal-approvals — fixed f0e95b7), R44/R50.4
+(agents-management REFERENCE Decision Guide taught "migrate" = self-serve export/import,
+predating R44's dual-MANAGER server-coordinated migration — fixed 1fb9b94, guard note added
+at the Import section). R52 and R41/R43/R45-R48/R50-R51 verified CLEAN: the topics are
+either untaught by CORE, deliberately DEP-deferred (approval/mandate rung semantics per
+3P-BND-02 — their absence from the TRDD frontmatter schema is BY DESIGN, not a gap), or
+consistent. Only the mirror SYNC itself remains, gated on the ai-maestro-plugin#56 answer
+about which half CORE owns. A 3-for-12 violation rate on unchecked rules is why the sweep
+must precede every future mirror sync.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
