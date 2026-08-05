@@ -202,6 +202,7 @@
     "venv",
     "virtualenv",
     "wagoid",
+    "wakeable",
     "webauthn",
     "wikimem",
     "workdirs",
