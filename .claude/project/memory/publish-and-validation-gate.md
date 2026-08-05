@@ -80,6 +80,21 @@ because the setting guarantees the backlog lands on whoever next edits the file.
 `publish.py` cannot substitute: it lints `scripts/` with ruff+mypy only. Workflow YAML, spelling,
 copy-paste and shell are CI's job, so a clean local publish says nothing about them. [^3]
 
+
+^ATOM-QHY3-BTGA [desc:"the v5.2.0 governance mirror's rule tables DESCRIBE forbidden attacks and skillaudit NITs them; NIT blocks --strict with NO sanctioned path (CPV#194) — do not mute, edit the mirror, or expect a CPV_RE", keywords: publish_blocked_on_NIT_skillaudit governance_mirror_trips_the_security_scanner threat_description_prose_flagged_as_attack A2A_rules_flagged_in_references_file consent_sentinel_does_not_work_on_tables cpv_194_strict_blocks_the_mirror_sync_release, ocd: 2026-08-05, lmd: 2026-08-05]
+
+The v5.2.0 governance-mirror sync cannot publish until upstream
+`claude-plugins-validation#194` ships: skillaudit's A2A_* patterns match the mirror's own
+rule TABLE ROWS (R22.4/R42.1/R42.7 — prose FORBIDDING the attacks), the demote lands at NIT,
+and NIT blocks `--strict`. Verified against BOTH the pinned CPV v4.2.1 and latest v5.1.5
+(same 3 findings, rc=4), so bumping `CPV_REF` does not help. No sanctioned path exists for
+this content class: the issue-#101 audit-consent sentinel anchors only to FENCED markdown
+blocks (table rows have no fence), the issue-#38 doc-only suppression deliberately excludes
+`skills/*/references/` (instruction-loadable), and the "needs review" demote state has no
+recordable verdict. Resolutions that are FORBIDDEN: muting the rule, editing the verbatim
+mirror body, relocating the mirror out of references/ (breaks the skill's discovery
+contract). The only move is the upstream fix; then re-run `publish.py --patch`.
+
 ## Notes and lessons learned
 
 [^1]: [id:ATOM-998W-KR6T, status:valid, desc:"a version restated in a second page is a fact that will go stale silently — name the owning page instead", keywords:"the_docs_say_one_version_and_the_code_says_another my_architecture_page_still_cites_the_old_pin where_should_a_version_number_live two_pages_disagree_about_a_dependency_version stale_version_in_an_overview_page", ocd:2026-08-01, lmd:2026-08-01] DO NOT restate a pinned version number in an overview/hub page that another page already owns, BECAUSE nothing fails when the copy rots — `architecture.md` still read "pinned `@v3.5.0`" after two bumps (v3.5.0 -> v3.22.3 -> v4.2.1) and would have told the next reader to validate against a version this repo has not used since 2026-07-26. DO name the owning page ([[publish-and-validation-gate]]) and let the version live in exactly one place, next to the command that proves it.

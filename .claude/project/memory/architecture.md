@@ -233,6 +233,21 @@ consistent. Only the mirror SYNC itself remains, gated on the ai-maestro-plugin#
 about which half CORE owns. A 3-for-12 violation rate on unchecked rules is why the sweep
 must precede every future mirror sync.
 
+
+^ATOM-JONB-6FIU [desc:"prrd_lib.prrd_lock mirrors ai-maestro withJsonLock byte-for-byte (<file>.lock mkdir-dir, 30s/20s/50ms) and must span each edit's whole parse-to-write, not just the write", keywords: two_writers_edit_the_prrd_concurrently lost_update_last_writer_wins_on_prrd prrd_lock_protocol_mkdir_lockdir why_does_prrd_lock_span_parse_to_write prrdgrep_and_prrd-edit_interop where_do_the_lock_constants_come_from, ocd: 2026-08-05, lmd: 2026-08-05]
+
+Two independent writers edit `design/requirements/PRRD.md`: CORE's `prrd-edit.py` and
+ai-maestro's `prrdgrep`. They exclude each other ONLY because the lock protocol matches
+byte-for-byte — the lock is the DIRECTORY `<file>.lock` beside the target, acquired with a
+bare non-recursive mkdir (EEXIST == held), stale-broken past 30s of lockdir mtime, released
+by recursively deleting the lockdir, 20s max wait at 50ms polls (`prrd_lib.prrd_lock`,
+shipped for #54). The constants were READ from `ai-maestro lib/json-io.ts::withJsonLock`,
+never chosen — change them only in lockstep with that source. The lock must span each edit
+op's WHOLE parse→write (as prrd-edit.py does): serialising only the write still loses
+updates, because both editors parse the same base and the last full re-emission drops the
+other's rule. `write_prrd` also takes the lock re-entrantly for direct library callers.
+Real-process race + blocked-writer tests: `tests/test_prrd_write_lock.py`.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
