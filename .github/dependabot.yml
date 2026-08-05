@@ -42,7 +42,12 @@ updates:
       time: "06:29"
     open-pull-requests-limit: 5
     commit-message:
-      prefix: "deps"
+      # MUST be a conventional-commit type. `.commitlintrc.json` extends
+      # config-conventional, whose type-enum is [build chore ci docs feat fix
+      # perf refactor revert style test] — `deps` is not in it, so every PR this
+      # ecosystem opened failed the Commitlint job by construction. The
+      # github-actions ecosystem above already uses `ci` and passes.
+      prefix: "chore"
     labels:
       - dependencies
       - python
