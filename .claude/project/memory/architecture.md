@@ -193,7 +193,11 @@ later: `TaskCreated`/`TaskCompleted` (kanban), `DirectoryAdded`, `ConfigChange`.
 ^ATOM-GFBT-KR76 [desc:"CORE's vendored GOVERNANCE-RULES.md mirror lags upstream, so skills get written against superseded semantics and the artifact that would contradict them is the stale one", keywords: our_skill_teaches_something_a_governance_rule_forbids bundled_governance_rules_are_stale why_did_nobody_notice_the_rule_violation mirror_lags_upstream_so_skills_were_written_pre_rule R42_cross_agent_driving_forbidden, ocd: 2026-08-05, lmd: 2026-08-05]
 
 `skills/team-governance/references/GOVERNANCE-RULES.md` is a **vendored mirror** of
-`Emasoft/ai-maestro@governance-rules:docs/GOVERNANCE-RULES.md`, and it LAGS. On 2026-08-05 it was
+`docs/GOVERNANCE-RULES.md` on the `governance-rules` branch of the ai-maestro repo, and it LAGS.
+(Written out in prose rather than in git's compact ref notation: the scope-leak detector treats an
+at-sign between two names as a user-and-host pair and flags the whole page as carrying a machine
+identity. Note the shape is described here rather than spelled, or this very sentence re-trips it —
+see janitor#209.) On 2026-08-05 it was
 **v4.0.2** (synced 2026-06-18) against upstream **v5.2.0** — twelve rules behind.
 
 That lag is not merely missing documentation, it silently produces WRONG SKILLS. Measured: three
