@@ -15,10 +15,13 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import sys
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, NoReturn
+from typing import Any, Iterator, NoReturn
 
 # ───────────────── path resolution ─────────────────
 
@@ -340,6 +343,77 @@ def _split_flow_items(inner: str) -> list[str]:
     return out
 
 
+# ───────────────── PRRD cross-process lock (#54) ─────────────────
+
+# Mirrors ai-maestro `lib/json-io.ts` (STALE_LOCK_MS / LOCK_MAX_WAIT_MS /
+# LOCK_POLL_MS), read from that source — not guessed. The two writers
+# interoperate ONLY because the lockdir string and the acquisition semantics
+# match byte-for-byte: `<file>.lock` as a DIRECTORY, bare mkdir as the atomic
+# acquire (EEXIST == held), mtime-based stale-break, rm -rf as release.
+_LOCK_STALE_S = 30.0
+_LOCK_MAX_WAIT_S = 20.0
+_LOCK_POLL_S = 0.05
+
+# Paths (resolved, as str) whose lock THIS process already holds. Re-entrancy
+# is not optional: `write_prrd` takes the lock for direct library callers, and
+# the prrd-edit ops take it around their whole read-modify-write — without
+# this set the inner acquire would deadlock on the outer hold.
+_HELD_LOCKS: set[str] = set()
+
+
+@contextmanager
+def prrd_lock(
+    path: Path | None = None,
+    *,
+    stale_s: float = _LOCK_STALE_S,
+    max_wait_s: float = _LOCK_MAX_WAIT_S,
+    poll_s: float = _LOCK_POLL_S,
+) -> Iterator[None]:
+    """Hold the cross-writer lock for the PRRD file at `path` (default: prrd_path()).
+
+    The lock protocol is shared with ai-maestro's `withJsonLock` (its `prrdgrep`
+    writer): the lock is the DIRECTORY `<file>.lock` next to the target, created
+    with a bare non-recursive mkdir — atomic on every platform, EEXIST means
+    held. A holder that died is detected by the lockdir's mtime exceeding
+    `stale_s`; breaking it races other breakers harmlessly because the mkdir on
+    the next iteration is what actually arbitrates. `stale_s` must always exceed
+    the guarded operation's own duration, or a slow holder gets its lock stolen
+    while still running (inherited hazard, same as the TS side documents).
+    """
+    p = (path or prrd_path()).resolve()
+    key = str(p)
+    if key in _HELD_LOCKS:
+        yield  # re-entrant: this process already holds it
+        return
+    lock_dir = Path(key + ".lock")  # byte-for-byte the other writer's string
+    p.parent.mkdir(parents=True, exist_ok=True)
+    start = time.monotonic()
+    while True:
+        try:
+            os.mkdir(lock_dir)  # bare mkdir: atomic acquire, EEXIST == held
+            break
+        except FileExistsError:
+            try:
+                st = lock_dir.stat()
+                if time.time() - st.st_mtime > stale_s:
+                    # Owner died mid-transaction; rm then loop — mkdir arbitrates.
+                    shutil.rmtree(lock_dir, ignore_errors=True)
+                    continue
+            except FileNotFoundError:
+                continue  # lock vanished under us — retry immediately
+            if time.monotonic() - start > max_wait_s:
+                raise TimeoutError(
+                    f"prrd lock: timed out after {max_wait_s}s waiting for {lock_dir}"
+                )
+            time.sleep(poll_s)
+    _HELD_LOCKS.add(key)
+    try:
+        yield
+    finally:
+        _HELD_LOCKS.discard(key)
+        shutil.rmtree(lock_dir, ignore_errors=True)
+
+
 # ───────────────── PRRD writing ─────────────────
 
 
@@ -359,10 +433,12 @@ def write_prrd(doc: PRRDDoc, path: Path | None = None) -> None:
     durable before the name points at them, and the `finally` unlink is a no-op
     after a successful replace but removes the temp on any failure path.
 
-    STILL UNLOCKED. Concurrent writers remain last-writer-wins over a full
-    re-emission, so the loser's rule disappears silently. That half of #54 needs
-    a lockdir string agreed byte-for-byte with the other writer and is NOT fixed
-    here; do not assume this function serialises anything.
+    LOCKED via `prrd_lock` (#54, second half): the lockdir protocol matches
+    ai-maestro's `withJsonLock` byte-for-byte, so this writer and `prrdgrep`
+    exclude each other. NOTE the lock here only serialises the WRITE — a
+    read-modify-write caller must hold `prrd_lock()` around its whole
+    transaction (as the prrd-edit ops do), or concurrent edits remain
+    lost-update over a full re-emission.
     """
     p = path or doc.path or prrd_path()
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -370,14 +446,15 @@ def write_prrd(doc: PRRDDoc, path: Path | None = None) -> None:
     # sections (overview, §0, etc.) are preserved by walking raw_lines.
     # For simplicity, we delegate full re-emission via render_prrd().
     tmp = p.with_name(f"{p.name}.tmp.{os.getpid()}")
-    try:
-        with open(tmp, "w", encoding="utf-8") as fh:
-            fh.write(render_prrd(doc))
-            fh.flush()
-            os.fsync(fh.fileno())
-        os.replace(tmp, p)
-    finally:
-        tmp.unlink(missing_ok=True)
+    with prrd_lock(p):
+        try:
+            with open(tmp, "w", encoding="utf-8") as fh:
+                fh.write(render_prrd(doc))
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp, p)
+        finally:
+            tmp.unlink(missing_ok=True)
 
 
 def render_prrd(doc: PRRDDoc) -> str:

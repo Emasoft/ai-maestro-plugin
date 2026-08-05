@@ -68,44 +68,49 @@ def cmd_add(args: argparse.Namespace) -> int:
     else:
         require_manager(args)
         kind = "S"
-    doc = plib.parse_prrd()
-    if not doc.path or not doc.path.exists():
-        plib.die("no PRRD found. Run `get-prrd.py --init` first.", code=2)
-    n = doc.next_free_number()
-    rule = plib.PRRDRule(number=n, version=1, kind=kind, text=args.text.strip())
-    doc.rules.append(rule)
-    _bump_prrd_version(doc, kind)
-    plib.write_prrd(doc)
+    # The lock must span parse→write (#54): serialising only the write would
+    # still let two concurrent edits parse the same base and last-writer-wins
+    # over a full re-emission — the loser's rule silently disappears.
+    with plib.prrd_lock():
+        doc = plib.parse_prrd()
+        if not doc.path or not doc.path.exists():
+            plib.die("no PRRD found. Run `get-prrd.py --init` first.", code=2)
+        n = doc.next_free_number()
+        rule = plib.PRRDRule(number=n, version=1, kind=kind, text=args.text.strip())
+        doc.rules.append(rule)
+        _bump_prrd_version(doc, kind)
+        plib.write_prrd(doc)
     print(f"✓ added rule {rule.cite()}: {rule.text}")
     _warn_mirrors(doc)
     return 0
 
 
 def cmd_revise(args: argparse.Namespace) -> int:
-    doc = plib.parse_prrd()
-    latest = doc.latest(args.number)
-    if latest is None:
-        plib.die(f"rule {args.number} not found", code=3)
-    assert latest is not None
-    if latest.kind == "G":
-        require_user(args)
-    else:
-        require_manager(args)
-    new_rule = plib.PRRDRule(
-        number=latest.number,
-        version=latest.version + 1,
-        kind=latest.kind,
-        text=args.text.strip(),
-    )
-    # Remove old, append new
-    doc.rules = [
-        r
-        for r in doc.rules
-        if not (r.number == latest.number and r.version == latest.version)
-    ]
-    doc.rules.append(new_rule)
-    _bump_prrd_version(doc, new_rule.kind)
-    plib.write_prrd(doc)
+    with plib.prrd_lock():  # spans read→modify→write (#54)
+        doc = plib.parse_prrd()
+        latest = doc.latest(args.number)
+        if latest is None:
+            plib.die(f"rule {args.number} not found", code=3)
+        assert latest is not None
+        if latest.kind == "G":
+            require_user(args)
+        else:
+            require_manager(args)
+        new_rule = plib.PRRDRule(
+            number=latest.number,
+            version=latest.version + 1,
+            kind=latest.kind,
+            text=args.text.strip(),
+        )
+        # Remove old, append new
+        doc.rules = [
+            r
+            for r in doc.rules
+            if not (r.number == latest.number and r.version == latest.version)
+        ]
+        doc.rules.append(new_rule)
+        _bump_prrd_version(doc, new_rule.kind)
+        plib.write_prrd(doc)
     print(
         f"✓ revised {latest.kind}{latest.number}.{latest.version} → {new_rule.cite()}: {new_rule.text}"
     )
@@ -114,18 +119,19 @@ def cmd_revise(args: argparse.Namespace) -> int:
 
 
 def cmd_delete(args: argparse.Namespace) -> int:
-    doc = plib.parse_prrd()
-    latest = doc.latest(args.number)
-    if latest is None:
-        plib.die(f"rule {args.number} not found", code=3)
-    assert latest is not None
-    if latest.kind == "G":
-        require_user(args)
-    else:
-        require_manager(args)
-    doc.rules = [r for r in doc.rules if r.number != args.number]
-    _bump_prrd_version(doc, latest.kind)
-    plib.write_prrd(doc)
+    with plib.prrd_lock():  # spans read→modify→write (#54)
+        doc = plib.parse_prrd()
+        latest = doc.latest(args.number)
+        if latest is None:
+            plib.die(f"rule {args.number} not found", code=3)
+        assert latest is not None
+        if latest.kind == "G":
+            require_user(args)
+        else:
+            require_manager(args)
+        doc.rules = [r for r in doc.rules if r.number != args.number]
+        _bump_prrd_version(doc, latest.kind)
+        plib.write_prrd(doc)
     print(f"✓ deleted rule {args.number} (number retires forever)")
     _warn_mirrors(doc)
     return 0
@@ -133,17 +139,18 @@ def cmd_delete(args: argparse.Namespace) -> int:
 
 def cmd_promote(args: argparse.Namespace) -> int:
     require_user(args)
-    doc = plib.parse_prrd()
-    latest = doc.latest(args.number)
-    if latest is None:
-        plib.die(f"rule {args.number} not found", code=3)
-    assert latest is not None
-    if latest.kind == "G":
-        plib.die(f"rule {args.number} is already golden", code=2)
-    # Flip letter, keep number and version
-    latest.kind = "G"
-    _bump_prrd_version(doc, "G")
-    plib.write_prrd(doc)
+    with plib.prrd_lock():  # spans read→modify→write (#54)
+        doc = plib.parse_prrd()
+        latest = doc.latest(args.number)
+        if latest is None:
+            plib.die(f"rule {args.number} not found", code=3)
+        assert latest is not None
+        if latest.kind == "G":
+            plib.die(f"rule {args.number} is already golden", code=2)
+        # Flip letter, keep number and version
+        latest.kind = "G"
+        _bump_prrd_version(doc, "G")
+        plib.write_prrd(doc)
     print(
         f"✓ promoted S{latest.number}.{latest.version} → G{latest.number}.{latest.version}"
     )
@@ -153,16 +160,17 @@ def cmd_promote(args: argparse.Namespace) -> int:
 
 def cmd_demote(args: argparse.Namespace) -> int:
     require_user(args)
-    doc = plib.parse_prrd()
-    latest = doc.latest(args.number)
-    if latest is None:
-        plib.die(f"rule {args.number} not found", code=3)
-    assert latest is not None
-    if latest.kind == "S":
-        plib.die(f"rule {args.number} is already silver", code=2)
-    latest.kind = "S"
-    _bump_prrd_version(doc, "G")
-    plib.write_prrd(doc)
+    with plib.prrd_lock():  # spans read→modify→write (#54)
+        doc = plib.parse_prrd()
+        latest = doc.latest(args.number)
+        if latest is None:
+            plib.die(f"rule {args.number} not found", code=3)
+        assert latest is not None
+        if latest.kind == "S":
+            plib.die(f"rule {args.number} is already silver", code=2)
+        latest.kind = "S"
+        _bump_prrd_version(doc, "G")
+        plib.write_prrd(doc)
     print(
         f"✓ demoted G{latest.number}.{latest.version} → S{latest.number}.{latest.version}"
     )

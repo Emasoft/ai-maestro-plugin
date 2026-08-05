@@ -8,11 +8,11 @@ writes into it.
 
 WHAT THESE TESTS DO AND DO NOT COVER
 
-They cover ATOMICITY only. The other half of #54 — that two processes editing one PRRD
-are last-writer-wins because neither takes a lock — is NOT fixed and NOT tested here. It
-needs a lock directory whose name matches the other writer byte-for-byte, and that
-writer's source is not currently readable from this repo. A lock that excludes nothing
-is worse than no lock, so it is not being guessed at.
+They cover ATOMICITY only. The other half of #54 — the cross-process LOCK — is fixed
+separately (`prrd_lib.prrd_lock`, protocol read from ai-maestro `lib/json-io.ts::
+withJsonLock`) and tested in `test_prrd_write_lock.py`, including a two-real-process
+race. The split is deliberate: atomicity protects against a writer DYING, the lock
+against a writer RACING, and each failure mode has its own falsification here or there.
 
 The falsification test at the bottom is the one that gives the rest their meaning: it
 re-runs the OLD implementation against the same injected failure and asserts it destroys
