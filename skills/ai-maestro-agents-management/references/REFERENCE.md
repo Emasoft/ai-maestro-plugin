@@ -244,6 +244,14 @@ aimaestro-agent.sh import backup.agent.json --name new-agent --dir ~/projects/ne
 
 **Maps to:** `POST /api/agents/import` (handled by the CLI).
 
+> **Not a migration path (R44/R50.4).** `export`/`import` is same-host backup/restore
+> (or a same-host duplicate via `--name`). Moving an agent to ANOTHER host is the R44
+> cross-host migration operation: BOTH hosts' MANAGERs must approve, and the two
+> servers then coordinate the transfer themselves. Hand-carrying an export file to a
+> different host bypasses that dual approval and the destination's R35 foreign-AID
+> acceptance — forbidden (R50.4: migrating an agent by any other means than the
+> operation's own endpoint).
+
 ---
 
 ## Skill Management
@@ -700,7 +708,7 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 | Resume work | `wake` |
 | Change task/tags | `update` |
 | Add Claude extensions | `plugin install` |
-| Backup/migrate | `export` / `import` |
+| Backup/restore (same host — never cross-host migration, R44) | `export` / `import` |
 
 ---
 
