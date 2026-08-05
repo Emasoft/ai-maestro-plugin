@@ -1,14 +1,14 @@
 ---
-version: "4.0.2"
-date: 2026-06-18
+version: "5.2.0"
+date: 2026-08-05
 branch: governance-rules
-synced-commit: 291758a4
-synced-blob: ad6159e8
+synced-commit: 340a2c9f
+synced-blob: "82481221"
 ---
 
 ## Table of contents
 
-- §0. Canonical source + copies
+- §0. Canonical source + copies (READ THIS BEFORE EDITING)
 - §TERMINOLOGY. Three-layer agent model (TITLE / ROLE / PERSONA)
 - Overview
 - R1. Teams and Groups
@@ -33,26 +33,38 @@ synced-blob: ad6159e8
 - R20. Marketplace Governance
 - Invariants (Must Never Be Violated)
 - R21. All-In-One Pipeline Architecture (CRITICAL — IRON)
-- R22. GitHub Authorship Self-Identification (RESERVED — see issue #33)
+- R22. GitHub Authorship Self-Identification (USER-set baseline)
 - R23. Plugin↔Server Decoupling via the Frozen CLI Layer (CRITICAL — IRON)
 - R24. Proactive Global Memory
 - R25. Three-Pillars Task System (TRDD / PRRD / Kanban)
-- R26. Identity Immutability — No Self-Mutation of Title / Role / Name / AID (CRITICAL — IRON)
-- R27. Self-Install Only via Core-Plugin Skills, With Approval + CPV Scan (IRON)
-- R28. Three-Check API Authorization (AID → Title → Portfolio Token) (CRITICAL — IRON)
-- R29. MANAGER Team & Agent Lifecycle Authority (IRON)
-- R30. COS Agent-Creation Requires a MANAGER Mandate; the 5-Member Base Is Invariant (IRON)
-- R31. Incomplete-Team Freeze (IRON)
-- R32. No Sudo Gates for Agents — AID Is Sufficient; Sudo Is USER-via-UI Only (CRITICAL — IRON)
-- R33. Signed-Ledger Recovery of Agent Auth State (IRON)
-- R34. The Signed Ledger Is the Ultimate Source of Truth (CRITICAL — IRON)
-- R35. Foreign Agent/User Host Approval (CRITICAL — IRON)
-- R36. Users Have AIDs; One MAESTRO Per Host (IRON)
-- R37. MAESTRO and the Single MAESTRO-DELEGATE (CRITICAL — IRON)
-- R38. Non-MAESTRO User Restrictions (IRON)
-- R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON)
-- R40. Foreign-User Creation Approval (IRON)
+- R26. Identity Immutability — No Self-Mutation of Title / Role / Name / AID (CRITICAL — IRON, USER-set)
+- R27. Self-Install Only via Core-Plugin Skills, With Approval + CPV Scan (IRON, USER-set)
+- R28. Three-Check API Authorization (AID → Title → Portfolio Token) (CRITICAL — IRON, USER-set)
+- R29. MANAGER Team & Agent Lifecycle Authority (IRON, USER-set)
+- R30. COS Agent-Creation Requires a MANAGER Mandate; the 5-Member Base Is Invariant (IRON, USER-set)
+- R31. Incomplete-Team Freeze (IRON, USER-set)
+- R32. No Sudo Gates for Agents — AID Is Sufficient; Sudo Is USER-via-UI Only (CRITICAL — IRON, USER-set; SUPERSEDES prior agent-sudo behavior)
+- R33. Signed-Ledger Recovery of Agent Auth State (IRON, USER-set)
+- R34. The Signed Ledger Is the Ultimate Source of Truth (CRITICAL — IRON, USER-set)
+- R35. Foreign Agent/User Host Approval (CRITICAL — IRON, USER-set)
+- R36. Users Have AIDs; One MAESTRO Per Host (IRON, USER-set)
+- R37. MAESTRO and the Single MAESTRO-DELEGATE (CRITICAL — IRON, USER-set)
+- R38. Non-MAESTRO User Restrictions (IRON, USER-set)
+- R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON, USER-set)
+- R40. Foreign-User Creation Approval (IRON, USER-set)
+- R41. APPROVAL vs MANDATE (the two authorization protocols)
+- R42. No Agent May Drive Another Agent — Messaging Is the ONLY Channel (CRITICAL — IRON, USER-set)
+- R43. Multi-Host Governance Scope (IRON, USER-set)
+- R44. Cross-Host Agent Migration (IRON, USER-set)
+- R45. Teams Are Same-Host; Groups May Span Hosts (IRON, USER-set)
+- R46. Unified Cross-Host Sidebar; User and Paired Agent Both Listed (IRON, USER-set)
+- R47. VPN-Unique User Names; Remote Normal-User Registration (IRON, USER-set)
+- R48. MAESTRO Console-Presence — Registration and Password Change Are Local-Only (CRITICAL — IRON, USER-set)
+- R49. The Refusal Protocol — An Approver Is a Guide, Not a Gate (CRITICAL — IRON, USER-set)
 - Role-Based Permission Matrix
+- R50. One Operation, One All-In-One Function — And The Button Calls It (CRITICAL — IRON, USER-set)
+- R51. All-Or-Nothing — An All-In-One Function Is a TRANSACTION (CRITICAL — IRON, USER-set)
+- R52. The Write Boundary — ai-maestro Writes Inside Its Own Two Roots (CRITICAL — IRON, USER-set)
 
 ---
 
@@ -64,15 +76,20 @@ synced-blob: ad6159e8
 > - Canonical path: `docs/GOVERNANCE-RULES.md`
 > - Stable raw URL (the long-lived `governance-rules` branch):
 >   `https://raw.githubusercontent.com/Emasoft/ai-maestro/governance-rules/docs/GOVERNANCE-RULES.md`
-> - NOTE (verified 2026-06-18): the canonical file is NOT yet on the `main`
->   branch — it lives on `governance-rules`. Do NOT "correct" the URL to a
->   `main` path; that path 404s until the doc is merged to main. (The v4.0.2
->   front-matter `branch:` field naming a `feature/phase6-*` branch is stale
->   editing metadata — `governance-rules` is the authoritative home.)
-> - Synced from commit: `291758a4` (on the `governance-rules` branch; blob `ad6159e8`)
-> - Re-synced into `ai-maestro-plugin` on: 2026-06-18 (v4.0.2 — R26–R40 security core)
+> - NOTE (re-verified 2026-08-05): `main` still LAGS the canonical — it carries
+>   v4.0.2 while `governance-rules` carries v5.2.0. Do NOT "correct" the URL or
+>   the sync source to a `main` path; `governance-rules` is the authoritative
+>   home, confirmed by fetching both branches and comparing `version:` fields,
+>   never by trusting a doc's self-declared `branch:` frontmatter.
+> - Synced from commit: `340a2c9f` (on the `governance-rules` branch; blob `82481221`)
+> - Re-synced into `ai-maestro-plugin` on: 2026-08-05 (v5.2.0 — adds R41–R52:
+>   approval/mandate protocols, the R42 no-driving iron rule, multi-host
+>   governance R43–R48, the R49 refusal protocol, the R50/R51 all-in-one
+>   transaction rules, and the R52 write boundary). The pre-sync contradiction
+>   sweep of CORE's skills against R41–R52 is recorded in PROJECT memory
+>   (ATOM-SBNM-OHF2) — run that sweep BEFORE every future re-sync.
 > - Bundled-doc version: see the `version:` field in the YAML frontmatter
->   above (4.0.2 at the time of this sync).
+>   above (5.2.0 at the time of this sync).
 >
 > Treat this file as **read-only** in this repo. To update:
 >
@@ -80,16 +97,22 @@ synced-blob: ad6159e8
 >    append a changelog entry).
 > 2. Walk the §0 cross-reference index in this very file — every mirror, role-plugin
 >    persona, enforcement code, API route, UI component, scenario test, and
->    validation script must be updated in the same commit.
-> 3. Re-sync this bundled copy: `cp <canonical> skills/team-governance/references/GOVERNANCE-RULES.md`
->    then refresh the bullets at the top of this banner (URLs, commit hash,
->    sync date, bundled-doc version).
+>    validation script must be updated in the same commit. (That walk binds the
+>    canonical's EDITOR; the re-sync below is the mirror-holder's half.)
+> 3. Re-sync this bundled copy: fetch the canonical from the `governance-rules`
+>    branch, replace the body verbatim, then refresh the bullets at the top of
+>    this banner (URLs, commit hash, sync date, bundled-doc version).
 > 4. Republish `ai-maestro-plugin` so running agents pick up the new rules via
 >    `claude plugin update` — agents read this file via the `team-governance` skill.
 >
 > If you find yourself disagreeing with this bundled copy: STOP, fetch the
 > canonical, and trust that one. This bundle exists for offline/airgapped
 > agent reading — it is never authoritative against the canonical.
+
+<!-- The body below is VERBATIM canonical; one upstream R20 table row carries an
+     unescaped pipe (4 cells in a 3-column table). The fix belongs upstream; the
+     mirror must not diverge to satisfy a linter. -->
+<!-- markdownlint-disable MD056 -->
 
 ---
 
@@ -101,15 +124,16 @@ synced-blob: ad6159e8
 
 ## §0. Canonical source + copies (READ THIS BEFORE EDITING)
 
-**`docs/GOVERNANCE-RULES.md` is the canonical source of truth for every governance rule in the AI Maestro ecosystem.** Every time a rule is added, renamed, renumbered, rewritten, or deleted, **every file listed below** must be updated in the same commit. Leaving any entry stale produces drift — agents that still obey an old rule because their plugin persona was never refreshed, validation scripts that block legitimate operations because they still check an old gate, etc.
+**`design/specs/governance-spec.md` is the canonical SOURCE OF TRUTH for every governance rule in the AI Maestro ecosystem — a rule is authored in the SPEC FIRST; this file (`docs/GOVERNANCE-RULES.md`) is its PRIMARY EMANATION: the human-facing catalog carrying the spec's rule content PLUS the teaching/rationale the spec omits.** Specs come before the implementation (USER, 2026-07-22, TRDD-CJWC3JLU) — the earlier direction, in which this file was canonical and the spec was a mirror synced from it, is reversed for good. The two are kept at strict **feature parity**: every rule R1-R49, every sub-clause, every invariant (the 22), every title, and the comm graph exists in BOTH; only the *rationale* is catalog-only. Every time a rule is added, renamed, renumbered, rewritten, or deleted, **edit the SPEC first, then this catalog, then every file listed below** in the same commit. Leaving any entry stale produces drift — agents that still obey an old rule because their plugin persona was never refreshed, validation scripts that block legitimate operations because they still check an old gate, etc.
 
 The list is maintained here (not in a separate `GOVERNANCE-COPIES.md`) so it is impossible to read the rules without seeing the index. Update this list whenever a new copy is added.
 
-### 0.1 — Canonical source
+### 0.1 — Canonical source + primary emanation
 
 | Path | Role | Update strategy |
 |---|---|---|
-| `docs/GOVERNANCE-RULES.md` | **CANONICAL** — single source of truth | Edit first. Bump the `version:` field in YAML frontmatter. Append a changelog entry. |
+| `design/specs/governance-spec.md` | **CANONICAL** — the single SOURCE OF TRUTH (the SPEC) | **Edit FIRST.** Bump its `spec-version:`. It defines every rule/invariant/title/comm-graph clause-for-clause. |
+| `docs/GOVERNANCE-RULES.md` | **PRIMARY EMANATION** — the human catalog (spec's rule content + rationale) | Edit right AFTER the spec. Bump the `version:` field + append a changelog entry. Must stay at feature parity with the spec and never contradict it. |
 
 ### 0.2 — Documentation mirrors (in this repo)
 
@@ -534,7 +558,7 @@ When a MANAGER is assigned (via title change), the reverse cascade runs:
 | R9.10 | When attempting to delete the MANAGER agent, the Delete Agent dialog MUST show a clear warning: "This agent holds the MANAGER title. Removing it will block all team operations." The system auto-demotes the MANAGER to AUTONOMOUS before proceeding with deletion | Explicit |
 | R9.11 | The MANAGER agent may create teams via the API using AID authentication. The governance password is NOT required for MANAGER-initiated team creation — the server validates the MANAGER's AID session secret (mst_* token) and grants team-creation privileges based on the MANAGER governance title | Explicit |
 | R9.12 | **All agents always appear in the dashboard** (sidebar ACTIVE/ALL/HIBER tabs) regardless of MANAGER status. The MANAGER gate controls wake permissions, not visibility. The registry is the source of truth for the agent list — it is never filtered by governance state | Explicit |
-| R9.13 | **Role-plugin is mandatory for every agent** (including AUTONOMOUS). CreateAgent, ChangeTitle, ChangeClient, ChangeTeam, and RegisterAgentFromSession MUST reject any desired state that would leave an agent with zero role-plugins. The only valid "no role-plugin" window is the transient instant inside a Change\* pipeline between uninstall and install — the agent is never persisted in that state. AUTONOMOUS resolves to `ai-maestro-autonomous-agent` which encodes workspace isolation, forbidden cross-agent mutation, and comm-graph restrictions in its persona. This closes the security gap where a persona-less AUTONOMOUS agent could destroy other agents' working directories, force-merge PRs, or mutate shared registry state — since all agents share one `gh` CLI identity, the persona instructions are the only effective governance boundary. See R11.12, R20.4, Invariant 8 | Explicit |
+| R9.13 | **Role-plugin is mandatory for every agent** (including AUTONOMOUS). CreateAgent, ChangeTitle, ChangeClient, ChangeTeam, and RegisterAgentFromSession MUST NOT leave an agent RUNNABLE with zero role-plugins. A pipeline that can cleanly restore its pre-command state MUST reject and revert (CreateAgent deletes the half-created agent). A pipeline that CANNOT — because the failure itself would leave the system invalid, as in ChangeTitle where the title and host-wide governance are already written — MUST instead apply **FAAF** (Fail-And-Activate-a-Fallback, `design/specs/all-in-one-spec.md` §AIO-FAAF): report the failure, persist `roleMissing: true`, and hibernate the agent, which `wakeAgent` then refuses to wake until a plugin is assigned. Quarantined-and-inert is a valid state; role-less-and-runnable is not. The only other valid "no role-plugin" window is the transient instant inside a Change\* pipeline between uninstall and install. AUTONOMOUS resolves to `ai-maestro-autonomous-agent` which encodes workspace isolation, forbidden cross-agent mutation, and comm-graph restrictions in its persona. This closes the security gap where a persona-less AUTONOMOUS agent could destroy other agents' working directories, force-merge PRs, or mutate shared registry state — since all agents share one `gh` CLI identity, the persona instructions are the only effective governance boundary. See R11.12, R20.4, Invariant 8 | Explicit |
 
 **Rationale:** Without a MANAGER, no governance authority exists to oversee teams. Blocking prevents unsupervised team operations and ensures the system is in a safe state until governance is restored. AUTONOMOUS agents are independent by definition — they have no team, no COS, and no governance chain that requires a MANAGER. Restricting them would break the fundamental principle that AUTONOMOUS agents operate outside the team governance model.
 
@@ -626,7 +650,7 @@ When a MANAGER is assigned (via title change), the reverse cascade runs:
 | ID | Rule | Source |
 |----|------|--------|
 | R13.1 | Each title agent **MUST operate strictly within its role-plugin's scope**. No agent may perform tasks assigned to another title's role-plugin | Explicit |
-| R13.2 | **MANAGER** manages governance, approves operations, routes work. Does NOT write code, design architecture, or coordinate tasks | Explicit |
+| R13.2 | **MANAGER** manages governance, approves operations, routes work, and performs **host-wide coordination** across projects, teams and agents (via AMP messaging, the PRRD, and the TRDD kanban). Does **NOT** write code, does **NOT** design architecture, and does **NOT** perform a team's **internal task orchestration** (kanban + work distribution inside a team — that is the ORCHESTRATOR's role, R13.5; the MANAGER reaches a team through its COS, R6.2) | Explicit |
 | R13.3 | **CHIEF-OF-STAFF** manages team staffing, agent lifecycle, external comms. Does NOT design, implement, or integrate | Explicit |
 | R13.4 | **ARCHITECT** designs system architecture, data models, APIs. Does NOT implement code, manage agents, or run CI/CD | Explicit |
 | R13.5 | **ORCHESTRATOR** coordinates tasks, manages kanban, distributes work. Does NOT design architecture or write code | Explicit |
@@ -685,6 +709,16 @@ When a MANAGER is assigned (via title change), the reverse cascade runs:
 **Rationale:** The governance password exists specifically to prevent agents from performing dangerous operations without user approval. If agents can receive and use the password, the security boundary is meaningless — any compromised or misbehaving agent could create teams, change titles, or delete agents without user knowledge. The password must always require a human in the loop.
 
 **Implementation:** When an agent's API call returns HTTP 403 with `"Governance password required"`, the AI Maestro dashboard should intercept this and show a password entry popup to the user. The user enters the password, which is sent to complete the operation. The agent never sees the password.
+
+**Password recovery — forgot-password reset (TRDD-P7XKV3N9):** because the human owner can *forget* the governance password, `POST /api/governance/password/reset` recovers it with **no old password** — you cannot prove knowledge of a secret you have lost, so the factor is proof of control of a recovery channel, over **three methods**:
+
+- **console** (default) — a one-shot code goes to the HOST (a `0600` file + best-effort desktop notification), gated on console-locality (`isConsolePeer`, from the real TCP peer, never a client header). A remote VPN device cannot read it, so cannot reset: **console presence REPLACES the knowledge factor**.
+- **email** — a one-shot code is emailed to the owner's **verified** recovery address (configured once in Settings; SMTP is auto-detected from the address and the app-password is stored in the OS keychain / a `0600` file **independent of the governance password**, so it survives the very reset it enables). Deliberately remote-capable — the trust root shifts to *control of the registered email*, so the console gate is not applied.
+- **passkey** — a WebAuthn assertion (possession of a registered authenticator, verified against the owner's stored credential via `lib/webauthn-server`). Also remote-capable — the trust root is the private key. Refused when no passkey is registered.
+
+Every method runs the same tail: `setPassword` with no old-password check, then — if `security-config.enc` was still locked (the true forgot case, keyed to the *lost* password and undecryptable) — it re-initializes security **policy** to defaults (only tuning lives there; no secrets) and reports `securityPolicyReset`, then auto-logins. The route is rate-limited per peer (5 / 15 min) and fail-closed (no channel to prove control ⇒ refuse). This does **not** weaken R16: agents never see or handle the password — recovery is a human-only, curl-hardened flow, and the route is whitelisted logged-out **only** because the whole point is that you cannot log in.
+
+**One dialog for every prompt:** the reset flow and every governance-password prompt (login, sudo, confirm, setup, revoke) are served by a single component, `components/governance/PasswordDialog.tsx` — the five previously hand-rolled copies were unified into it, so there is exactly one auth-dialog code path to audit.
 
 ---
 
@@ -912,7 +946,7 @@ rather than re-implementing these operations.
 | R20.18 | Every per-client marketplace MUST conform to its client's published marketplace spec — the AI Maestro converter is forbidden from inventing fields or bending a schema. Concretely: (a) **Claude** marketplaces MUST put the manifest at `<marketplace>/.claude-plugin/marketplace.json` and use `source: "./<name>"` as a plain string; (b) **Codex** marketplaces MUST put the manifest at `<marketplace>/marketplace.json` (root, no subfolder) and use `source: { "source": "local", "path": "./<name>" }` as an object plus the mandatory `policy`, `category`, and top-level `interface` fields from the Codex spec; (c) Every relative `source.path` or `source` string MUST start with `./` and MUST resolve to a plugin folder located inside the same `marketplace-<client>/` root — no `../` traversal, no absolute paths, no cross-client path leakage. When a new client (OpenRouter, Gemini, Kiro, …) publishes its marketplace spec, the generator MUST be extended with a dedicated emitter for that schema rather than reusing an existing client's code. | Explicit |
 | R20.19 | An agent MAY have additional optional plugins installed at `--scope local` beyond the required CORE (R20.2) and TITLE role-plugin (R20.4), selected from any registered marketplace via the Agent Profile → Config → Marketplaces view. Optional plugins are NOT subject to the auto-reinstall enforcement loop of R20.3 — only CORE and TITLE role-plugin are mandatory. | Explicit |
 | R20.20 | Scope isolation: plugins installed at `--scope user` via Settings → Plugins Explorer MUST NOT appear in any agent's local plugin list, and plugins installed at `--scope local` via Agent Profile → Config MUST NOT appear in the user-scope listing. Enable/disable state is per-scope and completely independent. SCEN-021 verifies this invariant end-to-end. | Explicit |
-| R20.21 | The converter + validator pipeline MUST treat per-client marketplace folders (Claude: `custom-marketplace/` / `roles-marketplace/`; others: `<client>-custom-marketplace/` / `<client>-roles-marketplace/`) as independent marketplaces, each registered separately with its target client's CLI. When the server registers or refreshes marketplaces at startup, it MUST iterate over every per-client marketplace folder inside both containers and call the matching client's `<cli> plugin marketplace add\|update` — never assume a single container-wide marketplace, and never mix two clients' plugins inside the same marketplace folder. | Explicit |
+| R20.21 | The converter + validator pipeline MUST treat per-client marketplace folders (Claude: `custom-marketplace/` / `roles-marketplace/`; others: `<client>-custom-marketplace/` / `<client>-roles-marketplace/`) as independent marketplaces, each registered separately with its target client's CLI. When the server registers or refreshes marketplaces at startup, it MUST iterate over every per-client marketplace folder inside both containers and call the matching client's `<cli> plugin marketplace add|update` — never assume a single container-wide marketplace, and never mix two clients' plugins inside the same marketplace folder. | Explicit |
 | R20.22 | The universal IR hubs (`.abstract/` at container level, R20.8 + R20.9) are shared across ALL per-client marketplaces within their container. Re-emitting a plugin for a new client MUST read the IR from the container's `.abstract/<name>/plugin-universal-ir.yaml` and write the emitted plugin into the correct per-client marketplace subfolder of the same container. The IR MUST NOT be duplicated into per-client subdirectories. | Explicit |
 | R20.23 | **Multi-client plugin duplication (v3.7.0):** If a role-plugin's `.agent.toml` declares `compatible-clients` with multiple clients, the plugin MUST be stored as a **separate emitted copy** inside EACH compatible client's marketplace directory. Each copy's `.agent.toml` retains the FULL `compatible-clients` list (so any consumer can see what other clients the plugin supports); only the emitted code, manifest format, and folder name differ per client. The shared `.abstract/` IR is the single source of truth; each marketplace copy is an independently emitted artifact. A plugin is NEVER shared by symlink or reference across marketplace directories — each client's CLI must be able to install from its own marketplace without cross-client path resolution. For **custom plugins** (which do NOT have `.agent.toml`), the target client is determined by the name suffix: `<name>-codex` → codex, `<name>-gemini` → gemini, `<name>` (no suffix) → claude. Custom plugins converted for multiple clients are likewise duplicated, one per marketplace. | Explicit |
 | R20.24 | **Role-plugin vs custom-plugin distinction (v3.7.0):** The presence of a `<name>.agent.toml` file at the plugin root is the SOLE marker that distinguishes a role-plugin from a custom (ordinary) plugin. Custom plugins MUST NOT contain `.agent.toml` files. The converter MUST only write `.agent.toml` (via `writeConvertedAgentProfile`) for role-plugins, never for custom plugins. Client detection for custom plugins relies on the name suffix convention, not on any TOML field. | Explicit |
@@ -1225,9 +1259,19 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 
 ---
 
-## R22. GitHub Authorship Self-Identification (RESERVED — see issue #33)
+## R22. GitHub Authorship Self-Identification (USER-set baseline)
 
-**Reserved.** R22 is the canonical ecosystem number for the **GitHub authorship self-identification** rule: every agent that writes to GitHub under the shared `@owner` identity (issue / PR / comment / review / release) MUST begin the body with a one-line self-identification of which agent / role / plugin authored it, because all AI Maestro agents share the single human-owner `gh` auth. The full rule text is proposed in `Emasoft/ai-maestro#33` and mirrored by the global PRRD baseline rule `G1.2`; the governance owner lands the canonical text here. **G1.2 adds: never write `@<name>` outside a code span in a GitHub body — it pages a real user.** Every AI Maestro title is a registered GitHub account (`@manager`, `@janitor`, `@owner`, `@role`, `@core`, `@orchestrator` all resolve), which is why this reference already backticks `@owner` above. **This number is held for that rule and MUST NOT be reused** (decoupling / memory / three-pillars moved to R23 / R24 / R25 to free it — see the 3.11.0 changelog entry).
+**The invariant:** all AI Maestro agents write to GitHub under ONE shared human-owner identity (the owner's `gh` CLI auth), so a reader cannot tell which agent authored a post without an explicit label. Every agent self-identifies at the top of every GitHub write. (Ratified in `Emasoft/ai-maestro#33`; mirrored by the global PRRD baseline golden rule `G1.1`.)
+
+| ID | Rule | Source |
+|----|------|--------|
+| R22.1 | Every agent that writes to GitHub — **issue, issue comment, PR, PR comment, PR review, discussion, release note** — MUST begin the body with a one-line self-identification of which agent / role / plugin authored it | Explicit (USER) |
+| R22.2 | Recommended leading line: `_Posted by the Claude developing **<plugin-or-role>** (via the shared @<owner> gh auth)._` | Explicit (USER) |
+| R22.3 | Commit messages SHOULD carry an `Agent: <plugin-slug>` trailer — the plugin's **stable package slug** (e.g. `Agent: ai-maestro-maintainer-agent`), which is greppable ecosystem-wide and survives a rename, NOT a freeform role name | Explicit (USER, refined 2026-06-02) |
+| R22.4 | This is an anti-impersonation / clarity convention: without it, multi-agent threads under the shared identity are ambiguous and one agent's post is indistinguishable from another's | Explicit (rationale) |
+| R22.5 | Mirrored as the PRRD baseline **golden** rule `G1.1` (user-set, immutable to MANAGER) — a project bootstraps it via `prrd-edit.py --user add golden` | Explicit |
+
+**Rationale:** the shared `@owner` identity is what makes AI Maestro's fleet coordination possible on GitHub, but it erases per-author attribution; the self-id line restores it at zero infrastructure cost. **This number MUST NOT be reused** (decoupling / memory / three-pillars moved to R23 / R24 / R25 to free it — see the 3.11.0 changelog entry).
 
 ---
 
@@ -1243,8 +1287,20 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 | R23.4 | The CLIs' skill-facing interface (name + args + output) is **FROZEN**. New capability = a NEW CLI (or an additive optional flag), NEVER a changed interface. Sole exception: a security fix | Explicit |
 | R23.5 | **No element-level exception — not even the core `ai-maestro-plugin`.** The boundary is the script layer, not a plugin; those scripts are owned by + shipped from the ai-maestro repo and are the only code allowed to call the API | Explicit |
 | R23.6 | **Bright-line test:** `grep -rn '/api/'` over a plugin tree shows no direct-call instructions. Conceptual references that route through the CLI layer are fine — the line is endpoint-syntax + actual calls/instructions, NOT the word "API" | Implicit (enforcement) |
+| R23.7 | **The frozen surface is `docs/SCRIPT-MANIFEST.md`, generated from `scripts/*.sh` — never a host's `~/.local/bin`.** The installer copies and never prunes, so a deployed dir accumulates scripts the source has already deleted; it therefore cannot be a source of truth, and a plugin conforming to it is conforming to one machine's residue | Derived (2026-07-14) |
+| R23.8 | **Announcing a new verb is part of shipping it.** A capability no plugin has been told about does not discharge this rule — an unannounced verb looks absent, and a plugin that believes the layer lacks what it needs is pushed back toward `/api/*` (or, correctly, blocks). The manifest is the announcement | Derived (2026-07-14) |
 
 **Rationale:** the CLI layer is the stability buffer — when the API changes, only ai-maestro's scripts change, never the plugins. One interface to keep stable instead of a dozen plugins to chase. If the layer lacks a call a plugin needs, ADD a CLI to ai-maestro — never reach past the layer.
+
+> **Implementation (R23.7 / R23.8, 2026-07-14).** `docs/SCRIPT-MANIFEST.md` (commit
+> `06c93b45`) is the canonical frozen surface: all 74 `scripts/*.sh` partitioned into **42
+> frozen skill-facing CLIs** (name + every subcommand + every flag), 12 sourced-only
+> libraries, and 20 operator scripts that are explicitly **not** a plugin API — plus §5, the
+> 24 scripts the plugins still call that this repo does not ship. R23.8 is not hypothetical:
+> `aimaestro-agent.sh presence`, `aimaestro-agent.sh session user-input`, and
+> `aimaestro-teams.sh tasks` all shipped, deployed byte-identical, and agent-callable while
+> the MANAGER believed they did not exist and stayed blocked on 28 call sites rather than
+> fake compliance. The rule was kept; the capability was simply never announced.
 
 ---
 
@@ -1308,15 +1364,35 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 | R28.2 | The server verifies, in order: (1) the **AID identity**; (2) the **TITLE** assigned to that id/agent grants the privilege for the operation; (3) when the operation requires approval, the presence in the agent's **portfolio** (a server-stored secure enclave, per agent, holding approval + mandate tokens) of the required **approval/mandate token** issued by the MANAGER or the (own-team) COS | Explicit (USER) |
 | R28.3 | The request is fulfilled **only if all three checks pass**. Missing id, insufficient title, or a missing required token → refused. The server NEVER trusts a client-supplied id / title / scope | Explicit (USER) |
 
+**401-before-403 note (2026-07-07, SCEN-003 S037 observation):** R28.2's ordering — AID identity checked before TITLE/AUTHZ — means an unauthenticated attempt at a rule enforced elsewhere (e.g. R26's no-self-modification invariant on `PATCH /api/agents/[id]`) is rejected at the AUTH layer with **HTTP 401** (Bearer token required) before the AUTHZ rule (which would return **HTTP 403**) is ever reached. Both outcomes block the mutation — callers should treat 401 and 403 as equally conclusive "rejected" signals for such a route, not assume 403 is the only valid rejection code for an AUTHZ-shaped rule.
+
 ---
 
 ## R29. MANAGER Team & Agent Lifecycle Authority (IRON, USER-set)
 
 | ID | Rule | Source |
 |----|------|--------|
-| R29.1 | The **MANAGER** may create and delete **Teams** on its own authority — no USER approval needed. Creating a team auto-creates the **CHIEF-OF-STAFF** + the **5 basic team members** | Explicit (USER) |
+| R29.1 | The **MANAGER** may create and delete **Teams** on its own authority — no USER approval needed. Creating a team auto-creates **the CHIEF-OF-STAFF, and ONLY the CHIEF-OF-STAFF**. The **COS** then creates the other **4** basic members (ARCHITECT, ORCHESTRATOR, INTEGRATOR, MEMBER) — see R12.1 for the base and R12.2 / R31.1 for the COS's duty to complete it | Explicit (USER) |
 | R29.2 | Alternatively the MANAGER may give the COS a **mandate** to populate the team with specific extra MEMBER-role agents tailored to the task (the 5-base structure stays mandatory) | Explicit (USER) |
 | R29.3 | The MANAGER may create and delete **AUTONOMOUS** agents and **MAINTAINER** agents on its own authority | Explicit (USER) |
+
+> **The base is 5 agents INCLUDING the COS** (R12.1) — 1 CHIEF-OF-STAFF, 1 ARCHITECT,
+> 1 ORCHESTRATOR, 1 INTEGRATOR, 1 MEMBER. The MANAGER creates 1 of them; the COS creates the
+> other 4.
+>
+> **CORRECTION (USER-authorized, 2026-07-14).** R29.1 previously read *"auto-creates the
+> CHIEF-OF-STAFF **+ the 5 basic team members**"*. That was wrong twice: it **miscounted** the
+> base (COS + 5 = six agents, when R12.1 defines five *including* the COS) and it named the
+> **wrong actor** (*"auto-creates"* implies the system builds them all, while R12.2 —
+> *"the CHIEF-OF-STAFF must immediately add the missing agents"* — and R31.1 —
+> *"until the COS finishes creating + configuring all basic members"* — both put that duty on
+> the COS). As written it contradicted R12.1, R12.2, R30.2 and R31.1 at once.
+>
+> **Why this matters beyond the wording:** the error propagated. Code was audited against it,
+> a correct implementation (`createNewTeam` creating only the auto-COS) was reported as a bug,
+> and the miscount was laundered into the project's memory corpus as though independently
+> corroborated. **When a rule USES a term, the rule that DEFINES that term governs** — here
+> R12.1 (CRITICAL) defines "the basic members" and R29.1 merely referred to them.
 
 ---
 
@@ -1414,12 +1490,15 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 | ID | Rule | Source |
 |----|------|--------|
 | R39.1 | Users (being human) have **no terminal and no chat page** on their own profile. Each user is auto-assigned an **ASSISTANT**-title agent when created/registered (the MAESTRO user is exempt — it already has the MANAGER agent) | Explicit (USER) |
-| R39.2 | The ASSISTANT runs the **`ai-maestro-assistant-role-agent`** role-plugin — a mix of the MANAGER role-plugin (planning) + the AUTONOMOUS role-plugin (programming), but **without** agent/team-creation privileges | Explicit (USER) |
+| R39.2 | The ASSISTANT runs the **`ai-maestro-assistant-role-agent`** role-plugin (a **LOCAL/D4 source** — already built at `~/agents/role-plugins/roles-marketplace/`, intentionally NOT a published GitHub repo and absent from `PREDEFINED_ROLE_PLUGIN_NAMES`) — a **mix of the MANAGER** (planning — it listens to its bound user) **and AUTONOMOUS** (programming — it codes autonomously, with no team and no direction from the MANAGER) role-plugins, **without** agent/team-creation privileges and **without governing powers** (R46.3). *(USER 2026-07-22 RE-RULED the composition back to MANAGER+AUTONOMOUS; the 2026-07-16 v4.4.0 "MANAGER+MAINTAINER" revision was the error — MAINTAINER is repo-bound issue-triage, not what an assistant does.)* | Explicit (USER) |
 | R39.3 | The user interacts with their ASSISTANT by selecting their own profile and typing in its terminal. The user may **not** access any other agent's terminal or join any team; selecting any non-own agent shows the profile with **no terminal** and **no** ability to edit that agent's profile panel | Explicit (USER) |
 | R39.4 | The ASSISTANT has **no team affiliation**; its profile shows `Assistant of <user name>` where the team label would be. The user MAY edit the ASSISTANT's profile panel **except** NAME, TITLE, ROLE-PLUGIN, and TEAM — those four stay **read-only to the user** and may be changed **only by the MAESTRO** user, with the sudo password (consistent with R26) | Explicit (USER) |
-| R39.5 | The ASSISTANT obeys **only its user and the MAESTRO**, is aware of the user's kanban tasks, shares TRDDs sent to the user, and may message **only** its user and the MAESTRO | Explicit (USER) |
+| R39.5 | The ASSISTANT obeys its bound user **unconditionally** — and, **only with that user's explicit permission**, the **MANAGER**, whose assigned tasks stay **refusable** (R41, R39.9). It obeys **no one else — not the MAESTRO *user*, no other agent** — and works in **isolation** under its user. It is **outside the governance chain**: it is never a direct target of a mandate (R41) and needs **no MANAGER / COS / MAESTRO approval** to act for its user. It is aware of the user's kanban tasks and shares TRDDs sent to the user, which it works on **as its user's** (R39.7). It may message **only its own user and the MANAGER** — the single agent it may exchange messages with (R39.9); every other agent is unreachable in both directions. The MANAGER channel carries **only** a refusable, USER-gated task assignment (R39.9) — never a command, never a mandate (R41 holds) | Explicit (USER, 2026-07-22 refined — MANAGER is the sole agent channel per R39.9; 2026-07-16 was "obeys only its user, messages only its own user") |
 | R39.6 | An ASSISTANT agent **cannot be deleted independently** — every user MUST always have exactly one ASSISTANT for as long as the user exists. Its lifecycle is **bound to its user**: only deleting the **USER** cascades a (soft) delete to that user's ASSISTANT (consistent with the cemetery soft-delete model) | Explicit (USER) |
-| R39.7 | A user's ASSISTANT is **invisible to the other agents**, but it **inherits all tasks and permissions sent to the user** — the user's kanban tasks and granted permissions flow through to their ASSISTANT | Explicit (USER) |
+| R39.7 | A user's ASSISTANT is **invisible to the other agents (except the MANAGER**, the sole agent that may reach it — R39.9; **plus** any collaborator agent the MANAGER assigns on a shared repo — scoped + revocable, R39.10), but it **inherits all tasks and permissions sent to the user** — the user's kanban tasks and granted permissions flow through to their ASSISTANT | Explicit (USER, 2026-07-22 refined — MANAGER carve-out) |
+| R39.8 | The ASSISTANT carries **none** of the MANAGER's approve-other-agents machinery (no instructions, no scripts to approve, command, or send directives to any other agent). It may approve **only its OWN** TRDDs — which, being its user's work, are **self-mandates (Tier 0)** that need **no** MANAGER/COS/MAESTRO approval — and it **never** approves another agent's TRDD, sends a command to another agent, or asks the MANAGER to approve its own work. In this it is like any AUTONOMOUS agent, minus the governing powers it never had | Explicit (USER, 2026-07-22) |
+| R39.9 | The **MANAGER is the only agent** that may reach the ASSISTANT, and only to **assign it a TRDD** — never to configure it (its configuration is changed **only by its bound USER via the UI**, R39.4; the MANAGER has no config power over it). The ASSISTANT accepts a MANAGER-assigned task **only if its bound USER has approved this kind of collaboration**, and it may **refuse any assigned task** (it is never a forced mandate target — R41 holds). When it collaborates on the **same GitHub project** as another agent, it acts as a **peer with equal authority** — subordinate **only** to its own USER. Its latitude is deliberate: the USER is free to act as it wishes, and the ASSISTANT must be free to follow | Explicit (USER, 2026-07-22) |
+| R39.10 | **Scoped, revocable collaboration expansion.** Once the user has permitted MANAGER collaboration (R39.9), the MANAGER may assign **another agent** to collaborate with the ASSISTANT on a **specific shared GitHub project**. Scoped to that collaboration, the ASSISTANT becomes **mutually visible** with that collaborator agent: the two may **exchange AMP messages**, and the ASSISTANT may be **assigned tasks via the kanban linked to that GitHub project** (each still **refusable**, R41). This is the ONLY way the ASSISTANT's invisibility (R39.7) opens to an agent other than the MANAGER, and it stays **scoped** to the assigned collaborator(s) and that project — it does **not** make the ASSISTANT generally visible. **The USER may at ANY time order the ASSISTANT to STOP or PAUSE the collaboration, or to REFUSE specific MANAGER orders** — the user's authority over its own ASSISTANT is absolute and overrides any MANAGER-arranged collaboration | Explicit (USER, 2026-07-22) |
 
 ---
 
@@ -1429,6 +1508,215 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 |----|------|--------|
 | R40.1 | Non-native users (registered on another host) are subject to all R38 restrictions, **and** require the **MAESTRO's approval for every agent or team creation** | Explicit (USER) |
 | R40.2 | The MANAGER may restrict specific API commands to specific foreign users, per the MAESTRO's instructions | Explicit (USER) |
+
+> **Implementation (R33/R34/R35/R40, 2026-06-19).** The signed-ledger identity
+> model ships behind `ledger.enforceAidAssociation` (security config, **default
+> OFF**, decision D5) so flipping it on is a deliberate act after a clean backfill
+> — with it OFF the behavior is unchanged. Modules:
+> `lib/aid-ledger-authority.ts` (`isAidAssociated` = the R34.1 gate;
+> `reconstructAgentAuthState` = R33 recovery; `record{AidAssociation,AidReissue,
+> AidRevocation,ForeignApproval}`), `lib/foreign-approval-registry.ts` +
+> `types/foreign-approval.ts` (the R35 pending queue),
+> `app/api/v1/auth/token/route.ts` + `lib/agent-auth.ts` (R34.1 MINT/SPEND gates),
+> `app/api/agents/foreign-approvals/[id]/{approve,reject}/route.ts` +
+> `app/api/system/aid-recover/route.ts` (MAESTRO-via-UI + sudo, R32-compliant —
+> never agent-reachable), and `assertForeignUserMayCall` in
+> `services/element-management-service.ts` (R40, restrictable set
+> `{create_agent, create_team}`). The new `aid_*` ledger ops are additive in
+> `types/ledger.ts`. Full surface + the breaking foreign-import 202 contract:
+> `docs/API-CHANGES.md` §6.
+
+---
+
+## R41. APPROVAL vs MANDATE (the two authorization protocols)
+
+**Every governed action is authorized by exactly one of two protocols.** They differ only in
+*who initiates* and *which direction authority flows*; both are binding.
+
+| ID | Rule | Source |
+|----|------|--------|
+| R41.1 | **APPROVAL (bottom-up — the agent asks).** An agent authors a proposal (a TRDD in `design/proposals/`, `column: proposal`), routes it to the authority its tier requires, that authority approves, and the agent is then bound to execute | Explicit (USER, 2026-06-21) |
+| R41.2 | **MANDATE (top-down — the authority orders).** An authority issues an order (a TRDD authored directly in `design/tasks/`, `column: planned`, `mandate: true`); the receiving agent is bound to execute it. A verified, in-scope mandate **cannot be refused** — the agent may flag a genuine problem and wait, but it does not decline | Explicit (USER, 2026-06-21) |
+| R41.3 | **An authority may only mandate within its own tier.** A TRDD is born approved **iff** `authority(mandated-by) >= authority(min-approval-requirement)`. A proposal exists only when the author's authority is *below* the tier the TRDD requires | Explicit (USER) |
+| R41.4 | The authority ladder is total and fixed: `none(0) < orchestrator(1) < chief-of-staff(2) < manager(3) < user(4)`. **No agent may ever hold the `user` rung** | Explicit (USER) |
+| R41.5 | **Nobody may approve their own proposal — MANAGER included.** (`refuse` on one's own proposal is permitted: that is a withdrawal, not an approval) | Derived (enforced) |
+| R41.6 | A **GOLDEN** PRRD change always requires the **MAESTRO/USER**. The MANAGER cannot sign it, and no mandate can substitute for it | Explicit (USER) |
+
+**Which authority a category requires** (the tier floor — objective, so a watchdog needs no
+judgment call):
+
+| Required authority | Category |
+|---|---|
+| **none** (Tier 0 — self-mandate) | own-scope work; DERIVED tasks (NPT/EHT); reversible + local; applying the ratified baseline as-is |
+| **ORCHESTRATOR / CHIEF-OF-STAFF** (Tier 1) | team-internal coordination affecting other members of the same team (ORCHESTRATOR covers only the dispatch subset: assignment, priority, sequencing) |
+| **MANAGER** (Tier 2) | cross-team / cross-project; a SILVER PRRD or persona change; release to production; a baseline-ruleset deviation; `.github/`; another project's source |
+| **MAESTRO / USER** (Tier 3) | a GOLDEN PRRD change or a promote/demote; shared credentials or the owner identity; irreversible / highest-stakes |
+
+> **Implementation status (R41, 2026-07-14) — read this before claiming the protocols are
+> enforced.**
+>
+> **What IS enforced by the server** (`d7531e53`, TRDD-K2WJH7RF): the TRDD write verbs
+> (`edit`, `approve`, `refuse`, `promote`, `archive` — via `aimaestro-trdd.sh`) are gated by
+> the `manage-trdd` AuthAction. It reads the card's own `min-approval-requirement:` (enum:
+> `none | orchestrator | chief-of-staff | manager | user`), compares it to the caller's
+> governance title on the R41.4 ladder, and **refuses** an under-authorized approval, an
+> agent approving a `user`-tier card, and **any self-approval** (R41.5). Authorization is
+> therefore no longer a convention: the server says no.
+>
+> **What IS enforced by the signature** (ai-maestro#47 ask 2, 2026-07-14): approving a card
+> now **mints a portfolio token** (R28) — Ed25519-signed by the HOST, anchored in the
+> host-signed ledger (R34), scoped `trdd:approve`, and **pinned to that card's id**. Its id is
+> recorded as `approval-token:` in the card's frontmatter, and
+> **`aimaestro-trdd.sh verify <trdd-id>`** reads it back: it checks the signature, the ledger
+> anchor, that the issuer **still holds** the title it minted under, and that the issuer's
+> authority **meets the card's `min-approval-requirement:`** on the R41.4 ladder. So a
+> COS-issued token cannot satisfy a manager-tier card, and **no agent token can ever satisfy a
+> `user`-tier one** (R41.4 — no agent holds the `user` rung; the human owner's tokens record
+> `issuer_title: user`). `verify` exits **non-zero** when the approval does not verify, so a
+> receiving agent can gate on it.
+>
+> Crucially, the verifier answers **from the token, not from the card's prose**. The
+> `## Approval log` line and `approval-judge:` are exactly what a forger rewrites, so the only
+> thing taken from the file is the token id; who approved, under what title, and for which
+> card all come from the signed token. A card carrying a perfectly-formed APPROVED line and no
+> token now reports **UNVERIFIED**.
+>
+> **The limit that remains — do not overstate this.** The token binds an approval to a card's
+> **identity**, not its **content**. Someone with repo write can still edit the body *after*
+> approval and `verify` will still say the approval is authentic — because it is: that
+> authority did approve that card. Freezing content requires a digest of the card inside the
+> token (`attestation_ref`, reserved in the token schema for exactly this). An agent must not
+> treat a verified approval as vouching for the body it is reading today.
+>
+> **Enforcement (`OPERATIONS_REQUIRING_TOKEN`) is still OFF, deliberately.** #47 asked for
+> *verification*; making a token *mandatory* for an operation is a separate governance
+> decision with its own blast radius, and it is a per-operation, reversible flip — not
+> something to slip in beside a refactor.
+
+---
+
+## R42. No Agent May Drive Another Agent — Messaging Is the ONLY Channel (CRITICAL — IRON, USER-set)
+
+**The invariant:** an agent influences another agent **only** by sending it a message. Nothing
+else. There is **no title-based exemption** — not MANAGER, not CHIEF-OF-STAFF.
+
+| ID | Rule | Source |
+|----|------|--------|
+| R42.1 | **No agent may inject a command, keystroke, prompt, or queued input into another agent's session — by API, by CLI, or by tmux.** This is ABSOLUTE | Explicit (USER) |
+| R42.2 | **No title is exempt.** The MANAGER and the CHIEF-OF-STAFF are bound exactly as every other agent is. A directive from a superior is a **message**, not a keystroke | Explicit (USER) |
+| R42.3 | The **messaging system (AMP) is the ONLY channel** by which one agent may influence another, and it is governed by the R6 communication graph (who may message whom) | Explicit (USER) |
+| R42.4 | **Self-drive remains permitted.** An agent may drive its OWN session (`/compact`, its own panel, its own queue). The prohibition is strictly about targeting **another** agent | Explicit (USER) |
+| R42.5 | **Sole exception — the janitor's few GLOBAL operations:** globally disarm/re-arm the janitor, pause/unpause the heartbeat, and globally reload plugins + skills. These are machine-wide switches, **not** commands targeted at an agent. Every other janitor command (`/compact` included) is **self-only** | Explicit (USER) |
+| R42.6 | MANAGER and COS retain a **separate, non-injection** authority: changing an agent's **configuration** (local-scope skills, subagents, MCP, hooks) and its **TEAM** / **TITLE** (rare — both are normally set at creation and kept for the agent's life). Configuring an agent is NOT driving it | Explicit (USER) |
+| R42.7 | **Second exception — the server-as-daemon may RESTART harness agents** after a global change it just applied (an `ai-maestro-plugins` plugin update, or a `~/.claude/settings.json` runtime-env re-apply). Six constraints, all load-bearing: **(a)** the fan-out is **uniform** over every affected harness agent — never a chosen one (a targeted restart is R42.1 injection renamed); **(b)** **zero content** — exit → relaunch with the agent's STORED args, never a keystroke or text; **(c)** **safe-state gated** — the same `idle_prompt` + subagent-counter 409 the human's Restart button obeys; **(d)** **same-host, harness-only**; **(e)** **audited** in the agent ops ledger; **(f)** **no agent may invoke it** — reachable only from the server's own tick, never a route/script/CLI. The actor is infrastructure (no AID, no title), which is why this is not an agent driving an agent | Explicit (USER — delegated 2026-07-30, TRDD-QZL828OD) |
+
+> **Why this is absolute.** A message lands in an inbox and the recipient *decides* whether to
+> act. An injected command *is* the recipient's own action — it bypasses its judgment, its
+> rules, and its governance title entirely. One agent typing into another's pane can make it do
+> anything the victim is permitted to do, which makes every other rule in this document
+> advisory. **The comm graph (R6) is only a boundary if messaging is the only channel.**
+>
+> **Prior design (SUPERSEDED).** `lib/authorization.ts` `send-command` allowed a MANAGER to
+> drive ANY agent and a COS to drive its own team's (`SELF_DRIVE_ACTIONS` permitted self;
+> another agent required MANAGER / own-team COS). Six routes carried it: `POST
+> …/[id]/{panel,queue,prompt/answer}`, `PATCH …/[id]/session` ("types arbitrary text straight
+> into a live pane"), and `POST /api/sessions/[id]/{stop,restart}`. **R42 revokes the
+> cross-agent case entirely** — see `TRDD-BF3JN4TL`.
+>
+> **HONEST LIMIT — the tmux channel is NOT yet closed.** All agents run under one OS uid, so
+> `tmux send-keys -t <other-agent>` succeeds regardless of what the API permits, and no
+> in-process guard can stop it (`agent-shell-guard.sh` overrides the `cd` *shell function*; a
+> binary invoked by absolute path ignores it). R42 is therefore **enforced at the API and
+> mandated by rule** (`rules/aimaestro/aimaestro-agent-rules.md`, injected into every agent's
+> context every turn) — and remains **tamper-evident, not tamper-proof**, until per-agent OS
+> isolation lands (per-agent uid, a seatbelt profile fencing the tmux socket, or containers —
+> `TRDD-a1019073`). **Do not describe R42 as a sandbox.** Closing the API while leaving tmux
+> open is a locked door beside an open window; the danger is believing the window is shut.
+
+---
+
+## R43. Multi-Host Governance Scope (IRON, USER-set)
+
+**The invariant:** governance authority is HOST-SCOPED. A MAESTRO — and the MANAGER that obeys it — governs only the agents and users registered on its OWN host.
+
+| ID | Rule | Source |
+|----|------|--------|
+| R43.1 | Many hosts may run inside the same Tailscale VPN; each host has exactly **one MAESTRO user and one MANAGER agent** (consistent with R36.2) | Explicit (USER) |
+| R43.2 | A MAESTRO (and its MANAGER) may **govern** — approve/mandate TRDDs, and create / destroy / configure agents and users — **only** the agents and users registered on its **own host** | Explicit (USER) |
+| R43.3 | An agent or user registered on **another** host can be governed **only** by **that host's** MAESTRO. No MAESTRO has governing authority over another host's agents or users | Explicit (USER) |
+| R43.4 | Multiple MAESTROs coexist across hosts without conflict — each on its own unique host, each a unique identity (name + AID). The **only** sanctioned channels crossing the host boundary are cross-host MANAGER↔MANAGER coordination for migration (R44) and cross-host **groups** (R45); neither grants governance over the other host's agents | Explicit (USER) |
+
+---
+
+## R44. Cross-Host Agent Migration (IRON, USER-set)
+
+**The invariant:** every ai-maestro agent is relocatable; moving one between hosts requires BOTH hosts' MANAGERs to approve, after which the two servers coordinate the transfer automatically.
+
+| ID | Rule | Source |
+|----|------|--------|
+| R44.1 | All ai-maestro agents are **relocatable by design**. The migration export bundle is: the **conversation JSONL**, all **extensions installed in the workdir**, any **Docker container the agent manages**, and the **zipped workdir** | Explicit (USER) |
+| R44.2 | A cross-host migration requires **DOUBLE approval — the source host's MANAGER AND the destination host's MANAGER must both approve**. Each MANAGER approves under its own MAESTRO's authority (R37.1) | Explicit (USER) |
+| R44.3 | Only after both MANAGERs approve do the two ai-maestro servers **permit the transfer to start**; the actual move is then **automated coordination between the two hosts** (export → transfer → import) | Explicit (USER) |
+| R44.4 | The destination host accepting the arriving agent is subject to **R35** — it is a foreign agent, so its AID is accepted only via the R35 MAESTRO-approval + signed-ledger path | Derived (R35) |
+| R44.5 | Cross-host migration (R44) is **distinct from intra-host team transfer (R5)**: R5 moves an agent between **teams on the same host** (COS-approved); R44 moves an agent between **hosts** (dual-MANAGER-approved) | Clarifying |
+
+---
+
+## R45. Teams Are Same-Host; Groups May Span Hosts (IRON, USER-set)
+
+| ID | Rule | Source |
+|----|------|--------|
+| R45.1 | A **team** requires all its agents to be on the **same host** — the 5-role base (R12) is host-local. To place an agent in a team on another host it must first be **migrated** there (R44) | Explicit (USER) |
+| R45.2 | A **group** MAY include agents from **different hosts**. A group is a broadcast **chat room** (like a Slack channel), not a governance unit — no titles, no COS, no kanban | Explicit (USER) |
+
+---
+
+## R46. Unified Cross-Host Sidebar; User and Paired Agent Both Listed (IRON, USER-set)
+
+| ID | Rule | Source |
+|----|------|--------|
+| R46.1 | The left sidebar shows **one unified list** of all agents AND users — same-host or cross-host, viewed from a desktop or mobile remote browser — divided **only** by teams/groups | Explicit (USER) |
+| R46.2 | A **user and its paired agent both appear** in the list, as **distinct entities**: a **MAESTRO user** alongside its **MANAGER agent**; a **normal user** alongside its **ASSISTANT agent** (R39). A user is not its agent | Explicit (USER) |
+| R46.3 | The paired agent's authority differs by pairing: the **MANAGER governs** its host; the **ASSISTANT does not govern** and works only for its bound user (R39.5) | Explicit (USER) |
+
+---
+
+## R47. VPN-Unique User Names; Remote Normal-User Registration (IRON, USER-set)
+
+| ID | Rule | Source |
+|----|------|--------|
+| R47.1 | **User names are unique across the ENTIRE Tailscale VPN** (all hosts), not merely per-host. Registration MUST reject a name already taken on any peer host | Explicit (USER) |
+| R47.2 | A **normal (non-MAESTRO) user** may be **registered remotely** on any host (then bound by all R38/R40 restrictions), and may **change their own password remotely** | Explicit (USER) |
+
+---
+
+## R48. MAESTRO Console-Presence — Registration and Password Change Are Local-Only (CRITICAL — IRON, USER-set)
+
+**The invariant:** the MAESTRO is too powerful to be seized remotely — physical presence at the host is required to become MAESTRO and to change the MAESTRO password.
+
+| ID | Rule | Source |
+|----|------|--------|
+| R48.1 | A **MAESTRO user may be registered ONLY from the physical host machine** — never over a remote browser. This cannot be changed by any setting | Explicit (USER) |
+| R48.2 | **Physical presence must be verified at least once** (at MAESTRO registration / first login) **and every time the MAESTRO changes their password** — via the host's OS presence channel (console-presence, TRDD-P7XKV3N9 §2b) | Explicit (USER) |
+| R48.3 | Consequently a **MAESTRO password change cannot be made remotely** — only from the host console. A **normal user's** password change is **not** so restricted (R47.2 — remote allowed) | Explicit (USER) |
+| R48.4 | R48 **extends R16** (password never shared with agents) and the TRDD-P7XKV3N9 console-presence work: invalidate/reset are already console-gated; R48 additionally binds **MAESTRO registration and MAESTRO login** to console presence (the not-yet-built halves) | Explicit (USER) + Implementation note |
+
+---
+
+## R49. The Refusal Protocol — An Approver Is a Guide, Not a Gate (CRITICAL — IRON, USER-set)
+
+**The invariant:** a refusal is the START of the work on a proposal, not the end. An approver's job is to get the fleet the capability it needs, not to answer yes/no — so a refusal MUST name a concrete defect and open a path forward. This is the refusal half of R41's APPROVAL protocol; R41 says who may approve, R49 says what a valid refusal is.
+
+| ID | Rule | Source |
+|----|------|--------|
+| R49.1 | **An approver is a GUIDE, not a GATE.** A refusal MUST name (a) the precise defect — the exact command / input path / abuse / rule, not "insufficiently secure", (b) the bar for acceptance — what would make it approvable, and (c) an explicit invitation to re-propose. A bare rejection ("no", "denied — security") names no defect and is **NOT a valid refusal** — it is itself a defect | Explicit (USER, ai-maestro#71, 2026-07-16) |
+| R49.2 | **Refuse the implementation, never the need.** When a design cannot be saved, the goal almost always can — the approver pushes toward an alternative route. A refusal is measured by what the proposer does NEXT: a verdict that is correct on the merits but ends with the need abandoned is a **failed** refusal, because correctness of the ruling and success of the management are independent | Explicit (USER, ai-maestro#71) |
+| R49.3 | **The from-DRAFT corollary (binds the proposer).** A refusal that names no defect does **NOT** authorize stripping, deleting, or rewriting the dependent or derived work — the need it addresses **stands until a defect is named**. This corollary attaches the moment a proposal is **DRAFTED**, not when it is refused: never pre-concede destruction in the ask itself ("implement X, or I strip X from the skill"), which invites the approver to take the cheap exit. If a refusal's scope is unclear, **ASK before destroying anything** — RULE-0 discipline pointed at capabilities | Explicit (USER + MANAGER, ai-maestro#71) |
+| R49.4 | **The MESSAGE is the channel; the tool is the paperwork.** A decision is DELIVERED as a message to the proposer (agent↔MANAGER, COS↔MANAGER, agent↔ORCHESTRATOR, per the R6 graph), carrying the arguments and explanations, and the approver stays in the thread through the revision rounds. `column: refused` + an `## Approval log` line only **records** the outcome — it is never a substitute: a decision that exists only in the file record was never communicated. **Where no AMP thread exists** between two parties (a plugin session ↔ the MANAGER), the **cross-repo GitHub issue IS the message channel** and carries the same duties — arguments, follow-ups, revision rounds — not a form filed once | Explicit (USER + CORE, ai-maestro#71) |
+| R49.5 | **Iterate.** Several refine-and-re-propose rounds per proposal is the process working, not failing; only a genuinely no-margin case ends the loop. Binds **every** approval authority — MANAGER at Tier 2, COS/ORCHESTRATOR at Tier 1 — and the agent when it is the one refused: extract the defect, harden with an explicit safety contract, re-propose; never silently drop its own capability | Explicit (USER, ai-maestro#71) |
+| R49.6 | **The refusal AND its named defect are RECORDED where the proposer will act on them** — the governing GitHub issue and/or the TRDD `## Approval log` — so the bar to clear is written, greppable, and survives a compaction (the message delivers it; the record preserves it) | Explicit (USER, ai-maestro#71) |
+
+> **Why this is absolute.** The failure is invisible from the refuser's side. The incident: the `ai-maestro` hub Claude denied most of a set of scripts an `ai-maestro-plugin` (CORE) skill needed, **correctly**, on security grounds — and CORE, hearing "no", began **deleting its own working skills** to strip the dependent features and make the refusal go away. The USER caught it by chance, explained *where* the security was lacking and that a hardened version would be approved; CORE then secured the commands, re-proposed, and the hub approved them. A correct refusal and a destructive one **look identical in the log** — a perfectly-formed `column: refused` with no conversation is silence wearing a sentence — which is exactly why the duty attaches to *every* refusal, not just the doubtful ones. R49 is the fleet REFUSAL PROTOCOL; the operating detail for agents lives in the DEP overlay `rules/aimaestro/aimaestro-trdd-approval.md` (Part B), and the fleet-side propagation is tracked on ai-maestro#71 and the sibling role-plugin issues.
 
 ---
 
@@ -1450,3 +1738,268 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 | Wake agent | No | Own team only | No | No | Any agent | No |
 | Hibernate agent | No | Own team only | No | No | Any agent | No |
 | Message (see R6 graph) | COS + ORCH | All titles | COS+ARCH+INTEG+MEM | COS + ORCH | All titles | MGR+COS+AUTO |
+
+## R50. One Operation, One All-In-One Function — And The Button Calls It (CRITICAL — IRON, USER-set)
+
+**The first principle of all-in-one functions: THERE MUST BE ONLY ONE FUNCTION FOR EACH OPERATION,
+AND THAT FUNCTION MUST BE AN ALL-IN-ONE.** (USER, 2026-07-25.)
+
+**R50.1 — One implementation per operation.** For any operation on a governed entity (create,
+delete, rename, change title, change client, wake, hibernate, team membership, …) exactly ONE
+function performs it. Every other caller delegates to it. A second code path that reaches the same
+end state by touching stores directly is a violation regardless of how small it is, because the
+gates it skips are exactly the ones nobody remembers.
+
+**R50.2 — An all-in-one leaves a VALID state, or says it did not.** It owns every store the entity
+touches, and it never reports success on a partial state. Where a gate cannot be made
+transactional, the operation MUST verify its own post-condition and surface the residue
+(`incomplete` + the stores still claiming the entity — TRDD-KERM18NX). "The pipeline ran" and "the
+system is valid" are different claims; only the second one may be reported as success.
+
+**R50.3 — Every UI button maps to exactly one API command, and that command IS the all-in-one.**
+The button does not implement the operation; it calls the endpoint. There is no UI-only path and no
+API-only path.
+
+**R50.4 — Manual invocation uses the SAME endpoint with the SAME authentication. Bypassing it is
+FORBIDDEN.** (USER, 2026-07-26 — this clause previously called an in-process bypass a "recorded
+deviation, permitted when no authenticated path exists yet". That was wrong and is superseded: it
+licensed exactly the practice that corrupts the system.)
+
+When the UI is unavailable (a stopped scenario, a headless host), the operation is invoked through
+**that same API endpoint, at the same authorization level, with a valid signed token passed to it**.
+Nothing else is an invocation of the operation.
+
+**Creating, renaming, changing, assigning, deleting, configuring, or migrating an agent by any other
+means — a CLI script, an in-process call to the service function, a direct store write — is
+ABSOLUTELY FORBIDDEN.** Not discouraged, not a deviation to log. Forbidden, because it does not
+merely skip a permission check:
+
+- **It punches holes in the ledger.** The operation sequence is the audit trail AND the restore
+  substrate. An unrecorded mutation makes the ledger a description of a system that no longer
+  exists, and state-restore silently reconstructs the wrong thing. (Worse in a short-lived process:
+  `emitAgentOp` does not await its append, so a CLI that exits can drop even the entries it tried
+  to write.)
+- **It makes recovery impossible.** No ledger entry means no cemetery archive, no rollback point,
+  nothing to reconstruct from.
+- **It compromises security.** The signed token is the authorization; skipping the endpoint is
+  performing a privileged operation with no proof of authority, and the audit record that would
+  show who did it is the same record that was skipped.
+- **It leaves the system invalid in ways nobody sees until later** — agents with conflicting titles
+  and role-plugins, missing rules in their workdirs, stale configuration, wrong names, references to
+  teams or GitHub projects that no longer exist, lost AMP messages, invalid launch-string args.
+
+**If no authenticated non-UI path exists, that is a BLOCKING GAP to fix, not a licence to bypass.**
+The correct response is to build the authenticated path (ai-maestro#55), or to wait for the UI —
+never to reach around the endpoint. An operation you cannot perform through its endpoint is an
+operation you do not perform.
+
+**R50.5 — Store primitives are private to the pipeline.** Low-level mutators
+(`lib/agent-registry.ts::createAgent/deleteAgent/renameAgent/deleteAgentBySession`, direct
+`saveAgents()` writes, …) are implementation details of the all-in-one that owns them. A service
+calling them directly re-creates the class of defect R50 exists to prevent — the
+`PersistedSession` row that outlived every deleted agent (2026-07-25) survived precisely because
+one store had no owner in the pipeline.
+
+**Enforcement.** `tests/unit/all-in-one-single-path.test.ts` pins the known bypass set; a NEW
+bypass fails the build, and the list may only shrink. Convergence of the existing bypasses is
+tracked in TRDD-YB4T4RTL.
+
+## R51. All-Or-Nothing — An All-In-One Function Is a TRANSACTION (CRITICAL — IRON, USER-set)
+
+**R51.0 — THE AIM: an all-in-one function ALWAYS leaves the system in a valid state.** (USER,
+2026-07-26.) Every other clause of R50 and R51 is a *derivation* of this one sentence, not an
+independent rule — when a new situation is not covered below, derive the answer from the aim rather
+than looking for a clause:
+
+| Derived clause | Because |
+|---|---|
+| A failed gate rolls everything back (R51.1-R51.3) | a half-applied operation is an invalid state |
+| A mutating gate must ship its undo, checked before the run starts (R51.4) | you cannot restore validity with a compensation you never wrote |
+| A failed compensation is reported as CRITICAL, never as "no changes" (R51.5) | the aim was NOT met; concealing that leaves an invalid state that nobody is looking for |
+| Irreversible effects go LAST (R51.6) | an irreversible effect early makes every later failure unrecoverable *by construction* |
+| The success path is validated too (R51.7) | "all gates ran" is not the same claim as "the system is valid" |
+| One function per operation (R50.1) | two implementations are two definitions of valid, and they drift |
+| Never bypass the endpoint (R50.4) | a bypass cannot maintain invariants it does not know about |
+
+**There is no reporting option.** This supersedes the "detect and report the residue" contract of
+TRDD-KERM18NX, which allowed an operation to return `incomplete` and leave a partial state behind.
+Reporting an invalid state is not an alternative to preventing one.
+
+**R51.1 — Any gate failure aborts the whole operation.** If even ONE gate fails to execute
+successfully, the function immediately stops and REVERTS. It does not continue to the next gate, and
+it does not "WARN and carry on".
+
+**R51.2 — Revert backwards, one gate at a time, completely.** The already-executed gates are undone
+in REVERSE order — last executed, first reverted — until the system is returned to the EXACT state
+it was in when the function was called. No trace of any change is left behind.
+
+**R51.3 — The return value states the failure and the no-op.** On abort the function returns:
+`THE COMMAND FAILED TO ACCOMPLISH THE REQUESTED OPERATION BECAUSE GATE NUMBER <N> FAILED, SO NO
+CHANGES WERE MADE TO THE SYSTEM.`
+
+**R51.4 — Every mutating gate declares its compensation.** A gate that changes state MUST ship the
+undo that reverses it, written at the same time as the gate. A gate with no compensation may only be
+one that changes nothing (validation, authorization, a read). "Unrevertable" is not a property of an
+operation — it is a missing archive: `DeleteAgent` can be undone precisely because it writes the
+cemetery archive BEFORE it touches anything. Where an undo needs a snapshot, the gate takes the
+snapshot as part of its own execution.
+
+**R51.5 — A failed compensation is a CRITICAL incident, never a silent "no changes".** If a rollback
+step itself fails, the system IS in an invalid state, and the function MUST say exactly that —
+naming every gate that could not be reverted. It must NOT emit the R51.3 no-op message, because that
+message is a factual claim about the system and it would be false. This is not an escape hatch from
+R51.1: it is the refusal to lie about the one case where the guarantee could not be met.
+
+**R51.6 — Ordering follows from this.** Gates are ordered so that irreversible or outward-facing
+effects (deleting a remote repo, sending a message, killing a process) come LAST, after everything
+revertible has already succeeded. An irreversible effect placed early makes every later gate's
+failure unrecoverable by construction.
+
+**R51.7 — The SUCCESS path is validated too, against the system's INVARIANTS.** The aim is not
+"every gate ran"; it is "the system is valid". A run in which every gate succeeded can still produce
+an invalid system — an agent holding a title with no compatible role-plugin, a workdir missing its
+seeded rules, a team slot pointing at a deleted agent, a launch string that will not start, a
+GitHub-project reference that no longer resolves. So a pipeline verifies the invariants it is
+responsible for BEFORE returning success, and **a failed invariant is a gate failure**: it triggers
+the same reverse compensation and the same R51.3 message. It does not return success with a warning.
+
+This is the clause the residue check of TRDD-KERM18NX only half-covers: that post-condition asks
+"does any store still CLAIM this entity?", which catches leftovers but not contradictions. Both are
+required — leftovers and contradictions are two different ways to be invalid.
+
+**R51.8 — THE SHAPE: pre-gates, the change, post-gates. NO CHANGE EXISTS IN ISOLATION.** A normal
+function makes CHANGE X. An all-in-one is a long sequence of PRE-gates, then CHANGE X, then a long
+sequence of POST-gates — because every change has both REQUIREMENTS and CONSEQUENCES, and the
+phasing is the PRIMARY mechanism that keeps the system valid (rollback is only the fallback for a
+failure at or after the change).
+
+```
+PRE-EXECUTION   G00..G11+   verify each element is in the required state
+EXECUTION       EXE:        the change itself — smallest possible mutation, never a `G##`
+POST-EXECUTION  PG01..PG08  apply every derived change the CHANGE implies
+```
+
+- **PRE-gates verify requirements.** They span low-level (`the name must have more than 0 chars`) to
+  complex governance (`only agents assigned to teams can install role-plugins compatible with the
+  MEMBER title`). One value is linked to dozens of others; the change is legal only when all of them
+  hold. Checking first is also why a rejected operation costs nothing to undo.
+- **POST-gates apply consequences.** They are NOT the caller's job and NOT optional:
+  - create an agent with the AUTONOMOUS title ⇒ install the AUTONOMOUS role-plugin (no agent may
+    exist without a role-plugin compatible with its title);
+  - uninstall the role-plugin of a MEMBER agent (MEMBER has several compatible) ⇒ install the
+    default one;
+  - remove an agent from a team ⇒ reset it to the AUTONOMOUS title AND an autonomous role-plugin;
+  - uninstall the core `ai-maestro-plugin` ⇒ HIBERNATE the agent immediately, because nothing can
+    run in ai-maestro without it.
+- **Post-gates call other all-in-one functions** — never inline the cascaded mutation, or it bypasses
+  that operation's own gates (R50.1).
+- **Post-gates run even when EXE is skipped as idempotent.** A no-op change does not imply valid
+  consequences: a previous attempt may have died before its post-gates, and that is precisely the
+  state needing repair.
+- **A failed post-gate reverts the CHANGE too.** A change whose consequences could not be applied
+  leaves the system invalid, so the change itself must go.
+
+**R51.9 — COMPLETENESS: one gate per rule.** For each governance rule there is a gate. For each
+security-spec rule there is a gate. For each spec rule there is a gate. A rule with no gate is a rule
+the system does not actually enforce — it is documentation, and the state it forbids will occur.
+
+**R51.10 — What "the EXACT state" means, and why restoring it is always possible.** (USER,
+2026-07-26.) R51.2 says a compensation returns the system to the exact state it was in. That is a
+weaker requirement than it looks, because **restorability is already a fundamental requirement of
+ai-maestro** — not something R51 has to invent. Whatever kills a process, kills a tmux, or deletes an
+agent directory, the continuity daemon restores the agent exactly where it stopped. That is what
+"the janitor daemon makes agents immortal" means.
+
+The state that must be restored:
+
+> **the configuration of the agent, its sessions and conversation transcripts, the AMP inbox and
+> outbox, and any state or resource it owns that will allow it to resume its job without
+> interruption — NOT process ids, and not values unnecessary to that.**
+
+What makes this reachable:
+
+- **Deleting an agent is a SOFT delete.** It moves the agent to the cemetery, preserving the git.
+- **Soft-delete and pack-for-relocation are THE SAME function.** A MANAGER may approve migrating an
+  agent to another host, under a different MANAGER; that migration must restore the agent and its
+  tmux on the new host perfectly and restart its work exactly where it stopped. A function that can
+  move an agent across machines can certainly move it back across a failed gate.
+- **The archive carries everything the definition names**: the whole workdir, every JSON config file
+  (local- and project-scoped), the git workdirs, the plugin data folders — plus the conversation
+  `.jsonl` copied out of the Claude projects folder together with the Claude metadata needed to
+  restore or relocate it.
+- **The LEDGER is the last-resort rebuild.** If configuration files are lost, the ledger recreates
+  them exactly: it records every addition, change and removal of every agent's configuration
+  elements, including uid rotation.
+
+Two consequences that decide real compensations:
+
+1. **A rebuilt-but-equivalent resource satisfies the guarantee.** Killing a tmux session is
+   compensated by relaunching it; the new session has a new pid, and that is NOT a violation,
+   because a pid was never part of the state. Same for a re-attached PTY or a re-opened handle.
+2. **Anything IN the definition must be snapshotted before the gate that destroys it** (R51.4). A
+   lost transcript, a dropped AMP message, or a config the ledger cannot replay IS an unrestored
+   state — no "it was equivalent" argument applies to those.
+
+**Enforcement.** `lib/gate-transaction.ts` provides the runner; `tests/unit/gate-transaction.test.ts`
+proves reverse-order compensation, the exact R51.3 message, and the R51.5 refusal. Retrofitting the
+existing pipelines, including their R51.7 invariant checks, is tracked in TRDD-DQ6XN2VP.
+
+---
+
+## R52. The Write Boundary — ai-maestro Writes Inside Its Own Two Roots (CRITICAL — IRON, USER-set)
+
+**R52.0 — THE AIM: a host shared with other tools comes back unchanged except where ai-maestro
+owns the ground.** (USER, 2026-07-29, verbatim: *"this is extremely dangerous, the only writings
+should be into `~/.aimaestro` and into `~/agents`"*.) Derive the answer from the aim when a clause
+below does not cover a case.
+
+**R52.1 — The two roots.** The **running server and its agents** MUST confine filesystem WRITES to
+`~/.aimaestro/` (per-host server state) and `~/agents/` (agent working directories, including an
+adopted project folder recorded in the registry). READS are unrestricted — reading another tool's
+files is how a harness cooperates; writing them is how it corrupts them.
+
+**R52.2 — This binds the RUNTIME, not the INSTALLER.** A user-invoked installer placing a tool on
+PATH (`~/.local/bin/`, `~/.local/share/`) is the user acting on their own machine, and the USER
+ordered exactly that in the same period as R52.0 (TRDD-217AYEOT: the pillar CLIs "must be installed
+where everyone can reach for them"). Read as a blanket path rule, R52.1 would outlaw
+`install-messaging.sh` itself. The subject of the sentence is load-bearing: *the server and its
+agents*, not *every process in this repo*.
+
+**R52.3 — The USER-SCOPED-ELEMENT exception, and its three non-readings.** Some ecosystem elements
+are user-scoped BY DESIGN, and their state lives outside both roots because that is what user scope
+MEANS. The list is SHORT and CLOSED: the **janitor**, the **wikimem memory system**, the **3-pillar
+system**, and a small number of user-scoped plugins that keep their own user-scoped files. Writing
+into one of those stores is entering another element's state dir by design, not widening our
+footprint. Without this clause, R52 would outlaw the janitor, wikimem and the 3-pillar system's own
+state the day it was written. It does NOT license:
+
+- **installing or enabling anything at user scope** — that remains prohibited, and only the human may
+  do it (R17.17 disables the core plugin found at user scope precisely because of this);
+- **writing a user-scoped element's state on a whim** — an out-of-root write still names a ratifying
+  TRDD and still owes the discipline that earned the settings carve-out: an allowlist entry, atomic
+  tmp+rename, fail-closed, idempotent;
+- **deleting the user's own data.** DeleteAgent's `~/.claude/projects/<slug>/` transcript purge was
+  removed for this reason (TRDD-0GCIMQ9F): Claude Code owns transcript retention, and a second
+  deleter of someone else's data can only ever be the one that deleted too much.
+
+**R52.4 — Another tool's file has ONE writer, and it is that tool.** Where a file is owned by another
+tool's CLI, mutate it BY ASKING THAT CLI, never by hand-editing. Two writers over one file do not
+disagree on day one; they disagree on the day the other side changes its schema, and the discovery
+is a corrupted user store. `~/.claude/plugins/installed_plugins.json` is the open instance
+(TRDD-OWO449MR).
+
+**R52.5 — Every out-of-root write is ALLOWLISTED, with the TRDD that ratified it.** An unratified
+line is a TODO, not permission. An entry names its ratifying TRDD and says why; a ratified entry is
+asserted POSITIVELY so a later audit cannot tidy away a carve-out the server needs to function.
+
+**Enforcement.** `lib/write-boundary.ts` scans the tree for a filesystem write verb whose target
+carries an out-of-root marker and compares the result to `ALLOWED_OUT_OF_ROOT_WRITES` in BOTH
+directions (an unexpected site is a new crossing; a stale entry silently widens what is permitted).
+`tests/unit/write-boundary.test.ts` asserts a non-vacuous scan (the scanned-file and call-site
+counts, and a non-zero hit per marker class), flags a seeded violation, and pins the ratified
+carve-out by key.
+
+**The gate's reach is stated, not assumed.** It is TEXTUAL, so a write through a local variable is
+invisible to it — that is how the transcript purge, the highest-risk write the audit found, was
+missed by the scanner and found by reading. `KNOWN_INDIRECT_WRITERS` records the writers it cannot
+see. A green gate means "no violation of the shapes I can see", never "no violation".
