@@ -132,6 +132,26 @@ checking nothing, and only the guard caught it.
 Record deliberate exclusions in the commit that makes them, or the next sweep re-files them as
 oversights.
 
+
+^ATOM-KXTI-U3Q2 [desc:"the PreToolUse directory-guard ABSTAINS (emits nothing) wherever it has no jurisdiction; returning allow there is a permission bypass, not a no-op", keywords: directory_guard_returns_allow_or_abstains why_does_the_pretooluse_guard_emit_nothing permission_prompts_suppressed_by_our_own_hook non_agent_session_guard_behaviour is_it_safe_to_return_allow_from_our_guard, ocd: 2026-08-05, lmd: 2026-08-05]
+
+`scripts/directory-guard.cjs` (PreToolUse, matcher `Bash|Write|Edit|NotebookEdit`) has exactly three
+outcomes, and the third is load-bearing: **deny** where a sandboxed write escapes its root, **allow**
+only where it affirmatively vouches for a write inside a resolved `AGENT_WORK_DIR`, and **abstain —
+emit no stdout at all** on every path where it has no jurisdiction (an ordinary non-agent session, or
+a tool outside the matcher).
+
+`permissionDecision: "allow"` is NOT "step aside". It is an affirmative override that skips the
+user's permission prompt AND their configured rules, so returning it from a no-jurisdiction path
+silently auto-approves the four highest-risk tools for anyone who installs the plugin. That shipped
+in 2.9.0–2.11.0 and was fixed in `0683e1b`; the guard reached that state by fixing an earlier
+fail-CLOSED bug (#22, a deny that bricked every interactive session) and over-correcting straight to
+allow, skipping abstain. Abstaining satisfies #22 equally well — it does not deny — without granting.
+
+`tests/test_directory_guard_bash.py::test_non_agent_session_without_work_dir_abstains_instead_of_allowing`
+requires EMPTY stdout and names `allow` explicitly in its failure message, so a future
+over-correction fails loudly instead of passing as "not denied".
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
