@@ -38,9 +38,12 @@ feedback-event count. If it reports zero clients, `set`/`open` will report
 
 ## Authorization
 
-Per `TRDD-D3RP7KQZ`: an agent drives its **own** panel by default. Targeting
-**another** agent's panel requires MANAGER (any agent) or CHIEF-OF-STAFF
-(agents of its own team). **Strict verbs** (agent: AID + title; human: fresh
+Per `TRDD-D3RP7KQZ`: an agent drives its **own** panel — and only its own.
+**Targeting another agent's panel is forbidden for every title** (governance
+R42, CRITICAL/IRON): the panel routes are `send-command`-class, R42.1 bars
+injecting into another agent's session by API, CLI or tmux, and R42.2 grants
+no exemption to MANAGER or CHIEF-OF-STAFF. The former "MANAGER (any agent) /
+COS (own team)" path was the pre-R42 model and is revoked (`TRDD-BF3JN4TL`). **Strict verbs** (agent: AID + title; human: fresh
 sudo-token): `open`, `close`, `refresh`, `set`. **Non-strict**: `status`,
 `feedback`.
 
@@ -122,7 +125,7 @@ JSON on STDOUT (pipe to `jq`). `set`/`open` return `{ "delivered": N, ... }`.
 | `delivered: 0` | no dashboard client has this agent's panel open — check `status`, ask the user to open it, or accept the push was a no-op |
 | 400 on `--url` | scheme is not `https:`/`http:`, or the URL was `javascript:`/`file:`/`data:` |
 | 400 on `--html`/`--html-file` | content exceeds the 2 MB cap |
-| 403 targeting another agent | you are not MANAGER, and not that agent's own-team COS |
+| 403 targeting another agent | expected — R42 forbids it for every title. Send the agent a message instead; do not hunt for a title that permits it |
 | `feedback` returns empty every time | either nothing has been submitted yet, or it was already drained by a prior call |
 
 ## Examples
@@ -148,8 +151,8 @@ events won't show up on a second call.
 
 ## Scope
 
-Drives an agent's **own** dashboard panel, or another agent's when the
-caller is MANAGER (any) / COS (own team). Terminal/state control is
+Drives an agent's **own** dashboard panel — only its own; R42 (IRON) forbids
+targeting another agent's, with no title exemption. Terminal/state control is
 `ama-session`. Server-mediated TRDD search/read is `ama-trdd-server`.
 
 ## Resources

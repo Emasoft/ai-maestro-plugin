@@ -70,12 +70,31 @@ are read/answer operations, not "make something happen next" operations:
 
 ## The authorization rule — READ THIS BEFORE TARGETING ANY `<agent>`
 
+**SELF ONLY. Never target another agent — no title exempts you (governance R42, IRON).**
+
 Since `TRDD-D3RP7KQZ`: **an agent may drive its own surface; it may never
 reconfigure itself.** Every verb in this skill acts on the agent's **own**
-id by default (inferred from the environment). Targeting **another** agent
-requires **MANAGER** (any agent) or **CHIEF-OF-STAFF** (agents of its own
-team only) — see the authorization table in
-[references/session-reference.md](references/session-reference.md).
+id by default (inferred from the environment), and that is the only
+permitted target.
+
+> **R42 — No Agent May Drive Another Agent; messaging is the ONLY channel**
+> (CRITICAL, IRON, USER-set). R42.1: *no agent may inject a command,
+> keystroke, prompt, or queued input into another agent's session — by API,
+> by CLI, or by tmux.* R42.2: *no title is exempt* — MANAGER and
+> CHIEF-OF-STAFF are bound exactly as every other agent is. R42.4 preserves
+> self-drive, which is what this skill is for.
+>
+> **This supersedes the title-keyed targeting this skill used to teach**
+> ("another agent requires MANAGER, or COS for its own team"). That was the
+> pre-R42 `send-command` model, and R42 revoked the cross-agent case
+> entirely (`TRDD-BF3JN4TL`). To influence another agent, send it a message
+> (AMP) and let it decide — an injected command *is* the recipient's own
+> action, which bypasses its judgment and its governance title.
+>
+> **A 403 is not the boundary.** All agents run under one OS uid, so
+> `tmux send-keys -t <other>` succeeds regardless of what the API permits.
+> R42 is enforced at the API and *mandated by rule* — tamper-EVIDENT, not
+> tamper-proof. Do not treat "the call would fail" as the reason to comply.
 **Nothing in this skill ever reconfigures anything** — role, plugin, team,
 MCP, hooks, sub-agents, and title are refused on self for every title,
 MANAGER included; that is `ai-maestro-agents-management`'s domain (and it
@@ -158,7 +177,7 @@ enqueued entry id (needed for `queue-cancel`).
 
 | Symptom | Likely cause |
 |---|---|
-| 403 targeting another agent | you are not MANAGER, and not that agent's own-team COS |
+| 403 targeting another agent | expected — R42 forbids it for every title. Send the agent a message instead; do not look for a title that permits it |
 | 403 on any verb attempting self-reconfiguration | not this skill's job — configuration is refused on self for every title |
 | `queue` accepted but nothing ran yet | expected — it fires at the next genuine idle prompt, not immediately (unless `--wake-first` on a hibernated agent) |
 | `inject` silently did nothing / landed mid-output | you skipped the `state` check; re-run with `--require-idle` |
@@ -188,8 +207,8 @@ Check whether an agent is safe to interrupt before injecting text.
 
 ## Scope
 
-Drives an agent's **own** terminal/state, or another agent's when the caller
-is MANAGER (any) / COS (own team). Never reconfigures an agent (role,
+Drives an agent's **own** terminal/state — and only its own; R42 (IRON)
+forbids targeting another agent, with no title exemption. Never reconfigures an agent (role,
 plugin, team, MCP, hooks, sub-agents, title) — that is
 `ai-maestro-agents-management`, refused on self regardless of title. Driving
 the HTML side panel is `ama-panel`. Server-mediated TRDD search/read is

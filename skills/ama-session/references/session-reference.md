@@ -18,9 +18,19 @@ are `send-command`-class actions. Who may act **on whom**:
 | Caller | May act on |
 |---|---|
 | the human USER | any agent (needs a fresh sudo-token) |
-| MANAGER | any agent |
-| CHIEF-OF-STAFF | agents of its own team only |
+| MANAGER | **itself only** — no title exemption (R42.2) |
+| CHIEF-OF-STAFF | **itself only** — no title exemption (R42.2) |
 | any agent | **itself only** |
+
+> **Revised for governance R42 (CRITICAL, IRON, USER-set).** The MANAGER/COS
+> rows previously read "any agent" and "agents of its own team" — that was the
+> pre-R42 `send-command` model, which R42 **revoked entirely** for the
+> cross-agent case (`TRDD-BF3JN4TL`). R42.1 forbids injecting a command,
+> keystroke, prompt, or queued input into another agent's session by API, CLI,
+> **or tmux**; R42.2 states no title is exempt. Only the human USER retains a
+> cross-agent path. To influence a peer, send it a message — a message lands in
+> an inbox and the recipient decides; an injected command *is* the recipient's
+> own action and bypasses its judgment entirely.
 
 So the janitor running inside a MEMBER's session can arm *that* agent and no
 other. A fleet-wide command must come from the MANAGER's session, or from
