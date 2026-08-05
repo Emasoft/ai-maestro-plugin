@@ -64,7 +64,7 @@ Hard backstop: `require_manager()` in the script calls
    ```bash
    python3 "$DIR/amama_proposal_approvals.py" list                     # numbered table; records a number->id manifest
    python3 "$DIR/amama_proposal_approvals.py" approve 4,6 --user       # approve EXACTLY those (rest stay pending)
-   python3 "$DIR/amama_proposal_approvals.py" refuse 7,8 --approve-rest --user   # refuse named, APPROVE the rest
+   python3 "$DIR/amama_proposal_approvals.py" refuse 7 --reason "<defect + bar + re-propose>" --user
    python3 "$DIR/amama_proposal_approvals.py" archive 9a8aba94 --state completed --user
    python3 "$DIR/amama_proposal_approvals.py" archive 9a8aba94 --cancel --user   # alias for --state cancelled
    ```
@@ -74,6 +74,28 @@ Hard backstop: `require_manager()` in the script calls
    approves exactly those (conservative — silence = still pending); `refuse: 7,8`
    with `--approve-rest` refuses the named few and approves everything else (the
    bulk path — use only after reviewing the whole list).
+
+   > **Every refusal MUST carry `--reason`, and it is not a formality**
+   > (governance **R49**, CRITICAL/IRON — *An Approver Is a Guide, Not a Gate*).
+   > The reason must name three things: **(a)** the precise defect — the exact
+   > command, input path, abuse or rule, never "insufficient detail"; **(b)** the
+   > **bar** that would clear it; **(c)** an invitation to **re-propose**. A
+   > refusal is the START of work on a proposal, not the end (R49.1), and several
+   > refine-and-re-propose rounds is the process working (R49.5).
+   >
+   > **Refuse the implementation, never the need** (R49.2) — when a design cannot
+   > be saved the goal usually can, so push toward an alternative.
+   >
+   > **R49.3 binds the PROPOSER too:** a refusal that names no defect does **NOT**
+   > authorize you to strip, delete or rewrite the dependent work. If you receive
+   > a bare refusal, ask for the defect — do not treat it as licence to tear
+   > things out.
+   >
+   > `--reason` lands in the TRDD's `## Approval log`, which is where R49.6
+   > requires the defect be recorded so the proposer can act on it. Batch-refusing
+   > several proposals with one shared reason is a smell: if the defects differ,
+   > the reasons must differ, and `--approve-rest` in particular refuses by
+   > omission — review the whole list before using it.
 
 ## Output
 
