@@ -152,6 +152,43 @@ allow, skipping abstain. Abstaining satisfies #22 equally well — it does not d
 requires EMPTY stdout and names `allow` explicitly in its failure message, so a future
 over-correction fails loudly instead of passing as "not denied".
 
+
+^ATOM-2JGQ-JEAV [desc:"CLAUDE.md claims the memory contract is repeated in each agents/ prompt, but CORE ships no agents at all — the stated safeguard does not exist", keywords: claude_md_says_agents_prompts_repeat_the_memory_contract does_core_ship_any_agents where_are_the_agent_prompts sub_agents_do_not_inherit_the_memory_contract agents_directory_missing, ocd: 2026-08-05, lmd: 2026-08-05]
+
+`CLAUDE.md` (the PROACTIVE MEMORY CONTRACT section) states the contract "is repeated in each
+`agents/` prompt for that reason", justifying it with "sub-agents inherit nothing". **CORE ships
+zero agents**: there is no `agents/` directory, `plugin.json` has no `agents` key, and the only
+files matching `*agent*` are SKILLS *about* agents (`agent-identity`, `agent-messaging`,
+`ai-maestro-agents-management`, `agent-repo-workflow`).
+
+So the safeguard the sentence promises is absent — any sub-agent CORE spawns receives no memory
+contract, while the file asserts otherwise. Verified 2026-08-05. Left unfixed deliberately:
+`CLAUDE.md` is the owner's instruction file, and the fix is a judgement call between dropping the
+clause and actually adding the agent prompts it promises.
+
+Related: `tests/test_claude_code_platform_contracts.py::test_no_agent_name_contains_a_colon` scans
+`agents/` and therefore currently proves nothing (it guards `if ... .is_dir() else []`). That is
+correct behaviour for an optional directory, not a broken glob — but it means the 2.1.218 colon
+rule has no live coverage here.
+
+
+^ATOM-N3UF-12WL [desc:"CORE registers 12 of Claude Code's 29 hook events; TeammateIdle is the one with a real AMP fit, deliberately NOT adopted pending a decision", keywords: which_hook_events_could_core_still_adopt teammate_idle_hook_for_amp_inbox how_many_hook_events_does_claude_code_have should_core_register_more_hooks unused_hook_events, ocd: 2026-08-05, lmd: 2026-08-05]
+
+Claude Code 2.1.222 dispatches **29** hook events; CORE registers **12**, all valid (locked by
+`test_every_registered_hook_event_is_one_claude_code_actually_dispatches`, commit `61db3f6`). The
+authoritative list comes from the binary's own enum, not the docs:
+
+    strings -a "$(readlink "$(command -v claude)")" | grep -A18 -x 'PreToolUse'
+
+The 17 unregistered events are a DESIGN CHOICE, not a gap — each hook costs a process spawn per
+occurrence. One is worth revisiting: **`TeammateIdle`**, which exposes `executeTeammateIdleHooks`
+and the string "TeammateIdle hook prevented continuation", i.e. it can stop an idle teammate from
+halting. That is a direct fit for AMP — an idle teammate could drain its inbox instead of stopping.
+
+Deliberately NOT built (2026-08-05): adding it changes behaviour for every plugin inheriting CORE,
+so it is a proposal awaiting the owner, not alignment work. Also unregistered and plausibly useful
+later: `TaskCreated`/`TaskCompleted` (kanban), `DirectoryAdded`, `ConfigChange`.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
