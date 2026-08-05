@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "consents": [
+    {
+      "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
+      "ruleId": "A2A_AGENT_IMPERSONATION",
+      "lineSha256": "4a85cc9671946d7262c72e2951264f6c3920b0d81c9d1e06c7c356e43abfc274",
+      "reason": "governance rule text DESCRIBES and FORBIDS this attack (R22.4/R42.1/R42.7 rows of the verbatim v5.2.0 canonical mirror); reviewed 2026-08-06, CPV#194/#195"
+    },
+    {
+      "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
+      "ruleId": "A2A_CROSS_AGENT_INJECT",
+      "lineSha256": "f27b3cbb32232ed92fc73ee957f00e7829dac6f9e68fa7da64551c34bdd37341",
+      "reason": "governance rule text DESCRIBES and FORBIDS this attack (R22.4/R42.1/R42.7 rows of the verbatim v5.2.0 canonical mirror); reviewed 2026-08-06, CPV#194/#195"
+    },
+    {
+      "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
+      "ruleId": "A2A_CROSS_AGENT_INJECT",
+      "lineSha256": "93d947f1cb4519348b5158c2e607b3fafe9c9e6d3a8812e8ad88ccea4bfe64f4",
+      "reason": "governance rule text DESCRIBES and FORBIDS this attack (R22.4/R42.1/R42.7 rows of the verbatim v5.2.0 canonical mirror); reviewed 2026-08-06, CPV#194/#195"
+    }
+  ]
+}
