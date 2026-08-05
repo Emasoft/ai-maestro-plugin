@@ -14,6 +14,7 @@
   - [Delete Agent](#6-delete-agent)
   - [Hibernate Agent](#7-hibernate-agent)
   - [Wake Agent](#8-wake-agent)
+  - [Hibernation States](#8a-hibernation-states-read-only)
   - [Restart Agent](#9-restart-agent)
   - [Export Agent](#10-export-agent)
   - [Import Agent](#11-import-agent)
@@ -64,6 +65,7 @@
 | `aimaestro-agent.sh rename <old> <new>` | `PATCH /api/agents/{id}` with `name` field |
 | `aimaestro-agent.sh hibernate <agent>` | `POST /api/agents/{id}/hibernate` |
 | `aimaestro-agent.sh wake <agent>` | `POST /api/agents/{id}/wake` |
+| `aimaestro-agent.sh hibernation [--json]` | `GET /api/agents/hibernation` (feature-detect first — see §8a) |
 | `aimaestro-agent.sh export <agent>` | `GET /api/agents/{id}/export` |
 | `aimaestro-agent.sh import <file>` | `POST /api/agents/import` |
 | `aimaestro-agent.sh plugin list <agent>` | `GET /api/agents/{id}/local-plugins` |
@@ -98,7 +100,7 @@ Status filters are an **exact string match** against the API's `AgentStatus` enu
 
 > **Do not use `online` or `hibernated`.** The CLI's own `--help` advertises both, but neither is in the enum, so each returns an empty list with **exit 0** — indistinguishable from "no agents are in that state" (ai-maestro#114). Conversely `idle` and `deleted` work but are not advertised.
 >
-> **`offline` is not a fault signal.** It conflates deliberately-hibernated, crashed, and never-woken agents; the status field cannot tell them apart. For liveness use the dedicated hibernation surface (ai-maestro-plugin#55) rather than inferring from this filter.
+> **`offline` is not a fault signal.** It conflates deliberately-hibernated, crashed, and never-woken agents; the status field cannot tell them apart. For liveness use `aimaestro-agent.sh hibernation` (§8a — the dedicated surface from ai-maestro-plugin#55) rather than inferring from this filter.
 
 Output formats: `--format table` (default), `--format json`, `--format names`, `--json`, `-q` (quiet).
 
@@ -214,6 +216,39 @@ aimaestro-agent.sh wake my-api --attach
 Restores hibernated agent: creates tmux session, launches `claude`.
 
 **Maps to:** `POST /api/agents/{id}/wake` (handled by the CLI — never call it directly, core#11).
+
+### 8a. Hibernation States (read-only)
+
+```bash
+aimaestro-agent.sh hibernation            # table
+aimaestro-agent.sh hibernation --json     # raw roster
+```
+
+Answers the question `list --status offline` cannot: **is an agent deliberately
+asleep or broken?** Each agent reports one of four states:
+
+| State | Meaning | Health |
+|-------|---------|--------|
+| `running` | live tmux session | healthy |
+| `hibernated` | cleanly suspended, wakeable | **HEALTHY — never surface as a fault, warning, or thing needing recovery** |
+| `never_woken` | created but not yet started | healthy |
+| `crashed` | the clean-hibernation record is absent but the session is gone | **the ONLY unhealthy state** |
+
+**Feature-detect before relying on it** (`aimaestro-agent.sh hibernation --help`):
+the verb shipped in the CLI *source*, but nothing propagates `scripts/*.sh` into
+`~/.local/bin/` on its own — an operator must re-run `install-agent-cli.sh` — and
+`--version` does not move with the verb set, so an installed copy can lack the
+verb while claiming the same version (ai-maestro#116 tracks the deployment
+stamp). If the probe fails, report the states as unavailable and name the
+`install-agent-cli.sh` remedy; do NOT fall back to inferring health from
+`--status offline`, which is wrong for cleanly-hibernated agents in the
+alarming direction.
+
+**Maps to:** `GET /api/agents/hibernation` (handled by the CLI — never call it
+directly, core#11). The janitor-side file surface
+(`.janitor/daemon_responses/hibernation.json`) is deposited only in the
+*server's own* checkout, not in consumer projects — it is not a surface for
+skills (ai-maestro-plugin#55).
 
 ### 9. Restart Agent
 
@@ -706,6 +741,7 @@ aimaestro-agent.sh plugin install data-processor data-analysis-tool
 | New project/agent | `create` |
 | Free resources | `hibernate` |
 | Resume work | `wake` |
+| Is an offline agent asleep or broken? | `hibernation` (feature-detect, §8a) |
 | Change task/tags | `update` |
 | Add Claude extensions | `plugin install` |
 | Backup/restore (same host — never cross-host migration, R44) | `export` / `import` |

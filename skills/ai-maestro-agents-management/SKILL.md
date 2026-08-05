@@ -72,7 +72,7 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
 
 ## Instructions
 
-1. **Identify the operation** the user needs (create, list, show, config, update, delete, rename, hibernate, wake, restart, export, import, plugin/skill management).
+1. **Identify the operation** the user needs (create, list, show, config, update, delete, rename, hibernate, wake, hibernation states, restart, export, import, plugin/skill management).
 2. **Run the CLI command** using `aimaestro-agent.sh <command> <agent> [options]`. Key commands:
    - `list [--status active|idle|offline]` — List agents. Exact match on the API's status enum, so the `online`/`hibernated` values the CLI's own `--help` advertises match nothing and exit 0 (ai-maestro#114)
    - `create <name> --dir <path> [--task "..."] [--tags "..."]` — Create agent
@@ -81,6 +81,7 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
    - `update <agent> [--task|--tags|--model|--args]` — Update properties
    - `delete <agent> --confirm` — Delete agent
    - `hibernate <agent>` / `wake <agent>` — Suspend/restore
+   - `hibernation [--json]` — Read every agent's real sleep state (`running`|`hibernated`|`crashed`|`never_woken`); `hibernated` is HEALTHY, only `crashed` is a fault. Feature-detect first (`hibernation --help`) — an installed CLI may predate the verb (ai-maestro#116); never infer health from `list --status offline` instead
    - `restart <agent>` — Graceful restart
    - `export <agent>` / `import <file>` — Backup/restore
    - `plugin list|install|uninstall|enable|disable <agent> <plugin>`

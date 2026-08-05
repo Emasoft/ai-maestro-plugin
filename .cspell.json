@@ -110,6 +110,7 @@
     "mkdtemp",
     "monkeypatch",
     "monorepo",
+    "myapi",
     "mypy",
     "network",
     "nodejs",
