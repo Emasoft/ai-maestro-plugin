@@ -18,7 +18,7 @@ Manage AI agents through the frozen `aimaestro-agent.sh` CLI (which resolves the
 
 The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RULES.md) covers:
 
-- §0. Canonical source + copies
+- §0. Canonical source + copies (READ THIS BEFORE EDITING)
 - §TERMINOLOGY. Three-layer agent model (TITLE / ROLE / PERSONA)
 - Overview
 - R1. Teams and Groups
@@ -43,26 +43,38 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
 - R20. Marketplace Governance
 - Invariants (Must Never Be Violated)
 - R21. All-In-One Pipeline Architecture (CRITICAL — IRON)
-- R22. GitHub Authorship Self-Identification (RESERVED — see issue #33)
+- R22. GitHub Authorship Self-Identification (USER-set baseline)
 - R23. Plugin↔Server Decoupling via the Frozen CLI Layer (CRITICAL — IRON)
 - R24. Proactive Global Memory
 - R25. Three-Pillars Task System (TRDD / PRRD / Kanban)
-- R26. Identity Immutability — No Self-Mutation of Title / Role / Name / AID (CRITICAL — IRON)
-- R27. Self-Install Only via Core-Plugin Skills, With Approval + CPV Scan (IRON)
-- R28. Three-Check API Authorization (AID → Title → Portfolio Token) (CRITICAL — IRON)
-- R29. MANAGER Team & Agent Lifecycle Authority (IRON)
-- R30. COS Agent-Creation Requires a MANAGER Mandate; the 5-Member Base Is Invariant (IRON)
-- R31. Incomplete-Team Freeze (IRON)
-- R32. No Sudo Gates for Agents — AID Is Sufficient; Sudo Is USER-via-UI Only (CRITICAL — IRON)
-- R33. Signed-Ledger Recovery of Agent Auth State (IRON)
-- R34. The Signed Ledger Is the Ultimate Source of Truth (CRITICAL — IRON)
-- R35. Foreign Agent/User Host Approval (CRITICAL — IRON)
-- R36. Users Have AIDs; One MAESTRO Per Host (IRON)
-- R37. MAESTRO and the Single MAESTRO-DELEGATE (CRITICAL — IRON)
-- R38. Non-MAESTRO User Restrictions (IRON)
-- R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON)
-- R40. Foreign-User Creation Approval (IRON)
+- R26. Identity Immutability — No Self-Mutation of Title / Role / Name / AID (CRITICAL — IRON, USER-set)
+- R27. Self-Install Only via Core-Plugin Skills, With Approval + CPV Scan (IRON, USER-set)
+- R28. Three-Check API Authorization (AID → Title → Portfolio Token) (CRITICAL — IRON, USER-set)
+- R29. MANAGER Team & Agent Lifecycle Authority (IRON, USER-set)
+- R30. COS Agent-Creation Requires a MANAGER Mandate; the 5-Member Base Is Invariant (IRON, USER-set)
+- R31. Incomplete-Team Freeze (IRON, USER-set)
+- R32. No Sudo Gates for Agents — AID Is Sufficient; Sudo Is USER-via-UI Only (CRITICAL — IRON, USER-set; SUPERSEDES prior agent-sudo behavior)
+- R33. Signed-Ledger Recovery of Agent Auth State (IRON, USER-set)
+- R34. The Signed Ledger Is the Ultimate Source of Truth (CRITICAL — IRON, USER-set)
+- R35. Foreign Agent/User Host Approval (CRITICAL — IRON, USER-set)
+- R36. Users Have AIDs; One MAESTRO Per Host (IRON, USER-set)
+- R37. MAESTRO and the Single MAESTRO-DELEGATE (CRITICAL — IRON, USER-set)
+- R38. Non-MAESTRO User Restrictions (IRON, USER-set)
+- R39. Users Have No Terminal/Client → the ASSISTANT Agent (CRITICAL — IRON, USER-set)
+- R40. Foreign-User Creation Approval (IRON, USER-set)
+- R41. APPROVAL vs MANDATE (the two authorization protocols)
+- R42. No Agent May Drive Another Agent — Messaging Is the ONLY Channel (CRITICAL — IRON, USER-set)
+- R43. Multi-Host Governance Scope (IRON, USER-set)
+- R44. Cross-Host Agent Migration (IRON, USER-set)
+- R45. Teams Are Same-Host; Groups May Span Hosts (IRON, USER-set)
+- R46. Unified Cross-Host Sidebar; User and Paired Agent Both Listed (IRON, USER-set)
+- R47. VPN-Unique User Names; Remote Normal-User Registration (IRON, USER-set)
+- R48. MAESTRO Console-Presence — Registration and Password Change Are Local-Only (CRITICAL — IRON, USER-set)
+- R49. The Refusal Protocol — An Approver Is a Guide, Not a Gate (CRITICAL — IRON, USER-set)
 - Role-Based Permission Matrix
+- R50. One Operation, One All-In-One Function — And The Button Calls It (CRITICAL — IRON, USER-set)
+- R51. All-Or-Nothing — An All-In-One Function Is a TRANSACTION (CRITICAL — IRON, USER-set)
+- R52. The Write Boundary — ai-maestro Writes Inside Its Own Two Roots (CRITICAL — IRON, USER-set)
 
 ## Prerequisites
 
@@ -156,6 +168,7 @@ Copy this checklist and track your progress:
   - Delete Agent
   - Hibernate Agent
   - Wake Agent
+  - Hibernation States
   - Restart Agent
   - Export Agent
   - Import Agent
