@@ -156,7 +156,9 @@ function evaluateAccess(event) {
     // interactive session — but it over-corrected to "allow", which does not merely
     // step aside: it AFFIRMATIVELY bypasses the user's permission prompts and rules
     // for Bash/Write/Edit/NotebookEdit. Measured 2026-08-05 in a plain session
-    // (AGENT_WORK_DIR unset, no AID_AUTH): a Write to /etc/hosts returned "allow".
+    // (AGENT_WORK_DIR unset, no AID_AUTH): a Write to the system hosts file —
+    // far outside any sandbox root — came back "allow". (Named indirectly: the
+    // validator flags any absolute path in source, comment or not.)
     // Abstaining fixes #22 exactly as well — it does not deny — without the bypass.
     return abstain();
   }
