@@ -189,6 +189,30 @@ Deliberately NOT built (2026-08-05): adding it changes behaviour for every plugi
 so it is a proposal awaiting the owner, not alignment work. Also unregistered and plausibly useful
 later: `TaskCreated`/`TaskCompleted` (kanban), `DirectoryAdded`, `ConfigChange`.
 
+
+^ATOM-GFBT-KR76 [desc:"CORE's vendored GOVERNANCE-RULES.md mirror lags upstream, so skills get written against superseded semantics and the artifact that would contradict them is the stale one", keywords: our_skill_teaches_something_a_governance_rule_forbids bundled_governance_rules_are_stale why_did_nobody_notice_the_rule_violation mirror_lags_upstream_so_skills_were_written_pre_rule R42_cross_agent_driving_forbidden, ocd: 2026-08-05, lmd: 2026-08-05]
+
+`skills/team-governance/references/GOVERNANCE-RULES.md` is a **vendored mirror** of
+`Emasoft/ai-maestro@governance-rules:docs/GOVERNANCE-RULES.md`, and it LAGS. On 2026-08-05 it was
+**v4.0.2** (synced 2026-06-18) against upstream **v5.2.0** — twelve rules behind.
+
+That lag is not merely missing documentation, it silently produces WRONG SKILLS. Measured: three
+skills (`ama-session`, `ama-panel`, `session-reference.md`) taught "targeting another agent requires
+MANAGER (any) or CHIEF-OF-STAFF (own team)" — the pre-R42 `send-command` model. **R42 (CRITICAL,
+IRON) landed upstream in v4.3.0 and forbids it absolutely, with no title exemption.** The skills
+were not defiant; they were written before the rule reached this repo, and then nothing could
+notice, because the artifact that would have contradicted them IS the stale mirror. Fixed `84aefa0`,
+shipped v3.0.4.
+
+**Therefore: before syncing the mirror, grep the skills for what the NEW rules contradict** — the
+sync is the cheap half; the consequences are the work. `grep -rn "requires MANAGER\|MANAGER (any" skills/`
+finds this class. The same reasoning applies to any plugin whose mirror predates a rule: a rule that
+arrives by mirror only binds agents whose mirror arrived.
+
+The mirror's own update procedure (its §0 banner) is NOT a `cp`: step 2 requires walking the §0
+cross-reference index — every mirror, persona, enforcement site, API route, UI component, scenario
+test — which spans repos and is why this is a reviewed change, never a drive-by.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
