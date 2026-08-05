@@ -159,6 +159,26 @@ decided whether the machine-wide memory protocol could run.
 | `aid-token.sh`    | Generate/exchange identity tokens        |
 | `aid-helper.sh`   | Shared helper functions for AID scripts  |
 
+## Versioning and removal policy
+
+Other plugins cite this plugin's skills, commands, and scripts by name in prose,
+so a removal is a breaking change even when no code imports anything
+(ai-maestro#118: two removals shipped as MINOR bumps and dependents' citations
+dangled silently). The policy, enforced by `tests/test_surface_removal_policy.py`
+at publish time:
+
+- **Removing or renaming any agent-facing surface** (a skill, a command, an AMP/AID
+  script, a CLI verb) is a **MAJOR** version bump. No exceptions for "nobody uses it".
+- **Every removal ships a one-release TOMBSTONE first**: the surface's file stays for
+  at least one release as a stub whose body starts with `TOMBSTONE` and names the
+  successor (or states there is none). The next MAJOR may then drop the stub.
+- The CHANGELOG entry for the MAJOR names every removed surface.
+
+A tombstone only helps dependents who look; the complementary citation-resolver
+gate (each dependent verifying that skill names cited in its live surfaces still
+resolve against the provider's released tag) is a generic plugin-quality check
+that belongs fleet-wide — see the discussion in ai-maestro#118.
+
 ## Requirements
 
 External tools the plugin's shell scripts call:
