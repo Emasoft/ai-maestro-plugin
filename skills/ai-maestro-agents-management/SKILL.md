@@ -74,7 +74,7 @@ The bundled [`GOVERNANCE-RULES.md`](../team-governance/references/GOVERNANCE-RUL
 
 1. **Identify the operation** the user needs (create, list, show, config, update, delete, rename, hibernate, wake, restart, export, import, plugin/skill management).
 2. **Run the CLI command** using `aimaestro-agent.sh <command> <agent> [options]`. Key commands:
-   - `list [--status online|offline|hibernated]` — List agents
+   - `list [--status active|idle|offline]` — List agents. Exact match on the API's status enum, so the `online`/`hibernated` values the CLI's own `--help` advertises match nothing and exit 0 (ai-maestro#114)
    - `create <name> --dir <path> [--task "..."] [--tags "..."]` — Create agent
    - `show <agent>` — Show agent details
    - `config <agent>` — **One call, the consolidated config**: launch string/CLI args, governance title, role-plugin, teams, associated GitHub repo, whether it runs in Docker, pending tasks, and the AID public key

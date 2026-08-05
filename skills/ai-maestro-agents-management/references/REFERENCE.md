@@ -91,10 +91,16 @@
 ### 1. List Agents
 
 ```bash
-aimaestro-agent.sh list --status online
+aimaestro-agent.sh list --status active
 ```
 
-Status filters: `offline`, `hibernated`, `all` (default). Output formats: `--format table` (default), `--format json`, `--format names`, `--json`, `-q` (quiet).
+Status filters are an **exact string match** against the API's `AgentStatus` enum — `active`, `idle`, `offline`, `deleted` — plus `all` (the default, special-cased before the filter runs).
+
+> **Do not use `online` or `hibernated`.** The CLI's own `--help` advertises both, but neither is in the enum, so each returns an empty list with **exit 0** — indistinguishable from "no agents are in that state" (ai-maestro#114). Conversely `idle` and `deleted` work but are not advertised.
+>
+> **`offline` is not a fault signal.** It conflates deliberately-hibernated, crashed, and never-woken agents; the status field cannot tell them apart. For liveness use the dedicated hibernation surface (ai-maestro-plugin#55) rather than inferring from this filter.
+
+Output formats: `--format table` (default), `--format json`, `--format names`, `--json`, `-q` (quiet).
 
 **Maps to:** `GET /api/agents` (handled by the CLI — never call it directly, core#11).
 
