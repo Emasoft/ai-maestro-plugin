@@ -59,6 +59,13 @@ def guard_decision(command: str, work_dir: str = WORK) -> tuple[str, str]:
         check=False,
     )
     assert proc.returncode == 0, f"guard exited {proc.returncode}: {proc.stderr}"
+    # Every caller of this helper sets AGENT_WORK_DIR, so the guard always reaches a
+    # real decision and never abstains. Say so explicitly: an empty stdout here would
+    # otherwise surface as a bare JSONDecodeError that hides which branch changed.
+    assert proc.stdout.strip(), (
+        "guard abstained (empty stdout) with AGENT_WORK_DIR set — it should have "
+        "reached an allow/deny decision. A sandboxed path must never fall through."
+    )
     out = json.loads(proc.stdout)
     hook = out["hookSpecificOutput"]
     return hook["permissionDecision"], hook.get("permissionDecisionReason", "")
@@ -182,10 +189,24 @@ def test_sanity_baseline_deny(case_id: str, command: str) -> None:
     assert decision == "deny", f"{case_id}: expected deny, got {decision}"
 
 
-def test_non_agent_session_without_work_dir_is_allowed() -> None:
-    """No AGENT_WORK_DIR and no agent marker → an ordinary (non-agent) Claude
-    session the guard must NOT sandbox (#22: denying it bricked every
-    interactive session machine-wide)."""
+def test_non_agent_session_without_work_dir_abstains_instead_of_allowing() -> None:
+    """No AGENT_WORK_DIR and no agent marker → an ordinary session the guard must not
+    sandbox (#22: denying it bricked every interactive session machine-wide) — but it
+    must ABSTAIN, not "allow".
+
+    This assertion was `== "allow"` until 2026-08-05, and that was a permission bypass.
+    `permissionDecision: "allow"` is not "step aside" — it is an affirmative override
+    that skips the user's permission prompt AND their configured rules. Because this
+    hook matches Bash|Write|Edit|NotebookEdit, returning it on the non-agent path meant
+    that installing this plugin silently auto-approved the four highest-risk tools in
+    every ordinary session. Measured before the fix, in a plain session: a Write to
+    /etc/hosts came back "allow".
+
+    Emitting nothing satisfies #22 exactly as well — abstaining is not denying, so no
+    session is bricked — while leaving the user's own settings in charge. The bar is
+    therefore EMPTY STDOUT; `allow` is asserted against explicitly so a future
+    over-correction back to it fails here loudly rather than passing as "not denied".
+    """
     event = {"tool_name": "Bash", "tool_input": {"command": f"echo x > {WORK}/f"}}
     env = os.environ.copy()
     env.pop("AGENT_WORK_DIR", None)
@@ -203,8 +224,12 @@ def test_non_agent_session_without_work_dir_is_allowed() -> None:
         check=False,
     )
     assert proc.returncode == 0, proc.stderr
-    hook = json.loads(proc.stdout)["hookSpecificOutput"]
-    assert hook["permissionDecision"] == "allow"
+    assert proc.stdout.strip() == "", (
+        f"the guard must ABSTAIN (emit nothing) on a non-agent session, but it emitted "
+        f"{proc.stdout.strip()!r}. If this is 'allow', the permission bypass is back: it "
+        f"auto-approves Bash/Write/Edit/NotebookEdit in every ordinary session. The fix "
+        f"for a bricked session is to abstain, never to allow."
+    )
 
 
 @pytest.mark.parametrize(

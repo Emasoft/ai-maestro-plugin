@@ -67,6 +67,22 @@ function allowDecision() {
   };
 }
 
+/**
+ * ABSTAIN — emit no decision at all, so Claude Code's normal permission flow runs.
+ *
+ * This is NOT the same as allowDecision(), and conflating the two is a permission
+ * bypass. `permissionDecision: "allow"` is an affirmative override: it skips the
+ * prompt the user would otherwise see AND their configured rules. Returning nothing
+ * means "this hook has no opinion", which leaves the user's settings in charge.
+ *
+ * Every path where this guard has no jurisdiction MUST abstain. Returning "allow"
+ * there silently disables permission prompts for Bash/Write/Edit/NotebookEdit — the
+ * four highest-risk tools — in every session where the plugin is installed.
+ */
+function abstain() {
+  return null;
+}
+
 /** Build a "deny" decision envelope. */
 function denyDecision(reason) {
   return {
@@ -89,7 +105,11 @@ process.stdin.on('end', () => {
   try {
     const event = JSON.parse(input);
     const result = evaluateAccess(event);
-    process.stdout.write(JSON.stringify(result));
+    // null === abstain: emit NOTHING so the normal permission flow runs. Writing
+    // "null" (or an empty envelope) would be a schema violation, not an abstention.
+    if (result !== null) {
+      process.stdout.write(JSON.stringify(result));
+    }
   } catch (err) {
     // Parse error on input → DENY (fail-closed)
     process.stdout.write(JSON.stringify(
@@ -111,7 +131,7 @@ function evaluateAccess(event) {
   const isBash = toolName === 'Bash';
 
   if (!WRITE_TOOLS.includes(toolName) && !isBash) {
-    return allowDecision();
+    return abstain();
   }
 
   // ── Resolve agent work directory (ONLY from env var) ───────
@@ -131,7 +151,14 @@ function evaluateAccess(event) {
         'Directory guard: AI-Maestro agent context detected (AID_AUTH/AIMAESTRO_AGENT set) but AGENT_WORK_DIR is unset — cannot determine the sandbox root, blocking writes (fail-closed). AI Maestro must set AGENT_WORK_DIR at agent launch.'
       );
     }
-    return allowDecision();
+    // ABSTAIN, do not allow. This is an ordinary (non-agent) session that this guard
+    // was never meant to sandbox. #22 fixed a fail-closed deny that bricked every
+    // interactive session — but it over-corrected to "allow", which does not merely
+    // step aside: it AFFIRMATIVELY bypasses the user's permission prompts and rules
+    // for Bash/Write/Edit/NotebookEdit. Measured 2026-08-05 in a plain session
+    // (AGENT_WORK_DIR unset, no AID_AUTH): a Write to /etc/hosts returned "allow".
+    // Abstaining fixes #22 exactly as well — it does not deny — without the bypass.
+    return abstain();
   }
 
   // ── Write/Edit/NotebookEdit: check file_path ──────────────
@@ -180,7 +207,9 @@ function evaluateAccess(event) {
     return allowDecision();
   }
 
-  return allowDecision();
+  // Unreachable today (both guarded branches return above), but abstain rather than
+  // allow so that adding a tool to the matcher can never silently auto-approve it.
+  return abstain();
 }
 
 // ============================================================================
