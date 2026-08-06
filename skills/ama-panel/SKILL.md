@@ -42,8 +42,12 @@ Per `TRDD-D3RP7KQZ`: an agent drives its **own** panel — and only its own.
 **Targeting another agent's panel is forbidden for every title** (governance
 R42, CRITICAL/IRON): the panel routes are `send-command`-class, R42.1 bars
 injecting into another agent's session by API, CLI or tmux, and R42.2 grants
-no exemption to MANAGER or CHIEF-OF-STAFF. The former "MANAGER (any agent) /
-COS (own team)" path was the pre-R42 model and is revoked (`TRDD-BF3JN4TL`). **Strict verbs** (agent: AID + title; human: fresh
+MANAGER and CHIEF-OF-STAFF no exemption for them. The former "MANAGER (any
+agent) / COS (own team)" path was the pre-R42 model and is revoked
+(`TRDD-BF3JN4TL`). Those two titles hold exactly one narrow cross-agent
+power — **R42.8**, unblocking an agent stalled on a prompt (`ama-unblock`) —
+and no panel verb is part of it: pushing content into another agent's panel
+carries the caller's own decision, which is what R42.1 forbids. **Strict verbs** (agent: AID + title; human: fresh
 sudo-token): `open`, `close`, `refresh`, `set`. **Non-strict**: `status`,
 `feedback`.
 

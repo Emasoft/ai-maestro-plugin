@@ -1,7 +1,7 @@
 ---
 name: ama-unblock
 user-invocable: false
-description: "MANAGER/CHIEF-OF-STAFF fleet-continuity workflow: detect an agent session that is stuck — blocked on an AskUserQuestion, a permission prompt, a frozen input field, a rate-limit or API-error banner (red text), a trust/login prompt — diagnose WHY from the hook state plus the classified terminal evidence, then resume it with the right gated intervention or escalate to the USER. Blocked-work is the ONLY sanctioned direct-command case; every other cross-agent influence goes via AMP messaging. Trigger with 'agent is stuck', 'session blocked', 'answer its pending prompt', 'worker not responding', 'resume the fleet', 'why is the agent waiting'. Self-unblocking (your own prompt) is ama-session, not this. Loaded by ai-maestro-plugin"
+description: "MANAGER/CHIEF-OF-STAFF fleet-continuity workflow (governance R42.8): detect an agent session that is stuck — blocked on an AskUserQuestion, a permission prompt, a rate-limit or API-error banner (red text) — diagnose WHY from the terminal-read verdict (block-state) plus the hook record (read-prompt), then resume it by answering its own pending prompt, or escalate to the USER. Blocked-work is the ONLY case where a MANAGER/COS may act on another agent's session; every other cross-agent influence goes via AMP messaging. Trigger with 'agent is stuck', 'session blocked', 'answer its pending prompt', 'worker not responding', 'resume the fleet', 'why is the agent waiting'. Self-unblocking (your own prompt) is ama-session, not this. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-session.sh:*), Bash(amp-send.sh:*), Bash(jq:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -13,209 +13,200 @@ metadata:
 ## Overview
 
 A blocked agent session is blocked **forever** unless something answers it: an
-`AskUserQuestion` menu, a permission prompt, a frozen input field, or a client
-error banner never resolves itself, and a blocked agent cannot read its AMP
-inbox — messaging reaches an agent only at its next turn, and a blocked agent
-has no next turn. This is the ONE hole in the messaging-only model, and this
-skill is the sanctioned patch for it (USER directive 2026-08-06, tracked in
-`ai-maestro#128`):
+`AskUserQuestion` menu or a permission prompt never resolves itself, and a
+blocked agent cannot read its AMP inbox — messaging reaches an agent only at
+its next turn, and a blocked agent has no next turn. This is the one hole in
+the messaging-only model, and governance **R42.8** is the sanctioned patch
+(USER grant 2026-08-05, `ai-maestro#125`; capability record `ai-maestro#128`):
 
-> **Blocked-work is the ONLY case where a MANAGER or CHIEF-OF-STAFF may act
-> directly on another agent's session. Everything else — tasking, corrections,
-> coordination — goes via AMP per the R6 communication graph.**
+> **The single carve-out is R42.8**: a MANAGER or CHIEF-OF-STAFF may UNBLOCK
+> an agent stalled on a permission/question prompt. Unblocking answers a
+> prompt the agent itself raised; it confers **no power to direct** that
+> agent. Everything else — tasking, corrections, coordination — is AMP per
+> the R6 communication graph.
 
-The skill teaches a six-step loop: **DETECT → DIAGNOSE → DECIDE → ACT →
-VERIFY → NOTIFY**. The ACT step runs through **server-gated verbs only**
-(never raw pane access), and those verbs plus the matching R42 exception
-clause are being shipped by the AI Maestro server (`ai-maestro#128`). Until
-they land, steps 1–3 and the USER-escalation path are fully operative — see
-[Feature detection](#feature-detection--what-is-operative-today).
+The workflow: **DETECT → DIAGNOSE → READ → DECIDE → ANSWER → VERIFY →
+NOTIFY**, entirely through the frozen `aimaestro-session.sh` — the exception
+verbs are **`block-state`, `read-prompt` and `answer` ONLY**. `inject`,
+`slash` and `queue` are NOT exception verbs: they deliver an arbitrary
+command, so they express the CALLER's decision (R42.1 exactly) and stay
+SELF-ONLY for every title — the server 403s them cross-agent.
 
-## The authority gate — READ THIS FIRST
+## The authority gate — R42.8's eight constraints, READ THIS FIRST
 
-Three conditions, ALL required, before the ACT step is even considered:
+1. **(a) Blocked-only.** The sole trigger is an agent stalled on a prompt. A
+   working, idle-but-unblocked, or merely SLOW agent is untouchable — *"it
+   would be faster if I typed it"* is an R42.1 violation, not an unblock.
+2. **(b) Unblock, never drive.** Answer ONLY the pending prompt. Nothing
+   appended, no new work, no redirection. Work is still assigned by AMP alone.
+3. **(c) Title-scoped and exhaustive.** MANAGER: any agent on the host
+   **except an ASSISTANT**. CHIEF-OF-STAFF: **its own team only**, same
+   exclusion. Every other title: none.
+4. **(d) Never an ASSISTANT.** An ASSISTANT's session is the surface a human
+   talks *through* — an injected answer is indistinguishable from something
+   its human typed, laundering an agent's instruction into apparent human
+   intent. (A USER has no terminal; there is no USER-target case.)
+5. **(e) Identity prompts ESCALATE.** A prompt asking the agent to vouch for
+   the CALLER's own authority goes to the human, never answered by the
+   caller — self-certification through a second channel proves nothing, and
+   a spoofer performs the identical act. No agent is the authority on
+   identity; the ai-maestro SERVER is the sole notary.
+6. **(f) Read before answer.** Never answer a prompt you have not read
+   (`read-prompt` + the `block-state` evidence). An unblock interrupts
+   nothing — the agent is already stopped, waiting.
+7. **(g) Server-enforced, failing closed.** AID_AUTH + governance title;
+   `answer` returns **409 unless the target is actually blocked**. The
+   refusal IS the check — a 403/409 is information, never an obstacle to
+   engineer around.
+8. **(h) Audited.** Every accepted call lands in the agent ops ledger.
 
-1. **WHO** — you hold the **MANAGER** title (any agent in the org) or
-   **CHIEF-OF-STAFF** (agents of your own team only). No other title, ever.
-2. **WHEN** — the target is **currently classified BLOCKED**, with **both
-   evidence sources agreeing**: the hook-state broadcast AND the terminal
-   classifier. One source alone, or disagreement, means `unknown_blocked` —
-   and unknown means WAIT + escalate, never act.
-3. **WHAT** — the intervention chosen is **legal for the diagnosed class**
-   per the decision table below. There is no class whose legal action is
-   "send the agent new work" — tasking a resumed agent is AMP's job.
+## The two read verbs are NOT alternatives
 
-If any condition fails, the correct move is an AMP message (agent will read
-it next turn) or a report to the USER — not a workaround. R42 (IRON) still
-governs: the server enforces the gate at the API, the ledger makes every
-intervention auditable, and the absence of a gate verb means the exception
-is **not in force** (see the tmux prohibition below).
+- **`read-prompt <agent>`** returns what the plugin **HOOK recorded**.
+  Measured across 419 live chat-state files: it carries permission prompts,
+  and carries AskUserQuestion **never** (0/419 question texts) — for the one
+  prompt shape that blocks an agent forever it answers `null` and the agent
+  looks fine. (CORE issue `#59` tracks fixing the hook capture.)
+- **`block-state <agent>`** reads the **TERMINAL** — the only source that
+  reflects the screen *now*. Returns the structured verdict:
 
-## The blocked-class taxonomy and decision table
+  ```json
+  { "blocked": true, "reason": "ask_user",
+    "field":   { "visible": true, "empty": true, "text": "" },
+    "choices": [ { "key": "1", "label": "…" } ],
+    "excerpt": [ "…the question, verbatim…" ],
+    "hookDisagreed": false, "sessionName": "…" }
+  ```
 
-Eight classes. Learn the table; the `why-blocked` verb returns the class so
-you never diagnose from raw text alone.
+  `reason ∈ ask_user | permission | rate_limited | api_error | idle |
+  active | unknown`. `--match "<regex>"` searches the pane **server-side**
+  (only matching lines cross the boundary; requires the agent to be blocked).
 
-| class | what the session shows | legal action | rule |
-|---|---|---|---|
-| `ask_user_question` | AskUserQuestion menu with options | `--option <key>` | answer ONLY when the right option is derivable from the target's own TRDD / mandate / task context; otherwise escalate to the USER. **Never guess.** |
-| `ask_user_freeform` | open question, free-text input | `--text "<answer>"` | same derivability rule |
-| `permission_prompt` | tool-approval prompt | `--option <key>` | approve only if the pending action is in-mandate AND non-destructive; destructive or out-of-mandate ⇒ escalate |
-| `input_field_blocked` | input field hidden / non-empty / stuck | `--nudge` | one clear/re-arm attempt (the server decides the exact keys), then escalate |
-| `rate_limited` | red rate-limit banner, window countdown | `--wait` ONLY | never type into a rate-limited session; optionally `queue --when idle` a resume command for after the window |
-| `api_error_retry` | red API-error / retry banner | `--nudge` | one retry nudge; if it recurs, escalate — repeated errors are an infrastructure problem, not a typing problem |
-| `trust_prompt` | folder-trust / login / onboarding dialog | NONE | machine-trust and auth decisions are **human-only**, no exceptions |
-| `unknown_blocked` | evidence sources disagree, or no pattern matched | `--wait` ONLY | capture the excerpt, escalate to the USER |
+Use both: the hook record is the fast hint, the pane verdict is the
+**authority**, and `hookDisagreed: true` means exactly that — resolve toward
+the pane (the hook is known to mislabel a live AskUserQuestion as
+`permission_prompt`).
 
-Two rules cut across every class:
+Three measured facts every consumer must know (`ai-maestro-plugin#58/#59`):
 
-- **Answer with the least-authority content that resumes work.** An answer
-  you derive from the target's own task context carries the target's own
-  authority; an answer you invent carries yours, wrongly.
-- **One intervention per blocked-state.** If the session is still blocked
-  after one intervention, STOP and escalate. The server's cooldown refuses a
-  second attempt against an unchanged state — do not look for a way around
-  it; a refused second attempt means your diagnosis was wrong.
+- **`status` cannot discriminate blocked from idle** — a blocked agent and a
+  healthy idle one both read `waiting_for_input`. The discriminator is
+  **`notificationType`** (`permission_prompt` / `elicitation_prompt` vs
+  `idle_prompt`), not `status`.
+- **Chat-state goes stale on exactly the agents that matter** — the hook
+  writes on events and a blocked agent generates none (~17 h observed). So
+  `updatedAt` is NOT a liveness signal, and "no recent event" is
+  indistinguishable from "healthy" from the file alone.
+- **`field`** (`visible`/`empty`/`text`) is how "the input field is clear"
+  is checked on the ai-maestro channel — never by eyeballing a pane dump.
+
+## The reason → action decision table
+
+| `reason` | legal action | rule |
+|---|---|---|
+| `ask_user` | `answer --option <key>` (menu — `choices` present) or `answer --text "<answer>"` (freeform) | answer ONLY when the right choice is derivable from the target's own TRDD / mandate / task context; otherwise escalate to the USER. **Never guess** — a wrong answer silently steers hours of downstream work; an escalation costs minutes |
+| `permission` | `answer --option <key>` | approve only in-mandate AND non-destructive; destructive or out-of-mandate ⇒ escalate. A MANAGER rubber-stamp deletes the last line of defense |
+| `rate_limited` | **WAIT** — no verb | never type into a rate-limited session; it self-resumes when its janitor heartbeat fires after the window (`ama-continuity`), else report to the USER |
+| `api_error` | **WAIT**, then escalate if persistent | usually transient/self-healing; there is deliberately no cross-agent nudge verb (`inject` is SELF-ONLY) — a stuck error banner is a USER report, not a keystroke |
+| `idle` / `active` | **hands off** | not blocked. `answer` 409s by design — see constraint (a) |
+| `unknown` | escalate with evidence | capture `excerpt` (plus a targeted `--match`) and report to the USER; never act on an unclassified state |
+
+Identity-vouching prompts (any `reason`): escalate — constraint (e).
 
 ## The workflow
 
-### 1. DETECT — find blocked fleet members
-
 ```bash
-aimaestro-session.sh state <agent>            # per-agent 5-state activity
-```
+# 1. DETECT + DIAGNOSE — the terminal verdict (authority)
+aimaestro-session.sh block-state <agent> | jq .
 
-Blocked signals: `waiting-permission`, `waiting-elicitation`, or a
-long-stale `working`/`idle` on an agent whose kanban card says mid-task.
-Staleness (time since last state change) is the blocked-duration signal —
-a 2-minute wait is normal, a 2-hour one is a stall.
+# 2. READ — constraint (f): both sources, never answer unread
+aimaestro-session.sh read-prompt <agent>          # the hook record (may be null for ask_user)
+#    …and read block-state's .excerpt / .choices yourself.
 
-### 2. DIAGNOSE — get the classified WHY
+# 3. DECIDE — the table above + the derivability test:
+#    can the right answer be read off the target's own TRDD, mandate, or task
+#    state? If you need knowledge its context does not contain, escalate.
 
-```bash
-aimaestro-session.sh why-blocked <agent> | jq .
-```
+# 4. ANSWER — only the pending prompt, nothing else
+aimaestro-session.sh answer <agent> --option <key>
+aimaestro-session.sh answer <agent> --text "<answer>"
 
-Returns `{blocked, class, confidence, since, evidence:{hookState, excerpt,
-promptStructure}}`. Read the excerpt yourself — the classifier picks the
-class, but YOU are accountable for the answer's content. For the two prompt
-classes, `promptStructure` carries the exact question and option keys.
+# 5. VERIFY — re-read the verdict
+aimaestro-session.sh block-state <agent> | jq '{blocked, reason}'
+#    blocked:false = resumed. Same reason still blocked = your answer did not
+#    take: STOP and escalate with before/after excerpts — do not retry blind.
+#    A NEW reason (a permission prompt often follows an answered question) =
+#    re-enter at step 1; one answer per blocked-state, not per session.
 
-### 3. DECIDE — apply the table
-
-Look up the class → legal action. Then the derivability test: can the right
-answer be read off the target's own TRDD, mandate, or current task state?
-If you need knowledge the target's context does not contain — judgment
-calls, credentials, product decisions — the answer is escalation, not
-improvisation.
-
-### 4. ACT — through the gated verb only
-
-```bash
-aimaestro-session.sh unblock <agent> --option <key>     # menu answer
-aimaestro-session.sh unblock <agent> --text "<answer>"  # freeform answer
-aimaestro-session.sh unblock <agent> --nudge            # input-field / retry recovery
-aimaestro-session.sh unblock <agent> --wait             # explicit no-op + ledger entry
-```
-
-The verb is STRICT (AID + title, sudo-token for humans) and refuses:
-non-MANAGER/COS callers, a target not currently classified blocked, an
-action illegal for the class, evidence disagreement, and repeat attempts
-against an unchanged state. Every acceptance is ledgered with the evidence
-snapshot. A refusal is information, not an obstacle.
-
-### 5. VERIFY — confirm resumption
-
-```bash
-aimaestro-session.sh why-blocked <agent> | jq '.blocked'
-```
-
-Re-check after a short wait. `false` = resumed. Still `true` with the same
-class = your intervention did not take: STOP, escalate to the USER with the
-before/after excerpts. Still `true` with a NEW class = re-enter the loop at
-step 2 (a permission prompt often follows an answered question) — the
-one-intervention rule applies per blocked-state, not per session.
-
-### 6. NOTIFY — tell the target what happened
-
-```bash
+# 6. NOTIFY — provenance (R41): the resumed agent must know the answer
+#    came from you, not from its human
 amp-send.sh <agent> "unblocked by <your-id>" \
-  "Your pending <class> prompt was answered by <your-id> with: <answer>. Reason: <one line>. Ledger: <ref>."
+  "Your pending <reason> prompt was answered by <your-id> with: <answer>. Reason: <one line>."
 ```
 
-The resumed agent's next turn MUST know the answer came from you, not from
-the human user — a silent third-party answer corrupts the agent's
-provenance model (R41): it would treat your judgment as USER authority.
-The server may automate this notification; send it yourself until it does.
+Strict-route auth: agents authorize by AID_AUTH + title; a HUMAN caller
+needs `AIMAESTRO_SUDO_TOKEN` (`block-state`, `answer`, `queue` are strict).
 
-## Feature detection — what is operative TODAY
-
-Probe before teaching yourself capabilities the install may not have:
+## Feature detection — older installs
 
 ```bash
-aimaestro-session.sh why-blocked --help >/dev/null 2>&1 && echo full || echo interim
+aimaestro-session.sh help 2>&1 | grep -q "block-state" && echo full || echo interim
 ```
 
-- **`full`** — the server has shipped the verbs and the R42 exception
-  clause is in the governance catalog. The whole workflow above applies.
-- **`interim`** — the verbs have not landed. Operative subset: DETECT
-  (state reads), DIAGNOSE-lite (`read-prompt` where the server permits the
-  read), and **escalation to the USER with the evidence you gathered**.
-  The ACT step is NOT available, and — this is the load-bearing rule —
+- **`full`** — the R42.8 surface is present; the whole workflow applies.
+- **`interim`** — the server predates the unblock capability. Operative
+  subset: `read-prompt` where permitted, plus **escalation to the USER with
+  whatever evidence you can gather**. And the load-bearing rule:
 
-  > **absence of the gated verb means the R42 exception is NOT in force.
-  > Do NOT fall back to raw `tmux send-keys`, `inject`, or any other
-  > direct pane access against another agent. Not being able to unblock
-  > is the correct behavior until the gate exists**; the gate IS the
-  > safety property (classification precondition, evidence agreement,
-  > cooldown, ledger), not an inconvenience layered on top of it.
-
-A cross-agent 403 on `state`/`read-prompt` in interim mode is expected on
-older servers — report what you could observe (dashboard state, kanban
-staleness) and escalate; do not treat the 403 as a bug to engineer around.
+  > **Absence of the gated verbs means the R42.8 exception is NOT in force
+  > on this install. Do NOT fall back to raw `tmux send-keys`, `inject`, or
+  > any other direct pane access against another agent.** Not being able to
+  > unblock is the correct behavior until the gate exists — the gate IS the
+  > safety property (blocked-precondition, title matrix, 409, ledger), not
+  > an inconvenience layered on top of it. All agents share one OS uid, so
+  > tmux WOULD succeed: R42 is tamper-EVIDENT, not tamper-proof, and the
+  > ledger-visible refusal to bypass it is what the rule buys.
 
 ## Anti-patterns (each has caused, or would cause, real harm)
 
 - **Guessing an answer to a domain question** to keep the pipeline moving.
-  A wrong answer silently steers hours of downstream work; a USER
-  escalation costs minutes.
 - **Approving a permission prompt you would not approve as the USER** —
-  destructive commands, pushes, credential access. The permission gate is
-  the last line of defense; a MANAGER rubber-stamp deletes it.
-- **Injection loops** — re-sending variations after a failed intervention.
-  The cooldown refuses it server-side; respect the same rule in interim
-  mode where no server enforces it.
-- **Using unblock verbs for tasking** ("while I have the terminal, run
-  X…"). The exception covers RESUMING work, never DIRECTING it — direction
-  is AMP.
-- **Raw tmux as a fallback** — see above. Tamper-EVIDENT, not
-  tamper-proof: the OS lets you, the rule and the ledger are why you don't.
-- **Answering a trust/login prompt.** Never. Human-only.
+  destructive commands, pushes, credential access.
+- **Retry loops** — re-answering variations after a failed intervention;
+  one answer per blocked-state, then escalate.
+- **Smuggling work through an unblock** ("while I have the prompt: also run
+  X"). Constraint (b): that is an R42.1 violation, not a permitted use.
+- **Raw tmux as a fallback** — see above.
+- **Answering an identity-vouching prompt.** Constraint (e). Never.
+- **Polling `status` or trusting `updatedAt`** to decide who is blocked —
+  the discriminator is `notificationType`, the authority is `block-state`.
 
 ## Error handling
 
 | Symptom | Meaning |
 |---|---|
-| `why-blocked`: command not found / unknown verb | interim mode — server verbs not yet shipped; escalate-only |
-| 403 on `unblock` | authority gate failed — wrong title, target not blocked, illegal action, or evidence disagreement; read the error body, do not retry blind |
-| `unblock` refused: cooldown | a previous intervention already ran against this state — escalate, your diagnosis was wrong |
-| 403 on cross-agent `state`/`read-prompt` | older server, reads not yet opened for MANAGER/COS — interim protocol |
+| `block-state`: unknown command | interim mode — this server predates the capability; escalate-only |
+| 403 on `block-state` / `read-prompt` / `answer` | title matrix failed — you are not MANAGER/COS, the target is out of your scope, or it is an ASSISTANT; the refusal is the check |
+| 409 on `answer` / `--match` | the target is not actually blocked (constraint (a) / Gate 0b) — re-read `block-state`; if it says blocked and the server says 409, report the disagreement upstream, do not force |
+| `read-prompt` returns null but the pane shows a menu | expected for AskUserQuestion (hook capture gap, CORE `#59`) — the `block-state` excerpt/choices are the readable copy |
 | target resumed but did the wrong thing | your NOTIFY message is how it finds out and corrects — send it, then follow up via AMP |
 
 ## Scope
 
-Cross-agent, MANAGER/COS-only, **blocked-sessions-only** — the single
-sanctioned exception to messaging-only influence. Everything self-targeted
-(your own prompt, your own queue) is `ama-session`. Tasking, corrections,
-and coordination are AMP (`agent-messaging`). Window/limit self-recovery is
-`ama-continuity`. Agent reconfiguration is `ai-maestro-agents-management`.
-This skill never reconfigures anything and never touches a session that is
-merely SLOW — slow is not blocked.
+Cross-agent, MANAGER/COS-only, **blocked-sessions-only** — the R42.8
+carve-out, nothing more. Everything self-targeted (your own prompt, your own
+queue) is `ama-session`. Tasking, corrections, and coordination are AMP
+(`agent-messaging`). Window/limit self-recovery is `ama-continuity`. Agent
+reconfiguration is `ai-maestro-agents-management` (R42.6 — a separate,
+non-injection authority). This skill never reconfigures anything and never
+touches a session that is merely SLOW — slow is not blocked.
 
 ## Resources
 
-- `ai-maestro#128` — the capability's design record: the USER directive
-  verbatim, the verb contract, the class table, and the server's half.
+- `ai-maestro#125` / `ai-maestro#128` — the R42.8 grant and the capability's
+  design record (USER directives verbatim).
+- `ai-maestro-plugin#58` / `#59` — the verified verb surface, the measured
+  hook findings, and the hook-capture fix this skill's caveats cite.
 - `design/tasks/TRDD-*-ZNGTF0FG-*.md` — CORE's implementation record.
 
 ## Use also
@@ -223,7 +214,7 @@ merely SLOW — slow is not blocked.
 - `Skill(skill: "ama-session")` — the SELF half of the same CLI surface.
 - `Skill(skill: "agent-messaging")` — AMP, the default channel for every
   non-blocked case.
-- `Skill(skill: "team-governance")` — R42 and the titles this skill's
+- `Skill(skill: "team-governance")` — R42/R42.8 and the titles this skill's
   authority gate is keyed on.
 - `Skill(skill: "ama-continuity")` — an agent's own window-exhaustion
   self-resume (the self-side complement of the `rate_limited` class).

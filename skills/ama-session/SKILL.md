@@ -70,7 +70,18 @@ are read/answer operations, not "make something happen next" operations:
 
 ## The authorization rule — READ THIS BEFORE TARGETING ANY `<agent>`
 
-**SELF ONLY. Never target another agent — no title exempts you (governance R42, IRON).**
+**SELF ONLY for every verb in this skill's ordering — no title exempts you
+(governance R42, IRON).** `inject`, `slash`, `queue` and `state --pane` are
+self-only for MANAGER and CHIEF-OF-STAFF exactly as for everyone else: they
+deliver an arbitrary command, so they express the CALLER's decision. The
+server 403s them cross-agent.
+
+**The one carve-out is R42.8, and it is NOT in this skill.** A MANAGER (any
+agent but an ASSISTANT) or a CHIEF-OF-STAFF (its own team only) may
+`block-state` / `read-prompt` / `answer` **another** agent that is stalled on
+a prompt — answering the prompt that agent itself raised, nothing more. That
+workflow, its eight constraints and its escalation rules live in
+`ama-unblock`. Everything below is the SELF case.
 
 Since `TRDD-D3RP7KQZ`: **an agent may drive its own surface; it may never
 reconfigure itself.** Every verb in this skill acts on the agent's **own**
@@ -80,16 +91,25 @@ permitted target.
 > **R42 — No Agent May Drive Another Agent; messaging is the ONLY channel**
 > (CRITICAL, IRON, USER-set). R42.1: *no agent may inject a command,
 > keystroke, prompt, or queued input into another agent's session — by API,
-> by CLI, or by tmux.* R42.2: *no title is exempt* — MANAGER and
-> CHIEF-OF-STAFF are bound exactly as every other agent is. R42.4 preserves
-> self-drive, which is what this skill is for.
+> by CLI, or by tmux — **to assign, redirect, or perform that agent's
+> work***. R42.2: *no title is exempt* — MANAGER and CHIEF-OF-STAFF are
+> bound exactly as every other agent is, holding exactly one narrow power
+> the others lack (R42.8 unblocking), which is **not** a power to direct.
+> R42.4 preserves self-drive, which is what this skill is for.
 >
 > **This supersedes the title-keyed targeting this skill used to teach**
 > ("another agent requires MANAGER, or COS for its own team"). That was the
-> pre-R42 `send-command` model, and R42 revoked the cross-agent case
-> entirely (`TRDD-BF3JN4TL`). To influence another agent, send it a message
-> (AMP) and let it decide — an injected command *is* the recipient's own
-> action, which bypasses its judgment and its governance title.
+> pre-R42 `send-command` model, and R42 revoked the cross-agent *command*
+> case entirely (`TRDD-BF3JN4TL`). To influence another agent, send it a
+> message (AMP) and let it decide — an injected command *is* the recipient's
+> own action, which bypasses its judgment and its governance title.
+>
+> **R42.8 is a carve-out from the WORK ban, not a hole in it.** An unblock
+> answers a prompt the target itself raised: it supplies a missing input, it
+> does not author an instruction. Smuggling work through an unblock ("while
+> I have the prompt, also run X") is an R42.1 violation, not a permitted
+> use — which is exactly why `inject`/`slash`/`queue` are excluded from the
+> exception and stay self-only here.
 >
 > **A 403 is not the boundary.** All agents run under one OS uid, so
 > `tmux send-keys -t <other>` succeeds regardless of what the API permits.
@@ -101,9 +121,17 @@ MANAGER included; that is `ai-maestro-agents-management`'s domain (and it
 too is self-refused for configuration).
 
 **Strict vs non-strict** (who can call what, and how they authenticate):
-`answer` and `queue` are **strict** — an agent authenticates by AID + title,
-a human needs a fresh sudo-token. `inject`, `slash`, `slash-keys`, `state`,
-`read-prompt`, `queue-list`, `queue-cancel` are **non-strict**.
+`block-state`, `answer` and `queue` are **strict** — an agent authenticates
+by AID + title, a human needs a fresh sudo-token. `inject`, `slash`,
+`slash-keys`, `state`, `read-prompt`, `queue-list`, `queue-cancel` are
+**non-strict**.
+
+**`read-prompt` on yourself has a known blind spot.** It returns what the
+plugin HOOK recorded, and the hook does not record an `AskUserQuestion`'s
+text (measured 0 of 419 live chat-state files; `ai-maestro-plugin#59` tracks
+the fix). A `null` from `read-prompt` therefore does NOT mean "no prompt is
+pending" — for the self case you can usually see your own prompt directly;
+for the cross-agent case that is why `block-state` reads the terminal.
 
 ## Prerequisites
 
@@ -163,9 +191,10 @@ a human needs a fresh sudo-token. `inject`, `slash`, `slash-keys`, `state`,
 | `queue-list <agent>` | — | non-strict |
 | `queue-cancel <agent> <entryId>` | — | non-strict |
 | `inject <agent> --command "<text>"` | `--no-newline`, `--require-idle` | non-strict, but the most dangerous |
-| `state <agent>` | `--pane` | non-strict |
-| `read-prompt <agent>` | — | non-strict |
-| `answer <agent>` | `--option <key>` \| `--text "<answer>"` | **strict** |
+| `state <agent>` | `--pane` | non-strict (`--pane` is self-only) |
+| `read-prompt <agent>` | — | non-strict; cross-agent only under R42.8 (`ama-unblock`) |
+| `block-state <agent>` | `--match "<regex>"` | **strict**; the terminal read — cross-agent only under R42.8 (`ama-unblock`) |
+| `answer <agent>` | `--option <key>` \| `--text "<answer>"` | **strict**; cross-agent only under R42.8 (`ama-unblock`) |
 
 ## Output
 
@@ -177,7 +206,9 @@ enqueued entry id (needed for `queue-cancel`).
 
 | Symptom | Likely cause |
 |---|---|
-| 403 targeting another agent | expected — R42 forbids it for every title. Send the agent a message instead; do not look for a title that permits it |
+| 403 targeting another agent with `inject`/`slash`/`queue`/`state --pane` | expected — R42 forbids these for every title, MANAGER included. Send the agent a message instead; do not look for a title that permits it |
+| 403 targeting another agent with `block-state`/`read-prompt`/`answer` | the R42.8 title matrix refused you (not MANAGER/COS-of-that-team, or the target is an ASSISTANT). See `ama-unblock` |
+| 409 on a cross-agent `answer` | the target is not actually blocked — R42.8(a). Not a bug: an unblock has no meaning for a working agent |
 | 403 on any verb attempting self-reconfiguration | not this skill's job — configuration is refused on self for every title |
 | `queue` accepted but nothing ran yet | expected — it fires at the next genuine idle prompt, not immediately (unless `--wake-first` on a hibernated agent) |
 | `inject` silently did nothing / landed mid-output | you skipped the `state` check; re-run with `--require-idle` |

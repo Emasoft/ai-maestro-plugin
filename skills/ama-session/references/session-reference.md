@@ -12,25 +12,42 @@
 
 ## Authorization matrix
 
-`queue`, `inject`, `slash`, `answer`, and every `panel` verb (see `ama-panel`)
-are `send-command`-class actions. Who may act **on whom**:
+`queue`, `inject`, `slash`, `state --pane`, and every `panel` verb (see
+`ama-panel`) are `send-command`-class actions — they deliver an arbitrary
+command, so they express the CALLER's decision. Who may act **on whom**:
 
-| Caller | May act on |
-|---|---|
-| the human USER | any agent (needs a fresh sudo-token) |
-| MANAGER | **itself only** — no title exemption (R42.2) |
-| CHIEF-OF-STAFF | **itself only** — no title exemption (R42.2) |
-| any agent | **itself only** |
+| Caller | May act on (`send-command`-class) | May `block-state`/`read-prompt`/`answer` (R42.8) |
+|---|---|---|
+| the human USER | any agent (needs a fresh sudo-token) | any agent (sudo-token) |
+| MANAGER | **itself only** — no title exemption (R42.2) | any agent on the host **except an ASSISTANT**, and only while that agent is BLOCKED |
+| CHIEF-OF-STAFF | **itself only** — no title exemption (R42.2) | **its own team only**, same ASSISTANT exclusion, same blocked-only condition |
+| any other agent | **itself only** | **itself only** |
+
+The right-hand column is the **R42.8 carve-out** and nothing wider: it
+answers a prompt the target itself raised, carries no work, and 409s unless
+the target is genuinely blocked. The workflow that governs it —
+constraints, escalation cases, the anti-patterns — is the `ama-unblock`
+skill. `answer` moved out of the `send-command` column because an answer to
+a pending prompt supplies a missing INPUT; it does not author an
+instruction.
 
 > **Revised for governance R42 (CRITICAL, IRON, USER-set).** The MANAGER/COS
 > rows previously read "any agent" and "agents of its own team" — that was the
 > pre-R42 `send-command` model, which R42 **revoked entirely** for the
 > cross-agent case (`TRDD-BF3JN4TL`). R42.1 forbids injecting a command,
 > keystroke, prompt, or queued input into another agent's session by API, CLI,
-> **or tmux**; R42.2 states no title is exempt. Only the human USER retains a
-> cross-agent path. To influence a peer, send it a message — a message lands in
-> an inbox and the recipient decides; an injected command *is* the recipient's
-> own action and bypasses its judgment entirely.
+> **or tmux**, *to assign, redirect, or perform that agent's work*; R42.2
+> states no title is exempt from THAT. To influence a peer, send it a message —
+> a message lands in an inbox and the recipient decides; an injected command
+> *is* the recipient's own action and bypasses its judgment entirely.
+>
+> **R42.8 (USER, 2026-08-05) added the single carve-out** shown in the second
+> column above: MANAGER/COS may unblock an agent stalled on a prompt, via
+> `block-state`/`read-prompt`/`answer` only. It exists because a blocked agent
+> cannot read its inbox — messaging reaches an agent at its next turn, and a
+> blocked agent has no next turn — so without it a stalled peer stays stalled
+> forever. It is not a general cross-agent path: `inject`, `slash` and `queue`
+> stay self-only for every title precisely because they could carry work.
 
 So the janitor running inside a MEMBER's session can arm *that* agent and no
 other. A fleet-wide command must come from the MANAGER's session, or from
