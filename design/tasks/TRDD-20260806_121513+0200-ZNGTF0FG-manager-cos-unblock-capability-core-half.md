@@ -3,7 +3,7 @@ trdd-id: ZNGTF0FG
 title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend the hook state)
 column: dev
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-06T14:34:57+0200
+updated: 2026-08-06T14:37:47+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -80,6 +80,17 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
    asked for 3 hook source-states (`present`/`stale`/**`absent`**) since our hook fails
    SILENTLY without node on PATH, so "no file" is an install defect while "17h old" is
    the healthy blocked case. 8 new real-subprocess tests; **330 suite tests pass**.
+
+10. ✅ **Cross-repo coordination so the procedure is not written THREE times.** The server
+    asked `ai-maestro-assistant-manager-agent#35` AND `ai-maestro-chief-of-staff#29` to each
+    author a skill carrying this same procedure + the R42 rule. Commented on both (comments
+    only — never their source, per the cross-project rule): CORE already ships `ama-unblock`
+    in the umbrella plugin they inherit, so reference it and add only the role-specific part
+    (MANAGER: scope + derivability; COS: how it establishes own-team membership BEFORE
+    acting — the one constraint a COS can violate by accident). Divergent copies of an R42
+    rule produce either a violation or a stalled fleet, with no way to tell which copy an
+    agent read. Also passed on the probe-the-deployed-CLI lesson so they do not repeat my
+    error.
 
 **REMAINING — NEXT ACTION: nothing runnable; two waits.**
 
