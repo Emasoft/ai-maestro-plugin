@@ -258,6 +258,15 @@ def test_last_error_survives_later_events(home: str) -> None:
     assert s["lastError"]["type"] == "rate_limit", "but the post-mortem must still be readable"
 
 
+def test_state_is_stamped_with_the_writing_plugin_version(home: str) -> None:
+    """#60: consumers read state written by whatever version each agent has installed.
+    Without a stamp a missing field is ambiguous in the direction that matters — 'no
+    question pending' vs 'a version that clobbered it' (#59) demand opposite actions."""
+    manifest = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text())
+    run_hook({"hook_event_name": "SessionStart"}, home)
+    assert read_state(home)["writerVersion"] == manifest["version"]
+
+
 def test_no_last_error_on_a_clean_session(home: str) -> None:
     """A healthy session reports lastError null — never a stale or invented one."""
     run_hook({"hook_event_name": "SessionStart"}, home)

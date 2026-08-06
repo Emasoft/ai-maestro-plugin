@@ -153,6 +153,7 @@ function writeState(cwd, state) {
         ...state,
         subagentCount,
         lastError,
+        writerVersion: getPluginVersion(),
         cwd,
         cwdHash,
         updatedAt: new Date().toISOString()
@@ -283,6 +284,32 @@ function getSubagentCount(cwd) {
         return state.subagentCount || 0;
     } catch (e) {
         return 0;
+    }
+}
+
+// The version of the plugin that WROTE this state record.
+//
+// The fleet's consumers (the server's block-state verdict, any supervisor reading
+// chat-state) read files written by whatever plugin version each agent happens to
+// have installed. Without a stamp, an absent field is ambiguous in the one direction
+// that matters: a missing `questions` means EITHER "no question is pending" OR "this
+// agent runs a version that clobbered it" (the #59 bug), and those call for opposite
+// actions. Stamping the writer lets a consumer say "stale producer" instead of
+// silently concluding the agent is fine. Read per event (a small JSON, same cost as
+// the state read beside it) rather than cached, so it cannot go stale after an update.
+// Resolved from __dirname, NEVER from $CLAUDE_PLUGIN_ROOT: this file's own location is
+// authoritative, whereas that env var describes whichever plugin's context spawned the
+// process and would stamp another plugin's version onto our record. A wrong stamp is
+// worse than none — it is the one field a consumer would trust to decide the producer
+// is current.
+function getPluginVersion() {
+    try {
+        const manifest = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '..', '.claude-plugin', 'plugin.json'), 'utf8')
+        );
+        return manifest.version || null;
+    } catch (e) {
+        return null;
     }
 }
 
