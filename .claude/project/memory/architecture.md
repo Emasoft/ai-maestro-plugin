@@ -257,7 +257,7 @@ because a later event silently erased state a supervisor needed: `subagentCount`
 event of any kind made "why did this agent stop" unanswerable; the terminal cannot answer it
 either, being a live tail that a scrolled-off error has left). `lastError` carries its own `at` so
 a consumer judges staleness instead of being told nothing happened. An explicit value always wins
-over the carry, so a handler resets deliberately (`subagentCount: 0`, `lastError: null`).
+over the carry, so a handler resets deliberately (`subagentCount: 0`, `lastError: null`). [^4]
 
 ^ATOM-VN4C-8QRP [desc:"a GENERIC hook notification must never overwrite a more SPECIFIC classification that is still pending — Notification(permission_prompt) fires for AskUserQuestion blocks too and used to clobber the captured question", keywords: askuserquestion_not_captured_in_chat-state read-prompt_returns_null_but_a_menu_is_on_screen notificationType_is_permission_prompt_for_a_question blocked_agent_looks_healthy question_text_never_recorded, ocd: 2026-08-06, lmd: 2026-08-06]
 
@@ -309,3 +309,4 @@ age bound** — `PostToolUse` is what ends the state, and a blocked agent stays 
   a vulnerable crate reaches every consumer as a compiled artifact with nothing ever
   alerting. DO audit crates against OSV (POST the lockfile's name+version pairs to
   `api.osv.dev/v1/querybatch`) and treat the alert count as covering only Actions and Python.
+[^4]: [id:ATOM-IW75-RF2M, status:valid, desc:"writerVersion must come from __dirname, never $CLAUDE_PLUGIN_ROOT — a wrong stamp is worse than none (#60, 2026-08-06)", keywords:"plugin_version_stamp_on_chat-state writerVersion_field CLAUDE_PLUGIN_ROOT_wrong_plugin_version how_does_the_hook_know_its_own_version is_the_version_stamp_redundant stale_producer_detection", ocd:2026-08-06, lmd:2026-08-06] DO NOT resolve the plugin version (or any plugin-root path) inside `scripts/ai-maestro-hook.cjs` from `$CLAUDE_PLUGIN_ROOT`, and DO NOT drop the `writerVersion` stamp as redundant. BECAUSE that env var names whichever plugin's context spawned the hook process, not this plugin, so it can stamp ANOTHER plugin's version onto our state record — and a wrong stamp is worse than none, since `writerVersion` is the one field a fleet consumer trusts to decide the producer is current (it is what lets the server distinguish 'no question pending' from 'this agent still runs the #59 clobber bug', which demand opposite actions). DO resolve from `__dirname`, whose value is the file's own location and cannot be wrong; the regression test passes with `CLAUDE_PLUGIN_ROOT` deliberately pointed elsewhere, so keep it that way.
