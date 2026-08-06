@@ -208,7 +208,10 @@ Check whether an agent is safe to interrupt before injecting text.
 ## Scope
 
 Drives an agent's **own** terminal/state — and only its own; R42 (IRON)
-forbids targeting another agent, with no title exemption. Never reconfigures an agent (role,
+forbids targeting another agent, with no title exemption. The single
+sanctioned cross-agent exception — a MANAGER/COS resuming a **blocked**
+session through the server-gated unblock verbs — is `ama-unblock`, not this
+skill. Never reconfigures an agent (role,
 plugin, team, MCP, hooks, sub-agents, title) — that is
 `ai-maestro-agents-management`, refused on self regardless of title. Driving
 the HTML side panel is `ama-panel`. Server-mediated TRDD search/read is
@@ -226,6 +229,8 @@ the HTML side panel is `ama-panel`. Server-mediated TRDD search/read is
 
 ## Use also
 
+- `Skill(skill: "ama-unblock")` — the MANAGER/COS-only, blocked-sessions-only
+  cross-agent exception (detect / diagnose / resume a stuck fleet member).
 - `Skill(skill: "ama-panel")` — drive the agent's HTML dashboard panel.
 - `Skill(skill: "ai-maestro-agents-management")` — agent lifecycle and
   configuration (a different authority than driving your own terminal).

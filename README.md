@@ -10,7 +10,7 @@ The umbrella core plugin for the AI Maestro ecosystem — shared skills, AMP
 messaging, AID identity, governance, kanban, and the universal PRRD/TRDD/Kanban
 workflow that every role plugin inherits.
 
-**Skills:** 28 | **Commands:** 14 | **Scripts:** 15 Python/shell
+**Skills:** 29 | **Commands:** 14 | **Scripts:** 15 Python/shell
 
 Last updated: 2026-06-16
 
@@ -84,6 +84,7 @@ are documented in the table below.
 | `ama-trdd-server`               | TRDD dashboard: approve / search TRDDs       |
 | `ama-panel`                     | Push HTML to the agent's side panel          |
 | `ama-session`                   | Queue commands / answer pending prompts      |
+| `ama-unblock`                   | MANAGER/COS resume of blocked sessions       |
 | `ama-continuity`                | Own 5h/7d window health + self-resume        |
 | `ama-portfolio`                 | R28 approval / mandate tokens (mint, verify) |
 | `ama-settings`                  | Gated settings.json editor                   |

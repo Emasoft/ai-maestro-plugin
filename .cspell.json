@@ -3,11 +3,11 @@
   "language": "en",
   "comment": [
     "Project dictionary. Every word here is an identifier or a domain term that",
-    "already exists in this repo's source — cspell only flagged them once a PR",
+    "already exists in this repo's source \u2014 cspell only flagged them once a PR",
     "touched the file that contains them, because MegaLinter runs with",
     "VALIDATE_ALL_CODEBASE: false. Without this file, any PR that edits a Python",
     "file fails CI on words it did not introduce.",
-    "The 2026-08-05 batch (airgapped … workdirs) is the v5.2.0 governance-mirror",
+    "The 2026-08-05 batch (airgapped \u2026 workdirs) is the v5.2.0 governance-mirror",
     "body: mostly domain terms and TRDD-id fragments; 'meame' and 'sgent' are",
     "typos inside a verbatim USER-quote block the canonical preserves by design."
   ],
@@ -36,6 +36,7 @@
     "claude",
     "commitlint",
     "conftest",
+    "cooldown",
     "cprint",
     "cspell",
     "cyclonedx",
@@ -46,6 +47,7 @@
     "delete",
     "deleter",
     "dependabot",
+    "derivability",
     "desync",
     "devitalize",
     "devitalizer",
@@ -68,6 +70,7 @@
     "gcimq",
     "generalises",
     "getpid",
+    "GFBT",
     "gitignore",
     "gitleaks",
     "GITLOG",
@@ -75,6 +78,7 @@
     "governance",
     "graph",
     "greppable",
+    "GSVC",
     "haephestos",
     "hatchling",
     "hiber",
@@ -96,6 +100,7 @@
     "keypair",
     "kiro",
     "kwargs",
+    "ledgered",
     "levelname",
     "licence",
     "maestro",
@@ -213,7 +218,8 @@
     "xdist",
     "yamllint",
     "zizmor",
-    "zizmorcore"
+    "zizmorcore",
+    "ZNGTF"
   ],
   "ignorePaths": [
     "uv.lock",
