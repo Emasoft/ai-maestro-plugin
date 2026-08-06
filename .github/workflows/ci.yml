@@ -166,7 +166,7 @@ jobs:
           # env and validates clean (CRITICAL 0); CI now matches it.
         run: |
           set +e
-          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v4.2.1 \
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v5.2.0 \
               --with pyyaml \
               cpv-remote-validate plugin . --strict
           exit_code=$?

@@ -99,7 +99,7 @@ PRE_PUSH_HOOK_PIN_REL = ".githooks/pre-push.sha256"
 # after measuring it here: v4.2.1 --strict -> exit 0, NIT=0 (WARNING=28
 # unchanged, advisory). This is a named, causally-established fix — NOT a
 # licence to bump the pin speculatively.
-CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v4.2.1"
+CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v5.2.0"
 
 # Load gh / git retry wrappers from the sibling module so every push +
 # `gh release create` survives transient github.com hiccups (the retry
