@@ -3,7 +3,7 @@ trdd-id: ZNGTF0FG
 title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend the hook state)
 column: dev
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-06T14:05:00+0200
+updated: 2026-08-06T14:18:26+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -42,18 +42,49 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
    NOTIFY-the-target requirement (AMP note so the resumed agent knows the answer's
    provenance — R41). Server reply pending (0 comments at time of writing).
 
-**REMAINING — NEXT ACTION: poll `ai-maestro#128` for the server's reply**, then:
+**DONE (second pass, 2026-08-06 — the server had ALREADY SHIPPED; CORE's proposal was moot):**
 
-1. Reconcile the skill's verb shapes with whatever the server actually ships (the skill
-   is feature-detected, so drift is cheap until the verbs land).
-2. Extend `scripts/ai-maestro-hook.cjs` state output with the fields the server's
-   classifier requests from inside the harness (they will name them on #128).
-3. After the governance catalog gains the R42 exception clause (spec-first, R42.7
-   template): re-run the contradiction sweep (ATOM-GFBT-KR76) on the new rule text vs
-   CORE skills — including the new ama-unblock — then re-sync the mirror.
-4. At next publish: expect skillaudit A2A_* findings on ama-unblock's cross-agent
-   wording; route the false-positive rows through `.cpv-audit-consent.json` (full-line
-   sha256 recipe — ATOM-GSVC-UQT2), never by weakening the teaching.
+3. ✅ **The capability is DEPLOYED and the rule is R42.8** (USER grant 2026-08-05,
+   `ai-maestro#125`, catalog v5.3.0–5.3.2). CORE's proposed verbs do NOT exist. Shipped:
+   `block-state [--match]` (terminal read, the AUTHORITY), `read-prompt` (hook hint),
+   `answer`. **`inject`/`slash`/`queue` are excluded from the exception** — they carry an
+   arbitrary command = the CALLER's decision = R42.1; server 403s them cross-agent. The
+   5.3.1 pass records that earlier wording named them and a MANAGER obeying it would have
+   been 403'd — build the enforcement BEFORE writing the rule.
+4. ✅ **ama-unblock rewritten to the deployed surface** (commit after `1f21d6f`): R42.8's
+   8 constraints, the 7-reason taxonomy (`ask_user|permission|rate_limited|api_error|
+   idle|active|unknown`), never-an-ASSISTANT, identity-prompts-escalate, read-before-
+   answer, 409-on-not-blocked. My `--nudge` action is GONE (a nudge is a keystroke).
+5. ✅ **Sweep found 2 more contradictions, fixed**: `session-reference.md` listed `answer`
+   among self-only send-command-class verbs (now a 2-column matrix); `ama-panel` claimed
+   R42.2 grants MANAGER/COS no exemption at all (now: exactly one power, R42.8, and no
+   panel verb is in it). `ama-continuity` verified clean (self-only by construction).
+6. ✅ **Hook #59 fixed — the question was CLOBBERED, not missing.** `PreToolUse` recorded
+   it; `Notification(permission_prompt)` (Claude Code emits it for AskUserQuestion too)
+   rebuilt state from a whitelist keeping only a recent `permission_request`, dropping
+   `questions` and downgrading the type. **NO age bound on the new carry-through** — a
+   blocked agent stays blocked for HOURS (17h observed), so a 10s window re-loses the
+   question in exactly the case that matters (my first attempt had it and a slow test
+   exposed it). `options` normalized to `{key,label}`. 
+7. ✅ **Hook #58: durable `lastError {type,message,at}`** carried through like
+   `subagentCount`, surviving SessionStart. 7 new real-subprocess tests, 18 pass.
+
+**REMAINING — NEXT ACTION: nothing runnable; two waits.**
+
+1. **Mirror sync BLOCKED and correctly so** — pushed `governance-rules` is still v5.2.0
+   (blob `824812218`, byte-identical to CORE's mirror). R42.8 lives only in an UNPUSHED
+   local commit of `~/ai-maestro`. Syncing would embed unverifiable text. Verify with
+   `git ls-remote` + read the PUSHED blob's version, never the local working copy.
+   When it lands: verbatim body replace → wrapper regen → re-embed both TOCs →
+   **regenerate `.cpv-audit-consent.json`** (R42.1/R42.2 line TEXT changed, so the
+   full-line sha256 invalidates — ATOM-GSVC-UQT2).
+2. Awaiting server answers on #58 (should the WS broadcast carry `questions`/`lastError`
+   too? want the red-state regex exported as generated JSON instead of a copied literal?)
+   and #128 (the autonomous agent's ADV-03 fixture — answered: stays REFUSE on TWO
+   grounds, wrong actor AND wrong verb).
+3. At next publish: expect skillaudit A2A_* findings on ama-unblock's cross-agent
+   wording; route false-positive rows through `.cpv-audit-consent.json`, never by
+   weakening the teaching.
 
 Gotchas: injection false-positives are the R42 harm — the teaching requires the
 classifier's evidence before any action; rate-limit blocks want WAIT, not text; a
@@ -62,7 +93,10 @@ debate about widening it). Hook starting point already shipped: idle_prompt /
 permission_prompt notifications, PermissionRequest events, 8-state broadcast,
 `~/.aimaestro/chat-state/<cwd-hash>.json`.
 
-**SUPERSEDED — do NOT carry forward:** "wait for the server to ship the verbs" as the
-next action (the USER ordered active work); `column: blocked` / `blocked-by:
-[ai-maestro#128]` (dropped — the skill work was never server-blocked, only step 2's hook
-fields and step 3's sweep are).
+**SUPERSEDED — do NOT carry forward:** "wait for the server to ship the verbs" (it had
+already shipped — CHECK THE DEPLOYED CLI's `help` before designing a contract for it);
+`column: blocked` / `blocked-by: [ai-maestro#128]`; CORE's proposed verb names
+`why-blocked` / `unblock --option|--text|--nudge|--wait` (**none exist** — the real ones
+are `block-state`/`read-prompt`/`answer`, and `--nudge` was rejected on principle, not
+by oversight); the earlier claim that the exception verbs include `inject`/`queue`; and
+the plan to sync the mirror this session (the catalog is unpushed).
