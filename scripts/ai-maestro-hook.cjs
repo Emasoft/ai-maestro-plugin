@@ -136,9 +136,23 @@ function writeState(cwd, state) {
         ? getSubagentCount(cwd)
         : state.subagentCount;
 
+    // lastError is a DURABLE post-mortem record, carried through by the same rule
+    // (#58). `status: 'error'` and `errorType` describe only the CURRENT event, so
+    // the next event of any kind erased them — an API failure was unreadable a
+    // second later, and a supervisor reading the file could not tell "healthy" from
+    // "died an hour ago". The terminal cannot answer this either: the pane is a live
+    // window scanned at the tail, so an error that has scrolled off is simply gone.
+    // It carries its own `at`, so a consumer can judge staleness instead of being
+    // silently told nothing happened. A handler clears it deliberately by passing
+    // `lastError: null` (an explicit value always wins over the carry).
+    const lastError = state.lastError === undefined
+        ? getLastError(cwd)
+        : state.lastError;
+
     const fullState = {
         ...state,
         subagentCount,
+        lastError,
         cwd,
         cwdHash,
         updatedAt: new Date().toISOString()
@@ -272,6 +286,20 @@ function getSubagentCount(cwd) {
     }
 }
 
+// The last error this session hit, as a DURABLE record (Emasoft/ai-maestro-plugin#58).
+// Returns null when there is none.
+function getLastError(cwd) {
+    try {
+        const stateDir = path.join(os.homedir(), '.aimaestro', 'chat-state');
+        const cwdHash = hashCwd(cwd);
+        const stateFile = path.join(stateDir, `${cwdHash}.json`);
+        const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+        return state.lastError || null;
+    } catch (e) {
+        return null;
+    }
+}
+
 // Main
 async function main() {
     const input = await readStdin();
@@ -386,29 +414,68 @@ async function main() {
                 const stateFile = path.join(stateDir, `${cwdHash}.json`);
 
                 let existingState = {};
+                let pendingQuestion = null;
                 try {
                     if (fs.existsSync(stateFile)) {
-                        existingState = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-                        // Only preserve if it's a recent permission_request (within 10 seconds)
-                        const age = Date.now() - new Date(existingState.updatedAt).getTime();
-                        if (existingState.status !== 'permission_request' || age > 10000) {
-                            existingState = {};
+                        const prior = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+                        const age = Date.now() - new Date(prior.updatedAt).getTime();
+                        // Claude Code emits Notification(permission_prompt) for an
+                        // AskUserQuestion block too, moments after PreToolUse recorded the
+                        // question. Without the branch below this handler CLOBBERED it:
+                        // the reset wiped `questions` (it only ever whitelisted
+                        // permission_request) and `notificationType` was downgraded
+                        // 'question' -> 'permission_prompt'. Measured server-side across
+                        // 419 live chat-state files: options present, question text
+                        // captured 0 times, and a live AskUserQuestion typed as a
+                        // permission prompt (Emasoft/ai-maestro-plugin#59). That made
+                        // read-prompt answer null for the ONE prompt shape that blocks an
+                        // agent forever, so a stalled agent looked healthy. Keep the more
+                        // SPECIFIC prior classification: a generic notification must never
+                        // overwrite a specific one that is still pending.
+                        //
+                        // NO AGE BOUND HERE, deliberately — unlike the permission_request
+                        // branch below. A pending question has no timeout: an agent blocked
+                        // on one stays blocked until a human answers (17h observed on a live
+                        // agent). Bounding this at 10s would re-drop the question for exactly
+                        // the long-block case the fix exists for. PostToolUse(AskUserQuestion)
+                        // is what ends this state — it writes no notificationType, so a
+                        // 'question' classification cannot outlive its answer.
+                        if (prior.notificationType === 'question'
+                            && prior.status === 'waiting_for_input'
+                            && Array.isArray(prior.questions) && prior.questions.length > 0) {
+                            pendingQuestion = prior;
+                        } else if (prior.status === 'permission_request' && age <= 10000) {
+                            // Only preserve if it's a recent permission_request (within 10 seconds)
+                            existingState = prior;
                         }
                     }
                 } catch (e) {}
 
-                writeState(cwd, {
-                    status: 'waiting_for_input',
-                    message: input.message || 'Waiting for your input...',
-                    notificationType,
-                    sessionId,
-                    transcriptPath,
-                    // Preserve tool info from PermissionRequest if we have it
-                    toolName: existingState.toolName,
-                    toolInput: existingState.toolInput,
-                    options: existingState.options,
-                    description: existingState.description || input.message
-                });
+                if (pendingQuestion) {
+                    writeState(cwd, {
+                        status: 'waiting_for_input',
+                        message: pendingQuestion.message || input.message || 'Claude is asking a question…',
+                        notificationType: 'question',
+                        questions: pendingQuestion.questions,
+                        options: pendingQuestion.options,
+                        sessionId,
+                        transcriptPath
+                    });
+                    debugLog({ event: 'question_kept_over_permission_prompt', cwd, count: pendingQuestion.questions.length });
+                } else {
+                    writeState(cwd, {
+                        status: 'waiting_for_input',
+                        message: input.message || 'Waiting for your input...',
+                        notificationType,
+                        sessionId,
+                        transcriptPath,
+                        // Preserve tool info from PermissionRequest if we have it
+                        toolName: existingState.toolName,
+                        toolInput: existingState.toolInput,
+                        options: existingState.options,
+                        description: existingState.description || input.message
+                    });
+                }
             } else if (notificationType === 'elicitation_dialog') {
                 // MCP server is requesting user input — special blocking state
                 writeState(cwd, {
@@ -470,13 +537,21 @@ async function main() {
 
         case 'StopFailure':
             // Turn ended due to API error (rate limit, auth failure, billing, etc.)
-            writeState(cwd, {
-                status: 'error',
-                message: input.error || input.message || 'API error',
-                errorType: input.error_type || input.stop_reason || 'unknown',
-                sessionId,
-                transcriptPath
-            });
+            {
+                const errorType = input.error_type || input.stop_reason || 'unknown';
+                const errorMessage = input.error || input.message || 'API error';
+                writeState(cwd, {
+                    status: 'error',
+                    message: errorMessage,
+                    errorType,
+                    // Durable copy (#58): survives every later event until a handler
+                    // clears it, so "why did this agent stop" is answerable after the
+                    // fact rather than only in the instant the error arrived.
+                    lastError: { type: errorType, message: errorMessage, at: new Date().toISOString() },
+                    sessionId,
+                    transcriptPath
+                });
+            }
             break;
 
         case 'SessionStart':
@@ -582,15 +657,27 @@ async function main() {
                     const ti = input.tool_input || input.toolInput || {};
                     const questions = Array.isArray(ti.questions) ? ti.questions : [];
                     const first = questions[0] || {};
+                    // Normalize the first question's choices into the SAME {key,label}
+                    // shape the PermissionRequest handler emits, so one consumer
+                    // (read-prompt, the dashboard, an unblocking MANAGER under R42.8)
+                    // reads choices the same way for both prompt kinds instead of
+                    // special-casing the raw AskUserQuestion schema. `key` is the 1-based
+                    // index because that is what the terminal UI accepts as the answer.
+                    const options = (Array.isArray(first.options) ? first.options : []).map((opt, i) => ({
+                        key: String(i + 1),
+                        label: typeof opt === 'string' ? opt : (opt && opt.label) || '',
+                        description: (opt && opt.description) || undefined
+                    }));
                     writeState(cwd, {
                         status: 'waiting_for_input',
                         notificationType: 'question',
                         message: first.question || 'Claude is asking a question…',
                         questions,
+                        options,
                         sessionId,
                         transcriptPath
                     });
-                    debugLog({ event: 'question_asked', cwd, count: questions.length });
+                    debugLog({ event: 'question_asked', cwd, count: questions.length, options: options.length });
                 }
             }
             break;
