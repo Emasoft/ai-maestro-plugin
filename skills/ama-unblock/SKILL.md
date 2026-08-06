@@ -26,8 +26,15 @@ the messaging-only model, and governance **R42.8** is the sanctioned patch
 > the R6 communication graph.
 
 The workflow: **DETECT → DIAGNOSE → READ → DECIDE → ANSWER → VERIFY →
-NOTIFY**, entirely through the frozen `aimaestro-session.sh` — the exception
-verbs are **`block-state`, `read-prompt` and `answer` ONLY**. `inject`,
+NOTIFY**, entirely through the frozen `aimaestro-session.sh`. **Never call the
+ai-maestro server API directly; this CLI resolves the API base and your
+identity internally (core#11).** That matters more here than anywhere else in
+the plugin: R42.8 is enforced at the API by title and blocked-state, so
+reaching past the CLI is not a shortcut around a missing verb — it is an
+attempt to perform an unblock without the gate that makes unblocking legal.
+If a verb you need does not exist, that is the answer; file it, do not route
+around it. The exception verbs are **`block-state`, `read-prompt` and
+`answer` ONLY**. `inject`,
 `slash` and `queue` are NOT exception verbs: they deliver an arbitrary
 command, so they express the CALLER's decision (R42.1 exactly) and stay
 SELF-ONLY for every title — the server 403s them cross-agent.
