@@ -3,7 +3,7 @@ trdd-id: ZNGTF0FG
 title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend the hook state)
 column: dev
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-06T14:18:26+0200
+updated: 2026-08-06T14:34:57+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -67,7 +67,19 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
    question in exactly the case that matters (my first attempt had it and a slow test
    exposed it). `options` normalized to `{key,label}`. 
 7. ✅ **Hook #58: durable `lastError {type,message,at}`** carried through like
-   `subagentCount`, surviving SessionStart. 7 new real-subprocess tests, 18 pass.
+   `subagentCount`, surviving SessionStart.
+8. ✅ **Hook #60: `writerVersion` stamp on every state record** — the fleet aggregator
+   reads files written by many installed versions, so a missing `questions` was
+   ambiguous between "no question pending" and "an agent still running the #59 clobber
+   bug" (opposite actions). Resolved from `__dirname`, NEVER `$CLAUDE_PLUGIN_ROOT` (that
+   names the spawning plugin's context and would stamp someone else's version — a wrong
+   stamp is worse than none; test passes with the env var pointed elsewhere).
+9. ✅ **Answered #60's three asks**, incl. the one blocking requirement for
+   `TRDD-LT5N2JA4`: it MUST have a frozen-CLI verb, not only an API route — core#11 +
+   `test_no_direct_api_calls` make an API-only probe unusable by every CORE skill. Also
+   asked for 3 hook source-states (`present`/`stale`/**`absent`**) since our hook fails
+   SILENTLY without node on PATH, so "no file" is an install defect while "17h old" is
+   the healthy blocked case. 8 new real-subprocess tests; **330 suite tests pass**.
 
 **REMAINING — NEXT ACTION: nothing runnable; two waits.**
 
@@ -79,9 +91,10 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
    **regenerate `.cpv-audit-consent.json`** (R42.1/R42.2 line TEXT changed, so the
    full-line sha256 invalidates — ATOM-GSVC-UQT2).
 2. Awaiting server answers on #58 (should the WS broadcast carry `questions`/`lastError`
-   too? want the red-state regex exported as generated JSON instead of a copied literal?)
-   and #128 (the autonomous agent's ADV-03 fixture — answered: stays REFUSE on TWO
-   grounds, wrong actor AND wrong verb).
+   too? want the red-state regex exported as generated JSON instead of a copied literal?),
+   #60 (will `TRDD-LT5N2JA4` get a frozen-CLI verb? will `sources` split
+   `absent` from `stale`?), and #128 (the autonomous agent's ADV-03 fixture — answered:
+   stays REFUSE on TWO grounds, wrong actor AND wrong verb).
 3. At next publish: expect skillaudit A2A_* findings on ama-unblock's cross-agent
    wording; route false-positive rows through `.cpv-audit-consent.json`, never by
    weakening the teaching.
