@@ -248,6 +248,30 @@ updates, because both editors parse the same base and the last full re-emission 
 other's rule. `write_prrd` also takes the lock re-entrantly for direct library callers.
 Real-process race + blocked-writer tests: `tests/test_prrd_write_lock.py`.
 
+
+^ATOM-TKLL-H9B7 [desc:"ai-maestro-hook writeState has two CARRY-THROUGH fields (subagentCount, lastError) — a write that omits one must preserve the prior value, or a later event silently erases state a supervisor needs", keywords: hook_drops_state_after_the_next_event why_did_this_agent_stop lastError_missing errorType_gone_a_second_later subagentCount_reset_to_zero_mid_fanout, ocd: 2026-08-06, lmd: 2026-08-06]
+
+`writeState` in `scripts/ai-maestro-hook.cjs` has TWO carry-through fields, and both exist
+because a later event silently erased state a supervisor needed: `subagentCount` (#17) and
+`lastError` (#58 — `status:'error'` and `errorType` describe only the CURRENT event, so the next
+event of any kind made "why did this agent stop" unanswerable; the terminal cannot answer it
+either, being a live tail that a scrolled-off error has left). `lastError` carries its own `at` so
+a consumer judges staleness instead of being told nothing happened. An explicit value always wins
+over the carry, so a handler resets deliberately (`subagentCount: 0`, `lastError: null`).
+
+^ATOM-VN4C-8QRP [desc:"a GENERIC hook notification must never overwrite a more SPECIFIC classification that is still pending — Notification(permission_prompt) fires for AskUserQuestion blocks too and used to clobber the captured question", keywords: askuserquestion_not_captured_in_chat-state read-prompt_returns_null_but_a_menu_is_on_screen notificationType_is_permission_prompt_for_a_question blocked_agent_looks_healthy question_text_never_recorded, ocd: 2026-08-06, lmd: 2026-08-06]
+
+The `Notification(permission_prompt)` handler must NOT clobber a pending `AskUserQuestion`.
+Claude Code emits that notification for question blocks too, and the handler used to rebuild
+state from a whitelist keeping only a recent `permission_request` — dropping `questions` and
+downgrading `notificationType` from `question` to `permission_prompt` about a second after
+`PreToolUse` had captured it. Measured server-side: question text captured **0 of 419** live
+state files, so `read-prompt` answered `null` for the one prompt shape that blocks an agent
+forever and a stalled agent read as healthy (#59). The invariant: **a GENERIC notification never
+overwrites a more SPECIFIC classification that is still pending.** That carry-through takes **no
+age bound** — `PostToolUse` is what ends the state, and a blocked agent stays blocked for hours
+(17h observed), so any window would re-drop the question in exactly the case it exists for.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to
