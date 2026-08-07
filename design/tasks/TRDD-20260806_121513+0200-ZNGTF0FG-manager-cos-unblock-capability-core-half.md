@@ -1,9 +1,11 @@
 ---
 trdd-id: ZNGTF0FG
 title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend the hook state)
-column: dev
+column: blocked
+pre-block-column: dev
+blocked-by: [ai-maestro#128, ai-maestro-plugin#58, ai-maestro-plugin#60]
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-06T14:37:47+0200
+updated: 2026-08-07T12:08:25+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -91,6 +93,14 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
     rule produce either a violation or a stalled fleet, with no way to tell which copy an
     agent read. Also passed on the probe-the-deployed-CLI lesson so they do not repeat my
     error.
+
+**COLUMN: `dev` → `blocked` (2026-08-07).** Held in `dev` while its own NEXT ACTION read
+"nothing runnable" — and `dev` asserts someone is working the card right now. That is the
+same defect this session fixed on `TRDD-202ccfa2`, so it gets the same treatment rather
+than an exception for being mine: the blockers are real, external, and now greppable in
+`blocked-by:`. Two of the three deliverables ARE done and shipped (the skill; the hook
+extensions for #58/#59/#60); only the mirror re-sync and the open server questions remain,
+and neither is CORE's to move. `pre-block-column: dev` restores it when they land.
 
 **REMAINING — NEXT ACTION: nothing runnable; two waits.**
 
