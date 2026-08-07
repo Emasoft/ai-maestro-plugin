@@ -107,6 +107,28 @@ Three measured facts every consumer must know (`ai-maestro-plugin#58/#59`):
 - **`field`** (`visible`/`empty`/`text`) is how "the input field is clear"
   is checked on the ai-maestro channel — never by eyeballing a pane dump.
 
+## ⚠ HOST CAVEAT — the terminal read is tmux-backed, so some agents are unreachable
+
+**The pane path assumes the target runs under tmux.** The CLI's own help describes
+`state --pane` as "live **tmux** pane status", and `block-state` / `--match` read that same
+pane server-side. (✓ verified from the CLI help; the failure mode for a non-tmux host is
+INFERRED from that, not yet measured against a live iTerm-hosted agent — measure before
+asserting it to anyone.)
+
+Why it matters: an agent running in a bare **iTerm** pane may be unreadable by
+`block-state`, and the janitor's global daemon separately cannot rescue iTerm panes at all
+without a macOS Automation (Apple Events) grant — which on some hosts will not persist.
+**Both rescue paths can therefore be unavailable at once, for the same agent, silently.**
+That is the worst shape this capability can take: a MANAGER runs `block-state`, learns
+nothing, and a stalled agent looks fine — the exact "blocked forever" the exception exists
+to prevent.
+
+**Operational consequence: run fleet agents under tmux.** The guardian rescues tmux panes
+with no Automation grant at all. If you find an agent you cannot read, check how it is
+hosted BEFORE concluding it is healthy — and report `unknown_blocked` with that fact rather
+than silence. Never fall back to driving an iTerm pane by another route; the prohibition
+below is about the ROUTE, and it does not relax because the sanctioned one is unavailable.
+
 ## The reason → action decision table
 
 | `reason` | legal action | rule |
