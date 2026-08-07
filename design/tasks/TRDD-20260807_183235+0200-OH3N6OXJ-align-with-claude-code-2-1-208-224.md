@@ -72,16 +72,50 @@ Decide (needs a governance call, not a code change):
   Tier 0 if it only documents the platform's behavior. Author the proposal, do not self-approve
   a rule change.
 
-**A2 — `DirectoryAdded` hook (2.1.219).** A 13th event CORE does not register. The hook keys
-chat-state on `cwdHash`, so a workspace gaining a directory mid-session is exactly the event that
-invalidates that key's assumption. Assess whether the state file should track added roots, or
-whether registering it is noise. Do NOT register it reflexively — 12 events already fire on every
-turn and each one costs.
+**A2 — `DirectoryAdded` hook (2.1.219). DECIDED: do NOT register.** A 13th event CORE does not
+register. Reason, recorded so nobody re-litigates it: chat-state is keyed on `cwdHash`, and
+adding a workspace root **does not change `cwd`** — so the key the state is filed under is
+unaffected. No consumer asks "which roots does this agent have"; the server tracks agents by
+workdir. Registering it would add an event that fires on every matching turn across every
+session on the machine and feeds nothing. Revisit only if a consumer appears that needs the
+root set.
 
-**A3 — `workflowSizeGuideline` settings key (2.1.219)** and **subagent concurrency**
-(`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, nesting depth 3, 200-agent cap removed). CORE's
-`subagentCount` carry-through in the hook counts nesting that can now legitimately go 3 deep.
-Verify the counter still means what its consumers think it means.
+**A4 — `archive` plugin source + SHA-256 pinning (2.1.224). DECIDED: cross-repo, not CORE's to
+make.** CORE's `plugin.json` declares dependencies by `marketplace` + `version`; switching a
+consumer to a SHA-256-pinned `archive` source is a **marketplace-repo** change
+(`ai-maestro-plugins`), not a change to this manifest. Per the cross-project rule, file it
+upstream rather than editing that repo from here. It is a genuine supply-chain improvement and
+worth proposing — just not from this card.
+
+**A3 — `subagentCount` is an unlocked cross-process counter, and the platform just made its
+race the normal case. VERIFIED DEFECT — second-most-valuable item after A1.**
+
+✓ VERIFIED by reading `ai-maestro-hook.cjs:128-149, 679-711`:
+
+- `SubagentStart` does `getSubagentCount(cwd) + 1` then `writeState` — a **read-modify-write
+  across separate Node processes with no lock**. The file's own comment concedes it:
+  *"One read does not close that race (only a lock would)"*. The atomic `rename(2)` prevents a
+  **torn** file; it does nothing about a **lost update**.
+- Two concurrent `SubagentStart`s both read 5, both write 6, and the counter is permanently
+  1 low. Nothing ever recomputes it from truth, so the error **never re-syncs** — it compounds
+  across a fan-out.
+- 2.1.x removed the 200-spawn cap, raised default nesting to **depth 3**, and caps concurrency
+  at **20**. Concurrent Start/Stop events go from rare to routine. The race was latent; the
+  platform made it live.
+
+**Why this is a safety issue, not a cosmetic one.** The counter gates **restart/autoContinue**
+(`ai-maestro-hook.cjs:680`). An undercount reaches 0 while subagents are still running, `status`
+flips to `active`, and the restart gate opens on a busy agent. That is exactly the interlock
+**R42.7(c)** leans on — *"the same `idle_prompt` + subagent-counter 409 the human's Restart
+button obeys"*. So a platform change to subagent orchestration quietly weakened a governance
+interlock, in the fail-DANGEROUS direction (reading high would merely keep the gate shut).
+
+**Not fixed here — it is a design call on a load-bearing file.** Reading LOW is the only unsafe
+direction, so the fix should be chosen for fail-safety, not exactness: an `O_EXCL` lockfile
+mutex with a staleness timeout, or a CAS-retry loop, or tracking live agent ids instead of an
+integer (note: a set does **not** self-heal either — a lost add is still a lost add). Recommend
+the lockfile: it is the only option that actually closes the window the comment names.
+`workflowSizeGuideline` (2.1.219) is unrelated config and needs no CORE change.
 
 **A4 — `archive` plugin source + SHA-256 pinning (2.1.224).** Relevant to how CORE is
 distributed via the marketplace. Assess against `scripts/publish.py` — a pinned archive source is
@@ -103,6 +137,17 @@ clean**). `/review` is now `/code-review`.
   behind it.
 - **Do not register a hook event because it exists.** Every registered event fires on every
   matching turn across every session on the machine.
+- **UNRESOLVED version discrepancy on the `context: fork` backgrounding flip.** This card says
+  2.1.218; the AMAA peer session says 2.1.222. One of us misread the changelog. It does not
+  change CORE's answer (no-op either way — zero `context:` keys anywhere, verified three ways),
+  but **do not cite a version from this card** without checking the changelog text first. A
+  wrong version in a fleet-wide advisory sends other repos looking at the wrong release.
+- **The `context: fork` flip is a fleet risk CORE is exempt from, not immune to.** The AMAA peer
+  reports 26 of 27 of its skills carry `context: fork` with no `background:`, so all 26 silently
+  became fire-and-forget while their bodies are written synchronously — the caller never sees the
+  result, and there is no error. CORE is clean AND does not teach the pattern (✓ verified: the
+  only hit in the whole repo is this card). Detection anywhere, one line:
+  `grep -c '^context: fork$' skills/*/SKILL.md`.
 
 ### SUPERSEDED — do NOT carry forward
 
