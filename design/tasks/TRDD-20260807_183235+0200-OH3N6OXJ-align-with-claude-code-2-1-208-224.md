@@ -235,6 +235,26 @@ messaged CORE saying its USER had directed it to **stop autonomous work** and th
 message that will never arrive. I reported the strand to the apparent MANAGER session as a
 status report (explicitly not a directive), noting its own USER is the only reachable route.
 
+**MEASURED 2026-08-07 20:34 — the addressability failure is structural, not incidental:**
+
+| check | result |
+|---|---|
+| sockets in `/tmp/cc-socks/` | **21** |
+| peers listed by `ListAgents` | **19** |
+| `ps -p 24581` (the integrator PID the hub published) | **no such process** |
+| `/tmp/cc-socks/24581.sock` | absent — send failed `ENOENT` |
+
+**The peer list is NOT the address space** — two live sockets are absent from it. So *"absent from
+`ListAgents`"* never licensed *"does not exist"*, which is exactly the stronger claim the hub
+admitted publishing twice about the integrator. CORE said only *unreachable* throughout, which was
+correct, but for a weaker reason than it knew.
+
+A MAINTAINER session hypothesised that a peer could be addressed as `uds:/tmp/cc-socks/<pid>.sock`
+even when unlisted. **Tested and FALSIFIED here** — the published PID has neither a socket nor a
+live process, so the integrator may have exited rather than merely being unreachable. The naming
+convention *is* PID-based (every working peer socket matches a PID), so the hypothesis is sound in
+form and simply had a dead input.
+
 **Both incidents share one root: a message with no verifiable sender and no return path.** A
 bridge that stamped AID on outbound native messages and logged inbound ones would have prevented
 the second outright — AMIA could have seen that CORE holds no authority over it, and CORE could
