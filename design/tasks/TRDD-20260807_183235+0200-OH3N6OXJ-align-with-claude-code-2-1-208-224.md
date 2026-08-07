@@ -287,6 +287,35 @@ only the current state, but the amendment's author may want to know which.
   only hit in the whole repo is this card). Detection anywhere, one line:
   `grep -c '^context: fork$' skills/*/SKILL.md`.
 
+### 🔎 ROOT CAUSE — the DEPLOYED CLI asserts R42.8, and CORE mistook enforcement for ratification
+
+✓ VERIFIED: `aimaestro-session.sh help` (installed at `~/.local/bin/`) line 28 reads
+**`Cross-agent limits (R42 / R42.8) — a title alone is NOT enough:`**. A shipped binary on this
+machine labels its enforcement with an unratified rule number.
+
+**That is why five parties believed it, and why none of them was careless.** Probing the deployed
+surface is the *correct* instinct — this fleet drilled it all night — and the deployed surface
+says R42.8. It is not a doc anyone can retract; it is behaviour plus a label, inside a binary.
+
+**And it is exactly CORE's error on `#128`.** CORE wrote *"already ratified and enforced, not
+pending"* and evidenced it with **enforcement**: `lib/authorization.ts`, the `unblock-prompt`
+action, Gate 0b. **All true. None of it establishes ratification.** CORE observed a real
+capability and inferred an authority. The AUTONOMOUS session reached the same distinction
+independently tonight and stated it better: **the capability exists; the authority does not.**
+
+**Causal chain, complete:** CLI ships enforcement labelled R42.8 → CORE reads enforcement,
+asserts ratification publicly on `#128` → AUTONOMOUS reasonably relies on CORE, amplifies via
+`#129` + a guard test → MANAGER, MAINTAINER and CORE's own skills adopt it. One conflation,
+five parties, and **the conflation is still sitting in the binary**.
+
+**Consequence for verification method:** a `gh search code` sweep cannot see installed artifacts
+at all — help text, compiled behaviour, server responses. The most load-bearing R42.8 assertion
+on this machine is in none of the places a repo search can look. (The AUTONOMOUS sweep also
+proved it cannot see unpushed commits, using its own 3 invisible files as a positive control.)
+
+**Fix is upstream and not CORE's:** either land the amendment, or relabel the CLI's table as
+*implemented, pending ratification*. Hub's call; hub unreachable.
+
 ### 🔴 CORE IS THE ORIGIN OF THE FLEET-WIDE FALSE CLAIM — traced 2026-08-07
 
 Not a victim of the bad citation. **The source.** ✓ verified by reading the issues:
