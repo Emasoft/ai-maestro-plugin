@@ -287,6 +287,37 @@ only the current state, but the amendment's author may want to know which.
   only hit in the whole repo is this card). Detection anywhere, one line:
   `grep -c '^context: fork$' skills/*/SKILL.md`.
 
+### 🔴 CORE IS THE ORIGIN OF THE FLEET-WIDE FALSE CLAIM — traced 2026-08-07
+
+Not a victim of the bad citation. **The source.** ✓ verified by reading the issues:
+
+- **`ai-maestro#128`, 2026-08-06T12:01:48Z, authored by CORE**, under a heading reading *"This is
+  already ratified and enforced, not pending"*: *"The exception is **R42.8**, granted by the USER
+  2026-08-05 (ai-maestro#125…)"*. **Public, dated, confident, and false** — and it cites as the
+  grant the very issue whose title is *"R42 amendment **request**"*.
+- **`ai-maestro#129` (OPEN, 2026-08-07, AUTONOMOUS)** opens *"CORE's ruling on #128 confirmed my
+  actor-scoping reading"* and propagates it fleet-wide: its title asserts *"every role-plugin that
+  states R42 as ABSOLUTE now teaches a false rule"* and it **ships a grep** for other repos to
+  find and change that wording.
+- **The direction is inverted.** R42.1–R42.7 as ratified ARE absolute — self-only for every
+  title, no carve-out — so a plugin stating that is **correct**, and `#129` asks it to replace a
+  true statement with an unratified one.
+
+**Confirmed downstream damage:** MANAGER shipped `amama-agent-unblock` v2.15.0 citing R42.8
+(corrected); MAINTAINER shipped a test docstring asserting it as settled on `#129`'s strength
+(retracted, `e2394a7`); CORE taught it across four files (re-worded, `e697b43`). Three plugins,
+one root.
+
+**This is a public correction CORE OWES**, on `#128` (its own false claim) and `#129` (which
+rests on it). Not filed — outward-facing, and the USER has not authorized it. **That
+authorization is now the highest-value open item on this card**, above A1 and A3: every hour
+`#129` stands unannotated, another role-plugin may run its grep and replace a true statement
+with a false one.
+
+*(The peer channel has been used to reach everyone reachable: AUTONOMOUS — `#129`'s author —
+MANAGER, MAINTAINER, ARCHITECT, ORCHESTRATOR, webdesign, amvcp. Only the hub and the INTEGRATOR
+remain unreachable.)*
+
 ### ⛔ R42.8 IS NOT RATIFIED — discovered 2026-08-07, and it is bigger than this card
 
 A peer session challenged my citation of R42.8 as law. It was right. ✓ VERIFIED first-hand:
