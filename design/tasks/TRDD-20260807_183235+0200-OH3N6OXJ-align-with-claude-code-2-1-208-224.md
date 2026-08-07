@@ -40,13 +40,31 @@ MANAGER or by this agent (Tier 3). Proceed with A2–A5, which are Tier 0, while
 
 **A1 — Cross-session `SendMessage` / `ListAgents` (2.1.224) vs AMP + R42. THE REAL ONE.**
 
-Claude Code now lets any local session message any other by name, and `ListAgents` enumerates
-them. A `crossSessionInbound` setting gates receipt; `dialogExpiry` bounds the prompt.
+> **⚠ CORRECTED 2026-08-07 against the authoritative changelog** (`gh api
+> repos/anthropics/claude-code/contents/CHANGELOG.md`, 5370 lines, read first-hand). My original
+> framing — *"the platform just shipped an ungated channel underneath R42.8"* — was **wrong in
+> two ways that change the verdict**, and I had already relayed it to two peer role-plugin
+> sessions before checking. The corrected finding is below; the superseded claim is kept in the
+> SUPERSEDED list, not deleted.
 
-This is a **second inter-agent channel that CORE's governance model does not know exists**, and
-it bypasses every property AMP was built to provide: no AID identity, no title-scoping, no audit
-trail, no R42 authorization matrix. R42.8 was negotiated as *the single carve-out* for one agent
-to touch another — and the platform just shipped an ungated one underneath it.
+**What is actually true (✓ each line traced to its changelog entry):**
+
+- **Cross-session `SendMessage` is NOT new in 2.1.224.** It predates R42.8 (2026-08-05) by
+  months — `2.1.77` already documents `SendMessage({to: agentId})` as the resume path, `2.1.162`
+  fixes a `$TMPDIR` bug in it. **2.1.224 added three things**: reach across **machines** ("on any
+  of your machines"), **`ListAgents` discovery**, and the `crossSessionInbound`/`dialogExpiry`
+  settings.
+- **It is NOT ungated — the platform hardened it against exactly my concern, twice.**
+  `2.1.166`: *"messages relayed via `SendMessage` from other Claude sessions **no longer carry
+  user authority** — receivers refuse relayed permission requests, and auto mode blocks them"*.
+  `2.1.222`: messages to other agent sessions are *"evaluated by the permission classifier before
+  dispatch"*. `2.1.224`'s `crossSessionInbound` holds messages to a bypassed-permissions session
+  for the user's approval. **Permission laundering — the failure mode I raised — is the specific
+  thing the platform already defends.**
+
+**So the severity drops from "security hole" to "audit and routing blind spot".** That reframing
+matters: a hole gets closed by forbidding the channel; a blind spot gets closed by observing it.
+Recommending a ban on the strength of the original framing would have been the wrong fix.
 
 **The precise finding (✓ VERIFIED — read `GOVERNANCE-RULES.md:1598-1611`, not grepped):**
 
@@ -54,11 +72,16 @@ to touch another — and the platform just shipped an ungated one underneath it.
   input"*. The native channel delivers a **message** the receiving agent processes on its own
   turn — that is the thing R42 was written to *permit*. Do not report this as a breach; it is
   not one, and saying so would misdirect the fix.
-- **R42.3 is now FALSE as written.** It asserts *"the messaging system (AMP) is the ONLY
-  channel by which one agent may influence another, and it is governed by the R6 communication
-  graph"*. Both halves fail: AMP is no longer the only channel, and R6's who-may-message-whom
-  graph is unenforced over the native one. The native channel also carries **no AID**, so a
-  message has no verifiable author.
+- **R42.3 is still FALSE as written — this part survives the correction.** It asserts *"the
+  messaging system (AMP) is the ONLY channel by which one agent may influence another, and it is
+  governed by the R6 communication graph"*. Both halves still fail: AMP is not the only channel,
+  and R6's who-may-message-whom graph is unenforced over the native one. The native channel
+  carries **no AID**, so a message has no verifiable author and no AI-Maestro audit entry.
+- **What 2.1.224 genuinely widened, and is worth the USER's attention:** the channel now reaches
+  **across machines**, and `ListAgents` lets an agent **enumerate peers without going through the
+  server's roster**. AID identity and R42 were designed as per-host concerns; cross-machine reach
+  and out-of-band discovery are a larger surface than the rules contemplate — independent of the
+  authority question, which the platform handles.
 - **CORE cannot fix this itself.** R42 is `CRITICAL — IRON, USER-set`. Editing R42.3 — even to
   make it true — is **Tier 3 (USER)**. MANAGER may not, and neither may this agent.
 
@@ -151,7 +174,20 @@ clean**). `/review` is now `/code-review`.
 
 ### SUPERSEDED — do NOT carry forward
 
-Nothing yet — this card is new.
+- **"Cross-session `SendMessage` is new in 2.1.224."** FALSE — it predates R42.8 by months
+  (`2.1.77`, `2.1.162`). 2.1.224 added cross-**machine** reach, `ListAgents` discovery, and the
+  two settings.
+- **"The platform shipped an ungated channel underneath R42.8."** FALSE and the more damaging
+  error — `2.1.166` removed user authority from relayed messages and made receivers refuse
+  relayed permission requests; `2.1.222` added permission-classifier evaluation before dispatch.
+  The authority-laundering failure mode is **already defended**. Anyone reading this card for a
+  ban recommendation is reading a superseded claim.
+- **The version discrepancy on the `context: fork` flip is RESOLVED: 2.1.218.** Confirmed
+  first-hand in the changelog's own 2.1.218 block, not by accepting the peer's concession. Its
+  neighbours in that block (agent names rejecting `:`, the ISO `modified` memory field) confirm
+  placement. All other attributions in this card verified against the same source: `DirectoryAdded`
+  = 2.1.219 ✓, depth-3 = 2.1.219 ✓, concurrency cap 20 = **2.1.217** ✓, 200-spawn-cap removal =
+  2.1.224 ✓, `archive` source = 2.1.224 ✓.
 
 ## Why
 
