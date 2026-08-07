@@ -46,8 +46,15 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
 
 **DONE (second pass, 2026-08-06 — the server had ALREADY SHIPPED; CORE's proposal was moot):**
 
-3. ✅ **The capability is DEPLOYED and the rule is R42.8** (USER grant 2026-08-05,
-   `ai-maestro#125`, catalog v5.3.0–5.3.2). CORE's proposed verbs do NOT exist. Shipped:
+3. ⚠️ **CORRECTED 2026-08-07 — the CAPABILITY is deployed; the RULE is NOT ratified.**
+   The CLI verbs shipped (catalog v5.3.0–5.3.2) — that half was verified and stands. But
+   **R42.8 is a PENDING PROPOSAL**: `ai-maestro#125` is **OPEN**, titled *"R42 amendment
+   request"*, and R42.8 appears in **none** of three published `GOVERNANCE-RULES.md`
+   copies (CORE tree, installed `ai-maestro-plugin@3.0.5`, `Emasoft/ai-maestro@governance-rules`),
+   all topping out at R42.7. **A deployed capability is not a ratified permission** — that
+   conflation is the error this line originally made, and item 1 under REMAINING already
+   half-saw it ("R42.8 lives only in an UNPUSHED local commit") but read it as
+   granted-but-unpushed rather than requested. Shipped verbs, as proposed to be governed:
    `block-state [--match]` (terminal read, the AUTHORITY), `read-prompt` (hook hint),
    `answer`. **`inject`/`slash`/`queue` are excluded from the exception** — they carry an
    arbitrary command = the CALLER's decision = R42.1; server 403s them cross-agent. The

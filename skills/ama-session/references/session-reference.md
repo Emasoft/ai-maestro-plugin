@@ -41,7 +41,14 @@ instruction.
 > a message lands in an inbox and the recipient decides; an injected command
 > *is* the recipient's own action and bypasses its judgment entirely.
 >
-> **R42.8 (USER, 2026-08-05) added the single carve-out** shown in the second
+> **⛔ R42.8 is a PENDING PROPOSAL, not ratified law** — `ai-maestro#125` is
+> OPEN and titled *"R42 amendment request"*, and R42.8 appears in none of the
+> three published `GOVERNANCE-RULES.md` copies (CORE tree, installed 3.0.5,
+> `@governance-rules`), all of which top out at R42.7. Verify there before
+> relying on the second column. The ratified rules are STRICTER — SELF-ONLY
+> for every title, no carve-out at all.
+>
+> **R42.8 as PROPOSED would add the single carve-out** shown in the second
 > column above: MANAGER/COS may unblock an agent stalled on a prompt, via
 > `block-state`/`read-prompt`/`answer` only. It exists because a blocked agent
 > cannot read its inbox — messaging reaches an agent at its next turn, and a
