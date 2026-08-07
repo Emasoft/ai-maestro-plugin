@@ -1,5 +1,6 @@
 ---
 name: ama-prrd-propose
+user-invocable: true
 description: "File a PRRD-change proposal for MANAGER (or USER) review without mutating the PRRD. This is the path EVERY non-MANAGER role uses to request a rule change, and the path for ANY GOLDEN-rule change (which is USER-only). Proposals are non-binding — they queue for approval. Use when an agent thinks a project rule should be added/reworded/removed but lacks the authority to do it directly. Trigger with /ama-prrd-propose or 'propose a rule change', 'suggest revising rule N'. The PROPOSAL pillar of the AI-Maestro PRRD; direct mutation (MANAGER, SILVER) is /ama-prrd-edit, reading is /ama-prrd-get."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(prrd-edit.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 metadata:

@@ -1,5 +1,6 @@
 ---
 name: ama-trdd-write
+user-invocable: true
 description: "Author a new TRDD task-design document under design/ with correct v2 frontmatter — uuid + timestamps, the right zone (tasks/ for a Tier-0 task written directly as 'planned'; proposals/ for a Tier-1/2/3 task needing approval), and a self-contained body. Allowed for every role (MEMBER via COS). Use when a non-trivial task, feature, or decision must be captured as a tracked spec, or a report's decision becomes a TRDD. Trigger with /ama-trdd-write, 'write a TRDD for X', or 'capture this as a task spec'. Finding is /ama-trdd-find, editing /ama-trdd-update, column moves /ama-trdd-transition."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(date:*), Bash(git:*), Bash(resolve_pillar_scripts.sh:*), Read, Write, Edit, Grep, Glob"
 metadata:

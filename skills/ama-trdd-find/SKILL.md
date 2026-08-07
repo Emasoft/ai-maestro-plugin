@@ -1,5 +1,6 @@
 ---
 name: ama-trdd-find
+user-invocable: true
 description: "Find TRDD task-design documents under design/ — by 8-char id (TRDD-9a8aba94), column, assignee, blocked-by, cited PRRD rule, a SQL-ish --where filter, or free-text; also validate a TRDD's frontmatter. Read-only. Use when locating a task spec before working on it, resuming a TRDD from a todo-list id, or auditing the backlog. Trigger with /ama-trdd-find, 'find the TRDD for X', or 'which TRDDs are blocked'."
 allowed-tools: "Bash(trddgrep:*), Bash(python3:*), Bash(sh:*), Bash(findtrdd.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"

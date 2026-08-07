@@ -89,19 +89,39 @@ def test_skill_does_not_promise_a_slash_command_it_lacks(skill: Path) -> None:
     D2: `user-invocable: false` means "not in the slash-command palette", so the
     promise is only true when a `commands/<name>.md` wrapper backs it.
 
-    THE DEFAULT IS TRUE, and getting that wrong inverts this test. An ABSENT
-    `user-invocable` means the skill IS invocable as `/<name>` — per the spec, and
-    as CPV implements it (`validate_skill_comprehensive.py`:
+    THE KEY IS NOW REQUIRED — absent is a failure, not a default. The platform
+    default IS true (spec, and CPV's `validate_skill_comprehensive.py`:
     `is_user_invocable = frontmatter.get("user-invocable", True)  # default True
-    per spec`). An earlier draft of this test treated absent as NOT invocable and
-    flagged 10 skills whose promises were perfectly truthful; "fixing" those would
-    have stripped accurate trigger information out of 10 working skills. Only an
-    EXPLICIT `false` opts out.
+    per spec`), and that history is why this test must not lean on it: an earlier
+    draft treated ABSENT as NOT invocable and flagged 10 skills whose promises
+    were perfectly truthful, so "fixing" those would have stripped accurate
+    trigger information out of 10 working skills. Getting the default wrong
+    inverted the test once already — the repair is to stop encoding a default
+    nobody here controls, not to encode it more carefully.
     """
     fm = _frontmatter(skill)
     name = skill.parent.name
+
+    # REQUIRE the key; do NOT default it. CC 2.1.218 flipped the `context: fork`
+    # default and every affected skill changed behaviour with no diff, no error,
+    # and no failing test — an upstream default is a decision nobody here made,
+    # and it can be re-made at any time. Before this, all 10 `ama-*` CLI wrappers
+    # OMITTED the key while advertising `/<name>` with no `commands/<name>.md`
+    # backing it, so their promises were truthful ONLY because the platform
+    # default happened to be true. Had it flipped, all 10 would have advertised a
+    # slash command that does nothing AND THIS TEST WOULD STILL HAVE PASSED,
+    # because the `, True)` default below asserted yesterday's platform against
+    # today's. Declaring the value makes each skill correct under either default,
+    # which is the point: the answer stops mattering. Falsify this guard by
+    # deleting the key from any SKILL.md — the suite must fail naming that file.
+    assert "user-invocable" in fm, (
+        f"{name}: frontmatter omits `user-invocable`, so its behaviour is "
+        f"whatever the platform currently defaults to — declare it explicitly "
+        f"(true for a palette skill, false for an agent-only one)"
+    )
+
     promises = f"/{name}" in str(fm.get("description", ""))
-    user_invocable = bool(fm.get("user-invocable", True))
+    user_invocable = bool(fm["user-invocable"])
     has_wrapper = (COMMANDS_DIR / f"{name}.md").exists()
     assert not (promises and not user_invocable and not has_wrapper), (
         f"{name}: description promises `/{name}` but user-invocable is false and "

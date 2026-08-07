@@ -1,5 +1,6 @@
 ---
 name: ama-trdd-update
+user-invocable: true
 description: "Edit an existing TRDD's body or non-column frontmatter as work proceeds — bump updated:, append implementation-commits/ci-runs/test results, write the STATE block, add review notes or post-mortems, set labels/priority/severity. Only the TRDD's current-owner edits its body; coordination fields (column, assignee) are moved by their owners. Use when recording progress on a task you own — NOT for column moves (/ama-trdd-transition) and NOT for a terminal frozen TRDD. Trigger with /ama-trdd-update, 'update the TRDD', or 'record the commit on TRDD X'. Authoring is /ama-trdd-write, finding /ama-trdd-find."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(date:*), Bash(git:*), Bash(findtrdd.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Write, Edit, Grep, Glob"
 metadata:
