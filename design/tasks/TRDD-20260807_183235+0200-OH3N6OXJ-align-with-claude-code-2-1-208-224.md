@@ -213,14 +213,18 @@ said no fleet policy existed on `model:` pins; the spec does carry one (pin the 
 cache-warmth guidance). A documented deliberate inconsistency is not the same as no policy — so
 my "unknown" was wrong. But the rule's own factual premise does not hold.
 
-✓ **Complete 8-of-8 sweep** (7 read from `~/.claude/plugins/cache/ai-maestro-plugins/<P>/<newest
-version>/agents/<P>-main-agent.md`; **integrator read from `Emasoft/ai-maestro-integrator-agent`
-default branch — a DIFFERENT source**, since it is not installed here, so it is repo HEAD rather
-than an installed version):
+✓ **Complete 8-of-8 sweep on CONSISTENT provenance.** Seven read from
+`~/.claude/plugins/cache/ai-maestro-plugins/<P>/<newest version>/agents/<P>-main-agent.md`.
+Integrator is not installed here, so I first read its repo HEAD and flagged that as a weaker,
+different-provenance value rather than hiding the gap; the architect peer then **discharged the
+caveat instead of carrying it** — `gh release view` ⇒ latest `v1.3.7` (2026-06-22), and the
+main-agent at `?ref=v1.3.7` also reads `model: opus`, identical to HEAD. All eight values are now
+shipped-release readings. *A caveat that can be discharged with one command should be, not
+inherited by every later reader.*
 
 | `model:` value | plugins | count |
 |---|---|---|
-| `opus` | assistant-manager 2.14.3, chief-of-staff 2.21.1, orchestrator 1.9.5, integrator (repo HEAD) | **4** |
+| `opus` | assistant-manager 2.14.3, chief-of-staff 2.21.1, orchestrator 1.9.5, integrator **v1.3.7** | **4** |
 | *(no `model:` key)* | architect 2.11.1, programmer 1.4.7 | **2** |
 | `inherit` | maintainer 1.7.21 | **1** |
 | `sonnet` | autonomous 1.5.5 | **1** |
