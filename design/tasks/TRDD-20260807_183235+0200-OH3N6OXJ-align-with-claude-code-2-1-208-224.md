@@ -1,9 +1,10 @@
 ---
 trdd-id: OH3N6OXJ
 title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
-column: dev
+column: human_review
+pre-block-column: dev
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-07T18:32:35+0200
+updated: 2026-08-07T19:03:43+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 approval-tier: 0
@@ -22,9 +23,22 @@ codebase to align with them and take advantage of them"* — followed by the ful
 
 **Where the work stands:** fact-gathering pass DONE (below). Nothing changed in the tree yet.
 
-**NEXT ACTION:** A1 is **BLOCKED ON THE USER** — see the A1 finding below. R42 is marked
-`CRITICAL — IRON, USER-set`, so the sub-rule the platform invalidated cannot be edited by
-MANAGER or by this agent (Tier 3). Proceed with A2–A5, which are Tier 0, while A1 waits.
+**NEXT ACTION: nothing — this card is in `human_review` and needs TWO USER decisions.** A2, A4
+and A5 are DONE (decisions + rationale recorded below). Moved out of `dev` deliberately: `dev`
+asserts someone is working the card right now, and nobody is. Restore to `dev` (see
+`pre-block-column:`) the moment either decision lands.
+
+1. **A1 — governance wording.** R42.3 is false as written. R42 is `CRITICAL — IRON, USER-set` ⇒
+   **Tier 3**; neither MANAGER nor this agent may edit it even to make it true. Options put to
+   the USER: **document-only** (recommended — see the correction below; the platform already
+   defends the authority concern, so this is an audit/routing blind spot, not a hole),
+   **bridge** (accept native as transport, keep AID on top), or **forbid**.
+2. **A3 — implementation go/no-go.** The `subagentCount` lock is a Tier-0 change I can make, but
+   it puts a lockfile in a hook that fires on **every event of every Claude Code session on this
+   machine**. A stale-lock or missing-timeout bug hangs the whole machine, so it wants an
+   explicit go rather than a drive-by at the end of a long session. Recommended shape: `O_EXCL`
+   lockfile mutex with a staleness timeout, chosen because only a lock closes the window the
+   file's own comment names.
 
 ### Verified facts about THIS repo (✓ = read, not grepped-and-assumed)
 
@@ -172,7 +186,38 @@ clean**). `/review` is now `/code-review`.
   only hit in the whole repo is this card). Detection anywhere, one line:
   `grep -c '^context: fork$' skills/*/SKILL.md`.
 
+### ⛔ R42.8 IS NOT RATIFIED — discovered 2026-08-07, and it is bigger than this card
+
+A peer session challenged my citation of R42.8 as law. It was right. ✓ VERIFIED first-hand:
+
+- **`Emasoft/ai-maestro#125` is OPEN**, created 2026-08-05T18:27:24Z, never closed, and titled
+  *"R42 amendment **request** (MAESTRO): grant MANAGER and CHIEF-OF-STAFF cross-agent terminal
+  read/write…"*. A **pending request**, not a USER grant.
+- **`GOVERNANCE-RULES.md` tops out at R42.7 — R42.8 is ABSENT.** (My mirror is stale, so absence
+  alone is weak; combined with an OPEN issue that calls itself a request, the burden is on
+  proving ratification, not assuming it.)
+- **CORE asserts R42.8 as granted in 6 files**: `skills/ama-unblock/SKILL.md`,
+  `skills/ama-session/SKILL.md`, `skills/ama-session/references/session-reference.md`,
+  `skills/ama-panel/SKILL.md`, `design/tasks/…ZNGTF0FG…md`, and this card.
+
+**How the error compounded:** I cited `#125` as the authority for R42.8 to **three** peer
+role-plugin sessions. Anyone who followed my own citation would have found it says *request* and
+is *open* — the citation I offered as proof is the thing that disproves the claim. I passed on a
+provenance I had not read.
+
+**Contained by luck, not by process:** `ama-unblock` is **not on the remote** (21 local commits
+unpushed), so nothing built on R42.8 has shipped to a consumer. The live blast radius was the
+three peers, now corrected.
+
+**Required:** either the USER confirms a grant happened outside #125, or every one of the 6
+assertions above must be re-worded from "granted" to "requested, pending". Until then **R42.8
+must not be taught as law**. Tracked as its own task; owning card is TRDD-ZNGTF0FG.
+
 ### SUPERSEDED — do NOT carry forward
+
+- **"R42.8 — USER grant 2026-08-05, ai-maestro#125."** NOT ESTABLISHED. #125 is an OPEN
+  amendment **request**; R42.8 does not appear in the governance rules file. Relayed to three
+  peers as law before it was checked.
 
 - **"Cross-session `SendMessage` is new in 2.1.224."** FALSE — it predates R42.8 by months
   (`2.1.77`, `2.1.162`). 2.1.224 added cross-**machine** reach, `ListAgents` discovery, and the
