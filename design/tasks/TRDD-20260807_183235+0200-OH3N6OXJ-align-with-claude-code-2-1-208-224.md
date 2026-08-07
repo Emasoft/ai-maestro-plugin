@@ -147,6 +147,32 @@ flips to `active`, and the restart gate opens on a busy agent. That is exactly t
 button obeys"*. So a platform change to subagent orchestration quietly weakened a governance
 interlock, in the fail-DANGEROUS direction (reading high would merely keep the gate shut).
 
+**✅ REPRODUCED EMPIRICALLY 2026-08-07 — no longer a read-from-source finding.** The ORCHESTRATOR
+session measured it under an isolated `HOME` (live fleet state untouched) and filed
+**`Emasoft/ai-maestro-plugin#61`** (OPEN, verified):
+
+- **16 concurrent `SubagentStart` from one cwd ⇒ observed 15, 11, 14, 15, 13 — 5/5 undercount.**
+  Not a rare interleaving; it is the normal outcome at that fan-out.
+- **The dangerous half, reproduced:** fire 16 starts, stop only 12 (four agents genuinely still
+  running) ⇒ in **2 of 3 trials the counter reached 0 and `status` flipped to `active`** while
+  those four were live. That is the restart/autoContinue gate's precondition, met, with agents
+  working.
+- **`Math.max(0, …)` at line 699 is why it is silent** — the clamp prevents the count going
+  negative, so the loss cannot signal itself once it bottoms out.
+- **Why the window widened:** 2.1.217 caps concurrency at 20 and 2.1.224 removed the 200-spawn
+  cap; that session dispatches waves of up to 16, i.e. 16 hooks contending on one state file.
+
+**The atomicity comment is the trap, and the corpus already knew this shape** — `ATOM-7QHM-7AMI`:
+*a comment asserting atomicity guarantees ONE operation; check whether it covers the operation you
+actually need, since an adjacent unsafe one reads as covered.* `writeState`'s `renameSync` comment
+is **true** and does fix torn reads; it says nothing about the read-then-write **sequence**.
+Closest relative is CORE's own `#54` (same class in `prrd_lib.write_prrd`).
+
+**Fail-open design removes my original objection to fixing it.** I withheld a lock because a hook
+fires on every event of every session on this machine and a stale lock would hang the machine. An
+`O_EXCL` lockfile with a staleness timeout that **proceeds unlocked on timeout** cannot do that:
+worst case degrades to exactly today's behaviour, never worse. That makes the fix strictly safe.
+
 **Not fixed here — it is a design call on a load-bearing file.** Reading LOW is the only unsafe
 direction, so the fix should be chosen for fail-safety, not exactness: an `O_EXCL` lockfile
 mutex with a staleness timeout, or a CAS-retry loop, or tracking live agent ids instead of an
