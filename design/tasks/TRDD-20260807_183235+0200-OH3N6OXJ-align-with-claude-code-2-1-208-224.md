@@ -22,9 +22,9 @@ codebase to align with them and take advantage of them"* — followed by the ful
 
 **Where the work stands:** fact-gathering pass DONE (below). Nothing changed in the tree yet.
 
-**NEXT ACTION:** work item **A1** (the cross-session messaging governance gap) — it is the only
-item that changes what CORE *asserts*, and it is assessed but not decided. Everything else is
-mechanical.
+**NEXT ACTION:** A1 is **BLOCKED ON THE USER** — see the A1 finding below. R42 is marked
+`CRITICAL — IRON, USER-set`, so the sub-rule the platform invalidated cannot be edited by
+MANAGER or by this agent (Tier 3). Proceed with A2–A5, which are Tier 0, while A1 waits.
 
 ### Verified facts about THIS repo (✓ = read, not grepped-and-assumed)
 
@@ -47,6 +47,20 @@ This is a **second inter-agent channel that CORE's governance model does not kno
 it bypasses every property AMP was built to provide: no AID identity, no title-scoping, no audit
 trail, no R42 authorization matrix. R42.8 was negotiated as *the single carve-out* for one agent
 to touch another — and the platform just shipped an ungated one underneath it.
+
+**The precise finding (✓ VERIFIED — read `GOVERNANCE-RULES.md:1598-1611`, not grepped):**
+
+- **R42.1 is NOT violated.** It forbids injecting *"a command, keystroke, prompt, or queued
+  input"*. The native channel delivers a **message** the receiving agent processes on its own
+  turn — that is the thing R42 was written to *permit*. Do not report this as a breach; it is
+  not one, and saying so would misdirect the fix.
+- **R42.3 is now FALSE as written.** It asserts *"the messaging system (AMP) is the ONLY
+  channel by which one agent may influence another, and it is governed by the R6 communication
+  graph"*. Both halves fail: AMP is no longer the only channel, and R6's who-may-message-whom
+  graph is unenforced over the native one. The native channel also carries **no AID**, so a
+  message has no verifiable author.
+- **CORE cannot fix this itself.** R42 is `CRITICAL — IRON, USER-set`. Editing R42.3 — even to
+  make it true — is **Tier 3 (USER)**. MANAGER may not, and neither may this agent.
 
 Decide (needs a governance call, not a code change):
 - Does CORE **forbid** the native channel for AMP-governed agents (assert `crossSessionInbound`
