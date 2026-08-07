@@ -1,5 +1,6 @@
 ---
 name: ama-kanban-render
+user-invocable: true
 description: "Render the project's design/spec kanban board as a READ-ONLY view over the TRDD pile (the TRDD files under design/ ARE the board) — the full board, just the RED (blocked) column with priority ranking, one column, grouped by assignee, or as JSON; also drift-check. Allowed for every role. Use when you want to see what work exists and what column each TRDD is in before acting, or to check what's blocked. Trigger with /ama-kanban-render, 'show the kanban', or 'what's blocked'. The board is READ-ONLY here; column moves are done via /ama-trdd-transition."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(kanban.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"

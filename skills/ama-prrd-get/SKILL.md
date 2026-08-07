@@ -1,5 +1,6 @@
 ---
 name: ama-prrd-get
+user-invocable: true
 description: "Read a PRRD rule by number from a project's design/requirements/PRRD.md. Use when an agent needs the exact text of a project rule it must comply with, wants to cite a rule (PRRD G64.134), list all rules, or bootstrap an empty PRRD. Reading is allowed for EVERY role. Trigger with /ama-prrd-get or 'what does PRRD rule N say', 'cite rule N', 'list the project rules', 'show the PRRD'. The READ pillar of the AI-Maestro PRRD; for searching by content use /ama-prrd-find, to mutate use /ama-prrd-edit (gated) or /ama-prrd-propose."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(get-prrd.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 metadata:

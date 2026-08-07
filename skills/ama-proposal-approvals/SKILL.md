@@ -1,5 +1,6 @@
 ---
 name: ama-proposal-approvals
+user-invocable: true
 description: "Batch-approve, refuse, or archive TRDD proposals — move them between the four design/ zones (proposals/ to tasks/ on approve; to refused/ on refuse; to archived/ on complete/cancel/supersede). GATED: only a MANAGER (or solo USER) may approve/refuse/archive; the COS relays but does not approve; list is open to all. Use when a MANAGER drains the proposal queue or archives a finished/cancelled/superseded TRDD. Trigger with /ama-proposal-approvals, 'list pending proposals', or 'approve proposals 4,6'. Column moves within tasks/ are /ama-trdd-transition."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(amama_proposal_approvals.py:*), Bash(resolve_pillar_scripts.sh:*), Bash(git:*), Read, Grep, Glob"
 metadata:

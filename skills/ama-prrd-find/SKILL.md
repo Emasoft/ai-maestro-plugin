@@ -1,5 +1,6 @@
 ---
 name: ama-prrd-find
+user-invocable: true
 description: "Search a project's PRRD rules by content or metadata — find rules whose text matches a keyword, list all GOLDEN or SILVER rules, find which rules a TRDD cites, find unused rules, or get rule-count stats. Use when an agent asks 'which rule covers X', 'are there rules about credentials/auth/deploys', 'what rules does this TRDD reference', 'which rules are never cited'. Searching is allowed for EVERY role. Trigger with /ama-prrd-find. The SEARCH pillar of the AI-Maestro PRRD; to read one rule by number use /ama-prrd-get, to mutate use /ama-prrd-edit (gated) or /ama-prrd-propose."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(findprrd.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 metadata:

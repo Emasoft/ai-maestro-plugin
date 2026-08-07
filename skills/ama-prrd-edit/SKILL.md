@@ -1,5 +1,6 @@
 ---
 name: ama-prrd-edit
+user-invocable: true
 description: "Mutate a project's PRRD rules — add/revise/delete a SILVER rule, or promote/demote between SILVER and GOLDEN. GATED: direct mutation is MANAGER-only (enforced by the script's AID_AUTH check); GOLDEN edits and promote/demote are USER-only; a non-MANAGER agent routes to /ama-prrd-propose instead. Use when a MANAGER (or solo USER) decides to change a SILVER rule. Trigger with /ama-prrd-edit, 'add/revise/delete a project rule', or 'promote rule N to golden'. The WRITE pillar of the AI-Maestro PRRD; proposing is /ama-prrd-propose, reading is /ama-prrd-get."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(prrd-edit.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Grep, Glob"
 metadata:
