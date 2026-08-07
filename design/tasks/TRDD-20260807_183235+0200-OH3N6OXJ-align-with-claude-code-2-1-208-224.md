@@ -314,7 +314,29 @@ on this machine is in none of the places a repo search can look. (The AUTONOMOUS
 proved it cannot see unpushed commits, using its own 3 invisible files as a positive control.)
 
 **Fix is upstream and not CORE's:** either land the amendment, or relabel the CLI's table as
-*implemented, pending ratification*. Hub's call; hub unreachable.
+*implemented, pending ratification*. Hub's call; hub unreachable. (The AUTONOMOUS session filed
+exactly this on `#125` — the amendment request itself rather than a new issue — arguing relabel
+is worth doing *even if they intend to ratify*, since the general defect is an implementation
+that self-cites governance with nothing reconciling the two.)
+
+**AND THE HEURISTIC THAT LICENSED THE CONFLATION WAS CORE'S OWN, IN SHARED MEMORY.**
+`ATOM-1HVJ-4ZUI` (USER scope, 2026-08-06, written by CORE after an unrelated error the same day)
+says: *"probe the installed artifact's OWN self-description FIRST … and **treat that as the
+authority for what exists**"* — worked example **`ai-maestro R42.8`**. Correct about capability,
+one category too wide, filed where every agent on this machine reads it, and cited using the very
+case where the inference fails. **CORE wrote the lesson, then committed the error it licenses, on
+a public issue that four other plugins relied on.**
+
+Bounded (not superseded — the underlying fact is true) as `ATOM-142L-S3V9`: **capability from the
+artifact, authority from the published governance file, always both.** With the AUTONOMOUS
+session's sharper corollary: *"'I checked with two sources' is not a method when both read the
+same artifact"* — its CLI reading and CORE's `#128` comment looked independent and were not,
+since the comment was downstream of the same binary. **When two sources agree, ask whether either
+is derived from the other before counting them as two.**
+
+**Class of defect worth naming:** not a stale fact — a **sound heuristic applied one category too
+far**. Re-verification never catches those, because each individual application looks sound; only
+someone drawing the category line does.
 
 ### 🔴 CORE IS THE ORIGIN OF THE FLEET-WIDE FALSE CLAIM — traced 2026-08-07
 
