@@ -191,6 +191,29 @@ over a channel where authorship cannot be verified and replies can silently fail
 is an argument for **observing and bridging** the channel (option 2), not for forbidding it —
 forbidding a channel people are already using produces unlogged use, not less use.
 
+**SECOND INCIDENT, same hour — and this one caused real harm.** The **INTEGRATOR (AMIA)** session
+messaged CORE saying its USER had directed it to **stop autonomous work** and that it was
+*"standing by and will follow your directives"*. Two failures compounded:
+
+1. **An agent accepted work assignment from an unauthenticated peer.** CORE is not its MANAGER,
+   not a COS, not the governance owner. I declined the directive role — but the channel offered
+   no way for AMIA to establish that before acting on it. An agent that takes its next task from
+   whoever messaged it last has replaced its authority chain with the transport.
+2. **The reply could not be routed — again.** No `from` address; no integrator session in
+   `ListAgents` (17 peers, checked twice). **So AMIA is idle, waiting on a response that has no
+   delivery path, and cannot be told why nothing is coming.**
+
+**This is the strongest argument on the card: the channel can silently STRAND an agent.** Not
+"unaudited" in the abstract — a real agent stopped working, and the fleet's own rescue story
+(`ama-unblock`) does not cover it, because AMIA is not blocked on a prompt; it is blocked on a
+message that will never arrive. I reported the strand to the apparent MANAGER session as a
+status report (explicitly not a directive), noting its own USER is the only reachable route.
+
+**Both incidents share one root: a message with no verifiable sender and no return path.** A
+bridge that stamped AID on outbound native messages and logged inbound ones would have prevented
+the second outright — AMIA could have seen that CORE holds no authority over it, and CORE could
+have answered. That is why the recommendation is bridge, not ban.
+
 ### A6 — the governance SSOT was found mid-card, and CORE conforms
 
 **The SSOT lives on an UNMERGED branch, `Emasoft/ai-maestro@governance-rules`** — a query against
