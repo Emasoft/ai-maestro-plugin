@@ -207,12 +207,38 @@ forbidding a channel people are already using produces unlogged use, not less us
   via the `aimaestro-*` / `amp-*` CLI layer) is enforced by a real test,
   `tests/test_no_direct_api_calls.py`.
 
-**RP-MODEL-01 corrects an answer I gave three peers.** I said no fleet policy existed on `model:`
-pins. One does: every shipped role-plugin pins the **family alias `opus`** on the main-agent
-(frontmatter + toml) and **omits `model:` on subagents**. The spec explicitly records that this
-contradicts the general "omit `model:`, inherit session" cache-warmth guidance, and says a new
-role-plugin SHOULD copy the pattern anyway. A documented, deliberate inconsistency is not the
-same as no policy.
+**RP-MODEL-01 corrects an answer I gave three peers — then turns out to be FALSE itself.** I had
+said no fleet policy existed on `model:` pins; the spec does carry one (pin the family alias
+`opus` on the main-agent, omit on subagents, explicitly conceding it contradicts CPV's CA-04
+cache-warmth guidance). A documented deliberate inconsistency is not the same as no policy — so
+my "unknown" was wrong. But the rule's own factual premise does not hold.
+
+✓ **Complete 8-of-8 sweep** (7 read from `~/.claude/plugins/cache/ai-maestro-plugins/<P>/<newest
+version>/agents/<P>-main-agent.md`; **integrator read from `Emasoft/ai-maestro-integrator-agent`
+default branch — a DIFFERENT source**, since it is not installed here, so it is repo HEAD rather
+than an installed version):
+
+| `model:` value | plugins | count |
+|---|---|---|
+| `opus` | assistant-manager 2.14.3, chief-of-staff 2.21.1, orchestrator 1.9.5, integrator (repo HEAD) | **4** |
+| *(no `model:` key)* | architect 2.11.1, programmer 1.4.7 | **2** |
+| `inherit` | maintainer 1.7.21 | **1** |
+| `sonnet` | autonomous 1.5.5 | **1** |
+
+**Exactly half the fleet follows the rule the spec says all of it follows.** Four spellings, and
+the architect peer sharpened one I missed: `inherit` is **semantically "no pin" but syntactically
+a pin**, so any ruling that treats the field as binary re-opens this.
+
+**The decisive fact is not the distribution — it is the mandated counterexample.**
+`ai-maestro-autonomous-agent` pins **`sonnet`**, and `RP-TITLES-02` in the *same document* calls
+that plugin **mandatory**. A universal whose counterexample the same spec requires is not a rule
+with an outlier; it is a rule that was never true. That makes "amend the rule to describe
+reality" available **without touching any plugin** — the cheapest exit, and one that framing this
+as non-conformance would have hidden.
+
+**Dating caveat for whoever amends it:** the spec's survey is dated 2026-07-22; these readings
+are ~2 weeks later. Either it was inaccurate then or the plugins drifted since — the ruling needs
+only the current state, but the amendment's author may want to know which.
 
 ### Gotchas
 
