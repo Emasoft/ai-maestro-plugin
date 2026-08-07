@@ -126,11 +126,13 @@ by AID + title, a human needs a fresh sudo-token. `inject`, `slash`,
 `slash-keys`, `state`, `read-prompt`, `queue-list`, `queue-cancel` are
 **non-strict**.
 
-**`read-prompt` on yourself has a known blind spot.** It returns what the
-plugin HOOK recorded, and the hook does not record an `AskUserQuestion`'s
-text (measured 0 of 419 live chat-state files; `ai-maestro-plugin#59` tracks
-the fix). A `null` from `read-prompt` therefore does NOT mean "no prompt is
-pending" — for the self case you can usually see your own prompt directly;
+**`read-prompt` returns what the plugin HOOK recorded, so what it can tell you
+depends on the installed version.** Before the `#59` fix the hook did not record
+an `AskUserQuestion`'s text at all (measured 0 of 419 live chat-state files), so
+a `null` did NOT mean "no prompt is pending"; fixed versions record the question,
+its normalized choices, and `questionCount`. Every record carries `writerVersion`
+so a reader can tell which it is holding — for the self case you can usually see
+your own prompt directly;
 for the cross-agent case that is why `block-state` reads the terminal.
 
 ## Prerequisites

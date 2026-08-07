@@ -181,6 +181,78 @@ def test_permission_prompt_does_not_clobber_a_pending_question(home: str) -> Non
     assert len(s["options"]) == 1
 
 
+def test_idle_prompt_does_not_clobber_a_pending_question(home: str) -> None:
+    """#59 review: the clobber fix was applied only to the permission_prompt branch. An
+    unanswered AskUserQuestion IS a session sitting without input, so the timer-driven
+    idle_prompt fires on exactly the blocked agent — and relabelling it 'idle_prompt',
+    the one value every consumer reads as healthy, made a MANAGER's fleet sweep skip it."""
+    run_hook(
+        {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "AskUserQuestion",
+            "tool_input": {"questions": [{"question": "Which bucket?", "options": [{"label": "staging"}]}]},
+        },
+        home,
+    )
+    run_hook({"hook_event_name": "Notification", "notification_type": "idle_prompt"}, home)
+    s = read_state(home)
+    assert s["notificationType"] == "question", "a blocked agent must not be relabelled idle"
+    assert len(s["questions"]) == 1
+
+
+def test_pending_question_is_bounded_by_session(home: str) -> None:
+    """#59 review: a question cancelled with ESC emits no PostToolUse, so its record can
+    linger. Unbounded, a later unrelated permission prompt would inherit it and republish
+    its choices — and a MANAGER answering the menu it recognised would be answering the
+    REAL prompt underneath, granting an unrelated permission."""
+    run_hook(
+        {
+            "hook_event_name": "PreToolUse",
+            "session_id": "session-A",
+            "tool_name": "AskUserQuestion",
+            "tool_input": {"questions": [{"question": "Which bucket?", "options": [{"label": "staging"}]}]},
+        },
+        home,
+    )
+    # A DIFFERENT session's permission prompt must not inherit session-A's question.
+    run_hook(
+        {"hook_event_name": "Notification", "session_id": "session-B", "notification_type": "permission_prompt"},
+        home,
+    )
+    s = read_state(home)
+    assert s["notificationType"] == "permission_prompt", "a stale question must not cross sessions"
+    assert not s.get("questions")
+
+
+def test_question_state_carries_description_and_count(home: str) -> None:
+    """#59 review: the question write dropped `description` (which the permission write it
+    replaces always emitted), rendering a question-blocked agent as blocked-with-no-reason;
+    and `options` describes questions[0] only, so consumers need the count to know."""
+    run_hook(
+        {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "AskUserQuestion",
+            "tool_input": {
+                "questions": [
+                    {"question": "Which bucket?", "options": [{"label": "staging"}]},
+                    {"question": "Rerun tests?", "options": [{"label": "yes"}]},
+                ]
+            },
+        },
+        home,
+    )
+    s = read_state(home)
+    assert s["description"] == "Which bucket?"
+    assert s["questionCount"] == 2, "a caller must be able to tell one question from four"
+    assert len(s["options"]) == 1, "options describe the FIRST question only"
+
+    # …and both survive the permission_prompt that follows.
+    run_hook({"hook_event_name": "Notification", "notification_type": "permission_prompt"}, home)
+    s = read_state(home)
+    assert s["description"] == "Which bucket?"
+    assert s["questionCount"] == 2
+
+
 def test_pending_question_survives_a_long_block(home: str) -> None:
     """#59: a blocked agent stays blocked for HOURS (17h observed), so the
     question carry-through must carry NO age bound — a 10s window would re-drop
@@ -242,7 +314,7 @@ def test_stopfailure_records_a_durable_last_error(home: str) -> None:
     assert s["lastError"]["at"]
 
 
-def test_last_error_survives_later_events(home: str) -> None:
+def test_last_error_survives_later_events_within_a_session(home: str) -> None:
     """#58 REGRESSION: status/errorType describe only the CURRENT event, so the next
     event erased them and 'why did this agent stop' became unanswerable a second
     later. The pane cannot answer it either — it is a live tail, so a scrolled-off
@@ -252,10 +324,23 @@ def test_last_error_survives_later_events(home: str) -> None:
         home,
     )
     run_hook({"hook_event_name": "Notification", "notification_type": "idle_prompt"}, home)
-    run_hook({"hook_event_name": "SessionStart"}, home)
+    run_hook({"hook_event_name": "Stop"}, home)
     s = read_state(home)
-    assert s["status"] == "active", "status correctly reflects the CURRENT state"
+    assert s["status"] in ("idle", "subagents_running"), "status reflects the CURRENT state"
     assert s["lastError"]["type"] == "rate_limit", "but the post-mortem must still be readable"
+
+
+def test_session_start_clears_last_error(home: str) -> None:
+    """Review of #58: with nothing ever clearing it, one 429 made every later record for
+    this cwd report a rate_limit FOREVER, across every future session — a supervisor
+    would read a weeks-old error as the current cause. A new session is a new life."""
+    run_hook(
+        {"hook_event_name": "StopFailure", "error_type": "rate_limit", "error": "429 slow down"},
+        home,
+    )
+    assert read_state(home)["lastError"]["type"] == "rate_limit"
+    run_hook({"hook_event_name": "SessionStart"}, home)
+    assert read_state(home)["lastError"] is None, "a new session must not inherit the old stop reason"
 
 
 def test_state_is_stamped_with_the_writing_plugin_version(home: str) -> None:

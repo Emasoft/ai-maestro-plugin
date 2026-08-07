@@ -137,6 +137,7 @@ def test_readme_skills_table_matches_disk_exactly() -> None:
 # its allowed-tools entry fails here instead of at an agent's first invocation.
 FROZEN_CLI_WRAPPERS = {
     "ama-session": "aimaestro-session.sh",
+    "ama-unblock": "aimaestro-session.sh",
     "ama-panel": "aimaestro-panel.sh",
     "ama-continuity": "aimaestro-continuity.sh",
     "ama-portfolio": "aimaestro-portfolio.sh",

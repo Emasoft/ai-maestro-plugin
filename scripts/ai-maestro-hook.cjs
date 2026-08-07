@@ -124,6 +124,18 @@ function writeState(cwd, state) {
     const cwdHash = hashCwd(cwd);
     const stateFile = path.join(stateDir, `${cwdHash}.json`);
 
+    // ONE read of the prior record, shared by every carry-through field below.
+    // getSubagentCount() and getLastError() each opened and parsed this same file, so a
+    // single writeState did TWO independent unlocked reads. Hook events are separate Node
+    // processes sharing one state file, so each extra read widens the window in which a
+    // concurrent StopFailure's atomic rename lands BETWEEN our reads and our own rename
+    // clobbers it — the durable lastError that #58 exists to preserve would vanish
+    // milliseconds after the error, intermittently and invisibly. One read does not close
+    // that race (only a lock would) but it halves the window AND makes the carried fields
+    // mutually consistent: they now come from the same snapshot, so we can never carry
+    // subagentCount from one moment and lastError from another.
+    const prior = readPriorState(cwd);
+
     // subagentCount is a PERSISTENT counter owned by SubagentStart/Stop. A state
     // write that doesn't mention it (idle_prompt / permission_prompt / elicitation /
     // PermissionRequest / StopFailure / question) must CARRY THE PRIOR VALUE
@@ -133,20 +145,25 @@ function writeState(cwd, state) {
     // still can by passing an explicit value (SessionStart/End pass 0); an
     // explicit field always wins over the carried-through prior.
     const subagentCount = state.subagentCount === undefined
-        ? getSubagentCount(cwd)
+        ? (prior.subagentCount || 0)
         : state.subagentCount;
 
-    // lastError is a DURABLE post-mortem record, carried through by the same rule
-    // (#58). `status: 'error'` and `errorType` describe only the CURRENT event, so
-    // the next event of any kind erased them — an API failure was unreadable a
-    // second later, and a supervisor reading the file could not tell "healthy" from
-    // "died an hour ago". The terminal cannot answer this either: the pane is a live
-    // window scanned at the tail, so an error that has scrolled off is simply gone.
-    // It carries its own `at`, so a consumer can judge staleness instead of being
-    // silently told nothing happened. A handler clears it deliberately by passing
-    // `lastError: null` (an explicit value always wins over the carry).
+    // lastError is a post-mortem record carried through by the same rule (#58).
+    // `status: 'error'` and `errorType` describe only the CURRENT event, so the next
+    // event of any kind erased them — an API failure was unreadable a second later, and
+    // the terminal cannot answer it either (the pane is a live tail, so a scrolled-off
+    // error is gone).
+    //
+    // It is carried WITHIN a session and CLEARED at SessionStart, which passes an
+    // explicit null. Unbounded persistence was the original shape and it was wrong: with
+    // no handler ever clearing it, a single 429 made every later record for that cwd —
+    // forever, across every future session — report a rate_limit, so a supervisor asking
+    // "why did this agent stop" would read a weeks-old error as the current cause and
+    // escalate a healthy agent, with no in-band way to reset short of deleting the file.
+    // A new session is a new life; the previous session's stop reason is history, and
+    // `at` is there so a consumer can still judge the age of a within-session error.
     const lastError = state.lastError === undefined
-        ? getLastError(cwd)
+        ? (prior.lastError || null)
         : state.lastError;
 
     const fullState = {
@@ -274,17 +291,22 @@ async function checkUnreadMessages(cwd) {
     return `${urgentTag}[AMP-INBOX-NOTIFICATION] ${messages.length} new messages. Open the agent-messaging skill to read them.`;
 }
 
-// Read current subagent count from state file (for SubagentStart/Stop tracking)
-function getSubagentCount(cwd) {
+// Read the whole prior state record, or {} when there is none / it is unreadable.
+// The single reader every carry-through field goes through — see writeState for why one
+// read matters when hook events are concurrent processes over one file.
+function readPriorState(cwd) {
     try {
         const stateDir = path.join(os.homedir(), '.aimaestro', 'chat-state');
         const cwdHash = hashCwd(cwd);
-        const stateFile = path.join(stateDir, `${cwdHash}.json`);
-        const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-        return state.subagentCount || 0;
+        return JSON.parse(fs.readFileSync(path.join(stateDir, `${cwdHash}.json`), 'utf8'));
     } catch (e) {
-        return 0;
+        return {};
     }
+}
+
+// Read current subagent count from state file (for SubagentStart/Stop tracking)
+function getSubagentCount(cwd) {
+    return readPriorState(cwd).subagentCount || 0;
 }
 
 // The version of the plugin that WROTE this state record.
@@ -313,18 +335,39 @@ function getPluginVersion() {
     }
 }
 
-// The last error this session hit, as a DURABLE record (Emasoft/ai-maestro-plugin#58).
-// Returns null when there is none.
+// The last error this session hit (Emasoft/ai-maestro-plugin#58). Returns null when
+// there is none. writeState reads it from its own single `prior` snapshot; this exists
+// for any caller that needs it outside a write.
 function getLastError(cwd) {
-    try {
-        const stateDir = path.join(os.homedir(), '.aimaestro', 'chat-state');
-        const cwdHash = hashCwd(cwd);
-        const stateFile = path.join(stateDir, `${cwdHash}.json`);
-        const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-        return state.lastError || null;
-    } catch (e) {
-        return null;
-    }
+    return readPriorState(cwd).lastError || null;
+}
+
+// Is this prior record a still-pending AskUserQuestion that a generic notification must
+// not overwrite? (Emasoft/ai-maestro-plugin#59.)
+//
+// Deliberately NOT an age bound. A pending question has no timeout — an agent blocked on
+// one stays blocked until a human answers (17h observed), so a 10s window would re-drop
+// the question in exactly the long-block case the fix exists for.
+//
+// It IS bounded by SESSION, which is the honest boundary. A question cancelled with ESC
+// emits no PostToolUse, so its record could linger; a later, unrelated permission prompt
+// would then inherit that stale question and republish its choices, and a MANAGER
+// answering the menu it recognised would be answering the REAL prompt underneath it —
+// granting an unrelated permission on the target agent.
+//
+// Two things bound that. This session check stops a question outliving the session that
+// raised it, and the `Stop` handler already writes a fresh record with NO
+// notificationType when the turn ends — and a turn that has ended cannot still have an
+// in-turn question pending, which covers the ESC case. (`UserPromptSubmit` would be the
+// third signal but is NOT among the events hooks.json registers, so it is deliberately
+// not claimed here: a comment describing a mechanism nothing implements is how the
+// unbounded `lastError` shipped in the first place.)
+function isPendingQuestion(prior, sessionId) {
+    return prior
+        && prior.notificationType === 'question'
+        && prior.status === 'waiting_for_input'
+        && Array.isArray(prior.questions) && prior.questions.length > 0
+        && (!sessionId || !prior.sessionId || prior.sessionId === sessionId);
 }
 
 // Main
@@ -420,13 +463,28 @@ async function main() {
 
             if (notificationType === 'idle_prompt') {
                 // Claude is waiting for regular input - perfect time to check messages!
-                writeState(cwd, {
-                    status: 'waiting_for_input',
-                    message: input.message || 'Waiting for your input...',
-                    notificationType,
-                    sessionId,
-                    transcriptPath
-                });
+                //
+                // …but an UNANSWERED AskUserQuestion is itself a session sitting without
+                // input, so this timer-driven notification fires on exactly the blocked
+                // agent #59 is about. Writing an unconditional fresh record here erased
+                // the captured question AND relabelled the agent `idle_prompt` — the one
+                // value every consumer reads as "healthy, not blocked" — so a MANAGER
+                // sweeping the fleet skipped it and it stayed blocked forever. Fixing
+                // only the permission_prompt path left this one open; a generic
+                // notification must never overwrite a still-pending specific one, on
+                // EITHER path.
+                const priorIdle = readPriorState(cwd);
+                if (isPendingQuestion(priorIdle, sessionId)) {
+                    debugLog({ event: 'question_kept_over_idle_prompt', cwd, count: priorIdle.questions.length });
+                } else {
+                    writeState(cwd, {
+                        status: 'waiting_for_input',
+                        message: input.message || 'Waiting for your input...',
+                        notificationType,
+                        sessionId,
+                        transcriptPath
+                    });
+                }
 
                 // Check for unread messages and notify the agent
                 const messagePrompt = await checkUnreadMessages(cwd);
@@ -448,28 +506,19 @@ async function main() {
                         const age = Date.now() - new Date(prior.updatedAt).getTime();
                         // Claude Code emits Notification(permission_prompt) for an
                         // AskUserQuestion block too, moments after PreToolUse recorded the
-                        // question. Without the branch below this handler CLOBBERED it:
-                        // the reset wiped `questions` (it only ever whitelisted
-                        // permission_request) and `notificationType` was downgraded
-                        // 'question' -> 'permission_prompt'. Measured server-side across
-                        // 419 live chat-state files: options present, question text
-                        // captured 0 times, and a live AskUserQuestion typed as a
-                        // permission prompt (Emasoft/ai-maestro-plugin#59). That made
-                        // read-prompt answer null for the ONE prompt shape that blocks an
-                        // agent forever, so a stalled agent looked healthy. Keep the more
-                        // SPECIFIC prior classification: a generic notification must never
-                        // overwrite a specific one that is still pending.
-                        //
-                        // NO AGE BOUND HERE, deliberately — unlike the permission_request
-                        // branch below. A pending question has no timeout: an agent blocked
-                        // on one stays blocked until a human answers (17h observed on a live
-                        // agent). Bounding this at 10s would re-drop the question for exactly
-                        // the long-block case the fix exists for. PostToolUse(AskUserQuestion)
-                        // is what ends this state — it writes no notificationType, so a
-                        // 'question' classification cannot outlive its answer.
-                        if (prior.notificationType === 'question'
-                            && prior.status === 'waiting_for_input'
-                            && Array.isArray(prior.questions) && prior.questions.length > 0) {
+                        // question. Without this branch the handler CLOBBERED it: the reset
+                        // wiped `questions` (it only ever whitelisted permission_request)
+                        // and `notificationType` was downgraded 'question' ->
+                        // 'permission_prompt'. Measured server-side across 419 live
+                        // chat-state files: options present, question text captured 0
+                        // times, and a live AskUserQuestion typed as a permission prompt
+                        // (Emasoft/ai-maestro-plugin#59). That made read-prompt answer null
+                        // for the ONE prompt shape that blocks an agent forever, so a
+                        // stalled agent looked healthy. A generic notification must never
+                        // overwrite a more specific one that is still pending —
+                        // isPendingQuestion() carries the session-bound test and the
+                        // reasoning for why it is not an age bound.
+                        if (isPendingQuestion(prior, sessionId)) {
                             pendingQuestion = prior;
                         } else if (prior.status === 'permission_request' && age <= 10000) {
                             // Only preserve if it's a recent permission_request (within 10 seconds)
@@ -485,6 +534,13 @@ async function main() {
                         notificationType: 'question',
                         questions: pendingQuestion.questions,
                         options: pendingQuestion.options,
+                        questionCount: pendingQuestion.questionCount,
+                        // description is what dashboards and read-prompt renderers show as
+                        // the human-readable prompt line; the permission_prompt write this
+                        // replaces always emitted one, and writeState does not carry it, so
+                        // omitting it rendered a question-blocked agent as blocked-with-no-
+                        // reason — for exactly the prompt class this fix targets.
+                        description: pendingQuestion.description || pendingQuestion.message || input.message,
                         sessionId,
                         transcriptPath
                     });
@@ -582,11 +638,17 @@ async function main() {
             break;
 
         case 'SessionStart':
-            // Session started — reset subagent count and record session info
+            // Session started — reset subagent count and record session info.
+            // lastError is cleared here too (explicit null beats the carry): a new session
+            // is a new life, so the previous session's stop reason is history. Without
+            // this, one 429 made every later record for this cwd report a rate_limit
+            // forever, across every future session (#58 review) — a supervisor asking
+            // "why did this agent stop" would read a weeks-old error as the current cause.
             writeState(cwd, {
                 status: 'active',
                 message: null,
                 subagentCount: 0,
+                lastError: null,
                 sessionId,
                 transcriptPath,
                 source: input.source
@@ -690,6 +752,15 @@ async function main() {
                     // reads choices the same way for both prompt kinds instead of
                     // special-casing the raw AskUserQuestion schema. `key` is the 1-based
                     // index because that is what the terminal UI accepts as the answer.
+                    //
+                    // `options`/`message` describe questions[0] ONLY, while `questions`
+                    // carries all of them — so `questionCount` is emitted alongside and a
+                    // consumer MUST check it. AskUserQuestion accepts up to 4 questions;
+                    // answering key "2" from a multi-question prompt sends that keystroke
+                    // to whichever question the terminal has focused, which need not be
+                    // the one whose labels the caller just read. A caller that cannot tell
+                    // one question from four has no way to notice, hence the explicit
+                    // count rather than a silent first-question view.
                     const options = (Array.isArray(first.options) ? first.options : []).map((opt, i) => ({
                         key: String(i + 1),
                         label: typeof opt === 'string' ? opt : (opt && opt.label) || '',
@@ -699,8 +770,10 @@ async function main() {
                         status: 'waiting_for_input',
                         notificationType: 'question',
                         message: first.question || 'Claude is asking a question…',
+                        description: first.question || 'Claude is asking a question…',
                         questions,
                         options,
+                        questionCount: questions.length,
                         sessionId,
                         transcriptPath
                     });

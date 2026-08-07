@@ -69,11 +69,15 @@ SELF-ONLY for every title — the server 403s them cross-agent.
 
 ## The two read verbs are NOT alternatives
 
-- **`read-prompt <agent>`** returns what the plugin **HOOK recorded**.
-  Measured across 419 live chat-state files: it carries permission prompts,
-  and carries AskUserQuestion **never** (0/419 question texts) — for the one
-  prompt shape that blocks an agent forever it answers `null` and the agent
-  looks fine. (CORE issue `#59` tracks fixing the hook capture.)
+- **`read-prompt <agent>`** returns what the plugin **HOOK recorded** — so what
+  it can tell you depends on the target's installed plugin version, which is why
+  every state record now carries `writerVersion`. On versions **before** the
+  `#59` fix it carried permission prompts but carried AskUserQuestion **never**
+  (measured 0/419 question texts across live chat-state files): for the one
+  prompt shape that blocks an agent forever it answered `null` and the agent
+  looked fine. **On the fixed version it carries the question text, its
+  normalized `{key,label}` choices, and `questionCount`.** Check
+  `writerVersion` before reading a `null` as either answer.
 - **`block-state <agent>`** reads the **TERMINAL** — the only source that
   reflects the screen *now*. Returns the structured verdict:
 
@@ -91,15 +95,24 @@ SELF-ONLY for every title — the server 403s them cross-agent.
 
 Use both: the hook record is the fast hint, the pane verdict is the
 **authority**, and `hookDisagreed: true` means exactly that — resolve toward
-the pane (the hook is known to mislabel a live AskUserQuestion as
-`permission_prompt`).
+the pane. (Pre-`#59` versions mislabelled a live AskUserQuestion as
+`permission_prompt`; fixed versions classify it `question`. Either way the pane
+wins — that a record CAN be wrong in a way only the screen contradicts is the
+reason the disagreement signal exists.)
 
 Three measured facts every consumer must know (`ai-maestro-plugin#58/#59`):
 
 - **`status` cannot discriminate blocked from idle** — a blocked agent and a
   healthy idle one both read `waiting_for_input`. The discriminator is
-  **`notificationType`** (`permission_prompt` / `elicitation_prompt` vs
-  `idle_prompt`), not `status`.
+  **`notificationType`**, not `status`. The BLOCKED values are
+  **`question`** (an AskUserQuestion — emitted only by versions carrying the
+  `#59` fix), **`permission_prompt`**, and **`elicitation_dialog`** (an MCP
+  server's elicitation). The not-blocked value is `idle_prompt`. Match that
+  exact spelling: `elicitation_dialog` is what the hook writes, and a filter
+  looking for `elicitation_prompt` matches nothing, so an agent stalled on an
+  MCP dialog is silently classified healthy. Treat an UNKNOWN
+  `notificationType` as possibly-blocked and fall through to `block-state`,
+  never as not-blocked.
 - **Chat-state goes stale on exactly the agents that matter** — the hook
   writes on events and a blocked agent generates none (~17 h observed). So
   `updatedAt` is NOT a liveness signal, and "no recent event" is
@@ -217,7 +230,8 @@ aimaestro-session.sh help 2>&1 | grep -q "block-state" && echo full || echo inte
 | `block-state`: unknown command | interim mode — this server predates the capability; escalate-only |
 | 403 on `block-state` / `read-prompt` / `answer` | title matrix failed — you are not MANAGER/COS, the target is out of your scope, or it is an ASSISTANT; the refusal is the check |
 | 409 on `answer` / `--match` | the target is not actually blocked (constraint (a) / Gate 0b) — re-read `block-state`; if it says blocked and the server says 409, report the disagreement upstream, do not force |
-| `read-prompt` returns null but the pane shows a menu | expected for AskUserQuestion (hook capture gap, CORE `#59`) — the `block-state` excerpt/choices are the readable copy |
+| `read-prompt` returns null but the pane shows a menu | check `writerVersion`: on pre-`#59` versions this is the known capture gap and the `block-state` excerpt/choices are the readable copy. On a fixed version a null is REAL — do not dismiss it as the old gap |
+| `read-prompt` shows choices but `questionCount` > 1 | `options`/`message` describe the FIRST question only; answering by key sends that keystroke to whichever question the terminal has focused. Read the full `questions` array, or escalate |
 | target resumed but did the wrong thing | your NOTIFY message is how it finds out and corrects — send it, then follow up via AMP |
 
 ## Scope
