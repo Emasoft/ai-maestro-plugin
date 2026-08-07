@@ -1,10 +1,10 @@
 ---
 trdd-id: 546UDAZF
 title: Remediate the CORE v2.10.0 full-audit findings
-column: complete
+column: published
 implementation-commits: [2ebabc4, fbe7670, f1b1d40, e8a5315, 6cceb62, c3dc41b]
 created: 2026-07-25T00:10:42+0200
-updated: 2026-08-02T03:52:00+0200
+updated: 2026-08-07T12:02:40+0200
 current-owner: ai-maestro-plugin (core)
 assignee: ai-maestro-plugin (core)
 task-type: refactor
@@ -534,3 +534,7 @@ dependencies resolve · **zero** dangling cross-references · zero name collisio
 168 files scanned by trufflehog/semgrep/gitleaks/cc-audit/tirith → 0 genuine
 findings · ruff, `mypy scripts/ --ignore-missing-imports`, pytest (180 pass),
 jscpd all green.
+
+## Approval log
+
+- 2026-08-07T12:02:40+0200 — PUBLISHED + ARCHIVED. Work shipped: all six implementation-commits (2ebabc4, fbe7670, f1b1d40, e8a5315, 6cceb62, c3dc41b) are ancestors of main and rode out in released versions up to v3.0.5. The card had recorded `complete` but never advanced to its release-via terminal.

@@ -1,9 +1,9 @@
 ---
 trdd-id: P83T33EN
 title: Close the script↔skill coverage gap — new agent-repo-workflow skill for the uncovered AMP work-loop scripts
-column: complete
+column: published
 created: 2026-06-24T03:51:53+0200
-updated: 2026-06-24T03:58:13+0200
+updated: 2026-08-07T12:02:40+0200
 current-owner: ai-maestro-plugin
 implementation-commits: [a401719]
 assignee: ai-maestro-plugin
@@ -99,3 +99,7 @@ canonical frozen manifest requested on ai-maestro#35 when it lands).
 - Internal libs (`amp-security.sh`, `amp-helper.sh`, `agent-*.sh`, `aid-helper.sh`).
 - The frozen-CLI verb core#11 waits on (separate, ai-maestro#45).
 - Rebuilding the messaging/kanban/identity skills (already cover their families).
+
+## Approval log
+
+- 2026-08-07T12:02:40+0200 — PUBLISHED + ARCHIVED. Work shipped: implementation-commit a401719 is an ancestor of main and skills/agent-repo-workflow/ exists in the released plugin (v3.0.5). The card had recorded `complete` but never advanced to its release-via terminal, so the board could not distinguish it from abandoned work.

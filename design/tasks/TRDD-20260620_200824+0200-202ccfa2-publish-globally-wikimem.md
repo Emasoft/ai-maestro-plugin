@@ -1,9 +1,11 @@
 ---
 trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
-column: planned
+column: blocked
+pre-block-column: planned
+blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52, ai-maestro-plugin#18]
 created: 2026-06-20T20:08:24+0200
-updated: 2026-08-05T09:28:51+0200
+updated: 2026-08-07T12:01:09+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -14,7 +16,6 @@ task-type: feature
 parent-trdd: null
 npt: []
 eht: []
-blocked-by: []
 relevant-rules: []
 release-via: publish
 delivery: direct-push
@@ -31,7 +32,43 @@ external-refs: []
 
 # publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 
-## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-06-20
+## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-07
+
+**BLOCKED, and CORE CANNOT UNBLOCK IT — the engine this card plans is no longer CORE's to
+build.** The ownership inversion is NOT a new finding: the 2026-08-02 block below already
+recorded it (memgrep went to the ai-maestro-janitor per `ai-maestro#106`; CORE's crate was
+removed and a test prevents its return). What changed today is only the **column**.
+
+**Why `planned` → `blocked`, overriding a deliberate choice.** A prior session kept this at
+`planned` on purpose — "solely to carry the user-LOCKED design that `#52` relays" — and that
+intent is sound and preserved (`pre-block-column: planned`). But `planned` is the
+ready-to-start column, and this card cannot be started by its own assignee at all; its
+blockers are three external issues. The kanban rule is mechanical: **`blocked` applies
+whenever `blocked-by:` is non-empty**, and that field was `[]` while the body listed real
+blockers — the frontmatter and the prose disagreed, and only the frontmatter is greppable.
+`blocked` states the same fact the body already stated, where a board query can see it.
+
+**Verified 2026-08-07 (authoritative verb list, not a probe):** the installed memgrep
+exposes `add-atom add-lesson atom atom-page fact find find-claude-mem-ref index links lint
+migrate new-page overview recall reindex validate`. **`publish-sync` is ABSENT and the
+wikimem `link` verb is ABSENT** (`links` is a read-only cross-file link-graph report, a
+different thing). So the engine half is genuinely NOT done.
+
+**⚠ HOW NOT TO CHECK THIS (cost me a wrong conclusion this session):** `memgrep
+publish-sync --help` prints the TOP-LEVEL help and **exits 0** for a verb that does not
+exist — a fall-through, which reads exactly like success. `ai-maestro-plugin#18`'s body
+documents this trap and I walked into it anyway. **Only the `Memory verbs:` list at the
+foot of `memgrep --help` is authoritative.**
+
+**What CORE still owns here:** the DESIGN below — chiefly the privacy invariant, which is
+the load-bearing user requirement and must survive into whoever implements it.
+
+**NEXT ACTION:** none runnable by CORE. Trackers, per the card's own verified list plus one
+this session confirmed still open: engine `ai-maestro-janitor#111`, coordination
+`ai-maestro-janitor#52`, and `ai-maestro-plugin#18` (filed by the janitor ON CORE's repo,
+reopened 2026-08-05 because closing another party's issue on my own audit is not mine to do).
+**Do NOT file a fourth issue** — the struck lines below already caused one near-duplicate.
+When the engine lands, re-verify against the authoritative verb list and restore `planned`.
 
 **Goal:** let a PROJECT-scope wikimem note opt into being visible from EVERY project
 (solves "many Claudes want some project memories accessible globally"), with **zero
