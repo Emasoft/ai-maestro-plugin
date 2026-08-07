@@ -3,7 +3,7 @@ trdd-id: 8ZVAPMSQ
 title: Pre-push hook contributor path — allow non-default-branch pushes without publish.py ancestry
 column: proposal
 created: 2026-07-16T11:43:11+0200
-updated: 2026-07-16T11:43:11+0200
+updated: 2026-08-07T12:04:59+0200
 current-owner: ai-maestro-plugin (core)
 task-type: infra
 min-approval-requirement: manager
@@ -15,6 +15,14 @@ eht: []
 ---
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-07-16
+
+**RE-VERIFIED 2026-08-07 — the premise still holds; this has NOT gone moot.** Read
+`.githooks/pre-push` at HEAD (active: `core.hooksPath=.githooks`): it consumes **no ref
+lines at all** — no `refs/heads` read, no branch or tag scoping anywhere — and its only
+decision is `if ! find_publish_ancestor "$$"; then … exit 1`. So **every** push without a
+genuine `scripts/publish.py` ancestor is refused, on any branch. The deadlock this proposal
+describes is unchanged and still launch-blocking. (Worth re-checking rather than assuming:
+the sibling issue `#34` DID go moot while parked, so a stale proposal is a real risk here.)
 
 **Status: PROPOSAL awaiting MANAGER approval.** The MANAGER pre-committed on
 core#26 ("Pick (a) or (b), file the TRDD, and I will approve it") and put the
