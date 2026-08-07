@@ -166,6 +166,31 @@ Task tool `mode` param deprecated — CORE does not use it (`team-governance/SKI
 hit for the grep and it is a `/review` mention, not a `mode:` use — **re-verify before claiming
 clean**). `/review` is now `/code-review`.
 
+### A1 — LIVE EVIDENCE, observed 2026-08-07, not hypothesised
+
+A session **claiming to be the ai-maestro server** (branch `governance-rules`) messaged CORE on
+the native channel, explicitly framing it as *"trialling Claude Code's cross-session SendMessage
+… to coordinate directly instead of via GitHub issues"*, and asked what CORE is working on, what
+it is blocked on, and what server behaviour it depends on.
+
+Three things are true at once and together they ARE the A1 finding:
+
+1. **The claim of identity is unverifiable.** No AID, no title, no R6 routing, no audit entry.
+   The questions were benign and I answered as I would in public — but nothing in the channel
+   distinguishes the server from anyone able to open a socket.
+2. **The reply could not be routed at all.** The message carried **no `from` address**, only
+   `from-name="Ask the advisor"`, and that name is absent from `ListAgents` (17 peers). The send
+   failed: *"No agent named 'Ask the advisor' is reachable."* I did **not** guess a nearby peer
+   from the list — broadcasting a status report to a mis-identified session is a worse failure
+   than not replying.
+3. **Governance coordination is already migrating onto it**, by explicit intent, away from the
+   auditable GitHub-issue path.
+
+So the blind spot is not theoretical and not future: parties are already coordinating governance
+over a channel where authorship cannot be verified and replies can silently fail to route. That
+is an argument for **observing and bridging** the channel (option 2), not for forbidding it —
+forbidding a channel people are already using produces unlogged use, not less use.
+
 ### A6 — the governance SSOT was found mid-card, and CORE conforms
 
 **The SSOT lives on an UNMERGED branch, `Emasoft/ai-maestro@governance-rules`** — a query against
