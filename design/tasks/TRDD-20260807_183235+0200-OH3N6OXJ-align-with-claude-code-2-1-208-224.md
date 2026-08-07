@@ -166,6 +166,29 @@ Task tool `mode` param deprecated — CORE does not use it (`team-governance/SKI
 hit for the grep and it is a `/review` mention, not a `mode:` use — **re-verify before claiming
 clean**). `/review` is now `/code-review`.
 
+### A6 — the governance SSOT was found mid-card, and CORE conforms
+
+**The SSOT lives on an UNMERGED branch, `Emasoft/ai-maestro@governance-rules`** — a query against
+`main` 404s and that 404 means nothing. It carries `docs/GOVERNANCE-RULES.md`, `rules/aimaestro/`
+(5 multi-agent overlays on the host-global base rules), and `design/specs/` including
+**`role-plugins-spec.md`** (spec-version 1.0.0, `status: authoritative`).
+
+✓ **CORE conformance checked against it:**
+- CORE is **not** a role-plugin (no `.agent.toml`, no `agents/`), so RP-QUAD / RP-TOML /
+  RP-PREFIX do not apply — correct by design; CORE is the umbrella core plugin.
+- All five skills role-plugins declare as `external_skills` **exist**: `planning`,
+  `agent-messaging`, `agent-identity`, `team-kanban`, `team-governance`.
+- **RP-VAL-05** (no element may embed `/api/…`, a `:23000` URL, or a raw server HTTP call — go
+  via the `aimaestro-*` / `amp-*` CLI layer) is enforced by a real test,
+  `tests/test_no_direct_api_calls.py`.
+
+**RP-MODEL-01 corrects an answer I gave three peers.** I said no fleet policy existed on `model:`
+pins. One does: every shipped role-plugin pins the **family alias `opus`** on the main-agent
+(frontmatter + toml) and **omits `model:` on subagents**. The spec explicitly records that this
+contradicts the general "omit `model:`, inherit session" cache-warmth guidance, and says a new
+role-plugin SHOULD copy the pattern anyway. A documented, deliberate inconsistency is not the
+same as no policy.
+
 ### Gotchas
 
 - **`grep -l` output is a search surface, not a verified claim.** The 8 R42 files above were
