@@ -100,9 +100,10 @@ synced-at: 2026-08-08
 >
 >   ```bash
 >   gh api "repos/Emasoft/ai-maestro/contents/docs/GOVERNANCE-RULES.md?ref=governance-rules" --jq .sha
->   # matches `synced-blob` above  ⇒  these exact bytes  ⇒  every rule read from
->   # this copy still holds. Differs ⇒ re-sync. It never says WHAT moved, only
->   # that something did — a moved blob is a prompt to re-read, not an answer.
+>   # expected: a13bed73fa9e…   (this copy = catalog v5.3.3)
+>   # matches ⇒ these exact bytes ⇒ every rule read from this copy still holds.
+>   # Differs ⇒ re-sync. It never says WHAT moved, only that something did —
+>   # a moved blob is a prompt to re-read, not an answer.
 >   ```
 >
 >   `3P-VER-05` of `design/specs/3-pillars-spec.md` makes this normative and
