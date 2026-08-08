@@ -43,13 +43,13 @@ def _state_path(home: str, cwd: str = CWD) -> Path:
     return Path(home) / ".aimaestro" / "chat-state" / f"{cwd_hash}.json"
 
 
-def run_hook(event: dict, home: str) -> None:
+def run_hook(event: dict, home: str, cwd: str = CWD) -> None:
     """Drive the hook with one event under the given HOME (real subprocess)."""
     env = os.environ.copy()
     env["HOME"] = home
     proc = subprocess.run(
         ["node", str(HOOK)],
-        input=json.dumps({**event, "cwd": CWD}),
+        input=json.dumps({**event, "cwd": cwd}),
         capture_output=True,
         text=True,
         env=env,
@@ -58,6 +58,51 @@ def run_hook(event: dict, home: str) -> None:
     )
     # The hook must never hard-fail — it exits 0 even on an internal error.
     assert proc.returncode == 0, f"hook exited {proc.returncode}: {proc.stderr}"
+
+
+def run_hooks_concurrently(events: list[dict], home: str, cwd: str = CWD) -> None:
+    """Fire every event as a REAL concurrent process, maximally overlapped.
+
+    Every process is spawned BEFORE any is awaited. Spawning-and-waiting one at a
+    time would serialize them and the test would pass against the racy code —
+    which is the only way this suite can lie about #61.
+    """
+    payloads = [json.dumps({**event, "cwd": cwd}) for event in events]
+    procs = _spawn_hooks(home, len(events))
+    _feed_and_wait(procs, payloads)
+
+
+def _spawn_hooks(home: str, count: int) -> list[subprocess.Popen[str]]:
+    env = os.environ.copy()
+    env["HOME"] = home
+    return [
+        subprocess.Popen(
+            ["node", str(HOOK)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=env,
+        )
+        for _ in range(count)
+    ]
+
+
+def _feed_and_wait(procs: list[subprocess.Popen[str]], payloads: list[str]) -> None:
+    for proc, payload in zip(procs, payloads):
+        assert proc.stdin is not None
+        proc.stdin.write(payload)
+        proc.stdin.close()
+    for proc in procs:
+        assert proc.stdout is not None and proc.stderr is not None
+        assert proc.wait(timeout=60) == 0, f"hook exited {proc.returncode}: {proc.stderr.read()}"
+        proc.stdout.close()
+        proc.stderr.close()
+
+
+def read_debug_log(home: str) -> str:
+    log = Path(home) / ".aimaestro" / "chat-state" / "hook-debug.log"
+    return log.read_text() if log.exists() else ""
 
 
 def read_state(home: str, cwd: str = CWD) -> dict:
@@ -392,6 +437,83 @@ def test_agent_completed_returns_to_idle(home: str) -> None:
     run_hook({"hook_event_name": "Notification", "notification_type": "agent_needs_input"}, home)
     run_hook({"hook_event_name": "Notification", "notification_type": "agent_completed"}, home)
     assert read_state(home)["status"] == "idle"
+
+
+FANOUT = 16
+
+
+def test_concurrent_subagent_starts_do_not_lose_updates(home: str) -> None:
+    """#61: 16 simultaneous SubagentStarts must leave the counter at exactly 16.
+
+    Each start is `read count, +1, write` in its OWN process. rename(2) makes the
+    write atomic and does nothing for the read-then-write sequence, so before the
+    lock two starts both read 5, both wrote 6, and the counter stayed 1 low
+    forever — nothing recomputes it from truth, so a fan-out compounds the loss.
+    Measured 5/5 undercount at this exact fan-out (15, 11, 14, 15, 13).
+    """
+    run_hooks_concurrently(
+        [{"hook_event_name": "SubagentStart", "agent_id": f"a{i}"} for i in range(FANOUT)],
+        home,
+    )
+    assert read_state(home)["subagentCount"] == FANOUT
+
+
+def test_concurrent_stops_keep_the_restart_gate_shut_while_subagents_run(home: str) -> None:
+    """#61's dangerous half: an undercount opens the restart gate on a busy agent.
+
+    12 of 16 subagents finish; 4 are still working. The counter must read 4 and
+    the status must stay `subagents_running`. Before the lock this reached 0 and
+    flipped to `active` in 2 of 3 trials — and `active` with a zero count is the
+    precondition for restart/autoContinue, the interlock governance R42.7(c)
+    leans on. Asserting the STATUS as well as the count is deliberate: the count
+    is the bug, the status is the harm.
+    """
+    run_hooks_concurrently(
+        [{"hook_event_name": "SubagentStart", "agent_id": f"a{i}"} for i in range(FANOUT)],
+        home,
+    )
+    run_hooks_concurrently(
+        [{"hook_event_name": "SubagentStop", "agent_id": f"a{i}"} for i in range(12)],
+        home,
+    )
+    s = read_state(home)
+    assert s["subagentCount"] == 4
+    assert s["status"] == "subagents_running"
+
+
+def test_the_lock_is_actually_held_under_fanout(home: str) -> None:
+    """The two tests above are only meaningful if the LOCK produced the result.
+
+    withStateLock proceeds unlocked on deadline — by design, because a hook that
+    can wedge is worse than the race it closes. But that fallback IS the old racy
+    path, so a green count could equally mean "timed out and got lucky". The
+    timeout logs `state_lock_timeout`; at this fan-out it must never appear.
+
+    Falsify by dropping LOCK_TIMEOUT_MS to ~0: this reddens while the counts above
+    may well stay green, which is exactly the confusion it exists to prevent.
+    """
+    run_hooks_concurrently(
+        [{"hook_event_name": "SubagentStart", "agent_id": f"a{i}"} for i in range(FANOUT)],
+        home,
+    )
+    assert "state_lock_timeout" not in read_debug_log(home)
+
+
+def test_index_survives_concurrent_writers_from_different_cwds(home: str) -> None:
+    """index.json is machine-global, so the per-cwd lock does not protect it.
+
+    Every cwd on the host writes this one file, and it had neither a lock nor the
+    tmp+rename the state file has: a lost entry reads downstream as "that agent
+    has no state" rather than as corruption, and a torn write fails the parse for
+    every agent at once.
+    """
+    cwds = [f"/tmp/ai_maestro_hook_index_{i}" for i in range(FANOUT)]
+    _feed_and_wait(
+        _spawn_hooks(home, len(cwds)),
+        [json.dumps({"hook_event_name": "SessionStart", "cwd": cwd}) for cwd in cwds],
+    )
+    index = json.loads((Path(home) / ".aimaestro" / "chat-state" / "index.json").read_text())
+    assert set(index) == set(cwds), f"lost {sorted(set(cwds) - set(index))}"
 
 
 def test_notification_matcher_covers_every_handled_type() -> None:

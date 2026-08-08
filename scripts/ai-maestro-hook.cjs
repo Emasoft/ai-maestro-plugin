@@ -109,7 +109,101 @@ async function broadcastStatusUpdate(cwd, state) {
     debugLog({ event: out != null ? 'status_broadcast' : 'status_broadcast_error', status: state.status });
 }
 
+// Cross-process mutex over one file in the chat-state dir.
+//
+// Hook events are SEPARATE NODE PROCESSES sharing one state file, and every
+// writeState is a read-modify-write: read the prior record, carry subagentCount
+// and lastError forward, rename the new one over the target. rename(2) makes the
+// WRITE atomic — it says nothing about the read-then-write SEQUENCE. Two
+// concurrent SubagentStarts both read 5, both write 6, and the counter is
+// permanently 1 low. Nothing ever recomputes it from truth, so the loss compounds
+// across a fan-out instead of re-syncing. Measured at 16-way concurrency: 5/5
+// trials undercounted (Emasoft/ai-maestro-plugin#61).
+//
+// It fails DANGEROUS, which is why a lock is worth its cost here. The counter
+// gates restart/autoContinue: an undercount reaches 0 while subagents are still
+// running, status flips to 'active', and the restart gate opens on a busy agent —
+// the interlock governance R42.7(c) leans on. Reading HIGH would merely hold the
+// gate shut, so this is chosen for fail-SAFETY, not exactness. `Math.max(0, …)` on
+// the decrement is why it was silent: the clamp stops the count going negative, so
+// once it bottoms out the loss can no longer signal itself.
+//
+// FAIL-OPEN BY CONSTRUCTION — the reason this is safe to add to a hook at all. A
+// hook fires on every event of every session on this machine, so a lock that can
+// wedge is worse than the race it closes. Two escape hatches, both load-bearing:
+//   - a lock older than LOCK_STALE_MS is assumed orphaned (a killed hook) and
+//     stolen, so a crash mid-section cannot wedge the machine; and
+//   - on deadline we PROCEED UNLOCKED, degrading to exactly today's behaviour and
+//     never worse.
+// The degradation is logged: a silent fallback to the racy path is indistinguishable
+// from the lock working, which is the failure mode that let #61 hide for months.
+//
+// The release is token-guarded. The naive lockfile flaw is that a holder whose
+// lock was stolen goes on to unlink the NEW owner's lock; writing a unique token in
+// and comparing it on the way out means we only ever remove our own.
+const LOCK_TIMEOUT_MS = 2000;
+const LOCK_STALE_MS = 10000;
+
+function withStateLock(stateDir, lockName, fn) {
+    const lockFile = path.join(stateDir, lockName);
+    const token = `${process.pid}.${Date.now()}.${Math.random()}`;
+    const deadline = Date.now() + LOCK_TIMEOUT_MS;
+    const sleeper = new Int32Array(new SharedArrayBuffer(4));
+    let held = false;
+
+    while (Date.now() < deadline) {
+        try {
+            // 'wx' is O_CREAT|O_EXCL: the create either wins outright or throws
+            // EEXIST. There is no check-then-create window to lose.
+            const fd = fs.openSync(lockFile, 'wx', 0o600);
+            try { fs.writeSync(fd, token); } finally { fs.closeSync(fd); }
+            held = true;
+            break;
+        } catch (e) {
+            // Anything other than "someone holds it" (EACCES, ENOENT on a vanished
+            // dir, EROFS) is not contention and will not clear by waiting — take the
+            // unlocked path immediately rather than burning the whole timeout.
+            if (e.code !== 'EEXIST') break;
+            try {
+                if (Date.now() - fs.statSync(lockFile).mtimeMs > LOCK_STALE_MS) {
+                    fs.unlinkSync(lockFile);
+                    continue;
+                }
+            } catch (e2) { /* it vanished under us — just retry */ }
+            // Synchronous sleep. writeState is sync and called from sync handlers,
+            // so there is no event loop to yield to; Atomics.wait is the only way to
+            // pause without a CPU-burning spin. Guarded because a runtime that
+            // forbids it on the main thread must degrade to the spin, not throw.
+            try { Atomics.wait(sleeper, 0, 0, 5); } catch (e3) { /* spin */ }
+        }
+    }
+
+    if (!held) debugLog({ event: 'state_lock_timeout', lock: lockName });
+
+    try {
+        return fn();
+    } finally {
+        if (held) {
+            try {
+                if (fs.readFileSync(lockFile, 'utf8') === token) fs.unlinkSync(lockFile);
+            } catch (e) { /* stolen or already gone — not ours to remove */ }
+        }
+    }
+}
+
 // Write state to file
+//
+// `state` is either a plain object or a FUNCTION of the prior record. Prefer the
+// function form in any handler whose own decision depends on the current state —
+// e.g. "am I idle or still running subagents?". Those handlers used to call
+// getSubagentCount() OUTSIDE writeState, so the read, the decision and the write
+// were three separate unsynchronized steps; passing a function moves all three
+// inside the lock below, which is the only arrangement that actually closes #61.
+//
+// Returns the record as written, so a caller that needs the resulting count (for a
+// log line, or a message string) reads it back instead of recomputing it — a
+// recomputation outside the lock would reintroduce exactly the stale read the lock
+// exists to prevent.
 //
 // State and debug-log files contain cwd, transcript paths, tool inputs and
 // raw command text — sensitive enough that any other local user (or any
@@ -124,17 +218,31 @@ function writeState(cwd, state) {
     const cwdHash = hashCwd(cwd);
     const stateFile = path.join(stateDir, `${cwdHash}.json`);
 
+    const fullState = withStateLock(stateDir, `.${cwdHash}.lock`, () => {
     // ONE read of the prior record, shared by every carry-through field below.
     // getSubagentCount() and getLastError() each opened and parsed this same file, so a
-    // single writeState did TWO independent unlocked reads. Hook events are separate Node
-    // processes sharing one state file, so each extra read widens the window in which a
+    // single writeState did TWO independent reads. Hook events are separate Node
+    // processes sharing one state file, so each extra read widened the window in which a
     // concurrent StopFailure's atomic rename lands BETWEEN our reads and our own rename
     // clobbers it — the durable lastError that #58 exists to preserve would vanish
-    // milliseconds after the error, intermittently and invisibly. One read does not close
-    // that race (only a lock would) but it halves the window AND makes the carried fields
-    // mutually consistent: they now come from the same snapshot, so we can never carry
-    // subagentCount from one moment and lastError from another.
+    // milliseconds after the error, intermittently and invisibly. The lock is what
+    // actually closes that race (this comment used to concede it did not); the single
+    // read still matters for a second reason, which the lock does NOT give us: the
+    // carried fields come from one snapshot, so we can never carry subagentCount from
+    // one moment and lastError from another.
     const prior = readPriorState(cwd);
+
+    // Resolve the caller's intent INSIDE the critical section, so a handler that
+    // branches on the prior record ("subagents_running" vs "idle") decides on the
+    // same snapshot we are about to write over.
+    //
+    // A resolver may return null to mean DO NOT WRITE. That is not a convenience:
+    // two handlers deliberately stand down when they find a still-pending question
+    // (#59), and "decide whether to write, then write" is the same read-modify-write
+    // as any other — done outside the lock, a PreToolUse recording a question between
+    // the look and the write is clobbered by the very branch written to protect it.
+    const resolved = typeof state === 'function' ? state(prior) : state;
+    if (resolved == null) return null;
 
     // subagentCount is a PERSISTENT counter owned by SubagentStart/Stop. A state
     // write that doesn't mention it (idle_prompt / permission_prompt / elicitation /
@@ -144,9 +252,9 @@ function writeState(cwd, state) {
     // subagentCount) misfires (#17). A handler that means to RESET the counter
     // still can by passing an explicit value (SessionStart/End pass 0); an
     // explicit field always wins over the carried-through prior.
-    const subagentCount = state.subagentCount === undefined
+    const subagentCount = resolved.subagentCount === undefined
         ? (prior.subagentCount || 0)
-        : state.subagentCount;
+        : resolved.subagentCount;
 
     // lastError is a post-mortem record carried through by the same rule (#58).
     // `status: 'error'` and `errorType` describe only the CURRENT event, so the next
@@ -162,12 +270,12 @@ function writeState(cwd, state) {
     // escalate a healthy agent, with no in-band way to reset short of deleting the file.
     // A new session is a new life; the previous session's stop reason is history, and
     // `at` is there so a consumer can still judge the age of a within-session error.
-    const lastError = state.lastError === undefined
+    const lastError = resolved.lastError === undefined
         ? (prior.lastError || null)
-        : state.lastError;
+        : resolved.lastError;
 
-    const fullState = {
-        ...state,
+    const full = {
+        ...resolved,
         subagentCount,
         lastError,
         writerVersion: getPluginVersion(),
@@ -183,23 +291,52 @@ function writeState(cwd, state) {
     // and silently reset subagentCount to 0, re-introducing #17 through the I/O
     // side door. (Adopted from PR #28, the server Claude's parallel fix.)
     const tmpFile = path.join(stateDir, `.${cwdHash}.${process.pid}.${Date.now()}.tmp`);
-    fs.writeFileSync(tmpFile, JSON.stringify(fullState, null, 2), { mode: 0o600 });
+    fs.writeFileSync(tmpFile, JSON.stringify(full, null, 2), { mode: 0o600 });
     try { fs.chmodSync(tmpFile, 0o600); } catch (e) {}
     fs.renameSync(tmpFile, stateFile);
     try { fs.chmodSync(stateFile, 0o600); } catch (e) {}
 
-    // Also write to a "by-cwd" index for easy lookup
-    const indexFile = path.join(stateDir, 'index.json');
-    let index = {};
-    try {
-        index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
-    } catch (e) {}
-    index[cwd] = cwdHash;
-    fs.writeFileSync(indexFile, JSON.stringify(index, null, 2), { mode: 0o600 });
-    try { fs.chmodSync(indexFile, 0o600); } catch (e) {}
+    return full;
+    });
 
-    // Broadcast status update via WebSocket (fire and forget)
-    broadcastStatusUpdate(cwd, state).catch(() => {});
+    // The resolver declined; nothing was written, so there is nothing to index and
+    // nothing to broadcast. Re-broadcasting the prior record here would tell the
+    // dashboard a state CHANGED when it deliberately did not.
+    if (fullState === null) return null;
+
+    // The by-cwd index is a DIFFERENT file with a DIFFERENT sharing pattern: every
+    // cwd on the machine writes it, so the per-cwd lock above does not protect it at
+    // all — two agents in two directories raced here and one lost its entry, which
+    // reads downstream as "that agent has no state" rather than as corruption. It
+    // also lacked the tmp+rename the state file has, so a reader could catch it torn.
+    // Both fixed here, plus the short-circuit: the index only CHANGES when a cwd is
+    // seen for the first time, so after that every event skips the read-modify-write
+    // entirely and the global lock is essentially never contended.
+    withStateLock(stateDir, '.index.lock', () => {
+        const indexFile = path.join(stateDir, 'index.json');
+        let index = {};
+        try {
+            index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+        } catch (e) {}
+        // JSON.parse happily returns null / a number / an array; any of those would
+        // make the assignment below throw and abort the hook's real work.
+        if (!index || typeof index !== 'object' || Array.isArray(index)) index = {};
+        if (index[cwd] === cwdHash) return;
+        index[cwd] = cwdHash;
+        const indexTmp = path.join(stateDir, `.index.${process.pid}.${Date.now()}.tmp`);
+        fs.writeFileSync(indexTmp, JSON.stringify(index, null, 2), { mode: 0o600 });
+        try { fs.chmodSync(indexTmp, 0o600); } catch (e) {}
+        fs.renameSync(indexTmp, indexFile);
+        try { fs.chmodSync(indexFile, 0o600); } catch (e) {}
+    });
+
+    // Broadcast status update via WebSocket (fire and forget).
+    // Broadcasts the record AS WRITTEN, not the caller's fragment: the fragment
+    // omits subagentCount whenever a handler relies on carry-through, and
+    // broadcastStatusUpdate skips a null field — so the dashboard was told nothing
+    // about the count on exactly the events that carried it forward.
+    broadcastStatusUpdate(cwd, fullState).catch(() => {});
+    return fullState;
 }
 
 // Log to debug file (mode 0600 — see writeState rationale)
@@ -473,17 +610,27 @@ async function main() {
                 // only the permission_prompt path left this one open; a generic
                 // notification must never overwrite a still-pending specific one, on
                 // EITHER path.
-                const priorIdle = readPriorState(cwd);
-                if (isPendingQuestion(priorIdle, sessionId)) {
-                    debugLog({ event: 'question_kept_over_idle_prompt', cwd, count: priorIdle.questions.length });
-                } else {
-                    writeState(cwd, {
+                //
+                // The look and the stand-down are ONE critical section. Reading the
+                // record here and writing after would leave the window this branch
+                // exists to close: a PreToolUse recording a question in between is
+                // clobbered by the write, which is #59 again by a different route.
+                let keptOverIdle = null;
+                writeState(cwd, prior => {
+                    if (isPendingQuestion(prior, sessionId)) {
+                        keptOverIdle = prior;
+                        return null;
+                    }
+                    return {
                         status: 'waiting_for_input',
                         message: input.message || 'Waiting for your input...',
                         notificationType,
                         sessionId,
                         transcriptPath
-                    });
+                    };
+                });
+                if (keptOverIdle) {
+                    debugLog({ event: 'question_kept_over_idle_prompt', cwd, count: keptOverIdle.questions.length });
                 }
 
                 // Check for unread messages and notify the agent
@@ -493,71 +640,68 @@ async function main() {
                     await sendMessageNotification(cwd, messagePrompt);
                 }
             } else if (notificationType === 'permission_prompt') {
-                // For permission prompts, preserve existing tool info if we have it
-                const stateDir = path.join(os.homedir(), '.aimaestro', 'chat-state');
-                const cwdHash = hashCwd(cwd);
-                const stateFile = path.join(stateDir, `${cwdHash}.json`);
-
-                let existingState = {};
+                // For permission prompts, preserve existing tool info if we have it.
+                //
+                // Read, decide and write in ONE critical section (writeState's
+                // resolver form). This used to open and parse the state file by hand
+                // and write afterwards — two unsynchronized steps over the field a
+                // concurrent PreToolUse writes, so the preservation logic could lose
+                // the very question it was added to preserve.
                 let pendingQuestion = null;
-                try {
-                    if (fs.existsSync(stateFile)) {
-                        const prior = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-                        const age = Date.now() - new Date(prior.updatedAt).getTime();
-                        // Claude Code emits Notification(permission_prompt) for an
-                        // AskUserQuestion block too, moments after PreToolUse recorded the
-                        // question. Without this branch the handler CLOBBERED it: the reset
-                        // wiped `questions` (it only ever whitelisted permission_request)
-                        // and `notificationType` was downgraded 'question' ->
-                        // 'permission_prompt'. Measured server-side across 419 live
-                        // chat-state files: options present, question text captured 0
-                        // times, and a live AskUserQuestion typed as a permission prompt
-                        // (Emasoft/ai-maestro-plugin#59). That made read-prompt answer null
-                        // for the ONE prompt shape that blocks an agent forever, so a
-                        // stalled agent looked healthy. A generic notification must never
-                        // overwrite a more specific one that is still pending —
-                        // isPendingQuestion() carries the session-bound test and the
-                        // reasoning for why it is not an age bound.
-                        if (isPendingQuestion(prior, sessionId)) {
-                            pendingQuestion = prior;
-                        } else if (prior.status === 'permission_request' && age <= 10000) {
-                            // Only preserve if it's a recent permission_request (within 10 seconds)
-                            existingState = prior;
-                        }
+                writeState(cwd, prior => {
+                    const age = Date.now() - new Date(prior.updatedAt).getTime();
+                    // Claude Code emits Notification(permission_prompt) for an
+                    // AskUserQuestion block too, moments after PreToolUse recorded the
+                    // question. Without this branch the handler CLOBBERED it: the reset
+                    // wiped `questions` (it only ever whitelisted permission_request)
+                    // and `notificationType` was downgraded 'question' ->
+                    // 'permission_prompt'. Measured server-side across 419 live
+                    // chat-state files: options present, question text captured 0
+                    // times, and a live AskUserQuestion typed as a permission prompt
+                    // (Emasoft/ai-maestro-plugin#59). That made read-prompt answer null
+                    // for the ONE prompt shape that blocks an agent forever, so a
+                    // stalled agent looked healthy. A generic notification must never
+                    // overwrite a more specific one that is still pending —
+                    // isPendingQuestion() carries the session-bound test and the
+                    // reasoning for why it is not an age bound.
+                    if (isPendingQuestion(prior, sessionId)) {
+                        pendingQuestion = prior;
+                        return {
+                            status: 'waiting_for_input',
+                            message: prior.message || input.message || 'Claude is asking a question…',
+                            notificationType: 'question',
+                            questions: prior.questions,
+                            options: prior.options,
+                            questionCount: prior.questionCount,
+                            // description is what dashboards and read-prompt renderers show
+                            // as the human-readable prompt line; the permission_prompt write
+                            // this replaces always emitted one, and writeState does not carry
+                            // it, so omitting it rendered a question-blocked agent as
+                            // blocked-with-no-reason — for exactly the prompt class this fix
+                            // targets.
+                            description: prior.description || prior.message || input.message,
+                            sessionId,
+                            transcriptPath
+                        };
                     }
-                } catch (e) {}
-
-                if (pendingQuestion) {
-                    writeState(cwd, {
-                        status: 'waiting_for_input',
-                        message: pendingQuestion.message || input.message || 'Claude is asking a question…',
-                        notificationType: 'question',
-                        questions: pendingQuestion.questions,
-                        options: pendingQuestion.options,
-                        questionCount: pendingQuestion.questionCount,
-                        // description is what dashboards and read-prompt renderers show as
-                        // the human-readable prompt line; the permission_prompt write this
-                        // replaces always emitted one, and writeState does not carry it, so
-                        // omitting it rendered a question-blocked agent as blocked-with-no-
-                        // reason — for exactly the prompt class this fix targets.
-                        description: pendingQuestion.description || pendingQuestion.message || input.message,
-                        sessionId,
-                        transcriptPath
-                    });
-                    debugLog({ event: 'question_kept_over_permission_prompt', cwd, count: pendingQuestion.questions.length });
-                } else {
-                    writeState(cwd, {
+                    // Only preserve tool info from a RECENT permission_request (10s).
+                    const existingState = (prior.status === 'permission_request' && age <= 10000)
+                        ? prior
+                        : {};
+                    return {
                         status: 'waiting_for_input',
                         message: input.message || 'Waiting for your input...',
                         notificationType,
                         sessionId,
                         transcriptPath,
-                        // Preserve tool info from PermissionRequest if we have it
                         toolName: existingState.toolName,
                         toolInput: existingState.toolInput,
                         options: existingState.options,
                         description: existingState.description || input.message
-                    });
+                    };
+                });
+                if (pendingQuestion) {
+                    debugLog({ event: 'question_kept_over_permission_prompt', cwd, count: pendingQuestion.questions.length });
                 }
             } else if (notificationType === 'elicitation_dialog') {
                 // MCP server is requesting user input — special blocking state
@@ -592,29 +736,25 @@ async function main() {
                 // CC 2.1.198: a background agent finished its work. Mirror Stop's
                 // idle branch (preserve any still-running subagent count) so the
                 // agent flips to idle/subagents_running, not a stale blocked state.
-                const currentSubagents = getSubagentCount(cwd);
-                writeState(cwd, {
-                    status: currentSubagents > 0 ? 'subagents_running' : 'idle',
+                writeState(cwd, prior => ({
+                    status: (prior.subagentCount || 0) > 0 ? 'subagents_running' : 'idle',
                     message: null,
-                    subagentCount: currentSubagents,
                     notificationType,
                     sessionId,
                     transcriptPath
-                });
+                }));
             }
             break;
 
         case 'Stop':
             // Claude finished responding — clear the waiting state but preserve subagent count
             {
-                const currentSubagents = getSubagentCount(cwd);
-                writeState(cwd, {
-                    status: currentSubagents > 0 ? 'subagents_running' : 'idle',
+                writeState(cwd, prior => ({
+                    status: (prior.subagentCount || 0) > 0 ? 'subagents_running' : 'idle',
                     message: null,
-                    subagentCount: currentSubagents,
                     sessionId,
                     transcriptPath
-                });
+                }));
             }
             break;
 
@@ -679,43 +819,56 @@ async function main() {
         case 'SubagentStart':
             // Background subagent spawned — increment counter, block restart/autoContinue
             {
-                const count = getSubagentCount(cwd) + 1;
-                writeState(cwd, {
-                    status: 'subagents_running',
-                    message: `${count} subagent${count > 1 ? 's' : ''} running`,
-                    subagentCount: count,
-                    lastSubagentId: input.agent_id,
-                    lastSubagentType: input.agent_type,
-                    sessionId,
-                    transcriptPath
+                const written = writeState(cwd, prior => {
+                    const count = (prior.subagentCount || 0) + 1;
+                    return {
+                        status: 'subagents_running',
+                        message: `${count} subagent${count > 1 ? 's' : ''} running`,
+                        subagentCount: count,
+                        lastSubagentId: input.agent_id,
+                        lastSubagentType: input.agent_type,
+                        sessionId,
+                        transcriptPath
+                    };
                 });
-                debugLog({ event: 'subagent_start', agentId: input.agent_id, type: input.agent_type, count });
+                debugLog({ event: 'subagent_start', agentId: input.agent_id, type: input.agent_type, count: written.subagentCount });
             }
             break;
 
         case 'SubagentStop':
             // Background subagent completed — decrement counter
             {
-                const count = Math.max(0, getSubagentCount(cwd) - 1);
-                writeState(cwd, {
-                    status: count > 0 ? 'subagents_running' : 'active',
-                    message: count > 0 ? `${count} subagent${count > 1 ? 's' : ''} running` : null,
-                    subagentCount: count,
-                    lastSubagentId: input.agent_id,
-                    lastSubagentType: input.agent_type,
-                    sessionId,
-                    transcriptPath
+                const written = writeState(cwd, prior => {
+                    // The clamp stays — a Stop with no matching Start (a hook lost to a
+                    // crash, a session restarted mid-fan-out) must not drive the counter
+                    // negative. What it must NOT do any more is hide a lost update: with
+                    // the read and the write now in one critical section there is no lost
+                    // update left for it to mask.
+                    const count = Math.max(0, (prior.subagentCount || 0) - 1);
+                    return {
+                        status: count > 0 ? 'subagents_running' : 'active',
+                        message: count > 0 ? `${count} subagent${count > 1 ? 's' : ''} running` : null,
+                        subagentCount: count,
+                        lastSubagentId: input.agent_id,
+                        lastSubagentType: input.agent_type,
+                        sessionId,
+                        transcriptPath
+                    };
                 });
-                debugLog({ event: 'subagent_stop', agentId: input.agent_id, type: input.agent_type, count });
+                debugLog({ event: 'subagent_stop', agentId: input.agent_id, type: input.agent_type, count: written.subagentCount });
             }
             break;
 
         case 'PreCompact':
             // Context compaction starting — agent temporarily unavailable
+            // No subagentCount here: omitting it takes writeState's carry-through
+            // path, which reads the prior record inside the lock. Passing
+            // getSubagentCount(cwd) explicitly was a redundant read OUTSIDE it, and
+            // an explicit value overrides carry-through — so a concurrent
+            // Start/Stop landing between the two would have been written away.
             writeState(cwd, {
                 status: 'compacting',
                 message: 'Context compaction in progress…',
-                subagentCount: getSubagentCount(cwd),
                 sessionId,
                 transcriptPath
             });
@@ -726,7 +879,6 @@ async function main() {
             writeState(cwd, {
                 status: 'active',
                 message: null,
-                subagentCount: getSubagentCount(cwd),
                 sessionId,
                 transcriptPath
             });
@@ -788,13 +940,12 @@ async function main() {
             {
                 const ptTool = input.tool_name || input.toolName;
                 if (ptTool === 'AskUserQuestion') {
-                    const currentSubagents = getSubagentCount(cwd);
-                    writeState(cwd, {
-                        status: currentSubagents > 0 ? 'subagents_running' : 'active',
+                    writeState(cwd, prior => ({
+                        status: (prior.subagentCount || 0) > 0 ? 'subagents_running' : 'active',
                         message: null,
                         sessionId,
                         transcriptPath
-                    });
+                    }));
                     debugLog({ event: 'question_answered', cwd });
                 }
             }
