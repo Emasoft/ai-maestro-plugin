@@ -74,7 +74,7 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
    `questions` and downgrading the type. **NO age bound on the new carry-through** — a
    blocked agent stays blocked for HOURS (17h observed), so a 10s window re-loses the
    question in exactly the case that matters (my first attempt had it and a slow test
-   exposed it). `options` normalized to `{key,label}`. 
+   exposed it). `options` normalized to `{key,label}`.
 7. ✅ **Hook #58: durable `lastError {type,message,at}`** carried through like
    `subagentCount`, surviving SessionStart.
 8. ✅ **Hook #60: `writerVersion` stamp on every state record** — the fleet aggregator

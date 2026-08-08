@@ -5,19 +5,25 @@
       "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
       "ruleId": "A2A_AGENT_IMPERSONATION",
       "lineSha256": "896ee5ae516674f2c9a8ec0d6c20989bc7529b6d0576b52218d3f5c7246474a8",
-      "reason": "governance rule text DESCRIBES and FORBIDS this attack (R22.4/R42.1/R42.7 rows of the verbatim v5.2.0 canonical mirror); reviewed 2026-08-06, CPV#194/#195"
+      "reason": "R22.4 of the verbatim canonical mirror: the anti-impersonation rationale row. It DESCRIBES impersonation in order to FORBID it. Line unchanged by the v5.3.3 re-sync; re-verified by reading the row 2026-08-08. CPV#194/#195"
     },
     {
       "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
       "ruleId": "A2A_CROSS_AGENT_INJECT",
-      "lineSha256": "f27b3cbb32232ed92fc73ee957f00e7829dac6f9e68fa7da64551c34bdd37341",
-      "reason": "governance rule text DESCRIBES and FORBIDS this attack (R22.4/R42.1/R42.7 rows of the verbatim v5.2.0 canonical mirror); reviewed 2026-08-06, CPV#194/#195"
+      "lineSha256": "f9e6ef360ab26226b60e1c2a104020985fe8c44a8a0f5ceea73c0446214b99ec",
+      "reason": "R42.1 of the verbatim canonical mirror — the row that PROHIBITS cross-agent injection absolutely. Rehashed for v5.3.3: the row gained 'and R42.8 does not weaken it', so the prior hash f27b3cbb went stale. Re-read in full 2026-08-08 before re-consenting; it is still a prohibition, not a technique. CPV#194/#195"
     },
     {
       "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
       "ruleId": "A2A_CROSS_AGENT_INJECT",
       "lineSha256": "cd5d1f9fd64ce2baa2f98f616de45996c6a9c0cef69c4a95ed27846cf3802fa6",
-      "reason": "governance rule text DESCRIBES and FORBIDS this attack (R22.4/R42.1/R42.7 rows of the verbatim v5.2.0 canonical mirror); reviewed 2026-08-06, CPV#194/#195"
+      "reason": "R42.7 of the verbatim canonical mirror: the daemon fleet-restart exception, which permits a ZERO-CONTENT uniform restart and explicitly forbids a targeted or keystroke-carrying one. Line unchanged by the v5.3.3 re-sync; re-verified by reading the row 2026-08-08. CPV#194/#195"
+    },
+    {
+      "file": "skills/team-governance/references/GOVERNANCE-RULES.md",
+      "ruleId": "A2A_CROSS_AGENT_INJECT",
+      "lineSha256": "dededb59cd3ea55726526a1059d609dd1d7d6b1c2e7e11ca8e607400cbf110ac",
+      "reason": "R42.8 of the verbatim canonical mirror — NEW in v5.3.3, so it had no prior consent. It is the blocked-prompt unblock carve-out, and it is narrower than the pattern that matched it: three verbs (block-state, read-prompt, answer), eight constraints, blocked-only, server-enforced with a 409, and it names inject/slash/queue as NOT permitted. A row that spells out what is forbidden is exactly what this scanner cannot distinguish from a row that does it. Read in full 2026-08-08 before consenting. CPV#194/#195"
     }
   ]
 }

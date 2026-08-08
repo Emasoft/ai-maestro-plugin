@@ -146,7 +146,12 @@ const LOCK_STALE_MS = 10000;
 
 function withStateLock(stateDir, lockName, fn) {
     const lockFile = path.join(stateDir, lockName);
-    const token = `${process.pid}.${Date.now()}.${Math.random()}`;
+    // randomBytes, not Math.random(): this token decides whether we are allowed to
+    // UNLINK the lock, so a predictable value is a way to make one holder release
+    // another's. pid+time alone collides across a pid reuse inside the same
+    // millisecond, which is rare and silent — exactly the pair that produces a bug
+    // nobody can reproduce.
+    const token = `${process.pid}.${Date.now()}.${crypto.randomBytes(8).toString('hex')}`;
     const deadline = Date.now() + LOCK_TIMEOUT_MS;
     const sleeper = new Int32Array(new SharedArrayBuffer(4));
     let held = false;

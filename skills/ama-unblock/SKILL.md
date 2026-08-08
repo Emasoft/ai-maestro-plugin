@@ -1,7 +1,7 @@
 ---
 name: ama-unblock
 user-invocable: false
-description: "MANAGER/CHIEF-OF-STAFF fleet-continuity workflow (governance R42.8): detect an agent session that is stuck — blocked on an AskUserQuestion, a permission prompt, a rate-limit or API-error banner (red text) — diagnose WHY from the terminal-read verdict (block-state) plus the hook record (read-prompt), then resume it by answering its own pending prompt, or escalate to the USER. Blocked-work is the ONLY case where a MANAGER/COS may act on another agent's session; every other cross-agent influence goes via AMP messaging. Trigger with 'agent is stuck', 'session blocked', 'answer its pending prompt', 'worker not responding', 'resume the fleet', 'why is the agent waiting'. Self-unblocking (your own prompt) is ama-session, not this. Loaded by ai-maestro-plugin"
+description: "MANAGER/CHIEF-OF-STAFF workflow (governance R42.8) for a stuck agent session — blocked on an AskUserQuestion, a permission prompt, or a rate-limit/API-error banner. Diagnose with block-state plus read-prompt, then resume it by answering its own pending prompt, or escalate to the USER. This is the ONLY case where a MANAGER/COS may act on another agent's session. Trigger with 'agent is stuck', 'session blocked', 'answer its pending prompt', 'worker not responding', 'why is the agent waiting'. Self-unblocking is ama-session. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-session.sh:*), Bash(amp-send.sh:*), Bash(jq:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -46,14 +46,10 @@ published in `docs/GOVERNANCE-RULES.md` **v5.3.3** on `Emasoft/ai-maestro@govern
 > fixed writer a null is REAL. Even once the fix ships, `block-state` stays in
 > the list: it is the pane-authoritative read.
 
-**Provenance note, kept deliberately.** On 2026-08-07 this file said R42.8 was
-*not ratified*. That was measured accurately — R42.8 was absent from three
-published copies at the time — but concluded wrongly: the USER grant of
-2026-08-05 was real and only the **publication** lagged, landing 2026-08-08.
-*"I cannot verify this"* is not *"this is not true"*, and asserting the stronger
-claim caused four role-plugins to retract correct statements. **For an absence,
-"true but not yet published" is always a live answer** — ask it before
-concluding.
+**This skill has been wrong about that list three times in two days**, always by
+reading the row without first resolving the branch TIP. The provenance is in
+[references/r42-8-authority.md](references/r42-8-authority.md) — read it before
+you "correct" anything here.
 
 > **The single carve-out is R42.8**: a MANAGER or CHIEF-OF-STAFF may UNBLOCK
 > an agent stalled on a permission/question prompt. Unblocking answers a
@@ -75,108 +71,38 @@ around it. The exception verbs are **`block-state`, `read-prompt` and
 command, so they express the CALLER's decision (R42.1 exactly) and stay
 SELF-ONLY for every title — the server 403s them cross-agent.
 
-## The authority gate — R42.8's eight constraints, READ THIS FIRST
+## The authority gate — READ [the eight constraints](references/r42-8-authority.md) FIRST
 
-1. **(a) Blocked-only.** The sole trigger is an agent stalled on a prompt. A
-   working, idle-but-unblocked, or merely SLOW agent is untouchable — *"it
-   would be faster if I typed it"* is an R42.1 violation, not an unblock.
-2. **(b) Unblock, never drive.** Answer ONLY the pending prompt. Nothing
-   appended, no new work, no redirection. Work is still assigned by AMP alone.
-3. **(c) Title-scoped and exhaustive.** MANAGER: any agent on the host
-   **except an ASSISTANT**. CHIEF-OF-STAFF: **its own team only**, same
-   exclusion. Every other title: none.
-4. **(d) Never an ASSISTANT.** An ASSISTANT's session is the surface a human
-   talks *through* — an injected answer is indistinguishable from something
-   its human typed, laundering an agent's instruction into apparent human
-   intent. (A USER has no terminal; there is no USER-target case.)
-5. **(e) Identity prompts ESCALATE.** A prompt asking the agent to vouch for
-   the CALLER's own authority goes to the human, never answered by the
-   caller — self-certification through a second channel proves nothing, and
-   a spoofer performs the identical act. No agent is the authority on
-   identity; the ai-maestro SERVER is the sole notary.
-6. **(f) Read before answer.** Never answer a prompt you have not read
-   (`read-prompt` + the `block-state` evidence). An unblock interrupts
-   nothing — the agent is already stopped, waiting.
-7. **(g) Server-enforced, failing closed.** AID_AUTH + governance title;
-   `answer` returns **409 unless the target is actually blocked**. The
-   refusal IS the check — a 403/409 is information, never an obstacle to
-   engineer around.
-8. **(h) Audited.** Every accepted call lands in the agent ops ledger.
+The four that decide whether you may act at all, in one line each; the full
+eight, with their reasoning, are in the reference:
+
+- **(a) Blocked-only** — a working, idle, or merely SLOW agent is untouchable.
+  *"It would be faster if I typed it"* is an R42.1 violation, not an unblock.
+- **(c) Title-scoped** — MANAGER: any agent on the host **except an ASSISTANT**.
+  COS: **its own team only**, same exclusion. Every other title: none.
+- **(e) Identity prompts ESCALATE** — never self-certify through a second
+  channel; a spoofer performs the identical act.
+- **(g) Server-enforced, failing closed** — `answer` 409s unless the target is
+  really blocked. **The refusal IS the check**, never an obstacle to route around.
 
 ## The two read verbs are NOT alternatives
 
-- **`read-prompt <agent>`** returns what the plugin **HOOK recorded** — so what
-  it can tell you depends on the target's installed plugin version, which is why
-  every state record now carries `writerVersion`. On versions **before** the
-  `#59` fix it carried permission prompts but carried AskUserQuestion **never**
-  (measured 0/419 question texts across live chat-state files): for the one
-  prompt shape that blocks an agent forever it answered `null` and the agent
-  looked fine. **On the fixed version it carries the question text, its
-  normalized `{key,label}` choices, and `questionCount`.** Check
-  `writerVersion` before reading a `null` as either answer.
-- **`block-state <agent>`** reads the **TERMINAL** — the only source that
-  reflects the screen *now*. Returns the structured verdict:
+- **`read-prompt <agent>`** returns what the plugin **HOOK recorded** — so it is
+  only as good as the target's installed plugin version. Before the `#59` fix it
+  carried AskUserQuestion **never** (measured 0/419), answering `null` for the one
+  prompt shape that blocks an agent forever. **Check `writerVersion` before
+  reading a `null` as either answer.**
+- **`block-state <agent>`** reads the **TERMINAL** — the only source reflecting
+  the screen *now*, and the **authority**. `reason ∈ ask_user | permission |
+  rate_limited | api_error | idle | active | unknown`.
 
-  ```json
-  { "blocked": true, "reason": "ask_user",
-    "field":   { "visible": true, "empty": true, "text": "" },
-    "choices": [ { "key": "1", "label": "…" } ],
-    "excerpt": [ "…the question, verbatim…" ],
-    "hookDisagreed": false, "sessionName": "…" }
-  ```
-
-  `reason ∈ ask_user | permission | rate_limited | api_error | idle |
-  active | unknown`. `--match "<regex>"` searches the pane **server-side**
-  (only matching lines cross the boundary; requires the agent to be blocked).
-
-Use both: the hook record is the fast hint, the pane verdict is the
-**authority**, and `hookDisagreed: true` means exactly that — resolve toward
-the pane. (Pre-`#59` versions mislabelled a live AskUserQuestion as
-`permission_prompt`; fixed versions classify it `question`. Either way the pane
-wins — that a record CAN be wrong in a way only the screen contradicts is the
-reason the disagreement signal exists.)
-
-Three measured facts every consumer must know (`ai-maestro-plugin#58/#59`):
-
-- **`status` cannot discriminate blocked from idle** — a blocked agent and a
-  healthy idle one both read `waiting_for_input`. The discriminator is
-  **`notificationType`**, not `status`. The BLOCKED values are
-  **`question`** (an AskUserQuestion — emitted only by versions carrying the
-  `#59` fix), **`permission_prompt`**, and **`elicitation_dialog`** (an MCP
-  server's elicitation). The not-blocked value is `idle_prompt`. Match that
-  exact spelling: `elicitation_dialog` is what the hook writes, and a filter
-  looking for `elicitation_prompt` matches nothing, so an agent stalled on an
-  MCP dialog is silently classified healthy. Treat an UNKNOWN
-  `notificationType` as possibly-blocked and fall through to `block-state`,
-  never as not-blocked.
-- **Chat-state goes stale on exactly the agents that matter** — the hook
-  writes on events and a blocked agent generates none (~17 h observed). So
-  `updatedAt` is NOT a liveness signal, and "no recent event" is
-  indistinguishable from "healthy" from the file alone.
-- **`field`** (`visible`/`empty`/`text`) is how "the input field is clear"
-  is checked on the ai-maestro channel — never by eyeballing a pane dump.
-
-## ⚠ HOST CAVEAT — the terminal read is tmux-backed, so some agents are unreachable
-
-**The pane path assumes the target runs under tmux.** The CLI's own help describes
-`state --pane` as "live **tmux** pane status", and `block-state` / `--match` read that same
-pane server-side. (✓ verified from the CLI help; the failure mode for a non-tmux host is
-INFERRED from that, not yet measured against a live iTerm-hosted agent — measure before
-asserting it to anyone.)
-
-Why it matters: an agent running in a bare **iTerm** pane may be unreadable by
-`block-state`, and the janitor's global daemon separately cannot rescue iTerm panes at all
-without a macOS Automation (Apple Events) grant — which on some hosts will not persist.
-**Both rescue paths can therefore be unavailable at once, for the same agent, silently.**
-That is the worst shape this capability can take: a MANAGER runs `block-state`, learns
-nothing, and a stalled agent looks fine — the exact "blocked forever" the exception exists
-to prevent.
-
-**Operational consequence: run fleet agents under tmux.** The guardian rescues tmux panes
-with no Automation grant at all. If you find an agent you cannot read, check how it is
-hosted BEFORE concluding it is healthy — and report `unknown_blocked` with that fact rather
-than silence. Never fall back to driving an iTerm pane by another route; the prohibition
-below is about the ROUTE, and it does not relax because the sanctioned one is unavailable.
+Use both. `hookDisagreed: true` means resolve toward the pane. The verdict's
+full JSON shape, the `--match` server-side pane search, the three measured facts
+about `status` / `updatedAt` / `field`, and the **tmux host caveat** (an iTerm-
+hosted agent may be unreadable by `block-state` while the janitor cannot rescue
+it either — both paths down at once, silently) are in
+[references/reading-blocked-state.md](references/reading-blocked-state.md).
+**Read that caveat before concluding any unreadable agent is healthy.**
 
 ## The reason → action decision table
 
@@ -231,19 +157,12 @@ needs `AIMAESTRO_SUDO_TOKEN` (`block-state`, `answer`, `queue` are strict).
 aimaestro-session.sh help 2>&1 | grep -q "block-state" && echo full || echo interim
 ```
 
-- **`full`** — the R42.8 surface is present; the whole workflow applies.
-- **`interim`** — the server predates the unblock capability. Operative
-  subset: `read-prompt` where permitted, plus **escalation to the USER with
-  whatever evidence you can gather**. And the load-bearing rule:
-
-  > **Absence of the gated verbs means the R42.8 exception is NOT in force
-  > on this install. Do NOT fall back to raw `tmux send-keys`, `inject`, or
-  > any other direct pane access against another agent.** Not being able to
-  > unblock is the correct behavior until the gate exists — the gate IS the
-  > safety property (blocked-precondition, title matrix, 409, ledger), not
-  > an inconvenience layered on top of it. All agents share one OS uid, so
-  > tmux WOULD succeed: R42 is tamper-EVIDENT, not tamper-proof, and the
-  > ledger-visible refusal to bypass it is what the rule buys.
+`interim` means this server predates the capability, so **the R42.8 exception is
+NOT in force here**: escalate to the USER with what evidence you can gather, and
+do **not** fall back to raw `tmux send-keys` or any other direct pane access.
+Being unable to unblock is the correct behavior until the gate exists — the gate
+IS the safety property. Why, and what `interim` still permits:
+[references/r42-8-authority.md](references/r42-8-authority.md).
 
 ## Anti-patterns (each has caused, or would cause, real harm)
 
@@ -261,14 +180,11 @@ aimaestro-session.sh help 2>&1 | grep -q "block-state" && echo full || echo inte
 
 ## Error handling
 
-| Symptom | Meaning |
-|---|---|
-| `block-state`: unknown command | interim mode — this server predates the capability; escalate-only |
-| 403 on `block-state` / `read-prompt` / `answer` | title matrix failed — you are not MANAGER/COS, the target is out of your scope, or it is an ASSISTANT; the refusal is the check |
-| 409 on `answer` / `--match` | the target is not actually blocked (constraint (a) / Gate 0b) — re-read `block-state`; if it says blocked and the server says 409, report the disagreement upstream, do not force |
-| `read-prompt` returns null but the pane shows a menu | check `writerVersion`: on pre-`#59` versions this is the known capture gap and the `block-state` excerpt/choices are the readable copy. On a fixed version a null is REAL — do not dismiss it as the old gap |
-| `read-prompt` shows choices but `questionCount` > 1 | `options`/`message` describe the FIRST question only; answering by key sends that keystroke to whichever question the terminal has focused. Read the full `questions` array, or escalate |
-| target resumed but did the wrong thing | your NOTIFY message is how it finds out and corrects — send it, then follow up via AMP |
+A **403** means the title matrix refused you; a **409** means the target is not
+actually blocked. Both are the gate working — re-read `block-state`, never force.
+The full symptom table (including the `writerVersion` null and the
+`questionCount > 1` multi-question trap) is in
+[references/reading-blocked-state.md](references/reading-blocked-state.md).
 
 ## Scope
 
@@ -282,6 +198,10 @@ touches a session that is merely SLOW — slow is not blocked.
 
 ## Resources
 
+- [references/r42-8-authority.md](references/r42-8-authority.md) — the eight constraints in full, the provenance of three wrong verb lists, and what an `interim` install still permits.
+  > Contents · The eight constraints · Provenance — why this file records a mistake · Feature detection — older installs
+- [references/reading-blocked-state.md](references/reading-blocked-state.md) — the `block-state` JSON shape, `--match`, the three measured facts, the tmux host caveat, and the error table.
+  > Contents · The two read verbs are NOT alternatives · Three measured facts every consumer must know · HOST CAVEAT — the terminal read is tmux-backed · Error handling
 - `Emasoft/ai-maestro@governance-rules` — **the authoritative rule text**:
   `docs/GOVERNANCE-RULES.md` (v5.3.3, carries R42.8), `rules/aimaestro/` (5
   overlay rules), `design/specs/role-plugins-spec.md`. These live on the
