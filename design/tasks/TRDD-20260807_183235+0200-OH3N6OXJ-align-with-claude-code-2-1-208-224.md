@@ -333,7 +333,61 @@ only the current state, but the amendment's author may want to know which.
   only hit in the whole repo is this card). Detection anywhere, one line:
   `grep -c '^context: fork$' skills/*/SKILL.md`.
 
-### 🔎 ROOT CAUSE — the DEPLOYED CLI asserts R42.8, and CORE mistook enforcement for ratification
+### ✅ REVERSED 2026-08-08 — R42.8 **IS** RATIFIED. THE THREE SECTIONS BELOW ARE WRONG.
+
+Read this before any of the R42.8 material that follows. ✓ verified first-hand:
+
+```
+gh api repos/Emasoft/ai-maestro/branches/governance-rules
+  -> bacf13ddf332eb55756cb9536f7b4768783fbd60   2026-08-08T05:51:08Z
+docs/GOVERNANCE-RULES.md @governance-rules -> v5.3.2, 1952 lines, 7x "R42.8",
+  line 1542 a full rule row: "Third exception — a MANAGER or CHIEF-OF-STAFF may
+  UNBLOCK an agent stalled on a permission / AskUserQuestion prompt … read-prompt
+  and answer ONLY …"   Source: Explicit (USER — 2026-08-05, ai-maestro#125,
+  TRDD-AODXPI5E)
+```
+
+| event | when |
+|---|---|
+| USER grant | **2026-08-05** |
+| CORE's `#128` claim "already ratified and enforced" | 2026-08-06 — **TRUE when written** |
+| my measurement (absent from 3 published copies) | **2026-08-07** — accurate, reproduced by MAINTAINER |
+| publication to `governance-rules` | **2026-08-08 ~05:51Z** |
+
+**I measured inside the window. The measurement was right; the CONCLUSION was wrong.** I had
+grounds for *"not verifiable from any published artifact"* and asserted *"not ratified."*
+
+**Everything the three sections below build on that inverts:**
+- *"CORE is the origin of a fleet-wide FALSE claim"* → CORE's `#128` claim was **true**. What CORE
+  did wrong was assert as verified something it could not then verify — a provenance failure, not
+  a factual one.
+- *"the capability exists; the authority does not"* → **backwards.** The authority existed from
+  2026-08-05; the **publication** lagged. The CLI's `R42.8` label was accurate all along, and every
+  party who trusted the deployed artifact was right.
+- *"relabel the CLI as implements-pending"* → **not needed.** The hub confirms the citation is
+  accurate against the published SSOT.
+
+**Cost of my error:** four role-plugins retracted **correct** statements — MANAGER demoted a true
+citation in a shipped skill (reversed, `a050458`), AUTONOMOUS retitled `ai-maestro#129` to
+`[RETRACTED — premise false]` and rewrote a guard test to assert the opposite, MAINTAINER reverted
+a true test docstring (`e2394a7`), ARCHITECT shipped a doc saying *"never cite R42.8 as an existing
+rule."* **Each verified my measurement independently and correctly, and it did not help** — the
+defect was in the inference, and re-running a measurement cannot catch that.
+
+**Two corrections to the rule's content, from the MANAGER, verified:** the ratified verbs are
+**`read-prompt` and `answer` ONLY** (`inject`/`slash`/`queue` excluded, server-403'd cross-agent);
+and **`block-state`'s absence from the row is a doc-vs-implementation gap, NOT a prohibition** —
+the deployed CLI permits it cross-agent and it is load-bearing, because `read-prompt` reads CORE's
+chat-state record and `AskUserQuestion` appeared in **0 of 419** of them. **That 0/419 is CORE's own
+`#59` defect, fixed in this tree and UNPUSHED** — a concrete cost of holding 38 commits, and the
+strongest argument on this card for pushing.
+
+**The lesson, which supersedes the four written on 2026-08-07:** all four harden the MEASUREMENT
+step, and a bad inference from a correct measurement passes every one of them. Ask *"what else
+would produce this same empty result?"* — **for an absence, "true but not yet published" is always
+a live answer.** Publish the uncertainty, not the conclusion.
+
+### 🔎 SUPERSEDED — root-cause account written while I believed R42.8 was unratified
 
 ✓ VERIFIED: `aimaestro-session.sh help` (installed at `~/.local/bin/`) line 28 reads
 **`Cross-agent limits (R42 / R42.8) — a title alone is NOT enough:`**. A shipped binary on this
