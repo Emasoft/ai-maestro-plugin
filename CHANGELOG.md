@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.5] — 2026-08-08
+
+### Documentation
+
+- Say what the conforms-to-spec stamp does NOT assert
 ## [3.1.4] — 2026-08-08
 
 ### Bug Fixes
