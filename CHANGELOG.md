@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.12] — 2026-08-08
+
+### Documentation
+
+- The native transport is unpoliced INBOUND too (ai-maestro#143)
 ## [3.1.11] — 2026-08-08
 
 ### Documentation
