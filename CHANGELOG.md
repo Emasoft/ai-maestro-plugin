@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.4] — 2026-08-08
+
+### Bug Fixes
+
+- Stop the changelog destroying its own history
 ## [3.1.3] — 2026-08-08
 
 ### Miscellaneous Tasks
