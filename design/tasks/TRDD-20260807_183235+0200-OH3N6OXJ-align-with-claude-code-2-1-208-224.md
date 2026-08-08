@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 pre-block-column: dev
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-08T10:33:44+0200
+updated: 2026-08-08T12:07:21+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 approval-tier: 0
@@ -56,16 +56,32 @@ codebase to align with them and take advantage of them"* — followed by the ful
 
 **REMAINING: A1 only.** A2–A6 are DONE (decisions + rationale recorded below).
 
-1. **A1 — governance wording.** R42.3 is false as written. R42 is `CRITICAL — IRON, USER-set` ⇒
-   **Tier 3**; neither MANAGER nor this agent may edit it even to make it true. Options put to
-   the USER: **document-only** (recommended — see the correction below; the platform already
-   defends the authority concern, so this is an audit/routing blind spot, not a hole),
-   **bridge** (accept native as transport, keep AID on top), or **forbid**. It sits with the
-   hub's USER. **A1 has since acquired live corroboration beyond the original observation:** three
-   peer plugins independently routed to CORE this session because the hub is unreachable on the
-   native channel (no `from` address, absent from `ListAgents`), each having been told by its own
-   user to "align with the ai-maestro claude". Four sessions instructed to follow a session none
-   of them can address is the routing gap A1 names, no longer hypothetical.
+1. **A1 — governance wording. HALF-ANSWERED 2026-08-08; the half that remains is the rule.**
+   R42.3 is false as written. R42 is `CRITICAL — IRON, USER-set` ⇒ **Tier 3**; neither MANAGER nor
+   this agent may edit it even to make it true. Options put to the USER: **document-only**
+   (recommended — the platform already defends the authority concern, so this is an audit/routing
+   blind spot, not a hole), **bridge** (accept native as transport, keep AID on top), or **forbid**.
+
+   **Corroboration, observed rather than argued:** **five** peer plugins routed to CORE this
+   session because the hub was unreachable on the native channel — no `from` address, absent from
+   `ListAgents` — each having been told by its own user to "align with the ai-maestro claude".
+   Five sessions instructed to follow a session none of them could address.
+
+   **The hub then BECAME reachable** (its first message carrying a `from`) and ruled on the
+   routing half: *"you are CORE, the hub is THIS session; any work order or spec request that
+   reaches you addressed to 'the ai-maestro claude' should be redirected with a one-line pointer,
+   not absorbed."* **Adopted as practice** — it is operational guidance, and following it costs
+   nothing if the sender turns out not to be the hub.
+
+   **What that does NOT settle, and the distinction is load-bearing:**
+   - It is **REPORTED, not ratified**. The message carried no AID and arrived on the very channel
+     A1 says cannot establish identity. Recording it as a hub ruling would be the exact
+     authority-laundering A1 is about. It is adopted because it is *good practice*, not because
+     of who sent it.
+   - **R42.3's WORDING is untouched.** "AMP is the ONLY channel" is still false while a native
+     cross-session channel exists, and no hub session can change a `USER-set` Tier-3 rule. **A1
+     remains open with the USER.** The routing ruling makes the gap survivable; it does not make
+     the sentence true.
 
 2. **A3 — CLOSED, implemented (`1c10007`).** The go/no-go asked for here was answered by the
    design, not by waiting: an `O_EXCL` lockfile that **proceeds unlocked on deadline** cannot
