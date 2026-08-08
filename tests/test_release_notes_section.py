@@ -19,8 +19,13 @@ substituted reader would test something else.
 """
 from __future__ import annotations
 
+import inspect
+import shutil
+import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import publish  # noqa: E402
@@ -132,3 +137,64 @@ def test_the_real_changelog_yields_the_current_version() -> None:
     got = publish._changelog_section(ROOT / "CHANGELOG.md", version)
     assert got is not None, f"CHANGELOG.md has no `## [{version}]` heading"
     assert got.startswith(f"## [{version}]")
+
+
+def _seeded_repo(tmp_path: Path) -> Path:
+    """A real git repo with one released section already in CHANGELOG.md."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git = ["git", "-C", str(repo)]
+    subprocess.run([*git[:1], "init", "-q", str(repo)], check=True)
+    subprocess.run([*git, "config", "user.email", "t@example.com"], check=True)
+    subprocess.run([*git, "config", "user.name", "T"], check=True)
+    shutil.copy(ROOT / "cliff.toml", repo / "cliff.toml")
+    (repo / "a.txt").write_text("one\n")
+    subprocess.run([*git, "add", "a.txt", "cliff.toml"], check=True)
+    subprocess.run([*git, "commit", "-qm", "feat: the older thing"], check=True)
+    subprocess.run([*git, "tag", "v0.1.0"], check=True)
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n"
+        "## [0.1.0] — 2026-01-01\n\n### Features\n\n- the older thing\n"
+    )
+    (repo / "a.txt").write_text("two\n")
+    subprocess.run([*git, "add", "a.txt"], check=True)
+    subprocess.run([*git, "commit", "-qm", "fix: the newer thing"], check=True)
+    return repo
+
+
+@pytest.mark.skipif(shutil.which("git-cliff") is None, reason="git-cliff not installed")
+def test_step_9_preserves_the_previous_release_section(tmp_path: Path) -> None:
+    """Releasing v0.2.0 into a repo that already shipped v0.1.0 keeps BOTH sections.
+
+    Runs the shipped `stage_changelog` against a real git repo and the real
+    git-cliff — no mocks, because the defect lived entirely in which flag was
+    handed to that binary, and a substituted runner would happily "pass" with
+    the destructive flag still in the source.
+
+    Falsification (measured): swap `--prepend CHANGELOG.md` for `-o CHANGELOG.md`
+    in step 9 and the `0.1.0` assertion below fails — the older section is gone,
+    which is what every release in this repo's history silently did.
+    """
+    repo = _seeded_repo(tmp_path)
+    publish.stage_changelog(repo, "0.2.0", dry_run=False)
+    text = (repo / "CHANGELOG.md").read_text()
+    assert "## [0.2.0]" in text, "the new section was not written"
+    assert "## [0.1.0]" in text, "PREVIOUS section destroyed — step 9 is overwriting again"
+    assert text.index("## [0.2.0]") < text.index("## [0.1.0]"), "newest section must come first"
+
+
+def test_step_9_never_redirects_over_an_existing_changelog() -> None:
+    """The `-o CHANGELOG.md` form may appear ONLY on the file-does-not-exist path.
+
+    A source-level guard, deliberately, and it is not redundant with the
+    behavioural test above: the fix for this defect lives in CPV's canonical
+    emitter, and this repo's publish.py is DRIFTED from that scaffold
+    (RC-PIPELINE-DRIFT-001), so a future re-sync can silently reintroduce the
+    upstream shape. Nothing outside this repo can catch that.
+    """
+    src = inspect.getsource(publish.stage_changelog)
+    assert '"--prepend", "CHANGELOG.md"' in src, "step 9 no longer prepends"
+    assert src.count('"-o", "CHANGELOG.md"') == 1, "a second redirect appeared in step 9"
+    guard = src.index("if changelog.is_file():")
+    assert guard < src.index('"--prepend"'), "the prepend must sit under the is_file() guard"
+    assert guard < src.index('"-o"'), "the redirect must sit in the else branch"

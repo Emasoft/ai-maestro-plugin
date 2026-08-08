@@ -1845,6 +1845,55 @@ def _refuse_bare_mentions(notes: str, tag: str) -> None:
     sys.exit(1)
 
 
+def _stage_tracked_modifications(root: Path) -> None:
+    """Stage the MODIFIED TRACKED files by name. Never `git add -A`.
+
+    `git add -A` also stages UNTRACKED files. Stage 1 guarantees a clean tree,
+    but stages 7-9 (version bump, README badge, changelog, uv lock) run in
+    between — so any scratch note, tool temp output or agent report that appears
+    in that window is swept into a PUBLIC, IRREVERSIBLE release commit with
+    nobody reviewing it. The window is small and it is not zero; a `.tmp` file
+    from a concurrent process only has to exist for a few seconds.
+
+    FAILS CLOSED. If the porcelain cannot be read, or it reports a path this
+    function cannot classify, it aborts rather than falling back — because the
+    tempting fallback is exactly `git add -A`, firing precisely when nobody can
+    see what is about to be staged. Prints the list it stages so the commit's
+    contents are visible before it is made, not after it is pushed.
+
+    (Found in the shared publish scaffold by the INTEGRATOR plugin, which hit it
+    from the other direction: a stray file in the repo root dirties the tree and
+    aborts the NEXT publish at stage 1.)
+    """
+    r = run(["git", "status", "--porcelain=v1", "-uall"], cwd=root, check=False, capture=True)
+    if r.returncode != 0:
+        cprint(f"  {RED}Cannot read git status — refusing to stage.{NC}")
+        sys.exit(1)
+
+    tracked: list[str] = []
+    untracked: list[str] = []
+    for line in r.stdout.splitlines():
+        if not line.strip():
+            continue
+        code, _, path = line[:2], line[2:3], line[3:]
+        # A rename prints "old -> new"; stage the destination.
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        path = path.strip('"')
+        if code == "??":
+            untracked.append(path)
+        else:
+            tracked.append(path)
+
+    if untracked:
+        cprint(f"  {YELLOW}Not staging {len(untracked)} untracked path(s): {', '.join(untracked[:5])}{NC}")
+    if not tracked:
+        cprint(f"  {RED}Nothing tracked to stage, but a commit was expected — refusing.{NC}")
+        sys.exit(1)
+    cprint(f"  Staging {len(tracked)} tracked file(s): {', '.join(tracked)}")
+    run(["git", "add", "--", *tracked], cwd=root)
+
+
 def _changelog_section(changelog: Path, version: str) -> str | None:
     """The `## [<version>]` section of CHANGELOG.md, or None if not found.
 
@@ -1991,7 +2040,7 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
             f"skipping commit (interrupted-publish recovery).{NC}"
         )
     else:
-        run(["git", "add", "-A"], cwd=root)
+        _stage_tracked_modifications(root)
         run(["git", "commit", "-m", expected_subject], cwd=root)
 
     if tag_exists:
