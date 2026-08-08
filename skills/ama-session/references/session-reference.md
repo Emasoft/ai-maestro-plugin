@@ -42,11 +42,12 @@ instruction.
 > *is* the recipient's own action and bypasses its judgment entirely.
 >
 > **R42.8 is RATIFIED** — `Explicit (USER — 2026-08-05, ai-maestro#125,
-> TRDD-AODXPI5E)`, published in `docs/GOVERNANCE-RULES.md` v5.3.2 on
-> `Emasoft/ai-maestro@governance-rules`. The ratified verbs are **`read-prompt`
-> and `answer` ONLY**; `inject`/`slash`/`queue` stay SELF-ONLY for every title.
-> `block-state` is absent from the row but permitted by the deployed CLI — a
-> known doc-vs-implementation gap, not a prohibition (see `ama-unblock`).
+> TRDD-AODXPI5E)`, published in `docs/GOVERNANCE-RULES.md` **v5.3.3** on
+> `Emasoft/ai-maestro@governance-rules`. The ratified verbs are **`block-state`,
+> `read-prompt` and `answer` ONLY**; `inject`/`slash`/`queue` stay SELF-ONLY for
+> every title. The dividing line is **caller decision, not read-vs-write** — the
+> two reads carry none. 5.3.2 omitted `block-state` and 5.3.3 corrected it; do
+> not "restore" the two-verb list (see `ama-unblock`).
 >
 > *(On 2026-08-07 this file said R42.8 was a pending proposal. The measurement
 > was right — it was absent from every published copy then — but the conclusion

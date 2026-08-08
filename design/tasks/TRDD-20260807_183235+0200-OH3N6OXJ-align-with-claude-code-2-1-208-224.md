@@ -367,6 +367,11 @@ docs/GOVERNANCE-RULES.md @governance-rules -> v5.3.2, 1952 lines, 7x "R42.8",
   UNBLOCK an agent stalled on a permission / AskUserQuestion prompt … read-prompt
   and answer ONLY …"   Source: Explicit (USER — 2026-08-05, ai-maestro#125,
   TRDD-AODXPI5E)
+
+then, SIX HOURS LATER, the same file moved again:
+gh api .../branches/governance-rules -> e46764f6  2026-08-08T06:03:37Z
+docs/GOVERNANCE-RULES.md -> v5.3.3; "block-state" 0 -> 2 occurrences; the row now
+  reads "block-state, read-prompt and answer ONLY", citing the 0/419 measurement
 ```
 
 | event | when |
@@ -396,13 +401,29 @@ a true test docstring (`e2394a7`), ARCHITECT shipped a doc saying *"never cite R
 rule."* **Each verified my measurement independently and correctly, and it did not help** — the
 defect was in the inference, and re-running a measurement cannot catch that.
 
-**Two corrections to the rule's content, from the MANAGER, verified:** the ratified verbs are
-**`read-prompt` and `answer` ONLY** (`inject`/`slash`/`queue` excluded, server-403'd cross-agent);
-and **`block-state`'s absence from the row is a doc-vs-implementation gap, NOT a prohibition** —
-the deployed CLI permits it cross-agent and it is load-bearing, because `read-prompt` reads CORE's
-chat-state record and `AskUserQuestion` appeared in **0 of 419** of them. **That 0/419 is CORE's own
-`#59` defect, fixed in this tree and UNPUSHED** — a concrete cost of holding 38 commits, and the
-strongest argument on this card for pushing.
+**The verb list, settled at v5.3.3 — `block-state`, `read-prompt`, `answer`, and no others.**
+`inject`/`slash`/`queue` stay excluded and are server-403'd cross-agent. The dividing line is
+**caller decision, not read-vs-write**: the three exception verbs read a prompt the target itself
+raised and supply the missing input, and none of them authors an instruction.
+
+`block-state` reached the row on the second hop. I read v5.3.2 (which omitted it), inferred a
+doc-vs-implementation gap, and reported that; the hub then verified `lib/sudo-guard.ts:449` routes
+`GET /api/agents/[id]/block-state` through the **same `unblock-prompt` action** as the other two —
+the server had always granted it — and shipped v5.3.3 six hours later. **The DOC was the stale
+side, not the CLI.** That is the second time in two days I measured one commit too early; the first
+produced the ratification error above.
+
+`block-state` is load-bearing, not decorative: `read-prompt` reads CORE's chat-state record, and
+`AskUserQuestion` appeared in **0 of 419** of them, so the terminal read is the only prompt-shape
+evidence a MANAGER actually gets. **That 0/419 is CORE's own `#59` defect, fixed in this tree and
+UNPUSHED** — a concrete cost of holding 38 commits, and the strongest argument on this card for
+pushing.
+
+**Downstream, this narrowing has already been over-applied.** AUTONOMOUS's `8127880` pins a
+two-verb list in a guard test asserting no re-widening — which now permanently locks out
+`block-state`; ARCHITECT shipped the same two-verb reading in v2.12.1. Both were told. **A guard
+written against a doc revision outlives the revision** — pin the verbs to the SSOT row, not to a
+snapshot of it.
 
 **The lesson, which supersedes the four written on 2026-08-07:** all four harden the MEASUREMENT
 step, and a bad inference from a correct measurement passes every one of them. Ask *"what else

@@ -18,29 +18,33 @@ blocked agent cannot read its AMP inbox — messaging reaches an agent only at
 its next turn, and a blocked agent has no next turn. This is the one hole in
 the messaging-only model, and governance **R42.8** is the sanctioned patch —
 **ratified**, `Explicit (USER — 2026-08-05, ai-maestro#125, TRDD-AODXPI5E)`,
-published in `docs/GOVERNANCE-RULES.md` v5.3.2 on `Emasoft/ai-maestro@governance-rules`.
+published in `docs/GOVERNANCE-RULES.md` **v5.3.3** on `Emasoft/ai-maestro@governance-rules`.
 
-> ## ⚠ THE RATIFIED VERB LIST IS NARROWER THAN THE CLI'S — read both
+> ## THE EXCEPTION VERBS — exactly three, and the list is exhaustive
 >
-> The ratified row names **`read-prompt` and `answer` ONLY**. `inject`, `slash`
-> and `queue` are **explicitly not** exception verbs — they deliver an arbitrary
-> command, so they express the CALLER's decision (R42.1) and stay SELF-ONLY for
-> every title; the server 403s them cross-agent.
+> **`block-state`, `read-prompt` and `answer` ONLY** (v5.3.3, verified at tip
+> `e46764f6`). `inject`, `slash` and `queue` are **explicitly not** exception
+> verbs — they deliver an arbitrary command, so they express the CALLER's
+> decision (R42.1) and stay SELF-ONLY for every title; the server 403s them
+> cross-agent.
 >
-> **`block-state` is not named in the ratified text, and that is a known
-> doc-vs-implementation gap — it is NOT a prohibition.** The deployed
-> `aimaestro-session.sh help` permits it cross-agent (MANAGER: any agent;
-> CHIEF-OF-STAFF: its own team), and it is load-bearing: `read-prompt` reads the
-> hook's chat-state record, and a MANAGER session measured `AskUserQuestion`
-> present in **0 of 419** such records — so without the terminal read a MANAGER
-> is blind to the one prompt shape that blocks an agent indefinitely. Follow the
-> CLI here, and say out loud that you are doing so. Reported to the hub.
+> **The dividing line is CALLER DECISION, not read-vs-write.** `block-state` and
+> `read-prompt` are both READS carrying no decision of the caller's, which is why
+> the inject/slash/queue exclusion never touched them.
 >
-> **Why that 0/419 exists, and it is CORE's to fix:** those records were written
-> by pre-`#59` writers that never captured the question text. The capture fix is
-> in CORE's tree but **not yet published**, so a consumer cannot rely on it.
-> **Check `writerVersion` before reading a null** — on a pre-fix writer a null
-> `read-prompt` is that known gap; on a fixed writer a null is real.
+> **⚠ Do NOT "restore" a narrower list.** Doc 5.3.2 omitted `block-state`; 5.3.3
+> corrected it, because the server had always granted it — `lib/sudo-guard.ts`
+> routes `block-state` through the **same `unblock-prompt` action** as the other
+> two. A guard pinning two verbs locks out the pane-authoritative detection read.
+>
+> **Why `block-state` is load-bearing:** `read-prompt` reads the hook's
+> chat-state record, and a MANAGER measured `AskUserQuestion` present in **0 of
+> 419** of them — a figure now cited in the ratified row itself. That 0/419 is
+> **CORE's own `#59` defect**, fixed in this tree and **not yet published**, so
+> consumers still run the pre-fix writer. **Check `writerVersion` before reading
+> a null** — on a pre-fix writer a null `read-prompt` is that known gap; on a
+> fixed writer a null is REAL. Even once the fix ships, `block-state` stays in
+> the list: it is the pane-authoritative read.
 
 **Provenance note, kept deliberately.** On 2026-08-07 this file said R42.8 was
 *not ratified*. That was measured accurately — R42.8 was absent from three
@@ -279,7 +283,7 @@ touches a session that is merely SLOW — slow is not blocked.
 ## Resources
 
 - `Emasoft/ai-maestro@governance-rules` — **the authoritative rule text**:
-  `docs/GOVERNANCE-RULES.md` (v5.3.2, carries R42.8), `rules/aimaestro/` (5
+  `docs/GOVERNANCE-RULES.md` (v5.3.3, carries R42.8), `rules/aimaestro/` (5
   overlay rules), `design/specs/role-plugins-spec.md`. These live on the
   **unmerged `governance-rules` branch**, so a query against `main` 404s and
   **that 404 means nothing**. Always read the row itself rather than any
