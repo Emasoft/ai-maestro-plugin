@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 blocked-by: []
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-08T15:27:51+0200
+updated: 2026-08-08T16:18:44+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 min-approval-requirement: none
@@ -105,6 +105,17 @@ codebase to align with them and take advantage of them"* — followed by the ful
    empty). **This does NOT close A1** — the rule text is still the USER's, and the clean split is:
    plugin text is each plugin's to fix today, rule text is one USER request, not seven
    reinterpretations. Posted on `ai-maestro#131`.
+
+   **The USER request is now FILED: `ai-maestro#143`** (2026-08-08). Asked the USER first and
+   got no answer within the window, so I filed the option I had recommended — **document-only**:
+   correct R42.3's factual clause to name both transports and state that R42/R6 bind on both,
+   while leaving R42.1/.2/.4/.8 and the entire authority ban untouched. Filing a proposal is not
+   a rule edit, so this is inside CORE's authority; **ratifying it is not**, and the issue says so.
+   Rejected in the issue with reasons: *bridge* (needs identity built on a path that has none —
+   larger than making the sentence true) and *forbid* (unenforceable, and a rule whose
+   enforcement claim is again untrue is exactly how this happened).
+
+   **A1 STAYS OPEN.** Filing is not ruling. It closes when the USER rules on `ai-maestro#143`.
 
 2. **A3 — CLOSED, implemented (`1c10007`).** The go/no-go asked for here was answered by the
    design, not by waiting: an `O_EXCL` lockfile that **proceeds unlocked on deadline** cannot
