@@ -41,14 +41,19 @@ instruction.
 > a message lands in an inbox and the recipient decides; an injected command
 > *is* the recipient's own action and bypasses its judgment entirely.
 >
-> **⛔ R42.8 is a PENDING PROPOSAL, not ratified law** — `ai-maestro#125` is
-> OPEN and titled *"R42 amendment request"*, and R42.8 appears in none of the
-> three published `GOVERNANCE-RULES.md` copies (CORE tree, installed 3.0.5,
-> `@governance-rules`), all of which top out at R42.7. Verify there before
-> relying on the second column. The ratified rules are STRICTER — SELF-ONLY
-> for every title, no carve-out at all.
+> **R42.8 is RATIFIED** — `Explicit (USER — 2026-08-05, ai-maestro#125,
+> TRDD-AODXPI5E)`, published in `docs/GOVERNANCE-RULES.md` v5.3.2 on
+> `Emasoft/ai-maestro@governance-rules`. The ratified verbs are **`read-prompt`
+> and `answer` ONLY**; `inject`/`slash`/`queue` stay SELF-ONLY for every title.
+> `block-state` is absent from the row but permitted by the deployed CLI — a
+> known doc-vs-implementation gap, not a prohibition (see `ama-unblock`).
 >
-> **R42.8 as PROPOSED would add the single carve-out** shown in the second
+> *(On 2026-08-07 this file said R42.8 was a pending proposal. The measurement
+> was right — it was absent from every published copy then — but the conclusion
+> was not: the grant was real and only publication lagged. An open issue is not
+> evidence a rule is unratified.)*
+>
+> **R42.8 added the single carve-out** shown in the second
 > column above: MANAGER/COS may unblock an agent stalled on a prompt, via
 > `block-state`/`read-prompt`/`answer` only. It exists because a blocked agent
 > cannot read its inbox — messaging reaches an agent at its next turn, and a

@@ -16,32 +16,40 @@ A blocked agent session is blocked **forever** unless something answers it: an
 `AskUserQuestion` menu or a permission prompt never resolves itself, and a
 blocked agent cannot read its AMP inbox — messaging reaches an agent only at
 its next turn, and a blocked agent has no next turn. This is the one hole in
-the messaging-only model, and governance **R42.8** is the proposed patch:
+the messaging-only model, and governance **R42.8** is the sanctioned patch —
+**ratified**, `Explicit (USER — 2026-08-05, ai-maestro#125, TRDD-AODXPI5E)`,
+published in `docs/GOVERNANCE-RULES.md` v5.3.2 on `Emasoft/ai-maestro@governance-rules`.
 
-> ## ⛔ R42.8 IS NOT VERIFIABLY RATIFIED — READ BEFORE USING THIS SKILL
+> ## ⚠ THE RATIFIED VERB LIST IS NARROWER THAN THE CLI'S — read both
 >
-> Checked 2026-08-07, and **no readable source establishes R42.8 as law**:
+> The ratified row names **`read-prompt` and `answer` ONLY**. `inject`, `slash`
+> and `queue` are **explicitly not** exception verbs — they deliver an arbitrary
+> command, so they express the CALLER's decision (R42.1) and stay SELF-ONLY for
+> every title; the server 403s them cross-agent.
 >
-> - **`ai-maestro#125` is OPEN**, created 2026-08-05, never closed, and titled
->   *"R42 amendment **request**…"*. It is the proposal, not the grant.
-> - **THREE independent published copies of `GOVERNANCE-RULES.md` top out at
->   R42.7** — CORE's source tree, the installed `ai-maestro-plugin@3.0.5`
->   plugin cache, and `Emasoft/ai-maestro@governance-rules` (the unmerged
->   branch that carries the newest governance overlays). R42.8 is in none of
->   them. The branch check matters: an earlier version of this note had only
->   checked default refs, which is exactly the "wrong ref is not a probe"
->   failure — `?ref=governance-rules` is the one that could have overturned
->   the finding, and it did not.
-> - The rule text exists only in an **unpushed local commit** of a repo CORE
->   does not own, so no consumer can read it.
+> **`block-state` is not named in the ratified text, and that is a known
+> doc-vs-implementation gap — it is NOT a prohibition.** The deployed
+> `aimaestro-session.sh help` permits it cross-agent (MANAGER: any agent;
+> CHIEF-OF-STAFF: its own team), and it is load-bearing: `read-prompt` reads the
+> hook's chat-state record, and a MANAGER session measured `AskUserQuestion`
+> present in **0 of 419** such records — so without the terminal read a MANAGER
+> is blind to the one prompt shape that blocks an agent indefinitely. Follow the
+> CLI here, and say out loud that you are doing so. Reported to the hub.
 >
-> A USER grant may still have happened out of band — that is exactly what
-> cannot be confirmed from here. Until it is confirmed **in a published
-> `GOVERNANCE-RULES.md`**, treat everything below as describing a **pending
-> proposal**. The ratified rules R42.1–R42.7 are **stricter**: they are
-> SELF-ONLY for every title, with no MANAGER/COS carve-out at all. Erring
-> toward the ratified text costs a stalled agent; erring toward the proposal
-> means doing a thing no rule permits.
+> **Why that 0/419 exists, and it is CORE's to fix:** those records were written
+> by pre-`#59` writers that never captured the question text. The capture fix is
+> in CORE's tree but **not yet published**, so a consumer cannot rely on it.
+> **Check `writerVersion` before reading a null** — on a pre-fix writer a null
+> `read-prompt` is that known gap; on a fixed writer a null is real.
+
+**Provenance note, kept deliberately.** On 2026-08-07 this file said R42.8 was
+*not ratified*. That was measured accurately — R42.8 was absent from three
+published copies at the time — but concluded wrongly: the USER grant of
+2026-08-05 was real and only the **publication** lagged, landing 2026-08-08.
+*"I cannot verify this"* is not *"this is not true"*, and asserting the stronger
+claim caused four role-plugins to retract correct statements. **For an absence,
+"true but not yet published" is always a live answer** — ask it before
+concluding.
 
 > **The single carve-out is R42.8**: a MANAGER or CHIEF-OF-STAFF may UNBLOCK
 > an agent stalled on a permission/question prompt. Unblocking answers a
@@ -270,15 +278,18 @@ touches a session that is merely SLOW — slow is not blocked.
 
 ## Resources
 
-- `ai-maestro#125` — the R42.8 amendment **REQUEST**. **OPEN** as of
-  2026-08-07; titled *"R42 amendment request…"*. It is the proposal, NOT the
-  grant — do not cite it as ratification (this skill did, and was wrong).
+- `Emasoft/ai-maestro@governance-rules` — **the authoritative rule text**:
+  `docs/GOVERNANCE-RULES.md` (v5.3.2, carries R42.8), `rules/aimaestro/` (5
+  overlay rules), `design/specs/role-plugins-spec.md`. These live on the
+  **unmerged `governance-rules` branch**, so a query against `main` 404s and
+  **that 404 means nothing**. Always read the row itself rather than any
+  plugin's summary of it — including this one.
+- `ai-maestro#125` — the amendment request that carried R42.8, and the USER
+  verdict on it. It is still OPEN; **an open issue is not evidence the rule is
+  unratified** (that inference is what went wrong here — see the provenance
+  note above). Comment `5224811566` reconciles the timeline for anyone who
+  measured between the 2026-08-05 grant and the 2026-08-08 publication.
 - `ai-maestro#128` — the capability's design record (USER directives verbatim).
-- `Emasoft/ai-maestro@governance-rules` — `docs/GOVERNANCE-RULES.md` (the
-  authoritative rule text; check R42.8 here before trusting this skill),
-  `rules/aimaestro/` (5 overlay rules), `design/specs/role-plugins-spec.md`.
-  These live on the **unmerged `governance-rules` branch**, so a query
-  against `main` 404s and that 404 means nothing.
 - `ai-maestro-plugin#58` / `#59` — the verified verb surface, the measured
   hook findings, and the hook-capture fix this skill's caveats cite.
 - `design/tasks/TRDD-*-ZNGTF0FG-*.md` — CORE's implementation record.
