@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.8] — 2026-08-08
+
+### Bug Fixes
+
+- Stage tracked files by name, and rebuild the CHANGELOG history
 ## [3.1.7] — 2026-08-08
 
 ### Bug Fixes
