@@ -183,10 +183,19 @@ def run(
     *,
     check: bool = True,
     capture: bool = False,
+    timeout: float = 300,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a command, stream output, fail-fast on error."""
+    """Run a command, stream output, fail-fast on error.
+
+    `timeout` is per-call because the stages are not comparable: a `git tag` that
+    hangs for 30s is broken, while the test suite legitimately runs for minutes.
+    A single global ceiling has to be set for the slowest stage, which makes it
+    useless as a hang detector for every other one.
+    """
     cprint(f"  {BLUE}$ {' '.join(cmd)}{NC}")
-    result = subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True, capture_output=capture, timeout=300)
+    result = subprocess.run(
+        cmd, cwd=str(cwd) if cwd else None, text=True, capture_output=capture, timeout=timeout
+    )
     if check and result.returncode != 0:
         cprint(f"  {RED}Command failed (exit {result.returncode}){NC}")
         sys.exit(result.returncode)
@@ -1199,7 +1208,21 @@ def stage_tests(root: Path) -> None:
         cprint(f"  {RED}BLOCKED: tests/ directory missing.{NC}")
         cprint(f"  {RED}Every CPV plugin MUST ship a tests/ directory.{NC}")
         sys.exit(1)
-    r = run(["uv", "run", "pytest", "tests/", "-x", "-q", "--tb=short"], cwd=root, check=False)
+    # 20 min, not run()'s 300s default. The suite crossed 300s on 2026-08-08 and
+    # the publish died on ITS OWN CLOCK with every test passing — a gate that
+    # blocks release because the work outgrew the timer, reported as
+    # TimeoutExpired rather than as a failure anyone could act on. The suite is
+    # ~275s and dominated by tests/test_ai_maestro_hook.py, which drives the real
+    # hook as real node subprocesses (no mocks, by project rule), so it is
+    # legitimately slow and will keep growing. A ceiling still exists because a
+    # hung pytest must not wedge a release forever — it is just set above the
+    # work instead of under it.
+    r = run(
+        ["uv", "run", "pytest", "tests/", "-x", "-q", "--tb=short"],
+        cwd=root,
+        check=False,
+        timeout=1200,
+    )
     if r.returncode == 5:
         # pytest exit 5 = no tests collected. This is ALSO a block — no exceptions.
         cprint(f"  {RED}BLOCKED: pytest collected 0 tests.{NC}")
