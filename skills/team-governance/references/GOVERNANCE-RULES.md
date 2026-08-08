@@ -2,8 +2,10 @@
 version: "5.3.3"
 date: 2026-08-06
 branch: governance-rules
+conforms-to-spec: governance-rules@5.3.3
+synced-blob: "a13bed73fa9e"
+synced-at: 2026-08-08
 synced-commit: e46764f6
-synced-blob: "a13bed73"
 ---
 
 ## Table of contents
@@ -83,7 +85,23 @@ synced-blob: "a13bed73"
 >   never by trusting a doc's self-declared `branch:` frontmatter. **A query
 >   against `main` 404s or returns v4.0.2, and neither means anything** — that
 >   inference is exactly what produced the 2026-08-07 R42.8 error below.
-> - Synced from commit: `e46764f6` (on the `governance-rules` branch; blob `a13bed73`)
+> - **Is this copy current? Poll the BLOB, never the branch tip:**
+>
+>   ```bash
+>   gh api "repos/Emasoft/ai-maestro/contents/docs/GOVERNANCE-RULES.md?ref=governance-rules" --jq .sha
+>   # matches `synced-blob` above  ⇒  these exact bytes  ⇒  every rule read from
+>   # this copy still holds. Differs ⇒ re-sync. It never says WHAT moved, only
+>   # that something did — a moved blob is a prompt to re-read, not an answer.
+>   ```
+>
+>   `3P-VER-05` of `design/specs/3-pillars-spec.md` makes this normative and
+>   **FORBIDS the branch commit sha as a change signal**: the tip moves on every
+>   unrelated commit, so a consumer polls, sees movement, refetches, gets a
+>   byte-identical document, and records "checked, current" — manufacturing
+>   confidence instead of supplying information. Measured upstream: the tip moved
+>   across four unrelated commits while the spec blob sat unchanged for 13 days.
+>   `synced-commit` below is kept for provenance only; it is NOT the signal.
+> - Synced from commit: `e46764f6` (on the `governance-rules` branch — provenance, not the change signal)
 > - Re-synced into `ai-maestro-plugin` on: 2026-08-08 (v5.3.3 — adds **R42.8**,
 >   the MANAGER/COS blocked-prompt unblock carve-out, plus the R22.2 and R39.2
 >   factual corrections). **Read R42.8's verb list from the row, never from a
