@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.6] — 2026-08-08
+
+### Bug Fixes
+
+- Refuse release notes that would page a real GitHub account
+
+### Documentation
+
+- A1 half-answered — the routing, not the rule
+
+### Testing
+
+- Guard the mirror stamp by POINTER, and by whether anyone looked
 ## [3.1.5] — 2026-08-08
 
 ### Documentation
