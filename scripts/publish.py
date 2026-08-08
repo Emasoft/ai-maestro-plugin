@@ -68,6 +68,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 # Relative paths of the integrity-pinned pre-push hook and its sha256 pin.
@@ -177,6 +178,84 @@ def cprint(msg: str) -> None:
     print(msg, flush=True)
 
 
+# git subcommands that take `.git/index.lock` and HARD-FAIL when they cannot get it.
+_INDEX_WRITERS = frozenset({"add", "commit", "rm", "mv", "checkout", "restore", "reset", "stash"})
+
+# How long to wait for a foreign lock, and the age past which it is presumed orphaned.
+_LOCK_WAIT_S = 30.0
+_LOCK_STALE_S = 120.0
+
+
+def _git_dir(cwd: Path | None) -> Path | None:
+    """Absolute `.git` dir for `cwd`, or None if this is not a work tree.
+
+    Resolved via `rev-parse`, not `cwd / ".git"`, because in a linked worktree
+    `.git` is a FILE pointing elsewhere — the lock we must watch is the one the
+    real git dir holds, and a path guess would watch a file that never appears.
+    """
+    r = subprocess.run(
+        ["git", "rev-parse", "--absolute-git-dir"],
+        cwd=str(cwd) if cwd else None,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    return Path(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else None
+
+
+def _await_index_lock(cwd: Path | None) -> None:
+    """Block until `.git/index.lock` clears, then return. Fail-fast if it does not.
+
+    MEASURED (git 2.55.0, 120 iterations per arm, watcher validated against a
+    `git add` positive control): plain `git status --porcelain` CREATES
+    `.git/index.lock` to refresh its stat cache, while `--no-optional-locks` /
+    `GIT_OPTIONAL_LOCKS=0` never does. So any concurrent *reader* — this machine
+    runs a 5-minute janitor heartbeat whose detectors run `git status` on every
+    project — can hold the lock for the instant our `git add` wants it.
+
+    The asymmetry is the whole reason this was hard to see: `git status` fails
+    SOFT (exit 0 even when denied the lock, verified by occupying the lock path
+    with a directory), so the reader never reports a thing. Only the WRITER dies,
+    mid-publish, leaving the version-bump artifacts on disk — twice here (v3.1.1,
+    v3.1.7).
+
+    Waiting is the fix rather than deleting: the lock is normally held for
+    milliseconds by a process that is entitled to it, and removing another
+    process's lock corrupts the index it was protecting. A lock older than
+    `_LOCK_STALE_S` is reported as presumed-orphaned with the manual recovery,
+    and still refuses — an automatic unlink is exactly the operation that must
+    never be taken on a guess.
+    """
+    git_dir = _git_dir(cwd)
+    if git_dir is None:
+        return
+    lock = git_dir / "index.lock"
+    deadline = time.monotonic() + _LOCK_WAIT_S
+    announced = False
+    while lock.exists():
+        if time.monotonic() > deadline:
+            try:
+                age = time.time() - lock.stat().st_mtime
+                size = lock.stat().st_size
+            except OSError:
+                break  # vanished under us — proceed
+            verdict = (
+                f"presumed ORPHANED (age {age:.0f}s, {size} bytes)"
+                if age > _LOCK_STALE_S
+                else f"held by a live process (age {age:.0f}s)"
+            )
+            cprint(f"  {RED}{lock} still present after {_LOCK_WAIT_S:.0f}s — {verdict}.{NC}")
+            cprint(f"  {YELLOW}Snapshot the process table (ps -eo pid,ppid,etime,command > /tmp/ps.txt){NC}")
+            cprint(f"  {YELLOW}and grep the FILE for a live git on this repo; if none, move the lock aside.{NC}")
+            sys.exit(1)
+        if not announced:
+            cprint(f"  {YELLOW}Waiting for {lock} (a concurrent git holds the index)...{NC}")
+            announced = True
+        time.sleep(0.05)
+    if announced:
+        cprint(f"  {GREEN}Index lock cleared.{NC}")
+
+
 def run(
     cmd: list[str],
     cwd: Path | None = None,
@@ -191,7 +270,13 @@ def run(
     hangs for 30s is broken, while the test suite legitimately runs for minutes.
     A single global ceiling has to be set for the slowest stage, which makes it
     useless as a hang detector for every other one.
+
+    Git subcommands that write the index wait for `.git/index.lock` first — see
+    `_await_index_lock`. Centralised here rather than at the call sites so a new
+    `git add` added later inherits it instead of reintroducing the failure.
     """
+    if cmd[:1] == ["git"] and _INDEX_WRITERS.intersection(cmd[1:]):
+        _await_index_lock(cwd)
     cprint(f"  {BLUE}$ {' '.join(cmd)}{NC}")
     result = subprocess.run(
         cmd, cwd=str(cwd) if cwd else None, text=True, capture_output=capture, timeout=timeout
@@ -1165,7 +1250,10 @@ def stage_bypass_guard() -> None:
 def stage_check_clean(root: Path) -> None:
     """Step 1: Working tree must be clean."""
     cprint(f"\n{BOLD}[1/11] Checking working tree...{NC}")
-    r = run(["git", "status", "--porcelain"], cwd=root, capture=True)
+    # `--no-optional-locks`: a plain `git status` WRITES .git/index.lock to refresh
+    # its stat cache (measured), which would make this read collide with any other
+    # git on the repo — including the one this same publish runs at step 10.
+    r = run(["git", "--no-optional-locks", "status", "--porcelain"], cwd=root, capture=True)
     if r.stdout.strip():
         cprint(f"  {RED}Working tree is dirty. Commit or stash changes first.{NC}")
         cprint(r.stdout)
@@ -1865,7 +1953,12 @@ def _stage_tracked_modifications(root: Path) -> None:
     from the other direction: a stray file in the repo root dirties the tree and
     aborts the NEXT publish at stage 1.)
     """
-    r = run(["git", "status", "--porcelain=v1", "-uall"], cwd=root, check=False, capture=True)
+    r = run(
+        ["git", "--no-optional-locks", "status", "--porcelain=v1", "-uall"],
+        cwd=root,
+        check=False,
+        capture=True,
+    )
     if r.returncode != 0:
         cprint(f"  {RED}Cannot read git status — refusing to stage.{NC}")
         sys.exit(1)
