@@ -109,8 +109,9 @@ fail-fast (no fallback/bypass on refusal).
 
 ## SCEN-G05 — R29: a MANAGER-titled agent creates a team + its COS with NO user approval
 
-**Verifies:** R29 (MANAGER creates AND deletes teams itself; team creation includes the
-COS + 5 base members) · R30 (COS mandate) · R32 (AID, no password).
+**Verifies:** R29 (MANAGER creates AND deletes teams itself; team creation auto-creates
+the COS and ONLY the COS, which then creates the other 4 — R12.1's base is five
+INCLUDING the COS) · R30 (COS mandate) · R32 (AID, no password).
 
 > **MAJOR REVERSAL — supersedes prior "COS assignment is USER-only / via the dashboard"
 > text.** The pre-R29 behavior was the OPPOSITE; this scenario asserts the new authority,
@@ -299,8 +300,8 @@ agent-facing governance password and to state the conferred-identity / no-agent-
 ## Notable reversal embedded in these scenarios
 
 SCEN-G05/G06 assert the **R29 supersession**: a MANAGER-titled agent creates AND deletes
-teams + the auto-created COS + the 5 base members + AUTONOMOUS/MAINTAINER **with no user
-approval**. This is the OPPOSITE of the pre-R29 "COS assignment is USER-only / via the
+teams + the auto-created COS (and only the COS — it creates the other 4 itself) +
+AUTONOMOUS/MAINTAINER **with no user approval**. This is the OPPOSITE of the pre-R29 "COS assignment is USER-only / via the
 dashboard" wording. The core plugin's `team-governance` SKILL + REFERENCE were reframed
 (TRDD-fabb5c42) to teach the new authority; the bundled `GOVERNANCE-RULES.md` mirror was
 synced to v4.0.2 so the canonical text travels with the skill.
