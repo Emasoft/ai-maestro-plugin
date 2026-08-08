@@ -1,9 +1,9 @@
 ---
-version: "5.2.0"
-date: 2026-08-05
+version: "5.3.3"
+date: 2026-08-06
 branch: governance-rules
-synced-commit: 340a2c9f
-synced-blob: "82481221"
+synced-commit: e46764f6
+synced-blob: "a13bed73"
 ---
 
 ## Table of contents
@@ -76,20 +76,32 @@ synced-blob: "82481221"
 > - Canonical path: `docs/GOVERNANCE-RULES.md`
 > - Stable raw URL (the long-lived `governance-rules` branch):
 >   `https://raw.githubusercontent.com/Emasoft/ai-maestro/governance-rules/docs/GOVERNANCE-RULES.md`
-> - NOTE (re-verified 2026-08-05): `main` still LAGS the canonical — it carries
->   v4.0.2 while `governance-rules` carries v5.2.0. Do NOT "correct" the URL or
+> - NOTE (re-verified 2026-08-08): `main` still LAGS the canonical — it carries
+>   v4.0.2 while `governance-rules` carries v5.3.3. Do NOT "correct" the URL or
 >   the sync source to a `main` path; `governance-rules` is the authoritative
 >   home, confirmed by fetching both branches and comparing `version:` fields,
->   never by trusting a doc's self-declared `branch:` frontmatter.
-> - Synced from commit: `340a2c9f` (on the `governance-rules` branch; blob `82481221`)
-> - Re-synced into `ai-maestro-plugin` on: 2026-08-05 (v5.2.0 — adds R41–R52:
->   approval/mandate protocols, the R42 no-driving iron rule, multi-host
->   governance R43–R48, the R49 refusal protocol, the R50/R51 all-in-one
->   transaction rules, and the R52 write boundary). The pre-sync contradiction
->   sweep of CORE's skills against R41–R52 is recorded in PROJECT memory
->   (ATOM-SBNM-OHF2) — run that sweep BEFORE every future re-sync.
+>   never by trusting a doc's self-declared `branch:` frontmatter. **A query
+>   against `main` 404s or returns v4.0.2, and neither means anything** — that
+>   inference is exactly what produced the 2026-08-07 R42.8 error below.
+> - Synced from commit: `e46764f6` (on the `governance-rules` branch; blob `a13bed73`)
+> - Re-synced into `ai-maestro-plugin` on: 2026-08-08 (v5.3.3 — adds **R42.8**,
+>   the MANAGER/COS blocked-prompt unblock carve-out, plus the R22.2 and R39.2
+>   factual corrections). **Read R42.8's verb list from the row, never from a
+>   summary:** it is `block-state`, `read-prompt`, `answer` — exhaustive, with
+>   `inject`/`slash`/`queue` excluded because they carry a CALLER decision.
+> - **⚠ Re-sync THE TIP, not a file you fetched earlier.** This bundle was
+>   stale for three days while the SSOT moved twice on consecutive days
+>   (v5.3.2 2026-08-08 05:51Z → v5.3.3 06:03Z, twelve minutes apart). Reading
+>   the row without first resolving the branch tip produced two wrong CORE
+>   claims in two days — "R42.8 is not ratified" (it was, published a day
+>   later) and "`block-state` is omitted deliberately" (a doc lag the hub
+>   corrected within hours). Fetch `branches/governance-rules` FIRST, record
+>   the sha, and treat any older copy as unread.
+> - The pre-sync contradiction sweep of CORE's skills against R41–R52 is
+>   recorded in PROJECT memory (ATOM-SBNM-OHF2) — run that sweep BEFORE every
+>   future re-sync.
 > - Bundled-doc version: see the `version:` field in the YAML frontmatter
->   above (5.2.0 at the time of this sync).
+>   above (5.3.3 at the time of this sync).
 >
 > Treat this file as **read-only** in this repo. To update:
 >
@@ -1266,7 +1278,7 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 | ID | Rule | Source |
 |----|------|--------|
 | R22.1 | Every agent that writes to GitHub — **issue, issue comment, PR, PR comment, PR review, discussion, release note** — MUST begin the body with a one-line self-identification of which agent / role / plugin authored it | Explicit (USER) |
-| R22.2 | Recommended leading line: `_Posted by the Claude developing **<plugin-or-role>** (via the shared @<owner> gh auth)._` | Explicit (USER) |
+| R22.2 | Recommended leading line: `_Posted by the Claude developing **<plugin-or-role>** (via the shared <owner> gh auth)._` — **carries NO `@`, deliberately.** A byline is a TEMPLATE: it is copied OUT of its code span into a real comment, where an `@` linkifies and PAGES a live account, so the backticks protect it where it sits and not where it is used. Naming the owner in plain words self-identifies exactly as well — the `@` only adds a notification. (Corrected 2026-08-05; the `@<owner>` form shipped here for months. Same defect the janitor found in its own IND base `prrd-design-rules.md` and reported on `#109`, where it also disclosed paging a real account from this pattern.) | Explicit (USER) |
 | R22.3 | Commit messages SHOULD carry an `Agent: <plugin-slug>` trailer — the plugin's **stable package slug** (e.g. `Agent: ai-maestro-maintainer-agent`), which is greppable ecosystem-wide and survives a rename, NOT a freeform role name | Explicit (USER, refined 2026-06-02) |
 | R22.4 | This is an anti-impersonation / clarity convention: without it, multi-agent threads under the shared identity are ambiguous and one agent's post is indistinguishable from another's | Explicit (rationale) |
 | R22.5 | Mirrored as the PRRD baseline **golden** rule `G1.1` (user-set, immutable to MANAGER) — a project bootstraps it via `prrd-edit.py --user add golden` | Explicit |
@@ -1490,7 +1502,7 @@ Read-only operations (queries, lookups, calculations) do NOT need AIO functions 
 | ID | Rule | Source |
 |----|------|--------|
 | R39.1 | Users (being human) have **no terminal and no chat page** on their own profile. Each user is auto-assigned an **ASSISTANT**-title agent when created/registered (the MAESTRO user is exempt — it already has the MANAGER agent) | Explicit (USER) |
-| R39.2 | The ASSISTANT runs the **`ai-maestro-assistant-role-agent`** role-plugin (a **LOCAL/D4 source** — already built at `~/agents/role-plugins/roles-marketplace/`, intentionally NOT a published GitHub repo and absent from `PREDEFINED_ROLE_PLUGIN_NAMES`) — a **mix of the MANAGER** (planning — it listens to its bound user) **and AUTONOMOUS** (programming — it codes autonomously, with no team and no direction from the MANAGER) role-plugins, **without** agent/team-creation privileges and **without governing powers** (R46.3). *(USER 2026-07-22 RE-RULED the composition back to MANAGER+AUTONOMOUS; the 2026-07-16 v4.4.0 "MANAGER+MAINTAINER" revision was the error — MAINTAINER is repo-bound issue-triage, not what an assistant does.)* | Explicit (USER) |
+| R39.2 | The ASSISTANT runs the **`ai-maestro-assistant-role-agent`** role-plugin (**PUBLISHED** — `Emasoft/ai-maestro-assistant-role-agent`, public since 2026-07-22 and listed in the `ai-maestro-plugins` marketplace manifest; also built locally at `~/agents/role-plugins/roles-marketplace/`. Still absent from `PREDEFINED_ROLE_PLUGIN_NAMES` — an OPEN QUESTION on ai-maestro#86 F2, not a consequence of being local) — a **mix of the MANAGER** (planning — it listens to its bound user) **and AUTONOMOUS** (programming — it codes autonomously, with no team and no direction from the MANAGER) role-plugins, **without** agent/team-creation privileges and **without governing powers** (R46.3). *(USER 2026-07-22 RE-RULED the composition back to MANAGER+AUTONOMOUS; the 2026-07-16 v4.4.0 "MANAGER+MAINTAINER" revision was the error — MAINTAINER is repo-bound issue-triage, not what an assistant does.)* | Explicit (USER) |
 | R39.3 | The user interacts with their ASSISTANT by selecting their own profile and typing in its terminal. The user may **not** access any other agent's terminal or join any team; selecting any non-own agent shows the profile with **no terminal** and **no** ability to edit that agent's profile panel | Explicit (USER) |
 | R39.4 | The ASSISTANT has **no team affiliation**; its profile shows `Assistant of <user name>` where the team label would be. The user MAY edit the ASSISTANT's profile panel **except** NAME, TITLE, ROLE-PLUGIN, and TEAM — those four stay **read-only to the user** and may be changed **only by the MAESTRO** user, with the sudo password (consistent with R26) | Explicit (USER) |
 | R39.5 | The ASSISTANT obeys its bound user **unconditionally** — and, **only with that user's explicit permission**, the **MANAGER**, whose assigned tasks stay **refusable** (R41, R39.9). It obeys **no one else — not the MAESTRO *user*, no other agent** — and works in **isolation** under its user. It is **outside the governance chain**: it is never a direct target of a mandate (R41) and needs **no MANAGER / COS / MAESTRO approval** to act for its user. It is aware of the user's kanban tasks and shares TRDDs sent to the user, which it works on **as its user's** (R39.7). It may message **only its own user and the MANAGER** — the single agent it may exchange messages with (R39.9); every other agent is unreachable in both directions. The MANAGER channel carries **only** a refusable, USER-gated task assignment (R39.9) — never a command, never a mandate (R41 holds) | Explicit (USER, 2026-07-22 refined — MANAGER is the sole agent channel per R39.9; 2026-07-16 was "obeys only its user, messages only its own user") |
@@ -1597,24 +1609,44 @@ judgment call):
 
 ## R42. No Agent May Drive Another Agent — Messaging Is the ONLY Channel (CRITICAL — IRON, USER-set)
 
-**The invariant:** an agent influences another agent **only** by sending it a message. Nothing
-else. There is **no title-based exemption** — not MANAGER, not CHIEF-OF-STAFF.
+**The invariant:** an agent influences another agent's **WORK** only by sending it a message.
+Nothing else. There is **no title-based exemption from THAT** — not MANAGER, not CHIEF-OF-STAFF.
+The single carve-out is **R42.8**: a MANAGER or CHIEF-OF-STAFF may UNBLOCK an agent stalled on a
+permission/question prompt. Unblocking answers a prompt the agent itself raised; it confers no
+power to direct that agent.
 
 | ID | Rule | Source |
 |----|------|--------|
-| R42.1 | **No agent may inject a command, keystroke, prompt, or queued input into another agent's session — by API, by CLI, or by tmux.** This is ABSOLUTE | Explicit (USER) |
-| R42.2 | **No title is exempt.** The MANAGER and the CHIEF-OF-STAFF are bound exactly as every other agent is. A directive from a superior is a **message**, not a keystroke | Explicit (USER) |
+| R42.1 | **No agent may inject a command, keystroke, prompt, or queued input into another agent's session — by API, by CLI, or by tmux — to assign, redirect, or perform that agent's work.** This is ABSOLUTE, and R42.8 does not weaken it: an unblock answers a pending prompt and may carry nothing else | Explicit (USER) |
+| R42.2 | **No title is exempt from R42.1.** The MANAGER and the CHIEF-OF-STAFF are bound exactly as every other agent is. A directive from a superior is a **message**, not a keystroke. Those two titles hold exactly one narrow power the others lack — **R42.8** unblocking — which is not a power to direct | Explicit (USER) |
 | R42.3 | The **messaging system (AMP) is the ONLY channel** by which one agent may influence another, and it is governed by the R6 communication graph (who may message whom) | Explicit (USER) |
 | R42.4 | **Self-drive remains permitted.** An agent may drive its OWN session (`/compact`, its own panel, its own queue). The prohibition is strictly about targeting **another** agent | Explicit (USER) |
 | R42.5 | **Sole exception — the janitor's few GLOBAL operations:** globally disarm/re-arm the janitor, pause/unpause the heartbeat, and globally reload plugins + skills. These are machine-wide switches, **not** commands targeted at an agent. Every other janitor command (`/compact` included) is **self-only** | Explicit (USER) |
 | R42.6 | MANAGER and COS retain a **separate, non-injection** authority: changing an agent's **configuration** (local-scope skills, subagents, MCP, hooks) and its **TEAM** / **TITLE** (rare — both are normally set at creation and kept for the agent's life). Configuring an agent is NOT driving it | Explicit (USER) |
 | R42.7 | **Second exception — the server-as-daemon may RESTART harness agents** after a global change it just applied (an `ai-maestro-plugins` plugin update, or a `~/.claude/settings.json` runtime-env re-apply). Six constraints, all load-bearing: **(a)** the fan-out is **uniform** over every affected harness agent — never a chosen one (a targeted restart is R42.1 injection renamed); **(b)** **zero content** — exit → relaunch with the agent's STORED args, never a keystroke or text; **(c)** **safe-state gated** — the same `idle_prompt` + subagent-counter 409 the human's Restart button obeys; **(d)** **same-host, harness-only**; **(e)** **audited** in the agent ops ledger; **(f)** **no agent may invoke it** — reachable only from the server's own tick, never a route/script/CLI. The actor is infrastructure (no AID, no title), which is why this is not an agent driving an agent | Explicit (USER — delegated 2026-07-30, TRDD-QZL828OD) |
+| R42.8 | **Third exception — a MANAGER or CHIEF-OF-STAFF may UNBLOCK an agent stalled on a permission / `AskUserQuestion` prompt**, in realtime, via the frozen `aimaestro-session.sh` — **`block-state`, `read-prompt` and `answer` ONLY** (`inject`, `slash` and `queue` are NOT exception verbs: they deliver an arbitrary command, so they express the CALLER's decision and stay SELF-ONLY for every title; the server 403s them cross-agent. `block-state` belongs in the list because it carries NO caller decision — it is the pane-authoritative DETECTION read that makes constraint (a)'s "blocked-only" trigger checkable at all: the hook's chat-state carried `AskUserQuestion` in 0 of 419 surveyed files, so a caller limited to `read-prompt` reads `null` and the one prompt shape that blocks an agent indefinitely is invisible. The server has always gated it under the same `unblock-prompt` action — `lib/sudo-guard.ts` routes `GET /api/agents/[id]/block-state` there — so this names the ratified implementation, it does not widen it). Eight constraints, all load-bearing: **(a)** **blocked-only** — the sole trigger is an agent stalled on a prompt; a working, idle-but-unblocked, or merely slow agent is untouchable ("it would be faster if I typed it" is R42.1); **(b)** **unblock, never drive** — answer ONLY the pending prompt, nothing appended, no new work, no redirection (work is still assigned by AMP alone); **(c)** **title-scoped and exhaustive** — MANAGER: any agent on the host except an ASSISTANT; COS: **its own team only**, same exclusion; every other title: none; **(d)** **never an ASSISTANT** — it is the surface a human talks *through*, so injected text is indistinguishable from something its human said, laundering an agent's instruction into apparent human intent (a USER has no terminal, so there is no USER-target case — do not implement one); **(e)** **identity prompts ESCALATE** — a prompt asking the agent to verify the CALLER's own authority goes to the human, never answered by the caller: self-certification through a second channel proves nothing and a spoofer performs the identical act. **No agent can answer such a prompt because no agent is the authority on identity — the ai-maestro SERVER is the sole notary**: it created or imported every agent, registered it and its AID in the signed ledger, alone holds the key that signs and rotates that AID, and alone signs and verifies AMP messages. Identity is ESTABLISHED by the server's verification, never ASSERTED by a party to the exchange — which is also what makes (c)'s title scoping meaningful, since `authorize()` reads back the server's notarized record rather than a caller's claim; **(f)** **read before answer** — `read-prompt` first; never answer a prompt you have not read (an unblock interrupts nothing: the agent is already stopped, waiting); **(g)** **server-enforced** — authorized by AID_AUTH + governance title, failing closed; the refusal is the check, never the caller's restraint; **(h)** **audited** in the agent ops ledger. Why it exists: the capability was built, shipped and title-gated while the rule told agents it did not exist for them, so a MANAGER refused **twice** to unblock a stalled agent and escalated to the human — defeating the automation the product exists to provide | Explicit (USER — 2026-08-05, ai-maestro#125, TRDD-AODXPI5E) |
 
 > **Why this is absolute.** A message lands in an inbox and the recipient *decides* whether to
 > act. An injected command *is* the recipient's own action — it bypasses its judgment, its
 > rules, and its governance title entirely. One agent typing into another's pane can make it do
 > anything the victim is permitted to do, which makes every other rule in this document
 > advisory. **The comm graph (R6) is only a boundary if messaging is the only channel.**
+>
+> **Why R42.8 does not undo that.** The danger above is an injected command becoming the
+> recipient's own *action*, chosen by someone else. An unblock cannot do that: the agent has
+> already decided what it wants to do and is waiting on an answer it asked for. The prompt is
+> the agent's own question; answering it supplies a missing input, it does not author an
+> instruction. Constraint (b) is what keeps the two apart — answer ONLY the pending prompt,
+> append nothing — and it is why smuggling work through an unblock stays an R42.1 violation
+> rather than a permitted use. The channel for *directing* an agent is still AMP, and only AMP.
+>
+> **The one place an unblock CAN forge intent, and why (d)+(e) exist.** Two cases break the
+> reasoning above and are therefore excluded outright rather than trusted to judgment: a prompt
+> that asks the agent to vouch for the *caller's own* authority (answering it is
+> self-certification through a second channel — a spoofer performs the identical act), and any
+> prompt in an **ASSISTANT's** session (whose text is indistinguishable from its human's, so an
+> injected answer launders an agent's instruction into apparent human intent in the one place
+> nobody re-checks).
 >
 > **Prior design (SUPERSEDED).** `lib/authorization.ts` `send-command` allowed a MANAGER to
 > drive ANY agent and a COS to drive its own team's (`SELF_DRIVE_ACTIONS` permitted self;
