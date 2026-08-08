@@ -1,11 +1,10 @@
 ---
 trdd-id: ZNGTF0FG
 title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend the hook state)
-column: blocked
-pre-block-column: dev
-blocked-by: [ai-maestro#128, ai-maestro-plugin#58, ai-maestro-plugin#60]
+column: human_review
+blocked-by: []
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-07T12:08:25+0200
+updated: 2026-08-08T12:31:44+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -46,20 +45,26 @@ the work by the MANAGER and CHIEF-OF-STAFF interventions") — active work, no i
 
 **DONE (second pass, 2026-08-06 — the server had ALREADY SHIPPED; CORE's proposal was moot):**
 
-3. ⚠️ **CORRECTED 2026-08-07 — the CAPABILITY is deployed; the RULE is NOT ratified.**
-   The CLI verbs shipped (catalog v5.3.0–5.3.2) — that half was verified and stands. But
-   **R42.8 is a PENDING PROPOSAL**: `ai-maestro#125` is **OPEN**, titled *"R42 amendment
-   request"*, and R42.8 appears in **none** of three published `GOVERNANCE-RULES.md`
-   copies (CORE tree, installed `ai-maestro-plugin@3.0.5`, `Emasoft/ai-maestro@governance-rules`),
-   all topping out at R42.7. **A deployed capability is not a ratified permission** — that
-   conflation is the error this line originally made, and item 1 under REMAINING already
-   half-saw it ("R42.8 lives only in an UNPUSHED local commit") but read it as
-   granted-but-unpushed rather than requested. Shipped verbs, as proposed to be governed:
-   `block-state [--match]` (terminal read, the AUTHORITY), `read-prompt` (hook hint),
-   `answer`. **`inject`/`slash`/`queue` are excluded from the exception** — they carry an
-   arbitrary command = the CALLER's decision = R42.1; server 403s them cross-agent. The
-   5.3.1 pass records that earlier wording named them and a MANAGER obeying it would have
-   been 403'd — build the enforcement BEFORE writing the rule.
+3. ✅ **RE-REVERSED 2026-08-08 — R42.8 IS RATIFIED. The 2026-08-07 "NOT ratified"
+   correction on this line was itself the error.** The original line was right and I
+   overwrote it. `Explicit (USER — 2026-08-05, ai-maestro#125, TRDD-AODXPI5E)`, published
+   in `docs/GOVERNANCE-RULES.md` **v5.3.3** on `Emasoft/ai-maestro@governance-rules`
+   (blob `a13bed73fa9e`). The measurement behind the retraction was accurate — R42.8 was
+   absent from every published copy on 2026-08-07 — and the inference was not: the grant
+   was 2026-08-05 and only the **publication** lagged, landing 2026-08-08. **`ai-maestro#125`
+   being OPEN is not evidence a rule is unratified**, and *"I cannot verify this"* is not
+   *"this is not true"*. Cost: four role-plugins retracted CORRECT statements on my report.
+   **For an absence, "true but not yet published" is always a live answer.**
+
+   **The exception verbs are THREE — `block-state`, `read-prompt`, `answer` — and the
+   dividing line is CALLER DECISION, not read-vs-write.** `inject`/`slash`/`queue` carry an
+   arbitrary command = the caller's decision = R42.1; the server 403s them cross-agent.
+   `block-state` reached the row late: v5.3.2 omitted it, I reported a doc-vs-implementation
+   gap, the hub checked `lib/sudo-guard.ts:449` (it routes `GET /api/agents/[id]/block-state`
+   through the **same `unblock-prompt` action**) and published v5.3.3 **twelve minutes**
+   later. **The doc was the stale side, not the CLI** — and that is the second time in two
+   days I measured one commit early. Both times the fix is the same act, and it is not
+   "measure more carefully": **resolve the branch TIP first, then read the row.**
 4. ✅ **ama-unblock rewritten to the deployed surface** (commit after `1f21d6f`): R42.8's
    8 constraints, the 7-reason taxonomy (`ask_user|permission|rate_limited|api_error|
    idle|active|unknown`), never-an-ASSISTANT, identity-prompts-escalate, read-before-
@@ -109,16 +114,25 @@ than an exception for being mine: the blockers are real, external, and now grepp
 extensions for #58/#59/#60); only the mirror re-sync and the open server questions remain,
 and neither is CORE's to move. `pre-block-column: dev` restores it when they land.
 
-**REMAINING — NEXT ACTION: nothing runnable; two waits.**
+**UNBLOCKED 2026-08-08 — the blocker landed and CORE's half is SHIPPED.**
 
-1. **Mirror sync BLOCKED and correctly so** — pushed `governance-rules` is still v5.2.0
-   (blob `824812218`, byte-identical to CORE's mirror). R42.8 lives only in an UNPUSHED
-   local commit of `~/ai-maestro`. Syncing would embed unverifiable text. Verify with
-   `git ls-remote` + read the PUSHED blob's version, never the local working copy.
-   When it lands: verbatim body replace → wrapper regen → re-embed both TOCs →
-   **regenerate `.cpv-audit-consent.json`** (R42.1/R42.2 line TEXT changed, so the
-   full-line sha256 invalidates — ATOM-GSVC-UQT2).
-2. Awaiting server answers on #58 (should the WS broadcast carry `questions`/`lastError`
+**COLUMN: `blocked` → `human_review`.** Every deliverable is out; what is left is not
+work, it is other repos' answers. Holding `blocked` now would be the same lie in the
+other direction — a card claiming it cannot move while nothing is stopping it.
+
+1. ✅ **Mirror sync DONE** — the blocker was real and it cleared. `governance-rules`
+   published v5.3.3 (blob `a13bed73fa9e`); mirror re-synced and shipped in **v3.1.2**,
+   body verified **byte-identical** to upstream, `.cpv-audit-consent.json` regenerated
+   (R42.1's row text changed exactly as predicted, so its full-line sha256 invalidated —
+   ATOM-GSVC-UQT2 held), and R42.8's brand-new row consented after reading it in full.
+   Two corrections rode in that CORE never had: R22.2 lost its `@<owner>` from the byline
+   **template**, and R39.2's publication fact. The three-day staleness now has a standing
+   guard (`tests/test_governance_mirror_stamp.py`) that asserts the POINTER — blob +
+   read-date — and **never fetches**, because a network test collapses "stale" and
+   "offline" into one red.
+2. `ai-maestro#128` is **CLOSED**. Remaining open: `ai-maestro-plugin#58` / `#60`, and
+   neither blocks anything — they are server digests awaiting server answers.
+3. Awaiting server answers on #58 (should the WS broadcast carry `questions`/`lastError`
    too? want the red-state regex exported as generated JSON instead of a copied literal?),
    #60 (will `TRDD-LT5N2JA4` get a frozen-CLI verb? will `sources` split
    `absent` from `stale`?), and #128 (the autonomous agent's ADV-03 fixture — answered:

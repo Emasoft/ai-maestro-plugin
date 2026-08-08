@@ -2,12 +2,12 @@
 trdd-id: OH3N6OXJ
 title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
-pre-block-column: dev
+blocked-by: []
 created: 2026-08-07T18:32:35+0200
 updated: 2026-08-08T12:07:21+0200
 current-owner: ai-maestro-plugin
 task-type: infra
-approval-tier: 0
+min-approval-requirement: none
 scope: project
 project-id: ai-maestro-plugin
 relevant-rules: []
