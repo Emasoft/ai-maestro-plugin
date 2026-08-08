@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.11] — 2026-08-08
+
+### Documentation
+
+- File the A1 rule-text request as ai-maestro#143
 ## [3.1.10] — 2026-08-08
 
 ### Bug Fixes
