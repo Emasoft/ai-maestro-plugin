@@ -84,6 +84,18 @@ synced-at: 2026-08-08
 >   never by trusting a doc's self-declared `branch:` frontmatter. **A query
 >   against `main` 404s or returns v4.0.2, and neither means anything** — that
 >   inference is exactly what produced the 2026-08-07 R42.8 error below.
+> - **What `conforms-to-spec: governance-rules@5.3.3` asserts, exactly.** That
+>   THIS FILE IS the v5.3.3 catalog — copy fidelity, nothing more. It is
+>   mechanically checkable in one command (below) and it is TRUE: the body
+>   from the title line down is byte-identical to upstream. **It does NOT
+>   assert that `ai-maestro-plugin` implements R1–R52.** CORE ships no
+>   `agents/` persona and incorporates no rule subset as its own — it
+>   DISTRIBUTES the catalog for role-plugins to read, which is a different
+>   claim from conforming to it. A role-plugin whose persona carries a partial
+>   incorporation must NOT copy this stamp: declaring a version it does not
+>   implement re-creates undetectable drift with a green check on top, which is
+>   strictly worse than a bare stale string. (Raised by the INTEGRATOR plugin,
+>   which declared PARTIAL for exactly that reason and was right to ask.)
 > - **Is this copy current? Poll the BLOB, never the branch tip:**
 >
 >   ```bash
