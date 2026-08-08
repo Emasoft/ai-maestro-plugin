@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.9] — 2026-08-08
+
+### Bug Fixes
+
+- Scope the comm-graph 403 to AMP — 2.1.224 added a transport it cannot cover (TRDD-OH3N6OXJ)
 ## [3.1.8] — 2026-08-08
 
 ### Bug Fixes
