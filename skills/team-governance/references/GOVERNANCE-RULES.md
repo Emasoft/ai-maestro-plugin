@@ -5,7 +5,6 @@ branch: governance-rules
 conforms-to-spec: governance-rules@5.3.3
 synced-blob: "a13bed73fa9e"
 synced-at: 2026-08-08
-synced-commit: e46764f6
 ---
 
 ## Table of contents
@@ -100,8 +99,10 @@ synced-commit: e46764f6
 >   byte-identical document, and records "checked, current" — manufacturing
 >   confidence instead of supplying information. Measured upstream: the tip moved
 >   across four unrelated commits while the spec blob sat unchanged for 13 days.
->   `synced-commit` below is kept for provenance only; it is NOT the signal.
-> - Synced from commit: `e46764f6` (on the `governance-rules` branch — provenance, not the change signal)
+> - Synced from commit `e46764f6` on the `governance-rules` branch. **Provenance
+>   only — deliberately NOT a frontmatter field**, so nobody polls it by reaching
+>   for the nearest sha. The frontmatter carries exactly one pointer, and it is
+>   the blob.
 > - Re-synced into `ai-maestro-plugin` on: 2026-08-08 (v5.3.3 — adds **R42.8**,
 >   the MANAGER/COS blocked-prompt unblock carve-out, plus the R22.2 and R39.2
 >   factual corrections). **Read R42.8's verb list from the row, never from a
