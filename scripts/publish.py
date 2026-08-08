@@ -67,6 +67,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # Relative paths of the integrity-pinned pre-push hook and its sha256 pin.
@@ -1775,16 +1776,68 @@ def detect_bump_type(root: Path) -> str:
     return "patch"
 
 
+def _changelog_section(changelog: Path, version: str) -> str | None:
+    """The `## [<version>]` section of CHANGELOG.md, or None if not found.
+
+    Returns None rather than an empty string on a miss, so the caller can tell
+    "this version has no entries" (never happens — git-cliff always writes a
+    heading) from "the heading is not where I expected", which is a parse
+    failure and must not be published as empty release notes.
+    """
+    try:
+        lines = changelog.read_text().splitlines()
+    except OSError:
+        return None
+    start = None
+    for i, line in enumerate(lines):
+        if line.startswith(f"## [{version}]"):
+            start = i
+            break
+        # Only the FIRST `## [` may be ours: step 9 prepends, so this version is
+        # always the newest section. Hitting a different one first means the
+        # heading we want is absent and something upstream changed shape.
+        if line.startswith("## ["):
+            return None
+    if start is None:
+        return None
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if lines[j].startswith("## ["):
+            end = j
+            break
+    return "\n".join(lines[start:end]).rstrip() + "\n"
+
+
 def stage_changelog(root: Path, new_ver: str, dry_run: bool) -> None:
-    """Step 9: Generate CHANGELOG.md with git-cliff using the bumped tag.
+    """Step 9: PREPEND this release's section to CHANGELOG.md with git-cliff.
 
-    Uses the git-cliff pattern recommended for release pipelines:
-        git cliff --bump --unreleased --tag v<NEXT> -o CHANGELOG.md
+        git cliff --bump --unreleased --tag v<NEXT> --prepend CHANGELOG.md
 
-    --bump          promote the unreleased section into a dated tag entry
-    --unreleased    process only commits since the last tag
-    --tag v<NEXT>   label the new entry with the computed version (prefixed v)
-    -o CHANGELOG.md write the regenerated changelog back to disk
+    --bump              promote the unreleased section into a dated tag entry
+    --unreleased        process only commits since the last tag
+    --tag v<NEXT>       label the new entry with the computed version
+    --prepend FILE      insert the new section ABOVE the existing content
+
+    `--prepend`, NOT `-o`. With `--unreleased -o CHANGELOG.md`, git-cliff writes
+    ONLY the current unreleased range and the redirect overwrites the file — so
+    every release DESTROYED its predecessor's section, and CHANGELOG.md had been
+    reduced to exactly one version for its whole history while its own first line
+    promised "All notable changes to this project will be documented in this
+    file." The GitHub releases each kept their own notes, so nothing was lost
+    where anyone looked, which is why it survived this long: the file was wrong
+    in the one place nobody reads because they read the releases instead.
+
+    Caught during the v3.1.1 publish, when a stale index.lock left the bump
+    artifacts on disk and the diff showed the v3.1.0 section being deleted rather
+    than added to. It was NOT introduced by that failure — every prior release
+    did the same thing; the interrupted run is just what made it visible.
+
+    Upstream fixed the same defect in its canonical emitter at CPV v5.3.0
+    ("canon: Stop destroying CHANGELOG history"). This repo's pipeline is drifted
+    from that scaffold (RC-PIPELINE-DRIFT-001 names publish.py), so bumping the
+    CPV pin does NOT deliver the fix here — it has to be applied locally, which
+    is this change. Do not assume a pin bump carries a pipeline fix into a
+    drifted copy; verify the behaviour, not the version.
     """
     cprint(f"\n{BOLD}[9/11] Generating changelog (git-cliff)...{NC}")
     if not shutil.which("git-cliff"):
@@ -1795,13 +1848,21 @@ def stage_changelog(root: Path, new_ver: str, dry_run: bool) -> None:
         cprint(f"  {YELLOW}No cliff.toml — skipping changelog.{NC}")
         return
     tag = f"v{new_ver}"
+    changelog = root / "CHANGELOG.md"
     if dry_run:
-        cprint(f"  Would run: git-cliff --bump --unreleased --tag {tag} -o CHANGELOG.md")
+        cprint(f"  Would run: git-cliff --bump --unreleased --tag {tag} --prepend CHANGELOG.md")
         return
-    run(
-        ["git-cliff", "--bump", "--unreleased", "--tag", tag, "-o", "CHANGELOG.md"],
-        cwd=root,
-    )
+    # --prepend needs the file to exist; on a fresh repo fall back to a write.
+    if changelog.is_file():
+        run(
+            ["git-cliff", "--bump", "--unreleased", "--tag", tag, "--prepend", "CHANGELOG.md"],
+            cwd=root,
+        )
+    else:
+        run(
+            ["git-cliff", "--bump", "--unreleased", "--tag", tag, "-o", "CHANGELOG.md"],
+            cwd=root,
+        )
     cprint(f"  {GREEN}CHANGELOG.md updated with {tag}.{NC}")
 
 
@@ -1969,13 +2030,45 @@ def stage_gh_release(root: Path, new_ver: str, dry_run: bool) -> None:
     # --generate-notes only when no CHANGELOG is present. Passing both
     # flags simultaneously produces undefined behavior across gh versions
     # (some concatenate, some override) — never both.
+    #
+    # Ship ONLY THIS VERSION'S SECTION. This used to pass the whole file, which
+    # was harmless only because step 9 overwrote CHANGELOG.md with a single
+    # section every release — the file and the notes were the same thing by
+    # accident. Making the changelog cumulative (step 9, `--prepend`) breaks
+    # that coupling, and passing the whole file would then publish the entire
+    # project history as every release's notes. The two changes are one change;
+    # landing the prepend without this is the regression it hides.
     args = ["gh", "release", "create", tag, "--title", tag]
-    if changelog_file.is_file():
+    notes = _changelog_section(changelog_file, new_ver) if changelog_file.is_file() else None
+    notes_file: Path | None = None
+    if notes is not None:
+        # OUTSIDE the repo, deliberately. Written after step 10's commit, so it
+        # would not be committed — but it would leave the tree dirty, and step
+        # [1/11] of the NEXT publish refuses on a dirty tree. A scratch file
+        # that quietly blocks the following release is a worse bug than the one
+        # this whole change fixes.
+        fd, tmp_path = tempfile.mkstemp(prefix="release-notes-", suffix=".md")
+        os.close(fd)
+        notes_file = Path(tmp_path)
+        notes_file.write_text(notes)
+        args.extend(["--notes-file", str(notes_file)])
+    elif changelog_file.is_file():
+        # The section could not be located — ship the whole file rather than
+        # nothing. A release with too many notes is recoverable by editing it;
+        # one with none loses the record.
+        cprint(f"  {YELLOW}Could not isolate the {tag} section — using the whole CHANGELOG.{NC}")
         args.extend(["--notes-file", str(changelog_file)])
     else:
         args.append("--generate-notes")
     cprint(f"  {BLUE}$ {' '.join(args)}{NC}")
-    result = gh_with_retry(args, cwd=str(root), check=False, capture_output=True)
+    try:
+        result = gh_with_retry(args, cwd=str(root), check=False, capture_output=True)
+    finally:
+        # In `finally`, not after the call: every branch below either returns or
+        # sys.exit()s, so a cleanup placed on the success path alone would leak
+        # the file on exactly the runs that are re-run most.
+        if notes_file is not None:
+            notes_file.unlink(missing_ok=True)
     if result.stdout and result.stdout.strip():
         cprint(result.stdout.strip())
     if result.stderr and result.stderr.strip():
