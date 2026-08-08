@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 blocked-by: []
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-08T12:07:21+0200
+updated: 2026-08-08T15:27:51+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 min-approval-requirement: none
@@ -82,6 +82,29 @@ codebase to align with them and take advantage of them"* — followed by the ful
      cross-session channel exists, and no hub session can change a `USER-set` Tier-3 rule. **A1
      remains open with the USER.** The routing ruling makes the gap survivable; it does not make
      the sentence true.
+
+   **CORE'S OWN HALF IS NOW DONE (2026-08-08, v3.1.9) — and it was a real defect, not just the
+   rule's.** An independent finding by the ASSISTANT role-plugin (`ai-maestro#131`) screened 7
+   role-plugin personas: **7 of 7 assert the comm-graph 403 enforces the rule; 0 of 7 name the
+   transport that cannot return one.** I ran the same measurement on CORE and it was in the same
+   state — 4 files asserting `title_communication_forbidden`, 0 mentioning `SendMessage`. Worse
+   than the personas, because the personas inherit their messaging contract from CORE's own
+   `agent-messaging`.
+
+   **The specific defect, which is the part worth remembering:** `ama-session` told the reader
+   *"To influence another agent, send it a message (AMP) and let it decide"* — a correct rule with
+   a wrong reflex attached, because a tool literally named `SendMessage` sits in every session's
+   toolbelt. CORE already taught *"a 403 is not the boundary"*, but argued it from the shared OS
+   uid (`tmux send-keys` works regardless of the API) — **a deliberate circumvention an agent must
+   choose to reach for.** The native tool is the harness's own advertised surface: an agent leaves
+   the governed path without noticing. That is why the uid paragraph did not cover this.
+
+   Fixed in all four files + the `ama-session` line, guarded by
+   `test_no_403_claim_travels_without_the_transport_that_cannot_return_one` (any CORE file
+   asserting the 403 must also name `SendMessage`; fails vacuously-green too, if the corpus is
+   empty). **This does NOT close A1** — the rule text is still the USER's, and the clean split is:
+   plugin text is each plugin's to fix today, rule text is one USER request, not seven
+   reinterpretations. Posted on `ai-maestro#131`.
 
 2. **A3 — CLOSED, implemented (`1c10007`).** The go/no-go asked for here was answered by the
    design, not by waiting: an `O_EXCL` lockfile that **proceeds unlocked on deadline** cannot

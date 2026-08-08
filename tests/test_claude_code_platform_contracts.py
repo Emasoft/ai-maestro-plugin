@@ -18,6 +18,10 @@ The rules, with the release that introduced each:
   * 2.1.221 -- a skill or command named after a terminal-only built-in (`/help`,
     `/feedback`, ...) is un-invocable in non-interactive sessions, so it works when a
     human tries it and fails in exactly the automated runs nobody is watching.
+  * 2.1.224 -- `SendMessage` / `ListAgents` added a native session-to-session transport
+    that never reaches the ai-maestro server. Any text asserting the comm graph is
+    enforced by a 403 became a claim about ONE of two transports, and the unpoliced one
+    is the one an agent reaches for by reflex when told to "send it a message".
 
 Plus one invariant that is ours rather than the platform's, and which every future hook
 addition can break: EVERY event in `hooks/hooks.json` must have a handler, and every
@@ -215,6 +219,37 @@ def test_the_scanners_actually_scanned() -> None:
     assert len(_hook_entries()) >= 10, f"only {len(_hook_entries())} hook entries parsed; the reader is broken"
     skills = [p for p in (PLUGIN_ROOT / "skills").rglob("*.md") if "_dev" not in p.parts]
     assert len(skills) >= 40, f"only {len(skills)} skill files found; the glob is broken"
+
+
+def test_no_403_claim_travels_without_the_transport_that_cannot_return_one() -> None:
+    """2.1.224: a comm-graph 403 is evidence about AMP and about nothing else.
+
+    Every file that tells an agent a forbidden edge returns HTTP 403
+    `title_communication_forbidden` must, in the same file, name the native
+    `SendMessage` transport that returns no such thing — otherwise the claim reads as
+    "every send is checked", and the agent routes around its own comm graph believing
+    the server has it covered.
+
+    Naming the transport IS the scope, which is why that is what is asserted rather
+    than a phrase: a prose marker can be reworded into meaninglessness while still
+    matching, and a file that mentions `SendMessage` at all cannot still be claiming
+    AMP is the only way agents reach each other.
+
+    Measured on `ai-maestro#131`: 7 of 7 role-plugin personas asserted the 403, 0 of 7
+    named the transport. CORE's four files were in the same state; this test is what
+    keeps them out of it.
+    """
+    claims = sorted(
+        p
+        for p in (PLUGIN_ROOT / "skills").rglob("*.md")
+        if "_dev" not in p.parts and "title_communication_forbidden" in p.read_text()
+    )
+    assert claims, "no file asserts the comm-graph 403 — the scanner is broken, not the corpus clean"
+    unscoped = [p.relative_to(PLUGIN_ROOT).as_posix() for p in claims if "SendMessage" not in p.read_text()]
+    assert not unscoped, (
+        "these assert a 403 enforces the comm graph without naming the transport that "
+        f"cannot return one (Claude Code 2.1.224): {unscoped}"
+    )
 
 
 @pytest.mark.parametrize(

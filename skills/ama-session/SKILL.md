@@ -101,8 +101,11 @@ permitted target.
 > ("another agent requires MANAGER, or COS for its own team"). That was the
 > pre-R42 `send-command` model, and R42 revoked the cross-agent *command*
 > case entirely (`TRDD-BF3JN4TL`). To influence another agent, send it a
-> message (AMP) and let it decide — an injected command *is* the recipient's
-> own action, which bypasses its judgment and its governance title.
+> message (**AMP — `amp-send.sh`**, not the harness's own `SendMessage`
+> tool, which reaches the session directly and is graph-checked by nobody;
+> see `agent-messaging`) and let it decide — an injected command *is* the
+> recipient's own action, which bypasses its judgment and its governance
+> title.
 >
 > **R42.8 is a carve-out from the WORK ban, not a hole in it.** An unblock
 > answers a prompt the target itself raised: it supplies a missing input, it

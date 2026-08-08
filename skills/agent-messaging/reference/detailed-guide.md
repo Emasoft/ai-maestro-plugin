@@ -274,6 +274,8 @@ The `AMP_DIR` environment variable points to the agent's directory and is auto-r
 
 AMP enforces a directed communication graph based on governance titles. Each node is a title (plus the HUMAN user); each edge is either `Y` (allowed) or `1` (reply-only). Blank = forbidden. The server calls `lib/communication-graph.ts::validateMessageRoute()` before every delivery and returns HTTP 403 `title_communication_forbidden` on a forbidden edge.
 
+**Scope of that enforcement: AMP only.** Claude Code 2.1.224 added a native session-to-session transport (`SendMessage` / `ListAgents`) that never reaches the server, so `validateMessageRoute()` is not consulted and a forbidden edge over it returns no error. The graph still binds the agent there; nothing enforces it. Use `amp-send.sh` for inter-agent coordination, and see the SKILL body's *"The 403 covers AMP"* section.
+
 ### Graph Nodes
 
 | Node | Description |

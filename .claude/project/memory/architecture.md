@@ -272,6 +272,32 @@ overwrites a more SPECIFIC classification that is still pending.** That carry-th
 age bound** — `PostToolUse` is what ends the state, and a blocked agent stays blocked for hours
 (17h observed), so any window would re-drop the question in exactly the case it exists for.
 
+
+^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: Claude Code 2.1.224's native SendMessage reaches another session with no server in the path, so a forbidden send returns nothing at all", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport, ocd: 2026-08-08, lmd: 2026-08-08]
+
+Claude Code **2.1.224** added `SendMessage` / `ListAgents` — a native session-to-session
+transport between live Claude Code sessions on one machine that **never reaches the
+ai-maestro server**. `validateMessageRoute()` is not consulted, so a forbidden edge over
+that path returns **no** HTTP 403 `title_communication_forbidden`; nothing on it can.
+
+**A 403 you never received is not permission.** R6 and R42 bind an agent on both
+transports; only AMP can tell it when it broke them. `amp-send.sh` is the verb that gets
+signed, routed, graph-checked and recorded.
+
+Measured 2026-08-08 (`ai-maestro#131`, filed by the ASSISTANT role-plugin): **7 of 7**
+role-plugin personas asserted server enforcement, **0 of 7** named the transport. CORE was
+in the same state — 4 files asserting the 403, 0 mentioning `SendMessage` — which was worse,
+because those personas inherit their messaging contract from CORE's `agent-messaging`.
+
+Fixed in CORE v3.1.9 across `agent-messaging` (SKILL + detailed-guide) and `team-governance`
+(SKILL + REFERENCE), guarded by
+`tests/test_claude_code_platform_contracts.py::test_no_403_claim_travels_without_the_transport_that_cannot_return_one`.
+
+The rule-text half is NOT fixed and is not CORE's: R42.3 ("messaging is the ONLY channel")
+is false as written, and R42 is `CRITICAL — IRON, USER-set` ⇒ Tier 3. Tracked as A1 of
+`TRDD-OH3N6OXJ`, open with the USER. The clean split: plugin text is each plugin's to fix
+today; rule text is ONE user request, not seven reinterpretations.
+
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
   DO NOT re-add a `rules/` directory or an `install-governance-rules.cjs` SessionStart installer to

@@ -25,6 +25,28 @@ Send and receive cryptographically signed messages between AI agents using the A
 
 AMP uses a title-based directed graph with HUMAN as a first-class node. Edge types: `Y` (allow), `1` (reply-only — requires `options.inReplyToMessageId` on an inbound H→agent message; one reply per inbound). Subagents are not nodes and **cannot send messages**. Server enforces via `validateMessageRoute()`; forbidden edges return HTTP 403 `title_communication_forbidden`. Full 9-column matrix + rules R6.1–R6.14 in the detailed-guide Communication Graph section (linked with its complete TOC in Resources below).
 
+### The 403 covers AMP. It cannot cover the harness's own transport.
+
+Everything above — the graph, `validateMessageRoute()`, the 403 — describes messages
+sent over **AMP**. Claude Code **2.1.224** added a second, native transport:
+`SendMessage` / `ListAgents` reach another live Claude Code session on the same
+machine **directly, without touching the ai-maestro server**. There is no request
+for `validateMessageRoute()` to inspect, so a forbidden edge over that path returns
+no 403 — nothing on it can.
+
+**So a 403 you never received is not permission.** R6 and R42 bind the agent on both
+transports; only one of them can tell you when you broke them. Prefer AMP for
+inter-agent coordination — it is what gets signed, routed, graph-checked and left as
+a record — and treat a native `SendMessage` to another agent as a send you are
+accountable for unaided.
+
+This is easy to miss precisely because it reads as the obvious thing to do: guidance
+across this fleet says "send it a message", and a tool literally named `SendMessage`
+sits in the toolbelt. The correct verb here is `amp-send.sh`. Measured on
+`ai-maestro#131`: 7 of 7 role-plugin personas asserted server enforcement and 0 of 7
+named the unpoliced transport — CORE's own skills were in the same state until this
+note, which is why it is stated here rather than assumed understood.
+
 **Key rules:**
 
 - **MANAGER**: `Y` to COS + peer MANAGER + MAINTAINER + AUTONOMOUS + HUMAN; **blank to in-team non-COS titles** (route via COS).

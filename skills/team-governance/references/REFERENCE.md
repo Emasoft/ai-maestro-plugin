@@ -188,6 +188,8 @@ done
 
 AMP messaging is governed by the **R6 v2 title-based directed communication graph**. Two edge types: `Y` (allow) and `1` (reply-only — sender MUST pass `options.inReplyToMessageId` referencing an inbound H→agent message; AMP marks the inbound `replied=true` on delivery, so one reply per inbound). Blank = deny. The server enforces this before every delivery in `lib/communication-graph.ts::validateMessageRoute()` and returns HTTP 403 `title_communication_forbidden` on a forbidden edge.
 
+**This describes the AMP transport only.** Claude Code 2.1.224's native `SendMessage` / `ListAgents` reach another live session on the same machine directly, with no server in the path — so no edge is validated and no 403 is possible there. R6 binds the agent on both; only AMP can tell it when it broke R6. See the `agent-messaging` skill.
+
 **Subagents** (spawned task helpers without their own Claude Code instance) **cannot send messages at all** — they are not nodes in the graph.
 
 This section mirrors `docs/GOVERNANCE-RULES.md` §R6 (rules R6.1–R6.10) in the `Emasoft/ai-maestro` server repo. Do not drift — the server's `lib/communication-graph.ts` is the canonical source.
