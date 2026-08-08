@@ -99,7 +99,25 @@ PRE_PUSH_HOOK_PIN_REL = ".githooks/pre-push.sha256"
 # after measuring it here: v4.2.1 --strict -> exit 0, NIT=0 (WARNING=28
 # unchanged, advisory). This is a named, causally-established fix — NOT a
 # licence to bump the pin speculatively.
-CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v5.2.0"
+#
+# v5.2.0 -> v5.4.0: and this one REVISES the "not a licence to bump
+# speculatively" line above, which was right about the direction and wrong about
+# the default. The INTEGRATOR plugin measured its own stale pin (v2.136.1) and
+# found the old ruleset was not merely lagging — it was HIDING seven real
+# defects in its own code that the current one reports. So the cost of a stale
+# pin is not staleness, it is what the narrower ruleset stops looking at:
+#
+#   A CLEAN REPORT FROM A STALE GATE MEANS *UNMEASURED*, NOT *CLEAN*.
+#
+# That inverts the burden. "Bump only for a named, causally-established fix" was
+# protecting against churn, but it licensed an indefinite hold on a gate whose
+# coverage only grows — and absence of findings from a narrower ruleset is
+# evidence of a smaller surface examined, not of a healthier tree. Two named
+# fixes here regardless: v5.3.0 stops the canon pipeline DESTROYING CHANGELOG
+# history (this repo's CHANGELOG.md had been reduced to a single version section
+# by every release), and v5.4.0 syncs the spec to Claude Code v2.1.220-224,
+# which is the platform window this repo was aligned to in TRDD-OH3N6OXJ.
+CPV_REF = "git+https://github.com/Emasoft/claude-plugins-validation@v5.4.0"
 
 # Load gh / git retry wrappers from the sibling module so every push +
 # `gh release create` survives transient github.com hiccups (the retry
