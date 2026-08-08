@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.10] — 2026-08-08
+
+### Bug Fixes
+
+- Wait for .git/index.lock instead of dying on it, and stop taking it
 ## [3.1.9] — 2026-08-08
 
 ### Bug Fixes
