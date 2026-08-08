@@ -77,13 +77,26 @@ synced-at: 2026-08-08
 > - Canonical path: `docs/GOVERNANCE-RULES.md`
 > - Stable raw URL (the long-lived `governance-rules` branch):
 >   `https://raw.githubusercontent.com/Emasoft/ai-maestro/governance-rules/docs/GOVERNANCE-RULES.md`
-> - NOTE (re-verified 2026-08-08): `main` still LAGS the canonical — it carries
->   v4.0.2 while `governance-rules` carries v5.3.3. Do NOT "correct" the URL or
->   the sync source to a `main` path; `governance-rules` is the authoritative
->   home, confirmed by fetching both branches and comparing `version:` fields,
->   never by trusting a doc's self-declared `branch:` frontmatter. **A query
->   against `main` 404s or returns v4.0.2, and neither means anything** — that
->   inference is exactly what produced the 2026-08-07 R42.8 error below.
+> - Do NOT "correct" the URL or the sync source to a `main` path. The reason is
+>   NOT that `main` is behind today — **measured 2026-08-08 16:53 +0200, both refs serve
+>   the SAME blob `a13bed73fa9e`**, because `main` was fast-forwarded to
+>   `governance-rules` that afternoon (`ai-maestro#138`). The durable reason is
+>   the DIRECTION of flow: amendments are authored on `governance-rules` and land
+>   there FIRST; `main` is brought up to it periodically. So between
+>   fast-forwards `main` is the lagging copy, and a consumer pinned to it gets
+>   stale bytes under a perfectly fresh-looking sha. **Equal right now is not
+>   equivalent**, and a change signal has to be right on the day they differ.
+>   (Raised by the AUTONOMOUS role-plugin on `ai-maestro#118`; verified here
+>   independently against both refs before this note was rewritten.)
+>
+>   The previous version of this note said "`main` carries v4.0.2" — true when
+>   written, false within days, and pointing at the right conclusion for a reason
+>   a reader could now check and find WRONG. A warning whose stated reason has
+>   expired invites exactly the "correction" it exists to prevent, so the reason
+>   here is one that survives both states. Never infer from a `main` query
+>   either way: a 404, a v4.0.2, and a matching blob are all equally uninformative
+>   about where amendments land — that class of inference produced the 2026-08-07
+>   R42.8 error below.
 > - **What `conforms-to-spec: governance-rules@5.3.3` asserts, exactly.** That
 >   THIS FILE IS the v5.3.3 catalog — copy fidelity, nothing more. It is
 >   mechanically checkable in one command (below) and it is TRUE: the body
