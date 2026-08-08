@@ -23,7 +23,29 @@ codebase to align with them and take advantage of them"* — followed by the ful
 
 **Where the work stands:** fact-gathering pass DONE (below). Nothing changed in the tree yet.
 
-**NEXT ACTION: nothing — this card is in `human_review` and needs TWO USER decisions.** A2, A4
+> **⚠ RESUME HERE — state as of 2026-08-08. Read the ✅ REVERSED block below before ANY R42.8
+> material; three later sections are superseded and say the opposite.**
+>
+> **R42.8 IS RATIFIED.** My 2026-08-07 "not ratified" finding was a correct measurement with a
+> wrong conclusion; publication lagged the 2026-08-05 grant by three days. CORE's four files are
+> reversed (`fb6f573`), the card records it (`729c5e0`), and all five peer plugins are corrected.
+> **A1's premise is unaffected** (R42.3 re-verified unchanged in the ratified file).
+>
+> **NEW, and the highest-value item on this card:** the ratified row names `read-prompt`/`answer`
+> ONLY and contains **zero** occurrences of `block-state`, while the deployed CLI permits
+> `block-state` cross-agent. **Escalated to the hub** (only it can resolve; two of its plugins have
+> shipped opposite readings). It is load-bearing because `AskUserQuestion` appears in **0 of 419**
+> chat-state records — **which is CORE's own `#59` defect, fixed here and UNPUSHED.**
+>
+> **⇒ Shipping `#59` is now a FLEET-BLOCKING fix, not CORE housekeeping.** That is the strongest
+> argument on this card for pushing the 39 local commits, and it did not exist yesterday.
+>
+> **Done since the card was written:** A2/A4/A5/A6 closed · #21 shipped (all 29 skills declare
+> `user-invocable`; the test now REQUIRES the key, falsified by negative control) · A3 reproduced
+> 5/5 by the orchestrator and filed as `ai-maestro-plugin#61` · `RP-MODEL-01` corrected upstream on
+> the pushed branch.
+
+**REMAINING USER DECISIONS.** A2, A4
 and A5 are DONE (decisions + rationale recorded below). Moved out of `dev` deliberately: `dev`
 asserts someone is working the card right now, and nobody is. Restore to `dev` (see
 `pre-block-column:`) the moment either decision lands.
