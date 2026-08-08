@@ -441,11 +441,6 @@ function readPriorState(cwd) {
     }
 }
 
-// Read current subagent count from state file (for SubagentStart/Stop tracking)
-function getSubagentCount(cwd) {
-    return readPriorState(cwd).subagentCount || 0;
-}
-
 // The version of the plugin that WROTE this state record.
 //
 // The fleet's consumers (the server's block-state verdict, any supervisor reading
@@ -470,13 +465,6 @@ function getPluginVersion() {
     } catch (e) {
         return null;
     }
-}
-
-// The last error this session hit (Emasoft/ai-maestro-plugin#58). Returns null when
-// there is none. writeState reads it from its own single `prior` snapshot; this exists
-// for any caller that needs it outside a write.
-function getLastError(cwd) {
-    return readPriorState(cwd).lastError || null;
 }
 
 // Is this prior record a still-pending AskUserQuestion that a generic notification must
