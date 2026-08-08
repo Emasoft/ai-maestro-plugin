@@ -95,6 +95,30 @@ def test_an_unreadable_changelog_returns_none(tmp_path: Path) -> None:
     assert publish._changelog_section(tmp_path / "CHANGELOG.md", "3.2.0") is None
 
 
+def test_bare_mentions_in_the_notes_abort_the_publish() -> None:
+    """A release body that would PAGE someone must stop the pipeline.
+
+    The body is built from commit subjects, and a commit subject is written long
+    before anyone thinks about GitHub notifications. `@name` there flows commit ->
+    changelog -> --notes-file -> a published release that pings a real account,
+    and redaction is not undo: the notification is already delivered.
+    """
+    import pytest as _pytest
+
+    with _pytest.raises(SystemExit):
+        publish._refuse_bare_mentions("- thanks @someone for the report", "v1.2.3")
+
+
+def test_inert_at_shapes_do_not_abort_the_publish() -> None:
+    """The forms `gh api markdown` proves do NOT notify must pass.
+
+    A gate that reddens on `actions/checkout@v4` in a commit subject gets deleted
+    within a week, and then nothing checks the shape that does page.
+    """
+    safe = "- bump actions/checkout@v4 and @types/node; contact user@example.com"
+    publish._refuse_bare_mentions(safe, "v1.2.3")  # must not raise
+
+
 def test_the_real_changelog_yields_the_current_version() -> None:
     """Against the shipped file at the shipped version — the end-to-end case.
 

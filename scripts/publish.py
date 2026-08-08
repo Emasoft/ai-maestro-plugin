@@ -1776,6 +1776,52 @@ def detect_bump_type(root: Path) -> str:
     return "patch"
 
 
+# A mention fires only at a word boundary, never AFTER `/`, `.`, `-` or another
+# `@`, and never BEFORE `/`. Measured with `gh api markdown`, so trust it over
+# intuition: `@janitor.` and `(@janitor)` PAGE; `actions/checkout@v4`,
+# `@types/node` and `user@host` do not.
+#
+# The trailing `(?!/)` is the half the prose scanner in
+# tests/test_no_bare_github_mentions.py can omit and this one cannot: that one
+# gates on an allowlist of handles this ecosystem actually writes, so `@types`
+# never reaches a verdict. This gate is unconditional on the handle, so a scoped
+# npm package would abort a publish for nothing — which is how a correct gate
+# gets deleted. Caught by its own inert-shapes test on the first run.
+_RELEASE_MENTION = re.compile(r"(?<![\w/@.\-])@([A-Za-z][A-Za-z0-9-]{1,38})\b(?!/)")
+
+
+def _refuse_bare_mentions(notes: str, tag: str) -> None:
+    """Abort before publishing release notes that would PAGE a real account.
+
+    The release body is built from COMMIT SUBJECTS by git-cliff, and a commit
+    subject is written months before anyone thinks about GitHub notifications. An
+    `@name` in one flows commit -> changelog -> `--notes-file` -> a published
+    release that pings whoever owns that handle. Redaction is not undo: the
+    notification has already been delivered, and edit history is kept.
+
+    This gate sits HERE rather than in the test suite because of WHEN each runs.
+    Tests run at step 3; the changelog is generated at step 9. A suite scanning
+    CHANGELOG.md therefore checks the PREVIOUS release's notes — useful standing
+    coverage, but it cannot gate the notes actually about to ship. This checks the
+    exact string that becomes the release body.
+
+    Deliberately unconditional on the handle: unlike the prose scanner, which
+    allowlists inert shapes because this ecosystem writes `@manager` constantly in
+    documentation, a release body is short, machine-generated, and has no business
+    containing an at-mention at all. A false positive costs one commit-subject
+    reword; a false negative pages a stranger. (Upstream: claude-plugins-validation#202.)
+    """
+    hits = sorted({m.group(0) for m in _RELEASE_MENTION.finditer(notes)})
+    if not hits:
+        return
+    cprint(f"  {RED}REFUSED — the {tag} release notes carry a bare @mention: {', '.join(hits)}{NC}")
+    cprint(f"  {YELLOW}Publishing this would notify a real GitHub account, and redaction{NC}")
+    cprint(f"  {YELLOW}does not undo a delivered notification. The source is a COMMIT{NC}")
+    cprint(f"  {YELLOW}SUBJECT — amend or reword it, regenerate CHANGELOG.md, retry.{NC}")
+    cprint(f"  {YELLOW}The tag {tag} is already pushed; the release is what is held.{NC}")
+    sys.exit(1)
+
+
 def _changelog_section(changelog: Path, version: str) -> str | None:
     """The `## [<version>]` section of CHANGELOG.md, or None if not found.
 
@@ -2040,6 +2086,8 @@ def stage_gh_release(root: Path, new_ver: str, dry_run: bool) -> None:
     # landing the prepend without this is the regression it hides.
     args = ["gh", "release", "create", tag, "--title", tag]
     notes = _changelog_section(changelog_file, new_ver) if changelog_file.is_file() else None
+    if notes is not None:
+        _refuse_bare_mentions(notes, tag)
     notes_file: Path | None = None
     if notes is not None:
         # OUTSIDE the repo, deliberately. Written after step 10's commit, so it
