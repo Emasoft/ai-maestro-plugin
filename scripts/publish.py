@@ -735,6 +735,29 @@ def _get_origin_slug(root: Path) -> str | None:
     return f"{parts[0]}/{parts[1]}"
 
 
+RATIFIED_BASELINE_RULESETS = ("baseline-history-protect", "baseline-pr-and-checks")
+
+
+def _fetch_ruleset_names(slug: str) -> list[str] | None:
+    """Ruleset names on the origin, or None when they cannot be read.
+
+    Goes through gh_with_retry like every other gh call here: a transient
+    github.com hiccup must not read as "no ratified baseline present", which
+    is the one wrong answer that would let the destructive command run.
+    """
+    try:
+        r = gh_with_retry(
+            ["gh", "api", f"repos/{slug}/rulesets", "--jq", ".[].name"],
+            check=False,
+            capture_output=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0:
+        return None
+    return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
+
+
 def install_branch_rules(root: Path) -> int:
     """Apply the cpv-branch-rules ruleset to the repo's GitHub origin.
 
@@ -744,6 +767,31 @@ def install_branch_rules(root: Path) -> int:
     gate that enforces CI as a required status check — the local pre-push
     hook alone is bypassable with `git push --no-verify`, but a ruleset is
     enforced by GitHub itself.
+
+    REFUSES on a repo already carrying the ratified `baseline-*` pair, because
+    on such a repo the upstream command does real harm. Verified by reading
+    CPV v5.3.0 `scripts/setup_branch_rules.py` first-hand, not inferred:
+
+      * `:110  RULESET_NAME = "cpv-branch-rules"` is hardcoded, and the file
+        contains ZERO occurrences of "baseline-" — it has no concept of the
+        ratified names at all, so it can only ever ADD a third ruleset beside
+        them. Under `manager-approval-defaults` §F that is "adding a new
+        ruleset affecting the default branch": NON-exempt, MANAGER-approval.
+      * `:326  fetch_legacy_protection_rulesets()` classifies as "legacy" any
+        non-cpv ruleset whose rules intersect {pull_request,
+        required_status_checks, required_signatures, code_quality}.
+        `baseline-pr-and-checks` carries the first two, so it ALWAYS matches;
+        `:694` then prints `gh api --method DELETE .../rulesets/<id>` for it.
+
+    So a plugin author following this flag's own output ends up with the
+    ratified pair half-deleted and a non-ratified ruleset in its place. The
+    hazard shipped from HERE — this function is what put that command in front
+    of every downstream plugin — which is why the refusal lives here and not
+    only in an upstream bug report (claude-plugins-validation#203).
+
+    `baseline-history-protect` survives only by accident: deletion /
+    non_fast_forward / required_linear_history do not intersect that set, so
+    it is never flagged. Do not read its survival as the command being safe.
     """
     cprint(f"\n{BOLD}Installing branch-protection ruleset...{NC}")
     slug = _get_origin_slug(root)
@@ -752,6 +800,22 @@ def install_branch_rules(root: Path) -> int:
         cprint(f"  {YELLOW}Set `git remote add origin <url>` first, then retry.{NC}")
         return 1
     cprint(f"  Target repo: {slug}")
+
+    names = _fetch_ruleset_names(slug)
+    if names is None:
+        # Fail CLOSED. An unreadable ruleset list cannot rule out the ratified
+        # pair, and the failure this guards against is destructive.
+        cprint(f"  {RED}Could not read {slug}'s rulesets — refusing to run.{NC}")
+        cprint(f"  {YELLOW}Check `gh auth status`; this guard fails closed by design.{NC}")
+        return 1
+    present = [n for n in RATIFIED_BASELINE_RULESETS if n in names]
+    if present:
+        cprint(f"  {RED}REFUSED — {slug} carries the ratified baseline: {', '.join(present)}.{NC}")
+        cprint(f"  {YELLOW}cpv-setup-branch-rules would add a non-ratified 'cpv-branch-rules'{NC}")
+        cprint(f"  {YELLOW}beside them (a §F non-exempt change) and then advise DELETING{NC}")
+        cprint(f"  {YELLOW}baseline-pr-and-checks by id. See claude-plugins-validation#203.{NC}")
+        cprint(f"  {YELLOW}The ratified pair IS the baseline — nothing to install here.{NC}")
+        return 1
     try:
         r = subprocess.run(
             [
