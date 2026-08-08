@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 pre-block-column: dev
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-07T19:03:43+0200
+updated: 2026-08-08T10:33:44+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 approval-tier: 0
@@ -21,46 +21,65 @@ relevant-rules: []
 codebase to align with them and take advantage of them"* — followed by the full changelog for
 **2.1.208 → 2.1.224**.
 
-**Where the work stands:** fact-gathering pass DONE (below). Nothing changed in the tree yet.
-
 > **⚠ RESUME HERE — state as of 2026-08-08. Read the ✅ REVERSED block below before ANY R42.8
 > material; three later sections are superseded and say the opposite.**
 >
-> **R42.8 IS RATIFIED.** My 2026-08-07 "not ratified" finding was a correct measurement with a
-> wrong conclusion; publication lagged the 2026-08-05 grant by three days. CORE's four files are
-> reversed (`fb6f573`), the card records it (`729c5e0`), and all five peer plugins are corrected.
-> **A1's premise is unaffected** (R42.3 re-verified unchanged in the ratified file).
+> **R42.8 IS RATIFIED, and the exception verbs are THREE.** My 2026-08-07 "not ratified" finding
+> was a correct measurement with a wrong conclusion; publication lagged the 2026-08-05 grant by
+> three days. CORE's four files are reversed (`fb6f573`), the card records it (`729c5e0`), and all
+> five peer plugins are corrected. **A1's premise is unaffected** (R42.3 re-verified unchanged in
+> the ratified file).
 >
-> **NEW, and the highest-value item on this card:** the ratified row names `read-prompt`/`answer`
-> ONLY and contains **zero** occurrences of `block-state`, while the deployed CLI permits
-> `block-state` cross-agent. **Escalated to the hub** (only it can resolve; two of its plugins have
-> shipped opposite readings). It is load-bearing because `AskUserQuestion` appears in **0 of 419**
-> chat-state records — **which is CORE's own `#59` defect, fixed here and UNPUSHED.**
+> **The verb list settled at v5.3.3 (tip `e46764f6`, 2026-08-08T06:03:37Z): `block-state`,
+> `read-prompt`, `answer` — exhaustive.** I read v5.3.2, found no `block-state`, and reported a
+> doc-vs-implementation gap. The hub checked the SERVER instead of the doc, found
+> `lib/sudo-guard.ts:449` routes `GET /api/agents/[id]/block-state` through the same
+> `unblock-prompt` action, and published v5.3.3 **twelve minutes** after v5.3.2. The DOC was the
+> stale side. **Second time in two days I measured one commit early** — the dividing line is
+> CALLER DECISION, not read-vs-write.
 >
-> **⇒ Shipping `#59` is now a FLEET-BLOCKING fix, not CORE housekeeping.** That is the strongest
-> argument on this card for pushing the 39 local commits, and it did not exist yesterday.
+> **A3 IS DONE AND VERIFIED (`1c10007`).** The lock is in. Measured with one harness before and
+> after, 16-way, five trials: **pre-fix starts 10, 9, 10, 9, 9 (want 16); post-fix 16 ×5.** After
+> 12 stops with four subagents still live: pre-fix reached `(0,'active')` in 2 of 5 — the restart
+> gate open on a busy agent — post-fix `(4,'subagents_running')` ×5.
+>
+> **The mirror was three days stale and had no R42.8 at all** — re-synced to v5.3.3 (`5d664b8`),
+> which also carried in two corrections CORE never had: R22.2 (the byline template lost its `@`)
+> and R39.2. Separately, three live CORE surfaces taught the R29.1 miscount the USER deleted on
+> 2026-07-14 — **25 days stale, found only because AUTONOMOUS audited its own tree and told me to
+> check mine** (`ea8643b`).
 >
 > **Done since the card was written:** A2/A4/A5/A6 closed · #21 shipped (all 29 skills declare
-> `user-invocable`; the test now REQUIRES the key, falsified by negative control) · A3 reproduced
-> 5/5 by the orchestrator and filed as `ai-maestro-plugin#61` · `RP-MODEL-01` corrected upstream on
-> the pushed branch.
+> `user-invocable`; the test now REQUIRES the key, falsified by negative control) · **A3
+> implemented + falsified** · mirror re-synced · R29.1 corrected · `RP-MODEL-01` corrected
+> upstream on the pushed branch.
 
-**REMAINING USER DECISIONS.** A2, A4
-and A5 are DONE (decisions + rationale recorded below). Moved out of `dev` deliberately: `dev`
-asserts someone is working the card right now, and nobody is. Restore to `dev` (see
-`pre-block-column:`) the moment either decision lands.
+**REMAINING: A1 only.** A2–A6 are DONE (decisions + rationale recorded below).
 
 1. **A1 — governance wording.** R42.3 is false as written. R42 is `CRITICAL — IRON, USER-set` ⇒
    **Tier 3**; neither MANAGER nor this agent may edit it even to make it true. Options put to
    the USER: **document-only** (recommended — see the correction below; the platform already
    defends the authority concern, so this is an audit/routing blind spot, not a hole),
-   **bridge** (accept native as transport, keep AID on top), or **forbid**.
-2. **A3 — implementation go/no-go.** The `subagentCount` lock is a Tier-0 change I can make, but
-   it puts a lockfile in a hook that fires on **every event of every Claude Code session on this
-   machine**. A stale-lock or missing-timeout bug hangs the whole machine, so it wants an
-   explicit go rather than a drive-by at the end of a long session. Recommended shape: `O_EXCL`
-   lockfile mutex with a staleness timeout, chosen because only a lock closes the window the
-   file's own comment names.
+   **bridge** (accept native as transport, keep AID on top), or **forbid**. It sits with the
+   hub's USER. **A1 has since acquired live corroboration beyond the original observation:** three
+   peer plugins independently routed to CORE this session because the hub is unreachable on the
+   native channel (no `from` address, absent from `ListAgents`), each having been told by its own
+   user to "align with the ai-maestro claude". Four sessions instructed to follow a session none
+   of them can address is the routing gap A1 names, no longer hypothetical.
+
+2. **A3 — CLOSED, implemented (`1c10007`).** The go/no-go asked for here was answered by the
+   design, not by waiting: an `O_EXCL` lockfile that **proceeds unlocked on deadline** cannot
+   wedge the machine, because its worst case is exactly the behaviour it replaces. That is what
+   made a lock safe to put in a hook firing on every event of every session on this box — the
+   objection was never to locking, it was to a lock that could fail closed.
+
+   Scope grew once the lock existed, because the same defect was in three more places: seven
+   handlers read the counter OUTSIDE writeState and branched on it, so `writeState` gained a
+   resolver form (`prior => state`) that puts read, decision and write in one critical section; a
+   resolver may return null to mean DO NOT WRITE, for the two branches that stand down on a
+   pending question (deciding whether to write is the same RMW, and outside the lock it clobbers
+   the question it was written to protect — `#59` again by another route); and `index.json` is
+   machine-global, so the per-cwd lock never covered it — it had neither a lock nor tmp+rename.
 
 ### Verified facts about THIS repo (✓ = read, not grepped-and-assumed)
 
@@ -569,11 +588,17 @@ platform's own inter-agent messaging is asserting something untrue.
 
 ## Acceptance
 
-- [ ] A1 decided and the R42 sites reconciled (or a proposal filed if it changes a rule)
-- [ ] A2 assessed with an explicit register/do-not-register decision and its reason
-- [ ] A3 `subagentCount` semantics re-verified against depth-3 nesting
-- [ ] A4 assessed against the publish pipeline
-- [ ] A5 `claude plugin validate` run clean; `mode:` absence re-verified by reading, not grep
-- [ ] Full suite green
+- [ ] A1 decided and the R42 sites reconciled (or a proposal filed if it changes a rule) — with
+      the hub's USER; the only box this card still needs
+- [x] A2 assessed with an explicit register/do-not-register decision and its reason — do NOT
+      register `DirectoryAdded`; adding a root does not change `cwd`, which is what keys the state
+- [x] A3 `subagentCount` semantics re-verified against depth-3 nesting — and the race CLOSED
+      (`1c10007`), falsified against the pre-fix file with one harness: 10/9/10/9/9 → 16 ×5
+- [x] A4 assessed against the publish pipeline — the `archive` source is a marketplace-repo
+      change, so it belongs upstream, not in CORE's `publish.py`
+- [x] A5 `claude plugin validate` run clean; `mode:` absence re-verified by reading, not grep —
+      one false-positive warning about the root CLAUDE.md; zero Task `mode:` uses (the single grep
+      hit was prose about `/review`)
+- [x] Full suite green — 340 passed
 
 ## Approval log
