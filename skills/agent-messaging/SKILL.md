@@ -42,10 +42,17 @@ accountable for unaided.
 
 This is easy to miss precisely because it reads as the obvious thing to do: guidance
 across this fleet says "send it a message", and a tool literally named `SendMessage`
-sits in the toolbelt. The correct verb here is `amp-send.sh`. Measured on
-`ai-maestro#131`: 7 of 7 role-plugin personas asserted server enforcement and 0 of 7
-named the unpoliced transport — CORE's own skills were in the same state until this
-note, which is why it is stated here rather than assumed understood.
+sits in the toolbelt. The correct verb here is `amp-send.sh`. Screened on
+`ai-maestro#131`: **7 of 7** role-plugin personas asserted server enforcement without
+scoping it — CORE's own skills were in the same state until this note, which is why it
+is stated here rather than assumed understood.
+
+*(That screen's companion figure — "0 of 7 named the transport" — is known to be off by
+at least one row: the ARCHITECT plugin reported that its pre-edit persona DID name
+`SendMessage`/`ListAgents` and still made the unscoped enforcement claim. The finding
+survives its own evidence being one column wrong, and the correction matters: **naming
+the transport and scoping the claim are independent**, so a body can pass a keyword scan
+and still promise that every send is checked.)*
 
 **Think in terms of the RECIPIENT, not the transport.** A route you may not take over
 AMP you may not take over native `SendMessage` either. The graph binds you; the

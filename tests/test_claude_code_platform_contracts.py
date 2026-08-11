@@ -48,6 +48,19 @@ _USER_CONFIG = re.compile(r"\$\{\s*user_config\.")
 # Permission-rule spellings that warn at startup (2.1.210).
 _WARNING_RULE = re.compile(r"^(Write|Glob|NotebookEdit)\(")
 
+# The claim that makes a 403 mention safe: the native transport is NOT policed. Naming
+# `SendMessage` is not enough on its own -- the ARCHITECT role-plugin's counterexample on
+# ai-maestro#131 was a body that named the tool and still opened with "violations return
+# HTTP 403", which passes a keyword scan while making exactly the false promise. Kept as a
+# permissive alternation of the SEMANTIC forms rather than one blessed sentence: a gate
+# that reddens on correct writing gets deleted, and then nothing checks the property.
+_NOT_POLICED = re.compile(
+    r"no 403|cannot return (one|a 403)|not enforced|nothing on (that|it) path can|"
+    r"no server in the path|without touching the (ai-maestro )?server|never (reaches|traverses) the server|"
+    r"returns no(thing| such| error| 403)|no place for one|unpoliced",
+    re.IGNORECASE,
+)
+
 # Terminal-only built-ins: a plugin skill with one of these names loads fine and is
 # simply un-invocable headlessly (2.1.221).
 _TERMINAL_BUILTINS = frozenset(
@@ -263,11 +276,42 @@ def test_no_403_claim_travels_without_the_transport_that_cannot_return_one() -> 
         if p.is_file() and "_dev" not in p.parts and "title_communication_forbidden" in p.read_text()
     )
     assert claims, "no file asserts the comm-graph 403 — the scanner is broken, not the corpus clean"
-    unscoped = [p.relative_to(PLUGIN_ROOT).as_posix() for p in claims if "SendMessage" not in p.read_text()]
-    assert not unscoped, (
+    unnamed = [p.relative_to(PLUGIN_ROOT).as_posix() for p in claims if "SendMessage" not in p.read_text()]
+    assert not unnamed, (
         "these assert a 403 enforces the comm graph without naming the transport that "
-        f"cannot return one (Claude Code 2.1.224): {unscoped}"
+        f"cannot return one (Claude Code 2.1.224): {unnamed}"
     )
+    unscoped = [
+        p.relative_to(PLUGIN_ROOT).as_posix() for p in claims if not _NOT_POLICED.search(p.read_text())
+    ]
+    assert not unscoped, (
+        "these name the transport but never say it is UNPOLICED, so the 403 still reads as "
+        f"covering every send: {unscoped}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("body", "should_pass"),
+    [
+        # The ARCHITECT's counterexample: names the tool, still promises enforcement.
+        ("The graph is ENFORCED at the API — violations return 403. See SendMessage.", False),
+        # A bare name-drop with no claim about policing at all.
+        ("Use SendMessage to reach another session.", False),
+        # The forms CORE's own files use.
+        ("native SendMessage never reaches the server, so no 403 is possible", True),
+        ("SendMessage is not enforced by validateMessageRoute()", True),
+        ("SendMessage reaches the session with no server in the path", True),
+    ],
+)
+def test_the_not_policed_matcher_rejects_a_bare_name_drop(body: str, should_pass: bool) -> None:
+    """Falsifies the matcher, not just the corpus.
+
+    The first case is the one that matters: it is the real body the ARCHITECT found in its
+    own persona (ai-maestro#131), and the previous guard — which asserted only that
+    `SendMessage` appears — passed it. A file can name the transport and still tell the
+    reader every send is checked, which is the entire failure being guarded against.
+    """
+    assert bool(_NOT_POLICED.search(body)) is should_pass, f"misclassified: {body!r}"
 
 
 @pytest.mark.parametrize(
