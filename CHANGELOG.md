@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.14] — 2026-08-11
+
+### Bug Fixes
+
+- The 403 guard scanned skills/ only, and was green while a scenario carried an unscoped claim
 ## [3.1.13] — 2026-08-08
 
 ### Documentation
