@@ -39,19 +39,30 @@ const { execFile } = require('child_process');
 async function readStdin() {
     return new Promise((resolve, reject) => {
         let data = '';
+        // CLEAR the guard timer on every exit path, and unref it besides. A pending
+        // setTimeout keeps Node's event loop alive even after the promise has resolved,
+        // so the un-cleared version made EVERY hook invocation take the full 5s — the
+        // promise settled in ~1ms and the process then sat waiting for a timer nobody
+        // was listening to. Measured: 5.04-5.08s per invocation across 9 runs, with a
+        // real payload as well as with closed stdin, on a hook that fires for ~12 events
+        // in every session. unref() alone would fix the hang; clearTimeout is what stops
+        // a late `{timeout: true}` from racing a value that already resolved.
+        const timer = setTimeout(() => resolve({ timeout: true }), 5000);
+        if (typeof timer.unref === 'function') timer.unref();
+        const settle = (fn) => (arg) => { clearTimeout(timer); fn(arg); };
+        const done = settle(resolve);
+        const fail = settle(reject);
+
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', chunk => { data += chunk; });
         process.stdin.on('end', () => {
             try {
-                resolve(data ? JSON.parse(data) : {});
+                done(data ? JSON.parse(data) : {});
             } catch (e) {
-                resolve({ raw: data });
+                done({ raw: data });
             }
         });
-        process.stdin.on('error', reject);
-
-        // Timeout after 5 seconds
-        setTimeout(() => resolve({ timeout: true }), 5000);
+        process.stdin.on('error', fail);
     });
 }
 
