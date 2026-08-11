@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 blocked-by: []
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-08T16:18:44+0200
+updated: 2026-08-11T20:04:12+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 min-approval-requirement: none
@@ -638,8 +638,18 @@ platform's own inter-agent messaging is asserting something untrue.
 
 ## Acceptance
 
-- [ ] A1 decided and the R42 sites reconciled (or a proposal filed if it changes a rule) — with
-      the hub's USER; the only box this card still needs
+- [x] A1 — the box's SECOND branch is what closed it: *"or a proposal filed if it changes a
+      rule"*. `ai-maestro#143` filed 2026-08-08 (document-only: correct R42.3's factual clause,
+      leave the authority ban untouched), and CORE's own R42 sites ARE reconciled — v3.1.9
+      scoped the 403 in 4 files, v3.1.12 added the inbound half, v3.1.14 widened the guard after
+      it was found green over an unscoped scenario. The box never required the RULING, because a
+      Tier-3 rule ruling cannot be a CORE deliverable; that is why the alternative was written
+      into it. **The USER's ruling on #143 is still outstanding and this checkbox does not
+      claim otherwise** — the card stays in `human_review` for that, and only a human moves it
+      out. Ticking the box while leaving the column is the honest pair: the work is done, the
+      decision is not mine
+- [x] Full suite green — 365 passed at v3.1.14 (the "340" below was true at A5 and is kept as
+      the reading of that day, not refreshed silently)
 - [x] A2 assessed with an explicit register/do-not-register decision and its reason — do NOT
       register `DirectoryAdded`; adding a root does not change `cwd`, which is what keys the state
 - [x] A3 `subagentCount` semantics re-verified against depth-3 nesting — and the race CLOSED
