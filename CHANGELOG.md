@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.17] — 2026-08-11
+
+### Bug Fixes
+
+- Naming the transport was a PROXY for scoping the claim, and a peer produced the counterexample
+
+### Performance
+
+- An uncleared 5s guard timer held every hook invocation open
 ## [3.1.16] — 2026-08-11
 
 ### Documentation
