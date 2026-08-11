@@ -261,20 +261,54 @@ def test_agent_context_without_work_dir_fails_closed(marker_env: dict) -> None:
     assert hook["permissionDecision"] == "deny"
 
 
-def test_single_invocation_is_fast_no_redos() -> None:
-    """A single invocation on a pathological-quoting payload stays fast.
+def _guard_min_ms(payload: str, runs: int = 3) -> float:
+    """Fastest of `runs` guard invocations, in ms.
 
-    `detectBashWriteTargets` is not exported, so the wall time here includes
-    Node's one-time process cold-start (a long-lived hook pays that once, not
-    per command) — hence the ceiling is generous rather than the bare 100ms
-    p95 budget. The point of this assertion is the linear-time guarantee: a
-    2000-char quoted run plus the full pattern set must not exhibit
-    catastrophic backtracking. A ReDoS regression in the new quote-pre-pass or
-    any new verb would blow past this ceiling by orders of magnitude.
+    MIN, not mean: every sample carries the same fixed cost (Node cold-start)
+    plus scheduling noise that can only ADD. The minimum is therefore the least
+    contaminated estimate of the real cost, which is what a scaling comparison
+    needs.
     """
-    payload = "echo " + '"' + "a" * 2000 + '"' + " > /etc/passwd"
-    t0 = time.perf_counter()
-    decision, _ = guard_decision(payload)
-    elapsed_ms = (time.perf_counter() - t0) * 1000.0
-    assert decision == "deny"  # the long quoted arg must not hide the target
-    assert elapsed_ms < 2000.0, f"guard took {elapsed_ms:.1f}ms (analyzer/ReDoS regression?)"
+    best = float("inf")
+    for _ in range(runs):
+        t0 = time.perf_counter()
+        decision, _ = guard_decision(payload)
+        best = min(best, (time.perf_counter() - t0) * 1000.0)
+        assert decision == "deny", "a long quoted arg must not hide the redirect target"
+    return best
+
+
+def test_payload_length_does_not_change_the_cost_no_redos() -> None:
+    """Catastrophic backtracking is a SCALING property — so assert scaling, not a stopwatch.
+
+    This replaces an absolute `elapsed_ms < 2000` ceiling that was measuring the
+    wrong quantity. `detectBashWriteTargets` is not exported, so each call spawns
+    Node, and the wall time is dominated by process cold-start rather than by the
+    regexes under test. Measured 2026-08-11 on a loaded box (load avg 176): bare
+    `node -e ''` took 890-1220ms by itself, and the old assertion failed at 3024ms
+    with no regression whatsoever — it was a machine-load test wearing a ReDoS
+    test's costume, red on a busy machine and green on an idle one.
+
+    The honest form of "no catastrophic backtracking" is that cost must not grow
+    with input length. Measured across an 1100x length range on the same box:
+
+        14 chars -> 752ms   |   2000 chars -> 690ms   |   16000 chars -> 854ms
+
+    Flat, and the ordering is noise. Real backtracking would blow the RATIO up by
+    orders of magnitude at 16000 chars, and a ratio is immune to load because both
+    measurements pay the same cold-start on the same machine at the same moment.
+
+    The absolute bound that remains is a HANG detector, deliberately far above any
+    plausible cold-start, so it can only fire on something genuinely pathological.
+    """
+    short_ms = _guard_min_ms("echo a > /etc/passwd")
+    huge_ms = _guard_min_ms('echo "' + "a" * 16_000 + '" > /etc/passwd')
+
+    # An 1100x longer payload may cost a little more; it must not cost a MULTIPLE.
+    assert huge_ms < short_ms * 3.0 + 1000.0, (
+        f"16000-char payload took {huge_ms:.0f}ms vs {short_ms:.0f}ms for a short one — "
+        "cost is scaling with input length (ReDoS / catastrophic backtracking?)"
+    )
+    # Hang detector only. Not a performance budget: on a loaded box the floor is
+    # Node's cold-start, which is not what this test is about.
+    assert huge_ms < 30_000.0, f"guard took {huge_ms:.0f}ms — hung?"
