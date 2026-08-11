@@ -238,11 +238,29 @@ def test_no_403_claim_travels_without_the_transport_that_cannot_return_one() -> 
     Measured on `ai-maestro#131`: 7 of 7 role-plugin personas asserted the 403, 0 of 7
     named the transport. CORE's four files were in the same state; this test is what
     keeps them out of it.
+
+    A GUARD'S SCOPE IS PART OF ITS CLAIM. This scanned `skills/` only until 2026-08-11,
+    and was green while `tests/scenarios/governance-scenarios.md` carried an unscoped
+    403 in a PASS criterion — a scenario satisfied by an agent that routes around AMP is
+    the failure it exists to catch, sitting in the file consulted when behaviour is
+    judged. Found by the AUTONOMOUS role-plugin hitting the identical defect
+    (`ai-maestro#143`): after fixing its persona, its `test_persona_*` guards stayed
+    green while the claim survived in a governance checklist and an adversarial fixture.
+    "I fixed the file I was thinking about" is not "the plugin is fixed", and in a green
+    run those are indistinguishable.
+
+    `design/` is excluded on their advice: terminal TRDDs are FROZEN by rule, so a guard
+    demanding an edit there would force a rule violation to go green. `CHANGELOG.md` is
+    excluded for the same reason — it records what past releases said, and correcting
+    history is not the same as correcting a claim.
     """
+    roots = ("skills", "commands", "docs", "tests/scenarios")
+    files = [p for r in roots for p in (PLUGIN_ROOT / r).rglob("*.md") if (PLUGIN_ROOT / r).is_dir()]
+    files.append(PLUGIN_ROOT / "README.md")
     claims = sorted(
         p
-        for p in (PLUGIN_ROOT / "skills").rglob("*.md")
-        if "_dev" not in p.parts and "title_communication_forbidden" in p.read_text()
+        for p in files
+        if p.is_file() and "_dev" not in p.parts and "title_communication_forbidden" in p.read_text()
     )
     assert claims, "no file asserts the comm-graph 403 — the scanner is broken, not the corpus clean"
     unscoped = [p.relative_to(PLUGIN_ROOT).as_posix() for p in claims if "SendMessage" not in p.read_text()]
