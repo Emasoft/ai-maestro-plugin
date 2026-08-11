@@ -93,6 +93,72 @@ visible consented WARNING. Consequences: any edit to a consented mirror line re-
 publish until the registry is regenerated (that is the feature); a registry can never touch
 a live finding; muting rules or editing the verbatim mirror body remain forbidden. [^4]
 
+
+^ATOM-H2ZK-LGHZ [desc:"The release commit staged with git add -A, sweeping UNTRACKED files into a public irreversible commit; it now stages tracked paths BY NAME and exits non-zero rather than falling back", keywords: publish_committed_a_file_I_never_staged release_commit_contains_a_scratch_file git_add_-A_in_publish untracked_swept_into_a_release how_does_publish_stage_files, type: project, ocd: 2026-08-11, lmd: 2026-08-11]
+
+`publish.py`'s commit stage ran `git add -A`. Stage 1 checks the tree is clean, but stages
+7-9 (version bump, README badge, changelog, `uv.lock`) all run AFTER that check — so any
+scratch note, tool temp output, or report appearing in that window was swept into a
+**pushed, tagged, irreversible** release commit with nobody reviewing the diff.
+
+Replaced by `_stage_tracked_modifications()`: reads `git status --porcelain=v1 -uall`,
+stages tracked paths BY NAME, prints the list, names any untracked paths it is skipping,
+and **exits non-zero when the porcelain is unreadable** — the tempting fallback there is
+exactly `git add -A`, and it would fire precisely when nobody can see what is being staged.
+
+Three details that matter in practice: porcelain prints `R  old -> new`, so a rename must
+stage the RIGHT side; paths with spaces/unicode arrive quoted and need the quotes stripped;
+and `git add --` before the paths stops a file named like a flag from becoming one.
+
+Found by the INTEGRATOR session in its own copy of the shared scaffold — *"worth a grep in
+your tree too if it shares the scaffold"* — and CORE did. Filed upstream as `CPV#206`.
+
+
+^ATOM-40UG-ZR2T [desc:"git-cliff --unreleased with -o OVERWRITES CHANGELOG.md, so every release destroyed its predecessor's section; --prepend fixes it, and the lost sections are rebuildable from the tags", keywords: CHANGELOG_lost_its_old_versions only_one_section_in_the_changelog changelog_history_destroyed_on_release git-cliff_overwrote_the_file release_notes_contain_the_whole_history, type: project, ocd: 2026-08-11, lmd: 2026-08-11]
+
+Step 9 ran `git-cliff --bump --unreleased --tag <v> -o CHANGELOG.md`. With `--unreleased`,
+git-cliff emits ONLY the current range and the redirect truncates the file — so **every
+release deleted its predecessor's section**. CORE's changelog carried 5 sections when the
+tags said 47. Fix: `--prepend CHANGELOG.md` (the `-o` form survives only for a repo where
+the file does not exist yet).
+
+**The loss is recoverable**: `git-cliff --output CHANGELOG.md` over ALL tags (no
+`--unreleased`) rebuilds the history from the commits, which were the real record all
+along — 5 to 47 sections here, back to `## [2.1.0]`.
+
+**The two changes are ONE change.** Step 11 passed the same file to
+`gh release create --notes-file`, so the file and the notes were identical BY ACCIDENT
+while the file held one section. Making it cumulative without also extracting just the
+newest section publishes the entire project history as every release's notes.
+
+**And the lesson that generalises:** the canonical fix shipped in CPV's emitter at v5.3.0,
+but this repo's `publish.py` is DRIFTED from that scaffold (`RC-PIPELINE-DRIFT-001`), so
+bumping the CPV pin to v5.4.0 delivered **none** of it. I bumped the pin and briefly
+believed the fix had arrived with it. **Verify the behaviour, not the version.**
+
+
+^ATOM-FX5I-7JNB [desc:"Publish died twice on a concurrent .git/index.lock; it now waits (bounded) before every index-writing git subcommand and takes --no-optional-locks on its own reads", keywords: publish_died_at_the_commit_step Unable_to_create_index.lock_during_publish release_left_bump_artifacts_on_disk publish_and_the_heartbeat_collide, type: project, ocd: 2026-08-11, lmd: 2026-08-11]
+
+Two publishes died at step 10 (`Unable to create '.git/index.lock'`), each leaving the
+version-bump artifacts on disk. Cause measured on git 2.55.0: **`git status` WRITES
+`.git/index.lock`** to refresh its stat cache, and **fails SOFT** (exit 0 even when denied
+it). So any read-only-looking background sweep that runs `git status` on the repo (a
+periodic drift detector, an IDE indexer, another agent session) silently kills the writer
+while reporting success. Full measurement lives in the USER-scope page
+[[git-concurrent-readers-take-the-index-lock]].
+
+Two changes here: `run()` awaits the lock before every index-writing subcommand
+(`add|commit|rm|mv|checkout|restore|reset|stash`), centralised there so a `git add` added
+later inherits it; and publish's own two `git status` reads take `--no-optional-locks`, so
+the pipeline stops creating the lock it guards against.
+
+The git dir is resolved with `git rev-parse --absolute-git-dir`, never `cwd/.git` — in a
+linked worktree `.git` is a FILE, so a path guess would watch a lock that never appears and
+the wait would pass instantly: green precisely when not working.
+
+**Scope limit worth knowing:** the wait lives in `publish.py`'s runner, so a plain shell
+`git commit` by the agent does NOT get it, and has hit the same lock since.
+
 ## Notes and lessons learned
 
 [^1]: [id:ATOM-998W-KR6T, status:valid, desc:"a version restated in a second page is a fact that will go stale silently — name the owning page instead", keywords:"the_docs_say_one_version_and_the_code_says_another my_architecture_page_still_cites_the_old_pin where_should_a_version_number_live two_pages_disagree_about_a_dependency_version stale_version_in_an_overview_page", ocd:2026-08-01, lmd:2026-08-01] DO NOT restate a pinned version number in an overview/hub page that another page already owns, BECAUSE nothing fails when the copy rots — `architecture.md` still read "pinned `@v3.5.0`" after two bumps (v3.5.0 -> v3.22.3 -> v4.2.1) and would have told the next reader to validate against a version this repo has not used since 2026-07-26. DO name the owning page ([[publish-and-validation-gate]]) and let the version live in exactly one place, next to the command that proves it.
