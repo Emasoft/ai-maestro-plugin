@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.15] — 2026-08-11
+
+### Bug Fixes
+
+- The ReDoS guard was a machine-load test in a ReDoS test's costume
+
+### Documentation
+
+- Tick A1 on the box's own second branch, and leave the column alone
 ## [3.1.14] — 2026-08-11
 
 ### Bug Fixes
