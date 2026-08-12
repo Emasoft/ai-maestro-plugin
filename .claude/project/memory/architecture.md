@@ -72,6 +72,53 @@ binaries) consumed by the other ecosystem plugins.
 - **Memory** — this plugin USES the janitor's global wiki-memory system (recall /
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
+
+^ATOM-LQAH-GVMK [desc:"the mirror-stamp banner slice refuses unless its heading occurs EXACTLY once — refuse-on-ambiguity alone misses absence, where .find(-1) swallows the whole document", keywords: my_guard_is_green_but_asserts_nothing test_passes_because_the_slice_is_the_whole_file find_returned_-1_and_the_slice_swallowed_everything banner_and_frontmatter_agree_passes_vacuously upstream_renamed_a_heading_and_my_test_went_green first_match_slice_selection refuse_on_ambiguity_is_not_enough, ocd: 2026-08-12, lmd: 2026-08-12]
+
+**`tests/test_governance_mirror_stamp.py` selects its banner by ARITY, not position** —
+`_prefix_before_unique_heading` refuses unless `# Team Governance` occurs **exactly once**,
+and the predicate is `count != 1`, *not* `count > 1`.
+
+The shape it replaced, `text[: text.find(anchor)]`, could not fail: `.find` returns `-1` when
+the anchor is ABSENT, so the slice became the whole document minus one character and both
+`x in banner` assertions passed because the document trivially contains its own frontmatter
+values. Measured on the real mirror: **10,095 -> 214,697 chars**, green while asserting nothing.
+
+**The trigger comes from outside this repo.** That heading lives in a MIRRORED upstream
+document, so its owner renaming it — an ordinary edit nobody here controls or observes — makes
+the guard vacuous on the *next sync*.
+
+Both shapes ship as COMMITTED controls (absent, duplicated); the absent one re-measures its own
+premise, `len(slice) == len(doc) - 1`, instead of inheriting `.find` semantics from a docstring.
+Simulating the pre-fix shape reddens both — while the test they protect stays **green**. A guard
+cannot detect its own vacuity; only a seeded control can.
+
+From `Emasoft/ai-maestro#131` (ARCHITECT + CHIEF-OF-STAFF, five rounds). Both their defects were
+ambiguity, this tree's was absence — so their package adopted verbatim measures green here and
+misses the only real defect. See also [[publish-and-validation-gate]].
+
+
+^ATOM-QV47-5DR0 [desc:"the five other first-match sites in CORE's suite are correct and must NOT be 'fixed' — and the corpus a selector runs over is part of the selector, which is how the audit nearly filed a false positive", keywords: grep_says_the_anchor_occurs_twice_but_the_test_passes is_this_.find_a_bug_or_correct do_not_tighten_the_release-notes_source_guard inspect.getsource_narrows_the_corpus false_positive_from_counting_across_the_whole_file which_first-match_sites_are_safe, ocd: 2026-08-12, lmd: 2026-08-12]
+
+**Five of CORE's six first-match `.find`/`.index` sites are correct — do not "fix" them.**
+`tests/test_release_notes_section.py` slices `inspect.getsource(publish.stage_changelog)`, where
+every anchor (`if changelog.is_file():`, `"--prepend"`, `"-o"`) occurs exactly once and `.index`
+**raises** rather than returning `-1`; `tests/test_skill_cli_contracts.py:125` guards `idx == -1`
+explicitly and scans every candidate line instead of selecting one. Changing either is motion,
+not correctness. Only the mirror-stamp banner slice was a real defect ([[architecture]] atom on
+arity, `ATOM-LQAH-GVMK`).
+
+**The audit nearly filed a false positive against the correct one, and the reason generalises.**
+Counting `"-o"` across the WHOLE of `scripts/publish.py` gives **2**, which reads as ambiguity —
+but the second is `["ps", "-p", str(pid), "-o", "ppid=,args="]` at line 976, a thousand lines
+outside the function the test actually slices. Within `inspect.getsource(stage_changelog)` the
+count is 1.
+
+**The corpus is part of the selector.** A first-match detector that greps FILES rather than the
+slice's real scope manufactures exactly this finding in any tree that narrows with
+`inspect.getsource`, a section extractor, or a fixture — and the finding looks identical to a
+true one. Measure in the same corpus the selector runs in, or the count means nothing.
+
 ## Applies to
 - [[publish-and-validation-gate]] — the release/validate gate: where the CPV validator
   ref is pinned (one constant, three sites) and why a `--strict` run can go red with
