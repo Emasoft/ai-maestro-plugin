@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.22] — 2026-08-12
+
+### Testing
+
+- The clean-file skip now reports whether the gate did any work
 ## [3.1.21] — 2026-08-12
 
 ### Testing
