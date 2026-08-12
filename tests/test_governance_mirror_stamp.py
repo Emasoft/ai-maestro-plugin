@@ -56,6 +56,43 @@ MAX_AGE_DAYS = 30
 
 _FRONTMATTER = re.compile(r"^---\n(.*?)\n---", re.S)
 
+BANNER_ANCHOR = "# Team Governance"
+
+
+def _prefix_before_unique_heading(text: str, heading: str) -> str:
+    """Everything before `heading`, refusing unless it occurs EXACTLY once.
+
+    `text[: text.find(heading)]` is the shape this file shipped, and it failed in
+    the one direction a guard must never fail: `.find` returns -1 when the anchor
+    is ABSENT, so the slice becomes the whole document minus its last character
+    and every `x in banner` assertion below passes trivially. Measured on the real
+    mirror: the banner grew 10,095 -> 214,697 chars and the pair-agreement test
+    went green while asserting nothing.
+
+    Not hypothetical here. The heading belongs to a MIRRORED upstream document, so
+    its owner renaming it — an ordinary edit we do not control and would not see —
+    turns this file green-and-vacuous on the very next sync, and the greenness is
+    what stops anyone looking.
+
+    Refusing on 0 AND on >=2 makes selection a PROPERTY (the anchor identifies one
+    place) rather than a POSITION (wherever `.find` landed). Credit: the
+    ARCHITECT/COS exchange on ai-maestro#131 converged on refuse-on-ambiguity.
+    The ABSENT shape is this tree's own and is named separately on purpose — that
+    thread's closing lesson is that a miss list must name SHAPES, not the tree
+    that happened to contain them, because each party described the gap as the
+    thing its own tree had and both descriptions were too narrow to protect the
+    other.
+    """
+    count = text.count(heading)
+    if count != 1:
+        raise AssertionError(
+            f"anchor {heading!r} occurs {count} times, expected exactly 1 — refusing to "
+            f"slice. 0 means the mirrored heading was renamed upstream, and the slice "
+            f"would silently become the whole document; >1 means a cross-reference was "
+            f"added and the slice would stop at the wrong one."
+        )
+    return text[: text.index(heading)]
+
 
 @pytest.fixture(scope="module")
 def mirror_text() -> str:
@@ -112,7 +149,7 @@ def test_the_banner_and_the_frontmatter_agree(mirror_text: str, frontmatter: dic
     """
     version = str(frontmatter["version"])
     blob = str(frontmatter["synced-blob"])
-    banner = mirror_text[: mirror_text.find("# Team Governance")]
+    banner = _prefix_before_unique_heading(mirror_text, BANNER_ANCHOR)
     # Substring, not a backticked form: the blob is cited as the `expected:` line
     # inside the polling command's fence, which is where a reader comparing the
     # command's output actually needs it. Pinning the MARKUP would fail on a
@@ -152,3 +189,38 @@ def test_someone_has_actually_looked_recently(frontmatter: dict) -> None:
         f"A differing blob says something moved, never WHAT — it is a prompt to "
         f"re-read, not an answer."
     )
+
+
+def test_the_slice_it_replaced_could_not_fail(mirror_text: str) -> None:
+    """Pins the DEFECT, not just the fix — the old shape was vacuous, not fragile.
+
+    A control you ran is not a control you have (ai-maestro#131, COS): the
+    measurement that justified the helper was a shell probe, and a probe that
+    existed for ninety seconds cannot stop the helper being narrowed back later.
+    So the mechanism is asserted here, in the suite.
+
+    The first arm re-measures the premise instead of inheriting it: if `.find`'s
+    -1 semantics ever stopped swallowing the document, the helper's docstring
+    would be describing a failure mode that no longer exists.
+    """
+    doctored = mirror_text.replace(BANNER_ANCHOR, "# Governance Rules")
+    old_banner = doctored[: doctored.find(BANNER_ANCHOR)]  # the shape that shipped
+    assert len(old_banner) == len(doctored) - 1, (
+        "the -1 slice no longer swallows the whole document — the helper's stated "
+        "failure mode is stale and must be re-measured, not assumed"
+    )
+    with pytest.raises(AssertionError, match="occurs 0 times"):
+        _prefix_before_unique_heading(doctored, BANNER_ANCHOR)
+
+
+def test_the_slice_refuses_a_duplicated_anchor(mirror_text: str) -> None:
+    """The other broken shape: a cross-reference added above the real heading.
+
+    This is the edit a later editor is most likely to write, and it is the shape
+    both role plugins found in their own trees. Seeded here rather than reasoned
+    about, because a resolver can cover a shape while nothing proves it does.
+    """
+    doctored = mirror_text.replace(BANNER_ANCHOR, f"See also: {BANNER_ANCHOR}\n\n{BANNER_ANCHOR}", 1)
+    assert doctored.count(BANNER_ANCHOR) == 2, "the seed did not produce the shape it claims to"
+    with pytest.raises(AssertionError, match="occurs 2 times"):
+        _prefix_before_unique_heading(doctored, BANNER_ANCHOR)
