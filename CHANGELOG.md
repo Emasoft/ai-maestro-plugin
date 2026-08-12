@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.18] — 2026-08-12
+
+### Testing
+
+- The banner slice could not fail, it could only pass
 ## [3.1.17] — 2026-08-11
 
 ### Bug Fixes
