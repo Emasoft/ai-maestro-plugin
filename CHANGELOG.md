@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.20] — 2026-08-12
+
+### Testing
+
+- Witness the gate branch — moving it inside the predicate left it dead
 ## [3.1.19] — 2026-08-12
 
 ### Bug Fixes
