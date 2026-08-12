@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.23] — 2026-08-12
+
+### Testing
+
+- Extract primed_state and test all three branches, including the loud one
 ## [3.1.22] — 2026-08-12
 
 ### Testing
