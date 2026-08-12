@@ -785,8 +785,12 @@ class TestOurOwnPRRDStampIsNotStale:
         # The predicate carries its OWN precondition — see stamp_predates_the_bytes.
         assert not stamp_predates_the_bytes(claimed, written, dirty=True), (
             f"PRRD.md was written at {written.isoformat()} but `updated:` claims {stamped} — "
-            f"the stamp does not cover the bytes on disk. Bump it as part of this edit "
-            f"(`prrd-edit.py` does both), or this is a mis-stamped document."
+            f"the stamp does not cover the bytes on disk. TWO candidates, and this arm "
+            f"cannot tell them apart: (1) an edit in progress whose stamp is not bumped "
+            f"yet — bump it (`prrd-edit.py` does both); (2) something OTHER than you "
+            f"rewrote the file, and the stamp is innocent. What it HAS ruled out is a "
+            f"stray mtime: a touch leaving content identical reads clean to git and never "
+            f"reaches this arm, so the bytes genuinely changed. Check `git diff` first."
         )
 
     def test_the_clock_arms_are_provably_blind_where_the_coverage_arm_bites(self) -> None:
