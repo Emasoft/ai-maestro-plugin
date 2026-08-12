@@ -54,6 +54,32 @@ _WARNING_RULE = re.compile(r"^(Write|Glob|NotebookEdit)\(")
 # HTTP 403", which passes a keyword scan while making exactly the false promise. Kept as a
 # permissive alternation of the SEMANTIC forms rather than one blessed sentence: a gate
 # that reddens on correct writing gets deleted, and then nothing checks the property.
+# The OPERATIVE claim, in each phrasing this corpus actually uses. A keyword survives the
+# deletion of the rule it belongs to, because the RATIONALE around a rule repeats its
+# keywords; a fragment of the rule's own SENTENCE does not, because commentary describes a
+# rule in different words than the rule states it. That divergence is the signal these ride
+# (CHIEF-OF-STAFF, ai-maestro#131 — "claim collocation", after my distance predicate was
+# measured and rejected).
+#
+# Keep each 3-6 words: long fragments red on a comma edit, short ones survive ordinary
+# rewording and die on deletion. Matched against whitespace-collapsed lowercase text so
+# rewrapping and blockquote prefixes do not red them. Adding a claiming file with a SIXTH
+# phrasing reds this deliberately — add the phrasing here in the same commit.
+_OPERATIVE_CLAIMS = (
+    "never received is not permission",
+    "describes messages sent over",
+    "scope of that enforcement: amp only",
+    "exists only on the amp path",
+    "no server in the path",
+    "recipient, not the transport",
+    "transport does not excuse you",
+)
+
+
+def _collapsed(text: str) -> str:
+    return re.sub(r"\s+", " ", text).lower()
+
+
 _NOT_POLICED = re.compile(
     r"no 403|cannot return (one|a 403)|not enforced|nothing on (that|it) path can|"
     r"no server in the path|without touching the (ai-maestro )?server|never (reaches|traverses) the server|"
@@ -286,13 +312,26 @@ def test_no_403_claim_travels_without_the_transport_that_cannot_return_one() -> 
 
     Four of five are unique-term, so deleting their operative line DOES redden this.
 
-    THE OBVIOUS FIX WAS MEASURED AND REJECTED. Requiring the scoping evidence to sit
-    within N chars of each 403 mention cannot separate the cases: real worst-gaps are
-    506 / **7915** / 292 / **7213** / 497, and the gutted file's is 1610. Any threshold
-    that catches 1610 reddens two CORRECT files whose 403 lives in a rules table far from
-    the scoping section — and a guard that reddens on correct writing gets deleted, taking
-    the real coverage with it. Recorded rather than "fixed": a known blind spot beats a
-    guard nobody trusts. Do not add a distance predicate without re-measuring these five.
+    A DISTANCE PREDICATE WAS MEASURED AND REJECTED — do not re-propose one. Requiring the
+    scoping evidence within N chars of each 403 mention cannot separate the cases: real
+    worst-gaps are 506 / **7915** / 292 / **7213** / 497 against the gutted file's 1610, so
+    any threshold catching the defect reddens two CORRECT files whose 403 lives in a rules
+    table far from the scoping section. A guard that reddens on correct writing gets
+    deleted, taking its real coverage with it.
+
+    THE FIX IS THE CLAIM ARM BELOW, not distance. A fragment of the rule's own SENTENCE is
+    what rationale cannot reproduce — commentary describes a rule in different words than
+    the rule states it, and the more a rule is explained the more distinctive its own
+    statement becomes relative to the prose around it. No distance is involved, so the
+    7915/7213 false positives never arise. All five files carry one; the gutted seed loses
+    both of the two it removed. (Prescription from the CHIEF-OF-STAFF on `ai-maestro#131`,
+    re-measured here rather than adopted — their first framing, "assert at rule POSITION",
+    is what the distance measurement above killed, and they withdrew it.)
+
+    RESIDUAL BLIND SPOT, narrower than it was and still real: the corpus arm is ANY-OF, so
+    a file carrying several claims survives losing some. That is why the one file with
+    redundant keywords gets `test_the_soft_file_keeps_every_one_of_its_operative_claims`,
+    one assertion per claim. Neither arm catches a rule WEAKENED in place.
     """
     roots = ("skills", "commands", "docs", "tests/scenarios")
     files = [p for r in roots for p in (PLUGIN_ROOT / r).rglob("*.md") if (PLUGIN_ROOT / r).is_dir()]
@@ -314,6 +353,53 @@ def test_no_403_claim_travels_without_the_transport_that_cannot_return_one() -> 
     assert not unscoped, (
         "these name the transport but never say it is UNPOLICED, so the 403 still reads as "
         f"covering every send: {unscoped}"
+    )
+    # The arm the two keyword arms above cannot provide: a fragment of the rule's own
+    # SENTENCE, which rationale prose does not reproduce. Measured — all five files carry
+    # one; the gutted soft file loses two of its four.
+    claimless = [
+        p.relative_to(PLUGIN_ROOT).as_posix()
+        for p in claims
+        if not any(c in _collapsed(p.read_text()) for c in _OPERATIVE_CLAIMS)
+    ]
+    assert not claimless, (
+        "these carry the 403 keywords but no OPERATIVE claim sentence — the scoping may have "
+        f"been deleted while the prose about it survived: {claimless}. Either restore the "
+        f"claim or add its new phrasing to _OPERATIVE_CLAIMS in the same commit."
+    )
+
+
+@pytest.mark.parametrize(
+    "claim",
+    [
+        "never received is not permission",
+        "describes messages sent over",
+        "recipient, not the transport",
+        "transport does not excuse you",
+    ],
+)
+def test_the_soft_file_keeps_every_one_of_its_operative_claims(claim: str) -> None:
+    """One assertion per claim, because ONE file is exploitable and the others are not.
+
+    `skills/agent-messaging/SKILL.md` is the only claiming file with redundant keywords
+    (`SendMessage` x5, scoping evidence x4), so the corpus-wide any-of arm above cannot
+    protect it: deleting two of its three operative paragraphs leaves the other two
+    matching, and the file still passes. Measured, not assumed — the gutted seed retains
+    exactly `recipient, not the transport` and `transport does not excuse you`.
+
+    Split one-per-claim so a failure NAMES the sentence that vanished rather than saying
+    the file changed. The cost is real and accepted: rewording one of these four reds this
+    test. That is the correct coupling — changing a rule's operative claim should require
+    acknowledging the test over it, which is a different act from adding a paragraph of
+    rationale, and adding rationale must NOT red.
+
+    Does NOT catch a rule WEAKENED in place (`MUST` -> `SHOULD`, a scope quietly narrowed);
+    no predicate here measures that.
+    """
+    body = _collapsed((PLUGIN_ROOT / "skills" / "agent-messaging" / "SKILL.md").read_text())
+    assert claim in body, (
+        f"the operative claim {claim!r} is gone from agent-messaging/SKILL.md. Its keywords "
+        f"still pass the corpus arm, so nothing else here would have caught this."
     )
 
 
