@@ -202,6 +202,15 @@ def test_the_slice_it_replaced_could_not_fail(mirror_text: str) -> None:
     The first arm re-measures the premise instead of inheriting it: if `.find`'s
     -1 semantics ever stopped swallowing the document, the helper's docstring
     would be describing a failure mode that no longer exists.
+
+    That first arm REIMPLEMENTS the shape it is about, and a reimplementation
+    normally tests a copy rather than the thing — it drifts the moment the real
+    code changes, and then reports on a function that no longer exists. It is
+    legitimate here for one narrow reason: the shape it reimplements is `str.find`
+    itself, a language primitive that cannot drift, and the helper it replaced no
+    longer exists to be substituted for. The SECOND arm calls the real helper. Keep
+    that split — if a future edit makes this arm reimplement anything of ours, it
+    stops being evidence about our code (ARCHITECT's correction, ai-maestro#131).
     """
     doctored = mirror_text.replace(BANNER_ANCHOR, "# Governance Rules")
     old_banner = doctored[: doctored.find(BANNER_ANCHOR)]  # the shape that shipped
