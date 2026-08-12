@@ -138,7 +138,7 @@ def test_no_shipped_file_teaches_a_bare_at_mention() -> None:
     violations = [v for p in _shipped_markdown() for v in _bare_mentions_in(p)]
     assert not violations, (
         "Bare `@name` in shipped prose — each resolves to a REAL GitHub account and pages a "
-        "stranger when copied into an issue or comment (PRRD G1.2). Fix by backticking the "
+        "stranger when copied into an issue or comment (PRRD G1). Fix by backticking the "
         "handle (`@name`), not by deleting the sentence:\n  " + "\n  ".join(violations)
     )
 

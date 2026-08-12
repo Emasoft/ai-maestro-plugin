@@ -48,7 +48,7 @@ pipeline state; this server board wins for live assignment/presence.
 9. **GitHub sync**: `kanban-sync.py link <team-id> <owner/repo> <project-number>` (out of #11 scope — keep)
    <!-- Bulk team metrics across all teams (was `GET /api/teams/stats`) will NEVER get a frozen-CLI verb — MANAGER verdict ai-maestro#64: an all-teams roll-up is a dashboard concern, not an agent verb. Permanent pattern: list with `amp-kanban-list.sh` per team and aggregate client-side with `jq` (see the Velocity and Distribution reference). Do NOT call `/api/*` directly (core#11). -->
 
-   When the sync posts to GitHub (issue, PR comment, project-item note), per PRRD G1.2 begin the body with a one-line self-identification of the authoring agent, since all agents share the one owner identity. **Never write `@<name>` outside a code span — it pages a real user.** Every role name is a registered GitHub account (`@manager`, `@janitor`, `@owner`, `@core` all resolve), so backtick every handle.
+   When the sync posts to GitHub (issue, PR comment, project-item note), per PRRD G1 begin the body with a one-line self-identification of the authoring agent, since all agents share the one owner identity. **Never write `@<name>` outside a code span — it pages a real user.** Every role name is a registered GitHub account (`@manager`, `@janitor`, `@owner`, `@core` all resolve), so backtick every handle.
 
 ### Quick CLI Reference
 
