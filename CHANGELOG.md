@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.19] — 2026-08-12
+
+### Bug Fixes
+
+- CORE's own prrd-version was 52 days stale — a hand-edit bypassed the tool
+
+### Documentation
+
+- The mirror-stamp slice defect + why five sibling sites are correct
+- Float three living-prose citations to G1 — the version was never load-bearing
+- Record CORE's two container-stamp guards and the class behind them
+
+### Testing
+
+- Say why the one reimplementation in this control is legitimate
+- Record the measured blind spot — rationale satisfies it after the rule is gone
+- Assert the rule's own SENTENCE, not just its keywords — blind spot narrowed
+- Add the dirty-file arm — the committed arm is blind exactly where the defect is born
+- Ask COVERAGE, not age — mtime closes the ordinary shape the clock arms miss
+- Move the precondition INSIDE the predicate — a caller-side gate is a rule the probe forgets
 ## [3.1.18] — 2026-08-12
 
 ### Testing
