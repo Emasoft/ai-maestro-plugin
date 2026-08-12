@@ -635,16 +635,9 @@ class TestOurOwnPRRDStampIsNotStale:
         WHAT THIS ARM DOES NOT CLOSE, measured rather than reasoned. It bites when the file
         is edited and its stamp is ALREADY stale — the 52-day case, caught at authoring time
         instead of after the bad commit lands. It does NOT catch a bump this morning followed
-        by a body edit this afternoon: both arms are green in that seed, because the stamp is
-        under a day old and the clock agrees with it. Seeded both cases and confirmed —
-
-            stale stamp + dirty file       -> BOTH arms red
-            fresh stamp + body edited      -> both arms GREEN   <- the residue
-
-        Closing that needs a content hash (the stamp asserting WHICH bytes it covers), not a
-        timestamp comparison; nothing here implements one. Stated because a guard whose
-        docstring overclaims is worse than a known-weak guard — the docstring becomes the
-        only thing lying.
+        by a body edit this afternoon: both clock arms are green there, because the stamp is
+        under a day old and the clock agrees with it. That is the ORDINARY shape; 52 days is
+        the pathological one. `test_the_stamp_covers_the_bytes_on_disk` is the arm for it.
         """
         from datetime import datetime, timezone
 
@@ -718,3 +711,67 @@ class TestOurOwnPRRDStampIsNotStale:
             "is intentional, the dirty arm is redundant and should be removed with this test."
         )
         assert dirty_lag > 86400, "the dirty arm must bite where the committed arm cannot"
+
+    def test_the_stamp_covers_the_bytes_on_disk(self) -> None:
+        """The arm that stops asking a TIME question and asks a COVERAGE one.
+
+        Both clock arms ask *how old is the stamp*. Neither asks *does the stamp cover
+        these bytes* — so a bump at 09:00 followed by a body edit at 16:00 passes both,
+        which is the shape that actually recurs. `mtime` answers coverage directly.
+
+        DIRTY-ONLY, and the scope is what makes it sound: on a CLEAN file `mtime` is
+        checkout time, not authorship, so it means nothing — a fresh clone would red
+        every file. Under the dirty gate a checkout cannot reach this arm, because a
+        checkout produces a clean file. (Credit: the ARCHITECT on `ai-maestro#145`, who
+        had rejected mtime earlier in the same design for the noise it causes in the
+        GENERAL case, then found the objection evaporates once scoped to dirty.)
+
+        Measured on this tree before adopting — the first probe omitted the dirty gate and
+        reported the clean baseline as RED, which would have rejected a correct fix:
+
+            clean baseline                 red=False   (short-circuit, mtime meaningless)
+            body edited, stamp untouched   red=True    mtime-updated = 1:45:18
+            edited AND stamped together    red=False   mtime-updated = 0:00:00
+
+        TOLERANCE is 5 minutes, and it is the number that decides whether this survives:
+        long enough to absorb the honest ordering (compute the ISO string, save a moment
+        later), short enough not to absorb the defect. It DOES red mid-edit before you have
+        stamped, and that is correct rather than a nuisance — mid-edit the stamp genuinely
+        does not cover the bytes, and the red clears on the stamp that precedes the commit.
+
+        STILL NOT CLOSED, so do not read this as coverage: once the bad edit is COMMITTED,
+        a same-day stale stamp is invisible to all three arms — the committed arm tolerates
+        a day and mtime no longer means anything. Only a stored digest closes that, and it
+        has to exclude `updated:` from its own hashed region, which is a fresh invariant
+        with a fresh bypass. Known-open on purpose.
+        """
+        from datetime import datetime, timedelta, timezone
+
+        if not self._is_dirty():
+            pytest.skip("PRRD.md is clean — mtime is checkout time here, not authorship")
+        stamped = self._frontmatter().get("updated")
+        assert stamped, "`updated:` is missing while the file is being edited"
+        written = datetime.fromtimestamp(self.PRRD.stat().st_mtime, tz=timezone.utc)
+        claimed = datetime.fromisoformat(str(stamped)).astimezone(timezone.utc)
+        assert written <= claimed + timedelta(minutes=5), (
+            f"PRRD.md was written at {written.isoformat()} but `updated:` claims {stamped} — "
+            f"the stamp does not cover the bytes on disk. Bump it as part of this edit "
+            f"(`prrd-edit.py` does both), or this is a mis-stamped document."
+        )
+
+    def test_the_clock_arms_are_provably_blind_where_the_coverage_arm_bites(self) -> None:
+        """Precondition again: three arms must not silently collapse into two.
+
+        Asserts the two clock arms ARE green on a same-day edit — the input the coverage
+        arm exists for. If a later change makes them catch it, this fails and reports the
+        coverage arm as redundant, rather than leaving overlapping guards nobody re-checks.
+        """
+        from datetime import datetime, timedelta, timezone
+
+        now = datetime(2026, 8, 12, 16, 0, tzinfo=timezone.utc)
+        stamped = now - timedelta(hours=7)      # bumped this morning
+        last_commit = stamped                   # dirty: HEAD has not moved since
+        assert (last_commit - stamped).total_seconds() < 86400, "committed arm must be green here"
+        assert (now - stamped).total_seconds() < 86400, "dirty clock arm must be green here"
+        written = now                           # ...but the bytes were written just now
+        assert written > stamped + timedelta(minutes=5), "the coverage arm must bite here"
