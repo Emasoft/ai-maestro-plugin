@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.21] — 2026-08-12
+
+### Testing
+
+- The coverage arm's message named one culprit it cannot distinguish
 ## [3.1.20] — 2026-08-12
 
 ### Testing
