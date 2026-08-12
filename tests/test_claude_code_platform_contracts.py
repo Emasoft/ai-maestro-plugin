@@ -266,6 +266,33 @@ def test_no_403_claim_travels_without_the_transport_that_cannot_return_one() -> 
     demanding an edit there would force a rule violation to go green. `CHANGELOG.md` is
     excluded for the same reason — it records what past releases said, and correcting
     history is not the same as correcting a claim.
+
+    MEASURED BLIND SPOT — this guard is word-presence, so RATIONALE can satisfy it after
+    the RULE is gone (the CHIEF-OF-STAFF's finding, `ai-maestro#131`). Deleting the two
+    operative paragraphs from `skills/agent-messaging/SKILL.md` (790 chars — the ones that
+    actually say the 403 describes AMP and that a 403 you never received is not permission)
+    leaves this **GREEN**: three other `SendMessage` mentions and the "unpoliced INBOUND"
+    heading survive in the prose written *around* the rule. Documenting why a rule exists
+    is what weakens a keyword-shaped guard over it — the words are present either way, so
+    only POSITION separates the rule from the commentary.
+
+    Per-file redundancy, measured, which is what decides exploitability:
+
+        skills/agent-messaging/SKILL.md              SendMessage x5   scoping x4  <- soft
+        skills/agent-messaging/reference/…           x1  x2
+        skills/team-governance/SKILL.md              x1  x1
+        skills/team-governance/references/REFERENCE  x1  x2
+        tests/scenarios/governance-scenarios.md      x1  x1
+
+    Four of five are unique-term, so deleting their operative line DOES redden this.
+
+    THE OBVIOUS FIX WAS MEASURED AND REJECTED. Requiring the scoping evidence to sit
+    within N chars of each 403 mention cannot separate the cases: real worst-gaps are
+    506 / **7915** / 292 / **7213** / 497, and the gutted file's is 1610. Any threshold
+    that catches 1610 reddens two CORRECT files whose 403 lives in a rules table far from
+    the scoping section — and a guard that reddens on correct writing gets deleted, taking
+    the real coverage with it. Recorded rather than "fixed": a known blind spot beats a
+    guard nobody trusts. Do not add a distance predicate without re-measuring these five.
     """
     roots = ("skills", "commands", "docs", "tests/scenarios")
     files = [p for r in roots for p in (PLUGIN_ROOT / r).rglob("*.md") if (PLUGIN_ROOT / r).is_dir()]
