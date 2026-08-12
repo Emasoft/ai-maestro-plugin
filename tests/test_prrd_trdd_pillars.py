@@ -576,3 +576,67 @@ class TestResolvePillarScripts:
         )
         assert res.returncode == 1
         assert "could not find ai-maestro-plugin pillar scripts" in res.stderr
+
+
+class TestOurOwnPRRDStampIsNotStale:
+    """`prrd-version:` / `updated:` are machine-readable claims about the file's CONTENT.
+
+    Nothing cites a container-level version, so nothing notices when it lies — a citation
+    checker cannot see it by construction, because there is no reference to resolve. That
+    is a different defect from a dangling citation and needs its own check (ARCHITECT's
+    fifth clause, `ai-maestro#145`, found after CORE's own `prrd-version` was measured
+    stale by 52 days).
+
+    ROOT CAUSE, and why this guards the FILE rather than the tool: `prrd-edit.py`'s
+    `_bump_prrd_version` already sets BOTH fields on every mutation, so the tool cannot
+    produce this state. `acbea84` edited `PRRD.md` BY HAND — a golden revise (G1.1 -> G1.2)
+    that never went through the tool — and the invariant the tool maintains silently did
+    not apply. A guard on the tool would have stayed green through it.
+    """
+
+    PRRD = PLUGIN_ROOT / "design" / "requirements" / "PRRD.md"
+
+    def _frontmatter(self) -> dict:
+        import re
+
+        import yaml
+
+        m = re.match(r"^---\n(.*?)\n---", self.PRRD.read_text(encoding="utf-8"), re.S)
+        assert m, "the PRRD has no YAML frontmatter block"
+        data = yaml.safe_load(m.group(1))
+        assert isinstance(data, dict), "the PRRD's frontmatter is not a mapping"
+        return data
+
+    def test_updated_is_not_older_than_the_last_commit_that_touched_the_file(self) -> None:
+        """The one arm that catches a hand-edit: git knows when the bytes last moved."""
+        from datetime import datetime
+
+        res = subprocess.run(
+            ["git", "--no-optional-locks", "log", "-1", "--format=%aI", "--", str(self.PRRD)],
+            cwd=PLUGIN_ROOT, capture_output=True, text=True, timeout=30, check=False,
+        )
+        if res.returncode != 0 or not res.stdout.strip():
+            pytest.skip("no git history for the PRRD (shallow clone or unborn branch)")
+        last_commit = datetime.fromisoformat(res.stdout.strip())
+        stamped = self._frontmatter().get("updated")
+        assert stamped, "`updated:` is missing — an unstamped document cannot go stale, only be wrong"
+        stamped_dt = datetime.fromisoformat(str(stamped))
+        # Same-day tolerance: the bump and the commit are two acts, and the stamp is
+        # written first. Anything beyond a day means an edit landed without one.
+        assert (last_commit - stamped_dt).total_seconds() < 86400, (
+            f"`updated: {stamped}` predates the last commit touching PRRD.md "
+            f"({last_commit.isoformat()}) by more than a day — the file changed and its "
+            f"own stamp did not. Edit through `prrd-edit.py` (it bumps both fields), or "
+            f"bump `prrd-version:` and `updated:` in the same commit as the hand-edit."
+        )
+
+    def test_the_version_field_is_present_and_well_formed(self) -> None:
+        """A missing version is worse than a stale one: nothing to compare at all."""
+        import re
+
+        v = str(self._frontmatter().get("prrd-version", ""))
+        assert re.fullmatch(r"\d+\.\d+", v), (
+            f"`prrd-version: {v!r}` is not `<major>.<minor>` — `prrd-edit.py` bumps major "
+            f"on a GOLDEN change and minor on a SILVER one, so a malformed value makes the "
+            f"next bump start from 0.1 and silently lose the document's history."
+        )

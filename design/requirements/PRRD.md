@@ -1,6 +1,6 @@
 ---
-prrd-version: 1.5
-updated: "2026-06-11T11:29:10+0200"
+prrd-version: 2.0
+updated: "2026-08-12T14:58:10+0200"
 project: ai-maestro-plugin
 project-id: ai-maestro-plugin
 canonical-source: design/requirements/PRRD.md
