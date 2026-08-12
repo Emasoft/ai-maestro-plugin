@@ -805,3 +805,31 @@ class TestOurOwnPRRDStampIsNotStale:
         assert (now - stamped).total_seconds() < 86400, "dirty clock arm must be green here"
         written = now                           # ...but the bytes were written just now
         assert written > stamped + timedelta(minutes=5), "the coverage arm must bite here"
+
+    def test_the_gate_branch_is_witnessed_and_not_merely_present(self) -> None:
+        """The precondition INSIDE the predicate is dead code until something calls it.
+
+        The live arm `pytest.skip`s while the file is clean and then passes `dirty=True`
+        unconditionally, so `if not dirty` never executes on a normal run. A clean-file
+        SKIP is NOT the baseline it looks like: it proves the PRECONDITION was false and
+        the predicate was never reached, which says nothing about what the predicate
+        returns. Without this control, deleting the gate leaves the entire suite green —
+        the protection would exist with nothing witnessing it.
+
+        So call it directly on the input that made the ungated probe lie: a correctly
+        stamped CLEAN file whose mtime sits hours past the stamp, i.e. a checkout. Both
+        directions, because a control that only checks the quiet half cannot tell "the
+        gate held" from "the input stopped reding".
+        """
+        from datetime import datetime, timedelta, timezone
+
+        stamped = datetime(2026, 8, 12, 9, 0, tzinfo=timezone.utc)
+        checked_out = stamped + timedelta(hours=1)  # mtime = checkout time, not authorship
+
+        assert stamp_predates_the_bytes(stamped, checked_out, dirty=True), (
+            "control is inert — this input must red while dirty, or the clean assertion "
+            "below passes for the wrong reason and witnesses nothing"
+        )
+        assert not stamp_predates_the_bytes(stamped, checked_out, dirty=False), (
+            "the gate is gone — a fresh clone now reds every correctly stamped file"
+        )
