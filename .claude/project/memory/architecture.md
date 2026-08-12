@@ -119,6 +119,35 @@ slice's real scope manufactures exactly this finding in any tree that narrows wi
 `inspect.getsource`, a section extractor, or a fixture — and the finding looks identical to a
 true one. Measure in the same corpus the selector runs in, or the count means nothing.
 
+
+^ATOM-X19C-BCK7 [desc:"CORE's two container-stamp guards (PRRD prrd-version/updated, and the governance-mirror version/synced-blob) — what each asserts, and the residue neither closes", keywords: prrd-version_is_stale my_hand_edit_did_not_bump_the_stamp why_does_the_PRRD_test_skip governance_mirror_synced-at_guard which_stamp_guards_does_CORE_have updated_field_predates_the_last_commit, ocd: 2026-08-12, lmd: 2026-08-12]
+
+**CORE ships TWO container-stamp guards, and they exist because both fields had already gone
+quietly wrong.** Neither is redundant with the other; they guard different documents with
+different witnesses.
+
+1. **`tests/test_prrd_trdd_pillars.py::TestOurOwnPRRDStampIsNotStale`** — `design/requirements/PRRD.md`.
+   Three arms: a CLEAN-file arm (witness = the newest commit touching the file), a DIRTY-file arm
+   (witness = the clock, because while the file is modified the newest commit has not moved and
+   the clean arm is blind), and a PRECONDITION arm pinning that blindness so the two cannot
+   silently merge. Plus well-formedness — a malformed `prrd-version:` makes the next
+   `prrd-edit.py` bump restart at `0.1` and lose the document's history.
+2. **`tests/test_governance_mirror_stamp.py`** — the bundled `GOVERNANCE-RULES.md` mirror.
+   Asserts the POINTER (`version:` + `synced-blob:` + `synced-at:`), **never fetches**, because a
+   network test collapses "stale" and "offline" into one red and a gate with two opposite correct
+   responses on one signal gets switched off.
+
+**The PRRD stamp was 52 days stale and the cause was NOT forgetfulness.** `prrd-edit.py`
+already sets both fields on every mutation; `acbea84` edited the file BY HAND, so the tool's
+invariant never applied. That is why these guards assert the ARTIFACT against git, not the tool
+— a tool-side guard stays green through exactly this. Restored to `2.0` (the tool bumps MAJOR on
+a golden change, and `G1.1 -> G1.2` is one) rather than inventing `1.6`, which would name a
+version no reader could look up.
+
+**Known residue, measured, do not assume it is covered:** `fresh stamp + body edited on the same
+day` is GREEN on both arms. Only a content hash closes it; none is implemented. See
+[[publish-and-validation-gate]]. Cross-tree provenance: `Emasoft/ai-maestro#145`.
+
 ## Applies to
 - [[publish-and-validation-gate]] — the release/validate gate: where the CPV validator
   ref is pinned (one constant, three sites) and why a `--strict` run can go red with
