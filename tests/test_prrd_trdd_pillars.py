@@ -41,6 +41,7 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -86,6 +87,34 @@ def _run(
         timeout=120,
         check=False,
     )
+
+
+MTIME_TOLERANCE_S = 300.0  # 5 min — absorbs "compute the ISO string, save a moment later"
+
+
+def stamp_predates_the_bytes(updated: datetime, mtime: datetime, *, dirty: bool) -> bool:
+    """True iff `updated:` does NOT cover the bytes currently on disk.
+
+    THE PRECONDITION LIVES IN HERE ON PURPOSE, and that placement is the point. On a CLEAN
+    file `mtime` is checkout time rather than authorship, so the comparison is meaningless
+    and a fresh clone would red every file — the predicate is only valid while the file is
+    dirty.
+
+    Putting that gate in the CALLER is what bit me: a throwaway probe reached the ungated
+    comparison, reported the correctly-stamped clean baseline as RED, and read exactly like
+    "mtime is too noisy, this fix does not port here". I was one step from rejecting a
+    CORRECT fix while holding a measurement — which is more persuasive than adopting blind,
+    and the reason that class is worse than the ones that merely hide a defect.
+
+    A gate in the caller is a rule someone must remember at every call site, INCLUDING the
+    throwaway probe written to check the rule. A gate inside the function makes the wrong
+    thing unaddressable. (Construction from the ARCHITECT on `ai-maestro#145`, whose own
+    build could not hit my failure because their gate was already here — by shape, not by
+    vigilance.)
+    """
+    if not dirty:
+        return False
+    return (mtime - updated).total_seconds() > MTIME_TOLERANCE_S
 
 
 def _git(project: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -745,15 +774,16 @@ class TestOurOwnPRRDStampIsNotStale:
         has to exclude `updated:` from its own hashed region, which is a fresh invariant
         with a fresh bypass. Known-open on purpose.
         """
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timezone
 
         if not self._is_dirty():
-            pytest.skip("PRRD.md is clean — mtime is checkout time here, not authorship")
+            pytest.skip("PRRD.md is clean — mtime records checkout time here, not authorship")
         stamped = self._frontmatter().get("updated")
         assert stamped, "`updated:` is missing while the file is being edited"
         written = datetime.fromtimestamp(self.PRRD.stat().st_mtime, tz=timezone.utc)
         claimed = datetime.fromisoformat(str(stamped)).astimezone(timezone.utc)
-        assert written <= claimed + timedelta(minutes=5), (
+        # The predicate carries its OWN precondition — see stamp_predates_the_bytes.
+        assert not stamp_predates_the_bytes(claimed, written, dirty=True), (
             f"PRRD.md was written at {written.isoformat()} but `updated:` claims {stamped} — "
             f"the stamp does not cover the bytes on disk. Bump it as part of this edit "
             f"(`prrd-edit.py` does both), or this is a mis-stamped document."
