@@ -41,7 +41,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -115,6 +115,26 @@ def stamp_predates_the_bytes(updated: datetime, mtime: datetime, *, dirty: bool)
     if not dirty:
         return False
     return (mtime - updated).total_seconds() > MTIME_TOLERANCE_S
+
+
+def primed_state(stamped: object, written: datetime) -> bool | None:
+    """What the coverage arm's predicate WOULD return right now — for the skip line to report.
+
+    A skip is consistent with two worlds: the dirty gate absorbed a false red, or the
+    predicate would have been silent anyway. Only the first credits the gate, so the skip
+    message reports this instead of implying coverage it never had.
+
+    `None` means CANNOT SAY: `updated:` is absent, so there is nothing to compare against.
+    A MALFORMED value is deliberately NOT None — it raises. A PRRD whose own timestamp does
+    not parse is a defect of the document, and a skip line reading "unknown" is exactly how
+    that lives for months unnoticed. This differs from the ARCHITECT's build on
+    ai-maestro#145, which reports None for both; the divergence is intentional and is why
+    it is tested rather than left to whichever branch happened to run.
+    """
+    if not stamped:
+        return None
+    claimed = datetime.fromisoformat(str(stamped)).astimezone(timezone.utc)
+    return stamp_predates_the_bytes(claimed, written, dirty=True)
 
 
 def _git(project: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -784,15 +804,7 @@ class TestOurOwnPRRDStampIsNotStale:
         # caught that my own touch-is-clean measurement had not checked this.)
         stamped = self._frontmatter().get("updated")
         written = datetime.fromtimestamp(self.PRRD.stat().st_mtime, tz=timezone.utc)
-        primed = (
-            stamp_predates_the_bytes(
-                datetime.fromisoformat(str(stamped)).astimezone(timezone.utc),
-                written,
-                dirty=True,
-            )
-            if stamped
-            else None
-        )
+        primed = primed_state(stamped, written)
 
         if not self._is_dirty():
             pytest.skip(
@@ -856,3 +868,25 @@ class TestOurOwnPRRDStampIsNotStale:
         assert not stamp_predates_the_bytes(stamped, checked_out, dirty=False), (
             "the gate is gone — a fresh clone now reds every correctly stamped file"
         )
+
+    def test_the_skip_line_reports_all_three_states_including_the_loud_one(self) -> None:
+        """Every branch of what the clean-file skip prints, driven rather than assumed.
+
+        Checking only the True branch would be this thread's own failure one level up: a
+        line watched succeeding once and never watched DECLINE to claim anything. So all
+        three, plus the case that must not degrade into a quiet answer.
+        """
+        from datetime import datetime, timedelta, timezone
+
+        stamp = datetime(2026, 8, 12, 9, 0, tzinfo=timezone.utc)
+
+        assert primed_state(stamp.isoformat(), stamp + timedelta(hours=10)) is True, (
+            "far past tolerance — the gate is absorbing a red and the line must say so"
+        )
+        assert primed_state(stamp.isoformat(), stamp) is False, (
+            "stamp covers the bytes — the line must admit the skip proved nothing this run"
+        )
+        assert primed_state(None, stamp) is None, "no `updated:` at all — cannot say"
+
+        with pytest.raises(ValueError):
+            primed_state("not-a-timestamp", stamp)
