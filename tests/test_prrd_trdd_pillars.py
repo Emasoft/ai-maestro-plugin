@@ -776,11 +776,30 @@ class TestOurOwnPRRDStampIsNotStale:
         """
         from datetime import datetime, timezone
 
-        if not self._is_dirty():
-            pytest.skip("PRRD.md is clean — mtime records checkout time here, not authorship")
+        # Computed BEFORE the gate on purpose, so a clean-file skip can REPORT whether the
+        # predicate was primed. A bare skip is consistent with two different worlds — the
+        # gate absorbed a false red, or the predicate would have been silent anyway — and
+        # crediting the gate without distinguishing them is the same empty-vs-all-clear
+        # mistake one level in. (Construction from the ARCHITECT on ai-maestro#145, who
+        # caught that my own touch-is-clean measurement had not checked this.)
         stamped = self._frontmatter().get("updated")
-        assert stamped, "`updated:` is missing while the file is being edited"
         written = datetime.fromtimestamp(self.PRRD.stat().st_mtime, tz=timezone.utc)
+        primed = (
+            stamp_predates_the_bytes(
+                datetime.fromisoformat(str(stamped)).astimezone(timezone.utc),
+                written,
+                dirty=True,
+            )
+            if stamped
+            else None
+        )
+
+        if not self._is_dirty():
+            pytest.skip(
+                "PRRD.md is clean — mtime records checkout time here, not authorship; "
+                f"gate load-bearing this run: {primed}"
+            )
+        assert stamped, "`updated:` is missing while the file is being edited"
         claimed = datetime.fromisoformat(str(stamped)).astimezone(timezone.utc)
         # The predicate carries its OWN precondition — see stamp_predates_the_bytes.
         assert not stamp_predates_the_bytes(claimed, written, dirty=True), (
