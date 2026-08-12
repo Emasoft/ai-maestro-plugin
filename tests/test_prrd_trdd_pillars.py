@@ -607,8 +607,65 @@ class TestOurOwnPRRDStampIsNotStale:
         assert isinstance(data, dict), "the PRRD's frontmatter is not a mapping"
         return data
 
+    def _is_dirty(self) -> bool:
+        """True iff PRRD.md has uncommitted modifications.
+
+        `--no-optional-locks`: a plain `git status` TAKES `.git/index.lock` to refresh its
+        stat cache, so a test suite running beside any other git command can kill it
+        (`ai-maestro-janitor#245`, measured twice in this repo).
+        """
+        res = subprocess.run(
+            ["git", "--no-optional-locks", "status", "--porcelain=v1", "--", str(self.PRRD)],
+            cwd=PLUGIN_ROOT, capture_output=True, text=True, timeout=30, check=False,
+        )
+        return res.returncode == 0 and bool(res.stdout.strip())
+
+    def test_a_dirty_prrd_is_witnessed_by_the_clock_not_by_its_own_stale_history(self) -> None:
+        """The arm that bites AT AUTHORING TIME, which is when the defect is born.
+
+        The committed arm below witnesses against the newest COMMIT touching the file — so
+        while the file is dirty, that witness is the OLD commit, the lag is whatever it
+        already was, and a body edited seconds ago passes. That is exactly the state
+        `acbea84` was in when it hand-edited the rules and left the stamp on June.
+
+        So when the file is modified, the witness is the CLOCK: you are editing it now, the
+        stamp must say now. Found by the ARCHITECT (`ai-maestro#145`), who shipped the same
+        split after measuring the identical blindness in their own tree.
+
+        WHAT THIS ARM DOES NOT CLOSE, measured rather than reasoned. It bites when the file
+        is edited and its stamp is ALREADY stale — the 52-day case, caught at authoring time
+        instead of after the bad commit lands. It does NOT catch a bump this morning followed
+        by a body edit this afternoon: both arms are green in that seed, because the stamp is
+        under a day old and the clock agrees with it. Seeded both cases and confirmed —
+
+            stale stamp + dirty file       -> BOTH arms red
+            fresh stamp + body edited      -> both arms GREEN   <- the residue
+
+        Closing that needs a content hash (the stamp asserting WHICH bytes it covers), not a
+        timestamp comparison; nothing here implements one. Stated because a guard whose
+        docstring overclaims is worse than a known-weak guard — the docstring becomes the
+        only thing lying.
+        """
+        from datetime import datetime, timezone
+
+        if not self._is_dirty():
+            pytest.skip("PRRD.md is clean — the committed arm is the applicable witness")
+        stamped = self._frontmatter().get("updated")
+        assert stamped, "`updated:` is missing while the file is being edited"
+        lag = datetime.now(timezone.utc) - datetime.fromisoformat(str(stamped)).astimezone(timezone.utc)
+        assert lag.total_seconds() < 86400, (
+            f"PRRD.md has uncommitted edits but `updated: {stamped}` is {lag.days}d old. The "
+            f"committed arm cannot see this — its witness is the previous commit, which has "
+            f"not moved. Bump the stamp in the SAME edit, or run `prrd-edit.py` (it does both)."
+        )
+
     def test_updated_is_not_older_than_the_last_commit_that_touched_the_file(self) -> None:
-        """The one arm that catches a hand-edit: git knows when the bytes last moved."""
+        """The arm that protects READERS: a clone's stamp must match its own history.
+
+        Blind while the file is dirty — see the dirty arm above, which exists for exactly
+        that window. The two are witnessed by different tenses on purpose and must not be
+        collapsed into one.
+        """
         from datetime import datetime
 
         res = subprocess.run(
@@ -640,3 +697,24 @@ class TestOurOwnPRRDStampIsNotStale:
             f"on a GOLDEN change and minor on a SILVER one, so a malformed value makes the "
             f"next bump start from 0.1 and silently lose the document's history."
         )
+
+    def test_the_committed_arm_is_provably_blind_where_the_dirty_arm_bites(self) -> None:
+        """A PRECONDITION, not a claim — so the two arms cannot silently become one.
+
+        If a later refactor makes the committed arm cover the authoring window, THIS test
+        fails and says the dirty arm is now redundant. A control that reports its own
+        obsolescence beats a comment nobody re-checks (ARCHITECT's construction,
+        `ai-maestro#145`).
+        """
+        from datetime import datetime, timedelta, timezone
+
+        now = datetime(2026, 8, 12, 12, 0, tzinfo=timezone.utc)
+        stamp = now - timedelta(days=52)          # the stale stamp, as measured
+        old_commit = stamp                        # dirty: HEAD has not moved since the stamp
+        committed_lag = (old_commit - stamp).total_seconds()
+        dirty_lag = (now - stamp).total_seconds()
+        assert committed_lag < 86400, (
+            "precondition broken: the committed arm now SEES the authoring window. If that "
+            "is intentional, the dirty arm is redundant and should be removed with this test."
+        )
+        assert dirty_lag > 86400, "the dirty arm must bite where the committed arm cannot"
