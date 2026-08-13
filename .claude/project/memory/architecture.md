@@ -148,6 +148,43 @@ version no reader could look up.
 day` is GREEN on both arms. Only a content hash closes it; none is implemented. See
 [[publish-and-validation-gate]]. Cross-tree provenance: `Emasoft/ai-maestro#145`.
 
+
+^ATOM-53N0-V0IF [desc:"write_prrd in scripts/prrd-trdd/prrd_lib.py is atomic temp+rename because it re-emits the WHOLE PRRD — a failed plain write partially ERASED the project constitution (#54)", keywords: the_PRRD_came_back_half_empty_after_a_crash a_failed_write_destroyed_the_rules_file why_is_write_prrd_not_a_simple_write_text is_my_atomicity_test_actually_testing_anything os.replace_across_filesystems why_must_the_temp_file_be_a_sibling, ocd: 2026-08-13, lmd: 2026-08-13]
+
+`write_prrd` in `scripts/prrd-trdd/prrd_lib.py` writes ATOMICALLY via temp+rename, and the reason
+is severity, not tidiness: `render_prrd` re-emits the WHOLE document from a parsed model, so the
+previous `p.write_text(render_prrd(doc))` truncated the target first. A crash, a full disk, or a
+SIGKILL mid-write did not leave one rule wrong — it left the project's constitution PARTIALLY
+ERASED (`edfdae9`, #54).
+
+Three details carry the guarantee and NONE is incidental:
+
+- **The temp is a SIBLING of the target.** `os.replace` is atomic only WITHIN one filesystem. A
+  `/tmp` staging file silently degrades to a cross-device copy — and still passes on a dev box
+  where `/tmp` and the repo are the same mount, so the regression is invisible exactly where it
+  is tested.
+- **`fsync` precedes the rename**, so the bytes are durable before the name points at them.
+- **The `finally` unlink** is a no-op after a successful replace and removes the temp on every
+  failure path, so a crash cannot litter `design/requirements/`.
+
+Atomicity is not serialisation: the locking half of #54 landed separately — see `ATOM-JONB-6FIU` on this page. What proves this atomicity is tested rather than asserted is `ATOM-FLE3-FVEX`.
+
+^ATOM-FLE3-FVEX [desc:"the write_prrd atomicity suite is only meaningful because of its 5th test — the falsification control that re-runs the OLD body and asserts it DOES destroy the file", keywords: my_atomicity_test_passes_but_would_it_pass_on_the_broken_version_too how_do_I_know_an_injected-failure_test_reaches_the_failure_window a_suite_that_became_a_tautology_without_anyone_noticing testing_os.replace_was_actually_called_not_just_that_content_changed, ocd: 2026-08-13, lmd: 2026-08-13]
+
+The `write_prrd` atomicity suite (see `ATOM-53N0-V0IF` on this page) is meaningful ONLY because of
+its fifth test. Every other assertion in it would ALSO pass against the old `write_text` one-liner,
+because the interesting states exist only when a write dies partway — so passing proves nothing
+about atomicity on its own.
+
+The fifth test re-runs the OLD body against the SAME injected failure and asserts it DOES destroy
+the file. That is the control: if it ever stops holding, the injection no longer reaches the
+truncation window and the whole suite has quietly become a tautology that cannot fail.
+
+Two assertions in the same suite exist for the same reason — that `os.replace` is actually CALLED
+(not merely that the file's content changed, which a plain write also achieves), and that its
+source is a SIBLING of the target, since the cross-device degradation has no other witness on a
+box where the temp dir and the repo share a mount.
+
 ## Applies to
 - [[publish-and-validation-gate]] — the release/validate gate: where the CPV validator
   ref is pinned (one constant, three sites) and why a `--strict` run can go red with
