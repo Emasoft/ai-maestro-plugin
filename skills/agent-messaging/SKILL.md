@@ -28,11 +28,16 @@ AMP uses a title-based directed graph with HUMAN as a first-class node. Edge typ
 ### The 403 covers AMP. It cannot cover the harness's own transport.
 
 Everything above — the graph, `validateMessageRoute()`, the 403 — describes messages
-sent over **AMP**. Claude Code **2.1.224** added a second, native transport:
-`SendMessage` / `ListAgents` reach another live Claude Code session on the same
-machine **directly, without touching the ai-maestro server**. There is no request
-for `validateMessageRoute()` to inspect, so a forbidden edge over that path returns
-no 403 — nothing on it can.
+sent over **AMP**. Claude Code has a second, native transport: `SendMessage` /
+`ListAgents` reach another live Claude Code session **directly, without touching the
+ai-maestro server**. There is no request for `validateMessageRoute()` to inspect, so a
+forbidden edge over that path returns no 403 — nothing on it can.
+
+**Its reach is not one machine.** Sessions on **any of your machines** (2.1.224),
+Remote Control sessions **on other machines by name** (2.1.225), and **cloud** sessions
+(labelled as such by `ListAgents` since 2.1.229) are all addressable. Do not read
+"native" as "local": what makes the 403 impossible here is that the **ai-maestro**
+server is not in the path, not that the message stays on this box.
 
 **So a 403 you never received is not permission.** R6 and R42 bind the agent on both
 transports; only one of them can tell you when you broke them. Prefer AMP for
@@ -42,7 +47,11 @@ accountable for unaided.
 
 This is easy to miss precisely because it reads as the obvious thing to do: guidance
 across this fleet says "send it a message", and a tool literally named `SendMessage`
-sits in the toolbelt. The correct verb here is `amp-send.sh`. Screened on
+sits in the toolbelt. **2.1.232 removed the last accidental speed bump**: a bare name
+that matches one live session now delivers outright, where the tool used to stop and
+make you confirm a ref. Nothing about that confirm step was a governance control — but
+it was the moment at which an unconsidered send became a considered one, and it is
+gone. The correct verb here is `amp-send.sh`. Screened on
 `ai-maestro#131`: **7 of 7** role-plugin personas asserted server enforcement without
 scoping it — CORE's own skills were in the same state until this note, which is why it
 is stated here rather than assumed understood.

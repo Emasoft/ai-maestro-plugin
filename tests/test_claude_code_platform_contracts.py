@@ -82,7 +82,8 @@ def _collapsed(text: str) -> str:
 
 _NOT_POLICED = re.compile(
     r"no 403|cannot return (one|a 403)|not enforced|nothing on (that|it) path can|"
-    r"no server in the path|without touching the (ai-maestro )?server|never (reaches|traverses) the server|"
+    r"no server in the path|without touching the (ai-maestro )?server|"
+    r"never (reaches|traverses) the (ai-maestro )?server|"
     r"returns no(thing| such| error| 403)|no place for one|unpoliced",
     re.IGNORECASE,
 )

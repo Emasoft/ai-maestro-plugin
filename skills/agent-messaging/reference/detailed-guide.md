@@ -274,7 +274,9 @@ The `AMP_DIR` environment variable points to the agent's directory and is auto-r
 
 AMP enforces a directed communication graph based on governance titles. Each node is a title (plus the HUMAN user); each edge is either `Y` (allowed) or `1` (reply-only). Blank = forbidden. The server calls `lib/communication-graph.ts::validateMessageRoute()` before every delivery and returns HTTP 403 `title_communication_forbidden` on a forbidden edge.
 
-**Scope of that enforcement: AMP only.** Claude Code 2.1.224 added a native session-to-session transport (`SendMessage` / `ListAgents`) that never reaches the server, so `validateMessageRoute()` is not consulted and a forbidden edge over it returns no error. The graph still binds the agent there; nothing enforces it. Use `amp-send.sh` for inter-agent coordination, and see the SKILL body's *"The 403 covers AMP"* section.
+**Scope of that enforcement: AMP only.** Claude Code has a native session-to-session transport (`SendMessage` / `ListAgents`) that never reaches the ai-maestro server, so `validateMessageRoute()` is not consulted and a forbidden edge over it returns no error. The graph still binds the agent there; nothing enforces it. Use `amp-send.sh` for inter-agent coordination, and see the SKILL body's *"The 403 covers AMP"* section.
+
+Read "never reaches the ai-maestro server" literally: it is the **ai-maestro** server that is absent from the path, not all infrastructure. The transport reaches sessions on any of your machines (2.1.224), Remote Control sessions by name (2.1.225) and cloud sessions (2.1.229), so a cross-machine send plainly traverses something — just nothing that holds the communication graph. The conclusion rests on *which* server is missing, not on the message staying local.
 
 ### Graph Nodes
 
