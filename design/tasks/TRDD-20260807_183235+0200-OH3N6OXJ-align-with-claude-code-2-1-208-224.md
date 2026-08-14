@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 blocked-by: []
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-11T20:04:12+0200
+updated: 2026-08-14T11:52:00+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 min-approval-requirement: none
@@ -155,10 +155,21 @@ codebase to align with them and take advantage of them"* — followed by the ful
 **What is actually true (✓ each line traced to its changelog entry):**
 
 - **Cross-session `SendMessage` is NOT new in 2.1.224.** It predates R42.8 (2026-08-05) by
-  months — `2.1.77` already documents `SendMessage({to: agentId})` as the resume path, `2.1.162`
-  fixes a `$TMPDIR` bug in it. **2.1.224 added three things**: reach across **machines** ("on any
-  of your machines"), **`ListAgents` discovery**, and the `crossSessionInbound`/`dialogExpiry`
-  settings.
+  months — `2.1.162` fixes a `$TMPDIR` bug in **cross-session messaging**, and `2.1.166` hardens
+  *"messages relayed via `SendMessage` **from other Claude sessions**"*, which cannot be said of
+  a channel that does not yet exist. **2.1.224 added three things**: reach across **machines**
+  ("on any of your machines"), **`ListAgents` discovery**, and the
+  `crossSessionInbound`/`dialogExpiry` settings — its own *"Added cross-session `SendMessage`"*
+  headline is the release note's framing, not the origin date.
+
+  ⚠ **CORRECTED 2026-08-14 — this bullet previously cited `2.1.77` as the origin evidence, and
+  that was a MIS-TRACE.** 2.1.77's `SendMessage({to: agentId})` is the resume path for **an agent
+  you already spawned** (intra-session); it says nothing about session-to-session. The conclusion
+  is unchanged — it now rests on two lines that actually contain the words "cross-session". Found
+  only because 2.1.224's own headline contradicted this bullet, which forced a re-read against
+  the authoritative CHANGELOG (`gh api`, 5511 lines). **A section headed *"✓ each line traced to
+  its changelog entry"* contained an untraced line for six days** — the header asserted the
+  discipline that would have caught it.
 - **It is NOT ungated — the platform hardened it against exactly my concern, twice.**
   `2.1.166`: *"messages relayed via `SendMessage` from other Claude sessions **no longer carry
   user authority** — receivers refuse relayed permission requests, and auto mode blocks them"*.
@@ -615,8 +626,9 @@ must not be taught as law**. Tracked as its own task; owning card is TRDD-ZNGTF0
   peers as law before it was checked.
 
 - **"Cross-session `SendMessage` is new in 2.1.224."** FALSE — it predates R42.8 by months
-  (`2.1.77`, `2.1.162`). 2.1.224 added cross-**machine** reach, `ListAgents` discovery, and the
-  two settings.
+  (`2.1.162`, `2.1.166`; **not** `2.1.77`, which this line cited until 2026-08-14 — that entry is
+  the resume path for an already-spawned agent, not a session-to-session channel). 2.1.224 added
+  cross-**machine** reach, `ListAgents` discovery, and the two settings.
 - **"The platform shipped an ungated channel underneath R42.8."** FALSE and the more damaging
   error — `2.1.166` removed user authority from relayed messages and made receivers refuse
   relayed permission requests; `2.1.222` added permission-classifier evaluation before dispatch.
