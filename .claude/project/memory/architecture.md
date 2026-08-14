@@ -386,12 +386,19 @@ age bound** — `PostToolUse` is what ends the state, and a blocked agent stays 
 (17h observed), so any window would re-drop the question in exactly the case it exists for.
 
 
-^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: Claude Code 2.1.224's native SendMessage reaches another session with no server in the path, so a forbidden send returns nothing at all", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport, ocd: 2026-08-08, lmd: 2026-08-08]
+^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: native SendMessage reaches another session with no ai-maestro server in the path, so a forbidden send returns nothing at all — and its reach is not one machine, it spans your machines, Remote Control and cloud sessions", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport native_transport_is_not_local same_machine_claim_is_wrong cross_machine_send_still_unpoliced, ocd: 2026-08-08, lmd: 2026-08-14]
 
-Claude Code **2.1.224** added `SendMessage` / `ListAgents` — a native session-to-session
-transport between live Claude Code sessions on one machine that **never reaches the
-ai-maestro server**. `validateMessageRoute()` is not consulted, so a forbidden edge over
-that path returns **no** HTTP 403 `title_communication_forbidden`; nothing on it can.
+`SendMessage` / `ListAgents` are a native session-to-session transport between live Claude
+Code sessions that **never reaches the ai-maestro server**. `validateMessageRoute()` is not
+consulted, so a forbidden edge over that path returns **no** HTTP 403
+`title_communication_forbidden`; nothing on it can.
+
+**Its reach is not one machine**, and the precision matters: sessions on any of your
+machines (2.1.224), Remote Control sessions by name (2.1.225) and cloud sessions
+(`ListAgents` labels them since 2.1.229). What makes the 403 impossible is that the
+**ai-maestro** server is absent from the path — NOT that the message stays local. A
+cross-machine send plainly traverses something; it just traverses nothing that holds the
+communication graph.
 
 **A 403 you never received is not permission.** R6 and R42 bind an agent on both
 transports; only AMP can tell it when it broke them. `amp-send.sh` is the verb that gets
@@ -409,7 +416,7 @@ Fixed in CORE v3.1.9 across `agent-messaging` (SKILL + detailed-guide) and `team
 The rule-text half is NOT fixed and is not CORE's: R42.3 ("messaging is the ONLY channel")
 is false as written, and R42 is `CRITICAL — IRON, USER-set` ⇒ Tier 3. Tracked as A1 of
 `TRDD-OH3N6OXJ`, open with the USER. The clean split: plugin text is each plugin's to fix
-today; rule text is ONE user request, not seven reinterpretations.
+today; rule text is ONE user request, not seven reinterpretations. [^5]
 
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
@@ -449,3 +456,4 @@ today; rule text is ONE user request, not seven reinterpretations.
   alerting. DO audit crates against OSV (POST the lockfile's name+version pairs to
   `api.osv.dev/v1/querybatch`) and treat the alert count as covering only Actions and Python.
 [^4]: [id:ATOM-IW75-RF2M, status:valid, desc:"writerVersion must come from __dirname, never $CLAUDE_PLUGIN_ROOT — a wrong stamp is worse than none (#60, 2026-08-06)", keywords:"plugin_version_stamp_on_chat-state writerVersion_field CLAUDE_PLUGIN_ROOT_wrong_plugin_version how_does_the_hook_know_its_own_version is_the_version_stamp_redundant stale_producer_detection", ocd:2026-08-06, lmd:2026-08-06] DO NOT resolve the plugin version (or any plugin-root path) inside `scripts/ai-maestro-hook.cjs` from `$CLAUDE_PLUGIN_ROOT`, and DO NOT drop the `writerVersion` stamp as redundant. BECAUSE that env var names whichever plugin's context spawned the hook process, not this plugin, so it can stamp ANOTHER plugin's version onto our state record — and a wrong stamp is worse than none, since `writerVersion` is the one field a fleet consumer trusts to decide the producer is current (it is what lets the server distinguish 'no question pending' from 'this agent still runs the #59 clobber bug', which demand opposite actions). DO resolve from `__dirname`, whose value is the file's own location and cannot be wrong; the regression test passes with `CLAUDE_PLUGIN_ROOT` deliberately pointed elsewhere, so keep it that way.
+[^5]: [id:ATOM-E7FC-E5XZ, status:valid, desc:"corrects this atom's pre-2026-08-14 body, which read 'between live Claude Code sessions on one machine that never reaches the ai-maestro server'", keywords:"native_transport_is_local no_server_in_the_path same_machine_claim cross-machine_send_is_still_unpoliced the_stated_reason_went_false_but_the_conclusion_held scoping_argument_built_on_the_wrong_premise", ocd:2026-08-14, lmd:2026-08-14] DO NOT justify "a native send returns no 403" by calling the transport LOCAL, or by saying it "never reaches the server" unqualified — this atom's own body did, reading "between live Claude Code sessions on one machine", and three CORE skills taught the same until 2026-08-14. BECAUSE the reach was never one machine (2.1.224 any of your machines, 2.1.225 Remote Control by name, 2.1.229 cloud sessions), so a cross-machine send plainly traverses infrastructure; a reader who catches that false premise can discard the TRUE conclusion along with it and route around the comm graph believing the doc is merely stale. A right conclusion resting on a checkable-false reason is more dangerous than a visibly wrong one. DO name WHICH server is absent — the ai-maestro one, the only one holding the communication graph — so the argument survives every future change in reach.
