@@ -1,9 +1,9 @@
 ---
 trdd-id: 4Y2LKKSZ
 title: directory-guard — allow /dev/null sinks and replace the > string scan with a quote-aware redirect tokenizer
-column: todo
+column: ai_review
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-15T01:13:40+0200
+updated: 2026-08-15T02:05:00+0200
 current-owner: ai-maestro-plugin-session
 task-type: bugfix
 priority: high

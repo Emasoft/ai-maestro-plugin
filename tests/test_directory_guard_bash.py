@@ -312,3 +312,57 @@ def test_payload_length_does_not_change_the_cost_no_redos() -> None:
     # Hang detector only. Not a performance budget: on a loaded box the floor is
     # Node's cold-start, which is not what this test is about.
     assert huge_ms < 30_000.0, f"guard took {huge_ms:.0f}ms — hung?"
+
+
+# ── ai-maestro#123 acceptance corpus (TRDD-4Y2LKKSZ) — the quote-aware redirect
+# scanner + /dev/* sink allowance. Each entry is an acceptance checkbox from the
+# MANAGER durable work order (comment 5198192106), driven as a REAL command
+# through the guard, exactly as the order requires ("assert on exit status and
+# whether the command actually ran — never on message text alone"; here the
+# guard IS the unit, so the assertion is its decision). The true-positive rows
+# run IN THE SAME parametrized suite, so a "fix" that simply disabled the guard
+# cannot pass this file.
+WO123_MUST_ALLOW = [
+    # (a) /dev sinks — the documented discard idiom must work.
+    ("wo123_devnull", "echo hi >/dev/null"),
+    ("wo123_devnull_dup", "ls /nonexistent >/dev/null 2>&1; echo $?"),
+    ("wo123_devstderr", "echo warn >/dev/stderr"),
+    ("wo123_tee_devnull", "produce | tee /dev/null"),
+    # (b) quoted `>` is data, not a redirect — the order's own repro first.
+    ("wo123_placeholder_prose", 'echo "quoted data with a placeholder /Users/<owner>/agents/frank"'),
+    ("wo123_dquote_prose", 'echo "a quoted redirect > /outside/path in prose"'),
+    ("wo123_squote_prose", "echo 'a > /etc/x in prose'"),
+    ("wo123_escaped_gt", "echo a \\> /etc/x"),
+    ("wo123_arith_shift", "echo $((1<<2))"),
+    # heredoc body containing <placeholder>, targeting an ALLOWED path.
+    ("wo123_heredoc_placeholder", f"cat > {WORK}/out <<EOF\na <placeholder> line\nEOF"),
+]
+
+
+@pytest.mark.parametrize("case_id,command", WO123_MUST_ALLOW, ids=[c[0] for c in WO123_MUST_ALLOW])
+def test_wo123_acceptance_allows(case_id: str, command: str) -> None:
+    """ai-maestro#123 acceptance: sinks and quoted/escaped `>` must be ALLOWED."""
+    decision, reason = guard_decision(command)
+    assert decision == "allow", f"{case_id}: expected allow, got {decision} (reason: {reason!r})"
+
+
+WO123_MUST_DENY = [
+    # True positives in the same run — the order's anti-disable clause.
+    ("wo123_tp_plain", "echo x > /etc/evil.txt"),
+    ("wo123_tp_quoted_target", 'echo h > "/etc/passwd"'),  # operator unquoted → real
+    ("wo123_tp_adjacent", 'echo ">" > /etc/x'),  # quoted `>` beside a real one
+    ("wo123_tp_append", "echo x >> /etc/evil.txt"),
+    ("wo123_tp_heredoc_target", "cat > /etc/bad <<EOF\nbody\nEOF"),  # heredoc's OWN redirect
+    ("wo123_tp_interp_body", "sh -c 'echo x > /etc/f'"),  # 1b legacy layer, gated
+    # An unterminated heredoc hides its tail → fail-closed rescan must catch this.
+    ("wo123_tp_unterminated_heredoc", "cat <<EOF\nbody\necho x > /etc/f"),
+]
+
+
+@pytest.mark.parametrize("case_id,command", WO123_MUST_DENY, ids=[c[0] for c in WO123_MUST_DENY])
+def test_wo123_acceptance_denies(case_id: str, command: str) -> None:
+    """ai-maestro#123 acceptance: genuine out-of-sandbox writes still DENY, with token+reason."""
+    decision, reason = guard_decision(command)
+    assert decision == "deny", f"{case_id}: expected deny, got {decision} (reason: {reason!r})"
+    # Scope item 4: the reason names the token AND why it was flagged.
+    assert "(" in reason and ")" in reason, f"{case_id}: reason lacks a (label): {reason!r}"

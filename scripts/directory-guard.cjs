@@ -366,17 +366,35 @@ function detectBashWriteTargets(command, agentWorkDir) {
   // semantics there are xargs/stdin-driven, modeled by #16). An unquoted
   // `<`/`>` is always a redirect operator, never part of a path token.
 
-  // 1. Output redirects: > file, >> file, 2> file, 2>> file, &> file, >| file
-  //    `>|` is the clobber-override redirect (writes even under `set -o
-  //    noclobber`) — it must be caught just like `>`. The target token may be
-  //    concatenated to the operator (`>file`, `>|file`) since \s* allows zero
-  //    whitespace.
-  const redirectRegex = /(?:&>>?|[12]?>>?\|?|[12]?>\|)\s*([^\s;|&<>]+)/g;
-  checkMatches(redirectRegex, cmd, 1, agentWorkDir, violations);
+  // 1. Output redirects — QUOTE-AWARE, scanned on the RAW command (ai-maestro#123).
+  //    The old shape ran a redirect regex over the DEQUOTED string, so a `>`
+  //    inside quoted prose ("/Users/<owner>/x", "a > b in a sentence") was
+  //    parsed as a redirect — the guard punished text, not writes. The scan
+  //    below is a linear state machine that knows single/double quotes,
+  //    backslash escapes, heredoc bodies, $((...)) arithmetic, fd-duplication
+  //    (2>&1) and process substitution — a redirect is only a redirect where
+  //    the SHELL would treat it as one. Real redirects with QUOTED targets
+  //    (`> "/etc/passwd"`) still deny: the operator's quoting decides, never
+  //    the target's. Returns true if a heredoc never terminated — that body
+  //    was skipped unverified, so FAIL-CLOSED: rescan everything the old way.
+  const unterminated = scanRedirects(command, agentWorkDir, violations);
+  // 1b. Redirects INSIDE interpreter/eval string arguments. The raw-text scan
+  //     above is shell-faithful, which makes it blind to `sh -c 'echo x > /f'`
+  //     (the redirect lives inside a quoted string the OUTER shell never
+  //     executes — but the INNER shell does). The old dequoted scan caught
+  //     these; keep that coverage, gated to commands that actually invoke an
+  //     interpreter or eval so prose can no longer trip it. This gate is the
+  //     false-negative-audit finding the work order's scope item 3 demanded
+  //     be resolved BEFORE the old scan went away.
+  const legacyRedirectRegex = /(?:&>>?|[12]?>>?\|?|[12]?>\|)\s*([^\s;|&<>]+)/g;
+  if (unterminated || /\b(?:sh|bash|zsh|dash|ksh)\b[^;|&\n]*\s-c\b|\beval\b/.test(cmd)) {
+    checkMatches(legacyRedirectRegex, cmd, 1, agentWorkDir, violations,
+      'redirect inside interpreter/eval string');
+  }
 
   // 2. tee: tee [-a] file [file...]
   const teeRegex = /\btee(?:\s+-[ai])*\s+([^\s;|&<>]+)/g;
-  checkMatches(teeRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(teeRegex, cmd, 1, agentWorkDir, violations, 'tee target');
 
   // 3. cp/mv: cp [-rfp] source target, mv source target
   //    Last argument is the destination. Flags match the token loop too,
@@ -384,25 +402,25 @@ function detectBashWriteTargets(command, agentWorkDir) {
   //    `--target-directory=<dir>` form (destination is an EARLIER arg) is
   //    handled by targetDirRegex (#15) so the real directory is reported.
   const cpMvRegex = /\b(?:cp|mv)(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&<>]+)/g;
-  checkMatches(cpMvRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(cpMvRegex, cmd, 1, agentWorkDir, violations, 'cp/mv destination');
 
   // 4. curl/wget output: curl -o file / --output file, wget -O file /
   //    --output-document file. The separator is \s* so the concatenated forms
   //    `-O<path>` / `-o<path>` (no whitespace) are also captured. A bare `-o`
   //    with no path (the next char is a separator) captures nothing.
   const curlOutRegex = /\bcurl\b[^;|&]*?(?:-o|--output)\s*([^\s;|&<>]+)/g;
-  checkMatches(curlOutRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(curlOutRegex, cmd, 1, agentWorkDir, violations, 'curl output file');
   const wgetOutRegex = /\bwget\b[^;|&]*?(?:-O|--output-document)\s*([^\s;|&<>]+)/g;
-  checkMatches(wgetOutRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(wgetOutRegex, cmd, 1, agentWorkDir, violations, 'wget output file');
 
   // 5. Inline Python write: python -c "...open('path'..." or python3 -c
   //    (quotes already stripped by the pre-pass, so match the bare path).
   const pyWriteRegex = /\bpython[23]?(?:\.[0-9]+)?\s+-c\s+.*?\bopen\s*\(\s*([^\s;|&,)]+)/g;
-  checkMatches(pyWriteRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(pyWriteRegex, cmd, 1, agentWorkDir, violations, 'python inline open()');
 
   // 6. Inline Node write: node -e "...writeFileSync('path'..." / writeFile(
   const nodeWriteRegex = /\bnode\s+-e\s+.*?(?:writeFileSync|writeFile|appendFileSync|appendFile)\s*\(\s*([^\s;|&,)]+)/g;
-  checkMatches(nodeWriteRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(nodeWriteRegex, cmd, 1, agentWorkDir, violations, 'node inline write');
 
   // 6b. Inline ruby/perl write: ruby/perl -e '...File.write("f")... /
   //     open(...,'w')...'. The script body lives after -e; scan it for the
@@ -428,40 +446,40 @@ function detectBashWriteTargets(command, agentWorkDir) {
       '(?:File\\.write|File\\.open|IO\\.write|' + 'open' + ')\\s*\\(\\s*([^\\s;|&,)]+)',
     'g'
   );
-  checkMatches(rubyPerlWriteRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(rubyPerlWriteRegex, cmd, 1, agentWorkDir, violations, 'ruby/perl inline write');
 
   // 6c. awk write: awk '...print ... > "file"...' (and >>). awk's redirect is
   //     INSIDE its program string; after dequoting it reads `print > /path`.
   //     Match an awk invocation, then the first `>`/`>>` target in its body.
   const awkWriteRegex = /\bawk\b[^;|&]*?>>?\s*([^\s;|&<>]+)/g;
-  checkMatches(awkWriteRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(awkWriteRegex, cmd, 1, agentWorkDir, violations, 'awk program redirect');
 
   // 7. install/rsync: install [-m...] source dest, rsync ... dest
   //    Flags match the token loop too (same collapse as cp/mv). `-t <dir>` is
   //    handled by targetDirRegex (#15).
   const installRegex = /\binstall(?:\s+[^\s;|&]{1,4096})+\s+([^\s;|&<>]+)/g;
-  checkMatches(installRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(installRegex, cmd, 1, agentWorkDir, violations, 'install destination');
 
   // 8. dd output: dd ... of=path
   const ddRegex = /\bdd\b[^;|&]*?\bof=([^\s;|&<>]+)/g;
-  checkMatches(ddRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(ddRegex, cmd, 1, agentWorkDir, violations, 'dd of= target');
 
   // 9. sed -i (in-place edit): sed -i[backup] ... file
   const sedRegex = /\bsed\s+(?:-[a-zA-Z]*i[^\s]*\s+).*?([^\s;|&<>]+)\s*(?:$|[;|&])/g;
-  checkMatches(sedRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(sedRegex, cmd, 1, agentWorkDir, violations, 'sed -i in-place target');
 
   // 10. rm/rmdir: rm [-rf] path (destructive, not write, but equally dangerous)
   const rmRegex = /\b(?:rm|rmdir)(?:\s+-[a-zA-Z]{1,16})*\s+([^\s;|&<>]+)/g;
-  checkMatches(rmRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(rmRegex, cmd, 1, agentWorkDir, violations, 'rm/rmdir target');
 
   // 11. chmod/chown: targeting files outside sandbox
   //     Flags match the token loop too (same collapse as cp/mv).
   const chmodRegex = /\b(?:chmod|chown)(?:\s+\S{1,4096})+\s+([^\s;|&<>]+)/g;
-  checkMatches(chmodRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(chmodRegex, cmd, 1, agentWorkDir, violations, 'chmod/chown target');
 
   // 12. ln -s: creating symlinks that point into the sandbox from outside
   const lnRegex = /\bln(?:\s+-[a-zA-Z]{1,16})*\s+[^\s;|&]+\s+([^\s;|&<>]+)/g;
-  checkMatches(lnRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(lnRegex, cmd, 1, agentWorkDir, violations, 'ln link target');
 
   // 13. tar extraction: `tar … x… -C <dir>` writes files into <dir>. Two
   //     shapes — explicit `-C <dir>`, and bare `tar x…` whose default target
@@ -469,7 +487,7 @@ function detectBashWriteTargets(command, agentWorkDir) {
   //     matched here. Require an extract mode (`x`) to be present.
   //     a) extraction with an explicit destination dir.
   const tarDestRegex = /\btar\b(?=[^;|&]*\b[a-z]*x[a-z]*\b)[^;|&]*?-C\s*([^\s;|&<>]+)/g;
-  checkMatches(tarDestRegex, cmd, 1, agentWorkDir, violations);
+  checkMatches(tarDestRegex, cmd, 1, agentWorkDir, violations, 'tar -C extraction dir');
   //     b) extraction with no -C (writes into the agent's CWD). CWD is NOT a
   //     trusted write root (the agent can `cd` anywhere), so an extract with
   //     no destination is checked against the resolved CWD — caught only when
@@ -503,7 +521,7 @@ function detectBashWriteTargets(command, agentWorkDir) {
   //     wrong target. Capture the real directory here.
   const targetDirRegex =
     /\b(?:cp|mv|install)\b[^;|&]*?(?:--target-directory=([^\s;|&<>]+)|(?:^|\s)-t\s+([^\s;|&<>]+))/g;
-  checkMatchesAlt(targetDirRegex, cmd, [1, 2], agentWorkDir, violations);
+  checkMatchesAlt(targetDirRegex, cmd, [1, 2], agentWorkDir, violations, 'target-directory flag');
 
   // 16. xargs <writer>: xargs invokes a downstream command once per stdin
   //     token. When that command is a writer/destructive verb (rm, cp, mv,
@@ -597,14 +615,35 @@ function dequoteCommand(command) {
   return out;
 }
 
-function checkMatches(regex, command, group, agentWorkDir, violations) {
+/**
+ * Kernel-provided data sinks that discard or echo bytes — writing to them
+ * mutates nothing on disk, so they are never "writes outside the sandbox"
+ * (ai-maestro#123 defect (a): `cmd >/dev/null 2>&1` is the documented discard
+ * idiom, and the /tmp-file workaround it forced was WORSE for the guard's own
+ * objective). Kept to the fixed sink set on purpose: /dev at large holds real
+ * device nodes; only these are unconditionally safe discard/echo targets.
+ */
+function isDevSink(resolvedPath) {
+  return (
+    resolvedPath === '/dev/null' ||
+    resolvedPath === '/dev/stdout' ||
+    resolvedPath === '/dev/stderr' ||
+    resolvedPath === '/dev/tty' ||
+    resolvedPath.startsWith('/dev/fd/')
+  );
+}
+
+function checkMatches(regex, command, group, agentWorkDir, violations, label) {
   let match;
   while ((match = regex.exec(command)) !== null) {
     const target = match[group];
     if (target) {
       const resolved = path.resolve(target);
-      if (!isAllowedPath(resolved, agentWorkDir)) {
-        violations.push(resolved);
+      if (!isDevSink(resolved) && !isAllowedPath(resolved, agentWorkDir)) {
+        // Name the token AND the reason (ai-maestro#123 scope item 4): a
+        // caller must be able to tell "write outside the sandbox" from "the
+        // parser thought this text was a redirect/target".
+        violations.push(label ? `${resolved} (${label})` : resolved);
       }
     }
     // Guard against zero-width matches stalling exec() on a global regex.
@@ -618,7 +657,7 @@ function checkMatches(regex, command, group, agentWorkDir, violations) {
  * vs `-t <dir>` — only one group is populated per match). The first
  * non-empty group in `groups` is taken as the target.
  */
-function checkMatchesAlt(regex, command, groups, agentWorkDir, violations) {
+function checkMatchesAlt(regex, command, groups, agentWorkDir, violations, label) {
   let match;
   while ((match = regex.exec(command)) !== null) {
     let target;
@@ -630,10 +669,196 @@ function checkMatchesAlt(regex, command, groups, agentWorkDir, violations) {
     }
     if (target) {
       const resolved = path.resolve(target);
-      if (!isAllowedPath(resolved, agentWorkDir)) {
-        violations.push(resolved);
+      if (!isDevSink(resolved) && !isAllowedPath(resolved, agentWorkDir)) {
+        violations.push(label ? `${resolved} (${label})` : resolved);
       }
     }
     if (match.index === regex.lastIndex) regex.lastIndex++;
   }
+}
+
+// ============================================================================
+// Quote-aware redirect scanner (ai-maestro#123 defect (b))
+// ============================================================================
+
+/**
+ * Linear single-pass scan of the RAW command for output redirects, applying
+ * the SHELL's notion of where a redirect exists. Inside single quotes, double
+ * quotes, a backslash escape, a heredoc body, or $((...)) arithmetic, `>` is
+ * DATA — the old dequote-then-regex shape parsed it as an operator, which is
+ * how `echo "a placeholder /Users/<owner>/agents/frank"` got denied for
+ * "writing" to /agents/frank (the `>` closing the placeholder).
+ *
+ * Deliberate asymmetry: the OPERATOR's context decides, never the target's —
+ * `> "/etc/passwd"` is a real redirect with a quoted target and still denies
+ * (pinned by test 01/02 in tests/test_directory_guard_bash.py).
+ *
+ * Handled without over-blocking: fd duplication (`2>&1`, `>&2`, `>&-`) is not
+ * a path; `<<<` here-strings and `<(...)`/`>(...)` process substitutions have
+ * no file target; `$((1<<2))` shift operators are not heredocs. Heredoc bodies
+ * (quoted or unquoted tag, `<<-` tab-stripping) are skipped — nothing in a
+ * body is executed by the OUTER shell. MAY still over-block (accepted,
+ * fail-closed): `> $VAR` resolves the literal token; redirects inside $() and
+ * backticks are treated as real (they are — a subshell runs them).
+ *
+ * Returns true when a heredoc body never terminated: the tail of the command
+ * was skipped UNVERIFIED, and an unterminated heredoc is exactly the shape an
+ * evasion would use — the caller MUST then rescan fail-closed (the legacy
+ * dequoted scan), never treat the skipped bytes as clean.
+ */
+function scanRedirects(command, agentWorkDir, violations) {
+  const MAX = 65536; // same cap + rationale as dequoteCommand
+  const src = command.length > MAX ? command.slice(0, MAX) : command;
+  const n = src.length;
+  const isSpace = (c) => c === ' ' || c === '\t';
+  const isWordEnd = (c) => isSpace(c) || ';|&<>()\n'.includes(c);
+
+  /** Read a redirect TARGET starting at j (after the operator). */
+  function readTarget(j) {
+    while (j < n && isSpace(src[j])) j++;
+    if (j >= n) return { target: null, next: j };
+    if (src[j] === '&') {
+      // fd duplication (>&1, 2>&1, >&-): a digit or `-` after `&` names an fd,
+      // not a file. `>& word` (legacy csh both-redirect) falls through below.
+      let k = j + 1;
+      if (k < n && (src[k] === '-' || (src[k] >= '0' && src[k] <= '9'))) {
+        while (k < n && src[k] >= '0' && src[k] <= '9') k++;
+        return { target: null, next: k };
+      }
+      j = k;
+    }
+    if (j < n && src[j] === '(') {
+      // >(cmd) process substitution: the "target" is a pipe to a command, not
+      // a path. The command INSIDE keeps being scanned by the outer loop.
+      return { target: null, next: j };
+    }
+    if (j < n && (src[j] === '"' || src[j] === "'")) {
+      const q = src[j];
+      let k = j + 1;
+      let buf = '';
+      while (k < n && src[k] !== q) {
+        if (q === '"' && src[k] === '\\' && k + 1 < n) { buf += src[k + 1]; k += 2; continue; }
+        buf += src[k];
+        k++;
+      }
+      return { target: buf || null, next: k < n ? k + 1 : k };
+    }
+    let k = j;
+    let buf = '';
+    while (k < n && !isWordEnd(src[k])) {
+      if (src[k] === '\\' && k + 1 < n) { buf += src[k + 1]; k += 2; continue; }
+      buf += src[k];
+      k++;
+    }
+    return { target: buf || null, next: k };
+  }
+
+  function pushIfForbidden(target) {
+    if (!target) return;
+    const resolved = path.resolve(target);
+    if (isDevSink(resolved)) return;
+    if (!isAllowedPath(resolved, agentWorkDir)) {
+      violations.push(`${resolved} (redirect target)`);
+    }
+  }
+
+  const heredocQueue = []; // FIFO of pending {tag, stripTabs} awaiting bodies
+  let arith = 0;           // $(( ... )) nesting depth
+  let i = 0;
+
+  while (i < n) {
+    const ch = src[i];
+
+    // A newline with heredocs pending starts the FIRST body: consume whole
+    // lines, closing each pending tag in order (that is heredoc semantics —
+    // bodies attach FIFO to the operators on the command line above).
+    if (ch === '\n' && heredocQueue.length > 0) {
+      i++;
+      while (heredocQueue.length > 0 && i < n) {
+        const { tag, stripTabs } = heredocQueue[0];
+        let eol = src.indexOf('\n', i);
+        if (eol === -1) eol = n;
+        let line = src.slice(i, eol);
+        if (stripTabs) line = line.replace(/^\t+/, '');
+        i = eol < n ? eol + 1 : n;
+        if (line === tag) heredocQueue.shift();
+      }
+      continue;
+    }
+
+    if (ch === '\\') { i += 2; continue; } // escaped char is data (incl. \>)
+
+    if (ch === "'") {
+      const close = src.indexOf("'", i + 1);
+      i = close === -1 ? n : close + 1;
+      continue;
+    }
+    if (ch === '"') {
+      let k = i + 1;
+      while (k < n && src[k] !== '"') {
+        if (src[k] === '\\') k++;
+        k++;
+      }
+      i = k < n ? k + 1 : n;
+      continue;
+    }
+
+    // $(( ... )): << and >> are shift operators here, never redirects.
+    if (ch === '$' && src.startsWith('$((', i)) { arith++; i += 3; continue; }
+    if (arith > 0) {
+      if (src.startsWith('))', i)) { arith--; i += 2; continue; }
+      i++;
+      continue;
+    }
+
+    if (ch === '<') {
+      if (src.startsWith('<<<', i)) { i = readTarget(i + 3).next; continue; } // here-string: word, no file
+      if (src.startsWith('<<', i)) {
+        // Heredoc: parse the tag (optionally `-` prefixed, quoted, or \escaped).
+        let j = i + 2;
+        let stripTabs = false;
+        if (src[j] === '-') { stripTabs = true; j++; }
+        while (j < n && isSpace(src[j])) j++;
+        let tag = '';
+        if (j < n && (src[j] === '"' || src[j] === "'")) {
+          const q = src[j];
+          let k = j + 1;
+          while (k < n && src[k] !== q) { tag += src[k]; k++; }
+          j = k < n ? k + 1 : k;
+        } else {
+          if (j < n && src[j] === '\\') j++;
+          while (j < n && !isWordEnd(src[j])) { tag += src[j]; j++; }
+        }
+        if (tag) heredocQueue.push({ tag, stripTabs });
+        i = j;
+        continue;
+      }
+      i++; // plain input redirect or <(cmd): no write target
+      continue;
+    }
+
+    if (ch === '&' && src[i + 1] === '>') { // &> file, &>> file
+      let j = i + 2;
+      if (src[j] === '>') j++;
+      const r = readTarget(j);
+      pushIfForbidden(r.target);
+      i = r.next;
+      continue;
+    }
+
+    if (ch === '>') {
+      let j = i + 1;
+      if (src[j] === '>') j++; // >>
+      if (src[j] === '|') j++; // >| clobber-override
+      if (src[j] === '(') { i = j; continue; } // >(cmd) process substitution
+      const r = readTarget(j);
+      pushIfForbidden(r.target);
+      i = r.next;
+      continue;
+    }
+
+    i++;
+  }
+
+  return heredocQueue.length > 0; // unterminated heredoc → caller rescans fail-closed
 }
