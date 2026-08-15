@@ -204,6 +204,13 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
+          # fetch-depth: 0 — several tests witness real history (e.g. the PRRD stamp
+          # test compares `updated:` against the last commit that touched PRRD.md).
+          # On the default depth-1 checkout `git log -- <path>` returns HEAD for EVERY
+          # file, so those tests read the release commit's timestamp as the file's last
+          # touch and fail on every push once a day has passed. Lint and commitlint
+          # already check out full depth for the same reason.
+          fetch-depth: 0
           persist-credentials: false   # Test only reads the tree; never pushes (zizmor artipacked).
 
       - name: Install uv

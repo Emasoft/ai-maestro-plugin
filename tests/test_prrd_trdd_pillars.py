@@ -710,12 +710,31 @@ class TestOurOwnPRRDStampIsNotStale:
         """
         from datetime import datetime
 
+        # A SHALLOW clone must be detected BEFORE reading the log, not inferred from an
+        # empty result. `git log -1 -- <path>` on a depth-1 checkout succeeds and returns
+        # HEAD — every file looks "last touched" by the tip commit — so the empty-output
+        # guard below can never fire there. That is not a hypothetical: CI's Test job
+        # checked out shallow while lint/commitlint used fetch-depth: 0, and once more
+        # than a day had passed since the real PRRD edit this test failed on every push,
+        # naming the RELEASE commit's timestamp as the PRRD's last touch. The lesson is
+        # the general one: a truncated history is UNMEASURED, not measured-and-clean, and
+        # an absence-check cannot distinguish the two.
+        shallow = subprocess.run(
+            ["git", "--no-optional-locks", "rev-parse", "--is-shallow-repository"],
+            cwd=PLUGIN_ROOT, capture_output=True, text=True, timeout=30, check=False,
+        )
+        if shallow.stdout.strip() == "true":
+            pytest.skip(
+                "shallow clone — `git log -- PRRD.md` would report HEAD for every file, so "
+                "this witness is UNAVAILABLE (not clean). Check out with fetch-depth: 0 to "
+                "restore the gate."
+            )
         res = subprocess.run(
             ["git", "--no-optional-locks", "log", "-1", "--format=%aI", "--", str(self.PRRD)],
             cwd=PLUGIN_ROOT, capture_output=True, text=True, timeout=30, check=False,
         )
         if res.returncode != 0 or not res.stdout.strip():
-            pytest.skip("no git history for the PRRD (shallow clone or unborn branch)")
+            pytest.skip("no git history for the PRRD (unborn branch, or not a git checkout)")
         last_commit = datetime.fromisoformat(res.stdout.strip())
         stamped = self._frontmatter().get("updated")
         assert stamped, "`updated:` is missing — an unstamped document cannot go stale, only be wrong"
