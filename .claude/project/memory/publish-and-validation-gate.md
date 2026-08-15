@@ -1,6 +1,6 @@
 ---
 name: publish-and-validation-gate
-description: "why does local publish.py validate disagree with CI / which CPV version does this repo validate against and where is it pinned / the strict gate went red and I changed no code / is exit 4 a real failure or a NIT / when may I bump the CPV pin"
+description: "why does local publish.py validate disagree with CI / which CPV version does this repo validate against and where is it pinned / the strict gate went red and I changed no code / CI is red but the same suite passes locally / a test fails on every push naming the release commit as a file's last touch / shallow clone, fetch-depth, git log returning HEAD for every file / is exit 4 a real failure or a NIT / when may I bump the CPV pin"
 ocd: 2026-08-01
 lmd: 2026-08-01
 metadata:
@@ -10,6 +10,35 @@ metadata:
 ---
 
 # publish-and-validation-gate
+
+
+^ATOM-ATQD-U4HE [desc:"CI's Test job checked out at depth 1, where git log -1 -- <path> returns HEAD for EVERY file, so the PRRD-stamp gate compared the stamp against the release commit and failed every push", keywords: CI_red_but_local_green shallow_clone fetch-depth git_log_returns_HEAD_for_every_file PRRD_stamp_test_fails_on_every_push test_passed_locally_failed_in_CI checkout_depth_1 history-witnessing_test, type: reference, ocd: 2026-08-15, lmd: 2026-08-15]
+
+A test that witnesses REAL GIT HISTORY is only valid on a full checkout. On a
+`fetch-depth: 1` clone `git log -1 --format=%aI -- <path>` still **succeeds** and
+prints the tip commit's date for **every** file in the tree — the answer is valid
+in shape and wrong in fact.
+
+Measured 2026-08-15 (CORE run 31906718423, both lanes): the PRRD-stamp gate
+reported `updated: 2026-08-12` as predating "the last commit touching PRRD.md
+(2026-08-15T22:27)". No commit touched PRRD.md then — 22:27 was the RELEASE
+commit. Locally the same test passed, and `publish.py` ran the identical suite
+green immediately before the push, so the disagreement was environmental, not a
+code regression.
+
+It was LATENT, not new: the gate stayed green only while the tip commit sat
+within the test's one-day tolerance of the last real PRRD edit. Once more than a
+day had passed it failed on **every** push. Lint and commitlint in the same
+workflow already used `fetch-depth: 0`; only the Test job did not.
+
+Fix (v3.1.25, `30ab817`): `fetch-depth: 0` on the Test job so the gate measures,
+plus an explicit `git rev-parse --is-shallow-repository` check in the test that
+skips naming the witness UNAVAILABLE and the remedy.
+
+Reproduce or falsify it in one command — `git clone --depth 1 file://$PWD /tmp/x`
+then read `git log -1 --format=%aI -- <path>` there: it prints the tip date, not
+the file's. Running the OLD test file in that clone reproduces the CI failure
+exactly; the NEW one skips. [^6]
 
 ## Governed by
 - [[architecture]] — the hub; `scripts/publish.py` is the canonical CPV release
@@ -166,3 +195,4 @@ the wait would pass instantly: green precisely when not working.
 [^3]: [id:ATOM-L3C0-JQGE, status:valid, desc:"A fail-fast job reveals its next defect only after the previous one is fixed — so N red causes look like N regressions.", keywords:"i_fixed_the_ci_failure_and_a_new_one_appeared does_each_fix_cause_the_next_failure cheap_fail_first_job_aborts_before_later_steps three_red_causes_stacked_in_one_job is_the_job_clean_after_one_green_step", ocd:2026-08-04, lmd:2026-08-04] DO NOT read "I fixed it and now something ELSE fails" as having caused a regression, BECAUSE a cheap-fail-first job aborts at its first failing step, so every later step's defects are invisible until that one is green: on 2026-08-04 the Lint job hid three independent, all pre-existing causes behind each other — actionlint SC2086, then Commitlint's rejected `deps:` prefix, then 19 cspell words — and each fix looked like it broke the next thing. DO expect a fail-fast pipeline to reveal defects one at a time, budget for several rounds rather than one, and confirm a job is CLEAN by reading every step's status, never by seeing the previously-failing step turn green.
 [^4]: [id:ATOM-GSVC-UQT2, status:valid, supersedes:ATOM-QHY3-BTGA, desc:"RESOLVED 2026-08-06: CPV v5.2.0 shipped the consent registry (PR #195, hardened at merge — lineSha256 = sha256 of the FULL stripped disk line, NOT the [:200] lineContent recipe); v3.0.5 published clea", keywords:"consent_registry_hash_recipe_full_line_not_truncated editing_the_governance_mirror_re-blocks_publish regenerate_cpv_audit_consent_after_mirror_edits publish_unblocked_by_cpv_v5.2.0 lineSha256_recipe_changed_at_merge", ocd:2026-08-06, lmd:2026-08-06] DO NOT hash consent-registry entries with the scanner's truncated `line.strip()[:200]` lineContent recipe, BECAUSE the merged v5.2.0 semantics hash the FULL stripped line read from disk (the maintainer closed the truncation hole at merge) — two of core's three entries silently failed to match until regenerated, and any future edit to a consented mirror line re-blocks publish by design. DO regenerate `.cpv-audit-consent.json` with full-line sha256 after ANY edit to the governance mirror, and expect the finding to re-block until you do — that is the feature, not a bug. SUPERSEDED BODY: The v5.2.0 governance-mirror sync cannot publish until upstream `claude-plugins-validation#194` ships: skillaudit's A2A_* patterns match the mirror's own rule TABLE ROWS (R22.4/R42.1/R42.7 — prose FORBIDDING the attacks), the demote lands at NIT, and NIT blocks `--strict`. Verified against BOTH the pinned CPV v4.2.1 and latest v5.1.5 (same 3 findings, rc=4), so bumping `CPV_REF` does not help. No sanctioned path exists for this content class: the issue-#101 audit-consent sentinel anchors only to FENCED markdown blocks (table rows have no fence), the issue-#38 doc-only suppression deliberately excludes `skills/*/references/` (instruction-loadable), and the "needs review" demote state has no recordable verdict. Resolutions that are FORBIDDEN: muting the rule, editing the verbatim mirror body, relocating the mirror out of references/ (breaks the skill's discovery contract). The only move is the upstream fix; then re-run `publish.py --patch`.
 [^5]: [id:ATOM-Z4T6-NB25, status:valid, desc:"The correct consent-hash recipe is the NAIVE one — the trap only catches you if you reach for the scanner's lineContent field because it looks authoritative", keywords:"consent_entry_matches_nothing_and_I_do_not_know_why my_lineSha256_is_right_but_publish_still_blocks which_field_do_I_hash_for_cpv_audit_consent lineContent_looks_authoritative_so_I_used_it did_I_dodge_the_truncation_trap_without_knowing consent_file_present_but_validator_predates_the_feature consent_registry_is_a_no-op_on_an_old_CPV_pin", ocd:2026-08-07, lmd:2026-08-07] DO NOT reach for the scanner report's `lineContent` field when building a `.cpv-audit-consent.json` entry, and DO NOT assume a present consent file is doing anything. BECAUSE the correct hash is the NAIVE one — read the line off disk and `sha256(line.strip())` — so the trap only catches whoever reaches past the file for the report's field because it looks more authoritative; CPV's own 5.2.0 source says the truncation was closed deliberately, since hashing a 200-char-truncated value would let an edit BEYOND char 200 silently inherit the old consent. Two agents hit this the same day and the one who got it right did so by ACCIDENT (obvious path = correct path, on an 880-char line that would otherwise have bitten). Separately: a perfectly valid consent file against a pre-#194 validator is not a subtle failure but a NO-OP — the gate that runs is whatever `CPV_REF` pins. DO hash the full stripped disk line, and before debugging a non-matching entry CHECK THE PINNED VALIDATOR VERSION FIRST (`grep -rn "claude-plugins-validation@v" scripts/publish.py .github/workflows/*.yml`) — consent needs CPV >= v5.2.0 to exist at all.
+[^6]: [id:ATOM-UDFC-E74F, status:valid, desc:"the test's own shallow-clone guard could never fire, because it tested for an ABSENT answer while shallow returns a wrong one", keywords:"absence_check_cannot_detect_truncation guard_never_fires shallow_clone_returns_a_valid_wrong_answer unmeasured_is_not_clean skip_on_empty_output degraded_input", ocd:2026-08-15, lmd:2026-08-15] DO NOT infer a degraded environment from an EMPTY or ERROR result, BECAUSE a degraded source often returns a well-formed answer that is simply wrong — the shallow clone returned a valid timestamp, so the test's `if returncode != 0 or not stdout: skip("shallow clone or unborn branch")` guard could never fire, and its comment asserted a protection it did not have for as long as it existed. DO probe the degradation DIRECTLY and BEFORE the read (`git rev-parse --is-shallow-repository`), and make the degraded branch say UNMEASURED — naming the remedy — never "clean".
