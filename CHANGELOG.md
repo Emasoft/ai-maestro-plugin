@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.24] — 2026-08-15
+
+### Bug Fixes
+
+- Quote-aware redirect scanner + /dev/* sink allowance (TRDD-4Y2LKKSZ, ai-maestro#123)
+- Clear the CPV strict gate on the interpreter-detection signature
+
+### Documentation
+
+- Capture write_prrd atomicity + its falsification control ([#54](https://github.com/Emasoft/ai-maestro-plugin/issues/54))
+- Repair the A1 origin citation — 2.1.77 was never cross-session (TRDD-OH3N6OXJ)
+- The native transport is not one machine (2.1.225-2.1.232)
+- The native transport's reach was never one machine (ATOM-P29X-WO6W)
+- Queue the three 2026-08-05 MANAGER work orders as TRDD-4Y2LKKSZ, TRDD-LLSSTD3P, TRDD-SNG93TTD
+- Field semantics + the sender-authority TITLE check (TRDD-LLSSTD3P, ai-maestro#124)
+- TRDD-4Y2LKKSZ + TRDD-LLSSTD3P ai_review passed -> human_review
+- Self/<self> literal + the named deployment contract (TRDD-55QLGECG, A4)
 ## [3.1.23] — 2026-08-12
 
 ### Testing
