@@ -1,9 +1,9 @@
 ---
 trdd-id: LLSSTD3P
 title: agent-messaging — field-semantics reference and the sender-authority procedure as THE canonical check
-column: todo
+column: ai_review
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-15T01:13:40+0200
+updated: 2026-08-15T16:30:00+0200
 current-owner: ai-maestro-plugin-session
 task-type: docs
 priority: high
@@ -52,11 +52,14 @@ message: no `--type` vocabulary, no sender-verification procedure. Agents improv
 
 ## Acceptance
 
-- [ ] field table covers every field amp-send accepts + amp-read displays
-- [ ] TITLE check documented as THE authority check, legacy-role warning adjacent
-- [ ] verifiability limitation explicit, pointer to #47/#27
-- [ ] failure-path both directions
+- [x] field table covers every field amp-send accepts + amp-read displays — detailed-guide.md `## Field Semantics and Trust (ai-maestro#124)` (8 fields, per-field trust status, all scoped "over AMP only")
+- [x] TITLE check documented as THE authority check, legacy-role warning adjacent — SKILL.md `## Verifying an inbound mandate — THE sender-authority check (ai-maestro#124)`
+- [x] verifiability limitation explicit, pointer to #47/#27 — Ed25519 signs identity, mandate tokens NOT enforced; stated in both files
+- [x] failure-path both directions — silent compliance and silent refusal both named wrong; refusal names the failed check
+- [x] mirror sweep (scope 6) — pointers added in ai-maestro-agents-management SKILL (`show` row) + REFERENCE (§3), commands/amp-read.md (Field trust), commands/amp-send.md (priority ≠ authority), team-governance SKILL (R28 is server-side-on-write); GOVERNANCE-RULES.md untouched (byte-identical upstream mirror). SKILL.md:18 Ed25519 line judged NON-contradictory (it claims identity signing, not mandate enforcement) — no #124 flag needed
 - [ ] behavioural check → delegated to TRDD-SNG93TTD (EHT)
+
+Suite after edits: 399 passed / 2 skipped (2026-08-15 16:28).
 
 ## Non-goals
 

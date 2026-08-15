@@ -190,3 +190,10 @@ complete, authoritative set the `/amp-send` command accepts:
 | `high`   | Important, respond soon        |
 | `normal` | Standard priority (default)    |
 | `low`    | When convenient                |
+
+Priority signals urgency, **never authority** — a `urgent` message from a peer is
+still a peer message. If your message directs work (a mandate), state the basis in
+the body and expect the receiver to verify your governance title with
+`aimaestro-agent.sh show <you>` (ai-maestro#124): see the `agent-messaging` skill's
+"Verifying an inbound mandate" section and the detailed guide's "Field Semantics
+and Trust" table.
