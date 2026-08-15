@@ -1,9 +1,10 @@
 ---
 trdd-id: 4Y2LKKSZ
 title: directory-guard — allow /dev/null sinks and replace the > string scan with a quote-aware redirect tokenizer
-column: human_review
+column: complete
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-15T21:35:00+0200
+updated: 2026-08-15T22:40:00+0200
+implementation-commits: [fe8919d, aeb7c16]
 current-owner: ai-maestro-plugin-session
 task-type: bugfix
 priority: high
@@ -57,3 +58,4 @@ reply on `ai-maestro#123` with the release version so the hub watch card can ver
 ## Approval log
 
 - 2026-08-15T21:35:00+0200 — ai_review PASSED (session self-review, mono-agent mode): advisor consult pre-implementation, premise re-verified first-hand, 53 pre-existing guard pins unmodified, 17 new acceptance tests (70/70 in file), full suite 399 passed / 2 skipped. Moved ai_review -> human_review; USER is the approver.
+- 2026-08-15T22:40:00+0200 — COMPLETE. USER authorized publish ("go"); shipped in v3.1.24 and the landing version was posted on the governing issue. human_review -> complete.

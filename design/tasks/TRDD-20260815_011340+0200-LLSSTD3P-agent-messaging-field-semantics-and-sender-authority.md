@@ -1,9 +1,10 @@
 ---
 trdd-id: LLSSTD3P
 title: agent-messaging — field-semantics reference and the sender-authority procedure as THE canonical check
-column: human_review
+column: complete
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-15T21:35:00+0200
+updated: 2026-08-15T22:40:00+0200
+implementation-commits: [e3ea162]
 current-owner: ai-maestro-plugin-session
 task-type: docs
 priority: high
@@ -69,3 +70,4 @@ If either server fact contradicts repo content, SAY SO on the issue rather than 
 ## Approval log
 
 - 2026-08-15T21:35:00+0200 — ai_review PASSED (session self-review, mono-agent mode): acceptance boxes verified against landed content, 4 pinned operative claims untouched, every trust claim scoped over-AMP-only, suite 399 passed / 2 skipped. Moved ai_review -> human_review; USER is the approver.
+- 2026-08-15T22:40:00+0200 — COMPLETE. USER authorized publish ("go"); shipped in v3.1.24 and the landing version was posted on the governing issue. human_review -> complete.

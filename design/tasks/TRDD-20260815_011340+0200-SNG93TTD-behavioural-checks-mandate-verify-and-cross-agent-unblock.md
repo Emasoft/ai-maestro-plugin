@@ -1,17 +1,16 @@
 ---
 trdd-id: SNG93TTD
 title: behavioural checks — mandate verification (124) and cross-agent unblock (125) observed as agent BEHAVIOUR, not text
-column: blocked
+column: todo
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-15T01:13:40+0200
+updated: 2026-08-15T22:40:00+0200
 current-owner: ai-maestro-plugin-session
 task-type: infra
 priority: normal
 external-refs: [ai-maestro#124, ai-maestro#125]
 created-by: LLSSTD3P
 npt: [LLSSTD3P]
-blocked-by: [LLSSTD3P]
-pre-block-column: todo
+blocked-by: []
 ---
 
 # Behavioural checks for #124 §Acceptance-5 and #125 §2
