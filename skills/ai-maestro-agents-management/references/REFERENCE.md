@@ -251,6 +251,13 @@ stamp). If the probe fails, report the states as unavailable and name the
 `--status offline`, which is wrong for cleanly-hibernated agents in the
 alarming direction.
 
+**The deployment contract has a name (ai-maestro#116, partial answer at
+`f97d3e23`):** deployment is repo → `~/.local/bin` via `install-agent-cli.sh`,
+`INSTALLED_FILES` is the shipping list, and the frozen skill-facing surface is
+`~/ai-maestro/docs/SCRIPT-MANIFEST.md` (R23.7: the manifest is generated from
+`scripts/*.sh` — never treat a host's `~/.local/bin` residue as the contract).
+Cite the manifest by name when a verb-vs-install dispute arises.
+
 **Maps to:** `GET /api/agents/hibernation` (handled by the CLI — never call it
 directly, core#11). The janitor-side file surface
 (`.janitor/daemon_responses/hibernation.json`) is deposited only in the
