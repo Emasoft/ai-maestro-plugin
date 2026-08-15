@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.25] — 2026-08-15
+
+### Bug Fixes
+
+- The PRRD-stamp gate read a shallow clone as history and failed every push
+
+### Documentation
+
+- Close TRDD-4Y2LKKSZ + TRDD-LLSSTD3P on v3.1.24, unblock TRDD-SNG93TTD
 ## [3.1.24] — 2026-08-15
 
 ### Bug Fixes
