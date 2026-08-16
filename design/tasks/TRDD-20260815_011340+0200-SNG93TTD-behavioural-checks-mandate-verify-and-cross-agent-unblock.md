@@ -1,9 +1,9 @@
 ---
 trdd-id: SNG93TTD
 title: behavioural checks — mandate verification (124) and cross-agent unblock (125) observed as agent BEHAVIOUR, not text
-column: todo
+column: dev
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-15T22:40:00+0200
+updated: 2026-08-16T16:24:34+0200
 current-owner: ai-maestro-plugin-session
 task-type: infra
 priority: normal
@@ -39,8 +39,12 @@ From `#125` (residual — the docs half shipped in ama-unblock, v3.1.0):
 - Each scenario needs its falsification control: run the OLD text (or no text) and assert
   the check CAN fail — a check that cannot fail verifies nothing (ATOM-FLE3-FVEX pattern).
 
-## Blocked
+## Unblocked 2026-08-16
 
-`blocked-by: [LLSSTD3P]` — the #124 scenarios test text that TRDD-LLSSTD3P has not written
-yet. The #125 pair could run today; kept in one card because the harness is shared and
-splitting it would duplicate the runner.
+`blocked-by:` is now empty. TRDD-LLSSTD3P closed in commit df29ce3, so the #124 text these
+scenarios observe exists; the #125 pair was already runnable. Both halves stay in this one
+card because the harness is shared and splitting it would duplicate the runner.
+
+The old body claimed `blocked-by: [LLSSTD3P]` long after the frontmatter said otherwise —
+kept as a note here because a body that contradicts its own frontmatter is how a ready card
+goes on looking parked.

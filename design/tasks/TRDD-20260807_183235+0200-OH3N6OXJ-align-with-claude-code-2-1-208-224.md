@@ -4,7 +4,7 @@ title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
 column: human_review
 blocked-by: []
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-14T11:52:00+0200
+updated: 2026-08-16T16:28:19+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 min-approval-requirement: none
@@ -16,6 +16,23 @@ relevant-rules: []
 # Align CORE with Claude Code 2.1.208-2.1.224
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-07
+
+### ❓ DECISION NEEDED FROM YOU
+
+- **Question:** Do you ratify the document-only fix to R42.3 (name both AMP and native
+  `SendMessage` as governed channels, leave the R42 authority ban untouched) as filed on
+  `ai-maestro#143`?
+- **If yes:** the drafter finalizes R42.3's wording per the issue thread, closes `#143`, and
+  this card moves out of `human_review` (A1 closes; the rest of the card is already done).
+  · **If no:** state which alternative you want instead (bridge or forbid the native channel)
+  and the card stays open for that redesign.
+- **Already verified — do not re-check:**
+  - `ai-maestro#143` is still **OPEN**, 3 comments, no USER ruling recorded yet (checked via `gh`
+    just now).
+  - A3's lock fix is merged in this repo: commit `1c10007` — "fix(hook): lock the chat-state
+    read-modify-write (#61)".
+  - A2/A4/A5/A6 all closed as documented decisions, no code pending on them.
+  - The "365 passed at v3.1.14" test-suite claim was **not** re-run/verified this pass.
 
 **Directive (USER, verbatim):** *"big changes to claude code. study them well and update the
 codebase to align with them and take advantage of them"* — followed by the full changelog for

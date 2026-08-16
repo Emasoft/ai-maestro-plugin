@@ -4,7 +4,7 @@ title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend t
 column: human_review
 blocked-by: []
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-08T12:31:44+0200
+updated: 2026-08-16T16:28:19+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -13,6 +13,22 @@ relevant-rules: []
 # MANAGER/COS unblock capability — CORE's half
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-06
+
+### ❓ DECISION NEEDED FROM YOU
+
+- **Question:** All of CORE's deliverables for this card are shipped (skill `ama-unblock`
+  authored, hook fixes #58/#59/#60 landed, mirror re-synced to v3.1.2, `ai-maestro#128` closed)
+  and the two remaining open items are server-side digests that don't block CORE. Approve moving
+  this card out of `human_review` to `complete`?
+- **If yes:** move `column:` to `complete` (or `archived` per the folder-lifecycle rule); the
+  card's remaining threads (`ai-maestro-plugin#58`, `#60`) keep tracking themselves as
+  independent issues, not as blockers on this TRDD.
+  · **If no:** say what is still missing before this can close.
+- **Already verified — do not re-check:**
+  - `ai-maestro#128` (the USER directive this card implements) — **CLOSED**.
+  - `ai-maestro-plugin#58` and `#60` — both still **OPEN** (checked via `gh` just now); the card
+    itself says neither blocks anything, they're server digests awaiting server answers.
+  - A3's companion lock fix (shared with `TRDD-OH3N6OXJ`) is merged: commit `1c10007`.
 
 USER directive (2026-08-06, quoted VERBATIM in `ai-maestro#128` — read it there first):
 MANAGER and CHIEF-OF-STAFF must detect a session blocked by an AskUser question, by the
