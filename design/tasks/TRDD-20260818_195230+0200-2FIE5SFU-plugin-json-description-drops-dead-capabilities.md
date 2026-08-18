@@ -1,9 +1,9 @@
 ---
 trdd-id: 2FIE5SFU
 title: plugin.json description advertises code graph and docs search which no longer ship
-column: todo
+column: ai_review
 created: 2026-08-18T19:52:30+0200
-updated: 2026-08-18T19:52:30+0200
+updated: 2026-08-18T19:58:00+0200
 current-owner: ai-maestro-plugin-session
 task-type: docs
 priority: normal
@@ -31,6 +31,9 @@ Sweep for the same stale phrases in README.md and any skill prose while at it
 
 ## Acceptance
 
-- [ ] `plugin.json` description no longer names a capability absent from `skills/`.
-- [ ] Repo-wide grep for "code graph" / "docs search" returns only the deliberate
-      historical note in memory-search REFERENCE.md.
+- [x] `plugin.json` description no longer names a capability absent from `skills/`
+      (verified: `json.load` parses; description reads "…memory search, task planning,…";
+      the stale `graph` keyword dropped too).
+- [x] Repo-wide grep for "code graph" / "docs search" over `.claude-plugin/ README.md
+      skills/ commands/` returns only REFERENCE.md:159's removal note. Targeted tests:
+      96 passed.

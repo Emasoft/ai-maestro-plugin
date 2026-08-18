@@ -122,17 +122,30 @@ NON-EXEMPT and requires MANAGER approval.
 | Run janitor fork-PR cache audit | janitor (no main agent — applies as-is) | Cache poisoning detection |
 
 **The ratified baseline (RATIFIED 2026-06-02)** is the `baseline-*`
-pair, agreed byte-identical by both plugins via:
+TRIO, agreed via:
 
 - janitor: <https://github.com/Emasoft/ai-maestro-janitor/issues/14>
 - maintainer: <https://github.com/Emasoft/ai-maestro-maintainer-agent/issues/7>
+- canonical spec: `design/specs/baseline-github-rulesets-spec.md` in the
+  `Emasoft/ai-maestro` repo (the SSOT this block mirrors; the trio is
+  pinned by name in `tests/governance/baseline-spec-ratchet.test.ts`).
 
-The two ratified rulesets (both `target: branch`, `enforcement: active`,
-condition `ref_name.include: ["~DEFAULT_BRANCH"]`):
+The three ratified rulesets (all `enforcement: active`; the first two
+`target: branch` on `ref_name.include: ["~DEFAULT_BRANCH"]`):
 
-- **`baseline-history-protect`** — `bypass_actors: []` (nobody, incl.
-  admin). Rules: `deletion`, `non_fast_forward`,
-  `required_linear_history`.
+- **`baseline-history-protect`** — `bypass_actors:
+  [{actor_id:5, actor_type:RepositoryRole, bypass_mode:always}]`
+  (admin bypass — USER Tier-3 ruling 2026-08-13: the owner must be able
+  to rewrite history and push directly; the empty-bypass shape is
+  abolished). Rules: `deletion`, `non_fast_forward`.
+  (`required_linear_history` was REMOVED by USER Tier-3 ruling
+  2026-08-08 — "non-linear history is allowed in all repos"; never
+  re-add it. Record: janitor#14, ai-maestro#140.)
+- **`baseline-tag-protect`** — `target: tag`, condition
+  `ref_name.include: ["refs/tags/v*.*.*"]`, `bypass_actors: []`
+  (nobody — creating a NEW tag is unrestricted, so publish.py still
+  cuts releases; nothing needs a bypass). Rules: `deletion`, `update`.
+  (Ratified later on janitor#14 as the fleet-wide third ruleset.)
 - **`baseline-pr-and-checks`** — `bypass_actors:
   [{actor_id:5, actor_type:RepositoryRole, bypass_mode:always}]`
   (admin direct-push for `publish.py`; outside PRs still gated). Rules:
@@ -144,10 +157,10 @@ condition `ref_name.include: ["~DEFAULT_BRANCH"]`):
   `required_status_checks` (`strict_required_status_checks_policy:true`,
   CI job ids auto-detected at apply time).
 
-Applying this `baseline-*` pair as-is is EXEMPT. The legacy names
+Applying this `baseline-*` trio as-is is EXEMPT. The legacy names
 (`janitor-baseline`, `default-branch-no-force-no-delete`,
 `default-branch-required-checks`) are superseded — re-applying the
-ratified pair deletes the orphaned legacy rulesets by name.
+ratified trio deletes the orphaned legacy rulesets by name.
 
 **Non-exempt for this category** (require MANAGER approval):
 

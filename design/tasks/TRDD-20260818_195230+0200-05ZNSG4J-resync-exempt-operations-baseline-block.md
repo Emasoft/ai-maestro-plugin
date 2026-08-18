@@ -1,9 +1,9 @@
 ---
 trdd-id: 05ZNSG4J
 title: exempt-operations.md baseline block is stale on two Tier-3 rulings and omits the ratified third ruleset
-column: todo
+column: ai_review
 created: 2026-08-18T19:52:30+0200
-updated: 2026-08-18T19:52:30+0200
+updated: 2026-08-18T19:58:00+0200
 current-owner: ai-maestro-plugin-session
 task-type: docs
 priority: high
@@ -47,7 +47,9 @@ loads to decide EXEMPT vs NON-EXEMPT, so the staleness misleads agents, not just
 
 ## Acceptance
 
-- [ ] The block describes the ratified TRIO, with per-ruleset bypass_actors matching the
-      ai-maestro spec (history-protect: admin bypass; tag-protect: empty).
-- [ ] `required_linear_history` appears in the file only as a removal note, if at all.
-- [ ] `grep -rn "required_linear_history" skills/` returns no line asserting it as current.
+- [x] The block describes the ratified TRIO, with per-ruleset bypass_actors matching the
+      ai-maestro spec (history-protect: admin bypass per the 2026-08-13 ruling;
+      tag-protect: empty), and names the canonical spec + ratchet test as the SSOT.
+- [x] `required_linear_history` appears in the file only as a same-line removal note.
+- [x] `grep -rn "required_linear_history" skills/` returns exactly that one removal-note
+      line. Targeted tests: 96 passed.
