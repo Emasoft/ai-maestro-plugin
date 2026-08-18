@@ -1,9 +1,10 @@
 ---
 trdd-id: 05ZNSG4J
 title: exempt-operations.md baseline block is stale on two Tier-3 rulings and omits the ratified third ruleset
-column: ai_review
+column: complete
 created: 2026-08-18T19:52:30+0200
-updated: 2026-08-18T19:58:00+0200
+updated: 2026-08-18T19:57:34+0200
+implementation-commits: [94a7883]
 current-owner: ai-maestro-plugin-session
 task-type: docs
 priority: high

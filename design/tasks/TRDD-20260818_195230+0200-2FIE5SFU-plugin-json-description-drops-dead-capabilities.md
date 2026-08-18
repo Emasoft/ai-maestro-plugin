@@ -1,9 +1,10 @@
 ---
 trdd-id: 2FIE5SFU
 title: plugin.json description advertises code graph and docs search which no longer ship
-column: ai_review
+column: complete
 created: 2026-08-18T19:52:30+0200
-updated: 2026-08-18T19:58:00+0200
+updated: 2026-08-18T19:57:34+0200
+implementation-commits: [94a7883]
 current-owner: ai-maestro-plugin-session
 task-type: docs
 priority: normal

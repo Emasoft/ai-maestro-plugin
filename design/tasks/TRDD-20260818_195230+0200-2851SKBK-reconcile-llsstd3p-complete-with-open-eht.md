@@ -1,9 +1,10 @@
 ---
 trdd-id: 2851SKBK
 title: LLSSTD3P sits at complete while its EHT SNG93TTD is still open — reconcile per rule 9
-column: ai_review
+column: complete
 created: 2026-08-18T19:52:30+0200
-updated: 2026-08-18T20:02:00+0200
+updated: 2026-08-18T19:57:34+0200
+implementation-commits: [d52173d]
 current-owner: ai-maestro-plugin-session
 task-type: infra
 priority: normal
