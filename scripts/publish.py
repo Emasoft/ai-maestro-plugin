@@ -848,7 +848,15 @@ def _get_origin_slug(root: Path) -> str | None:
     return f"{parts[0]}/{parts[1]}"
 
 
-RATIFIED_BASELINE_RULESETS = ("baseline-history-protect", "baseline-pr-and-checks")
+# The ratified TRIO (janitor#14; canonical spec baseline-github-rulesets-spec.md in
+# Emasoft/ai-maestro). tag-protect matters here even though setup_branch_rules never
+# touches tag rulesets: a repo carrying ONLY tag-protect is still a ratified-baseline
+# repo mid-apply, and the guard below must refuse on it too (TRDD-JQ0T7MRC).
+RATIFIED_BASELINE_RULESETS = (
+    "baseline-history-protect",
+    "baseline-pr-and-checks",
+    "baseline-tag-protect",
+)
 
 
 def _fetch_ruleset_names(slug: str) -> list[str] | None:
@@ -903,8 +911,8 @@ def install_branch_rules(root: Path) -> int:
     only in an upstream bug report (claude-plugins-validation#203).
 
     `baseline-history-protect` survives only by accident: deletion /
-    non_fast_forward / required_linear_history do not intersect that set, so
-    it is never flagged. Do not read its survival as the command being safe.
+    non_fast_forward do not intersect that set, so it is never flagged.
+    Do not read its survival as the command being safe.
     """
     cprint(f"\n{BOLD}Installing branch-protection ruleset...{NC}")
     slug = _get_origin_slug(root)
@@ -927,7 +935,7 @@ def install_branch_rules(root: Path) -> int:
         cprint(f"  {YELLOW}cpv-setup-branch-rules would add a non-ratified 'cpv-branch-rules'{NC}")
         cprint(f"  {YELLOW}beside them (a §F non-exempt change) and then advise DELETING{NC}")
         cprint(f"  {YELLOW}baseline-pr-and-checks by id. See claude-plugins-validation#203.{NC}")
-        cprint(f"  {YELLOW}The ratified pair IS the baseline — nothing to install here.{NC}")
+        cprint(f"  {YELLOW}The ratified trio IS the baseline — nothing to install here.{NC}")
         return 1
     try:
         r = subprocess.run(

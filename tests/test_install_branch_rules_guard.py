@@ -55,10 +55,11 @@ needs_gh = pytest.mark.skipif(
 
 
 def test_the_ratified_names_are_the_ones_the_guard_looks_for() -> None:
-    """The constant is not a free-form label — CPV matches rulesets by NAME."""
+    """The constant is not a free-form label — CPV matches rulesets by NAME (ratified TRIO per janitor#14)."""
     assert publish.RATIFIED_BASELINE_RULESETS == (
         "baseline-history-protect",
         "baseline-pr-and-checks",
+        "baseline-tag-protect",
     )
 
 
