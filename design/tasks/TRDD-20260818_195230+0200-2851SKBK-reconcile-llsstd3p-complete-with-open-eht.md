@@ -1,9 +1,9 @@
 ---
 trdd-id: 2851SKBK
 title: LLSSTD3P sits at complete while its EHT SNG93TTD is still open — reconcile per rule 9
-column: todo
+column: ai_review
 created: 2026-08-18T19:52:30+0200
-updated: 2026-08-18T19:52:30+0200
+updated: 2026-08-18T20:02:00+0200
 current-owner: ai-maestro-plugin-session
 task-type: infra
 priority: normal
@@ -32,7 +32,16 @@ Two honest resolutions; pick one and record why in the card:
 Do NOT resolve it by editing the `eht:` list — deleting the dependency to silence the rule
 destroys the reason the EHT exists.
 
+## Resolution taken (2026-08-18)
+
+**Resolution 2, refined.** SNG93TTD's harness is not near completion (its design
+consultation was killed and not re-run), so waiting on resolution 1 would leave the board
+lying for days. LLSSTD3P moved `complete → blocked` with `blocked-by: [SNG93TTD]` and
+`pre-block-column: complete` — per rule 6, `blocked` applies whenever `blocked-by:` is
+non-empty, and the pre-block column records that the card returns to `complete`
+legitimately the moment its EHT is terminal. `eht:` untouched.
+
 ## Acceptance
 
-- [ ] `grep "^column:" TRDD-*LLSSTD3P*.md TRDD-*SNG93TTD*.md` no longer violates rule 9,
-      via resolution 1 or 2 — never via `eht:` surgery.
+- [x] `grep "^column:" TRDD-*LLSSTD3P*.md TRDD-*SNG93TTD*.md` no longer violates rule 9
+      (LLSSTD3P: blocked, SNG93TTD: dev); resolved via column state, not `eht:` surgery.
