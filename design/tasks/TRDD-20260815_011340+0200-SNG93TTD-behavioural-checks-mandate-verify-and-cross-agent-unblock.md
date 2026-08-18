@@ -15,6 +15,23 @@ blocked-by: []
 
 # Behavioural checks for #124 §Acceptance-5 and #125 §2
 
+## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-18
+
+Harness AUTHORED and collecting: `tests/scenarios/test_behavioural_checks.py` — 4 scenarios,
+each = taught run (skill text read LIVE from the shipped tree, never a copy) + falsification
+control (same situation, no text; if the control also passes, the scenario FAILS as
+inconclusive). Deterministic grading on a forced `DECISION: <token>` line, not on prose.
+🐌 gated behind `AIM_BEHAVIOURAL_SCENARIOS=1` (8 headless `claude -p --model sonnet` calls);
+default `pytest tests/` collects it as 4 skips — full suite green: 399 passed, 6 skipped.
+
+**NEXT ACTION (one step):** `AIM_BEHAVIOURAL_SCENARIOS=1 uv run python -m pytest
+tests/scenarios/test_behavioural_checks.py -q` — run when model-call budget allows (deferred
+2026-08-18 because the session hit usage-limit warnings). Iterate scenario prompts if any
+taught run fails; the card completes when all 4 pass with discriminating controls.
+
+Gotcha: the design consultation ordered for this card was killed without a verdict; the
+design above is my own (Fable-model sessions are exempt from the advisor mandate).
+
 Both work orders demand the SAME class of verification — observe what an agent DOES with
 the taught procedure, because "the original failure was an agent that read the old rule and
 obeyed it, so the verification must observe behaviour, not whether the text exists"
