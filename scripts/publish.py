@@ -2218,11 +2218,17 @@ def stage_commit_and_push(root: Path, new_ver: str, dry_run: bool) -> None:
     # for every plugin that depends on it — exactly the half-published state
     # this --atomic push exists to prevent.
     cprint(f"  {BLUE}$ git push --atomic origin HEAD {tag} {dep_tag}{NC}")
-    git_with_retry(
+    # capture_output MUST be True (TRDD-WC2GEDOC, ported from CPV 02a6aa5d): the
+    # transient classifier reads result.stderr, and with capture disabled stderr
+    # is None, so `if not stderr: return False` classified EVERY failure as permanent
+    # and the release push could never retry a network blip. The captured stderr is
+    # echoed below so nothing git says is swallowed.
+    push_result = git_with_retry(
         ["git", "push", "--atomic", "origin", "HEAD", tag, dep_tag],
         cwd=str(root),
-        capture_output=False,
     )
+    if push_result.stderr:
+        print(push_result.stderr, end="", file=sys.stderr)
     cprint(f"  {GREEN}Pushed {tag} + {dep_tag} atomically.{NC}")
 
 
