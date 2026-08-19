@@ -32,6 +32,8 @@ pipeline state; this server board wins for live assignment/presence.
 - AI Maestro running (the `amp-kanban-*` / `aimaestro-teams.sh` CLIs resolve the API base + auth internally)
 - The `amp-kanban-*` + `aimaestro-teams.sh` CLIs on PATH; `jq` installed
 - For GitHub sync: `gh` CLI authenticated, `kanban-sync.py` at `~/.local/bin/`
+- **Team resolution:** the CLIs auto-detect the team only for agents that are team members. A MANAGER (or any agent not in a team) MUST pass `--team <id>` on every task verb, or it fails with "Could not determine team ID" (measured by hub + AMAA, TRDD-17K0SHDQ probe).
+- **The board is GitHub-backed:** a team whose project link is org/user-level (no repo) is browse-only — task verbs return HTTP 409; a team with no project link at all returns HTTP 400. Link a repo-level project first (`kanban-sync.py link`).
 
 ## Instructions
 
