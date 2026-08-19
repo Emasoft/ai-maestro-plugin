@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.26] — 2026-08-19
+
+### Bug Fixes
+
+- Drop dead capabilities from plugin.json; re-sync the baseline block to the ratified trio (TRDD-2FIE5SFU, TRDD-05ZNSG4J)
+- LLSSTD3P complete -> blocked on its open EHT (TRDD-2851SKBK)
+- Behavioural scenarios pass live — controls redesigned from measurement (TRDD-SNG93TTD)
+- The baseline refusal guard now knows the ratified TRIO (TRDD-JQ0T7MRC)
+- Apply the 5 ai_review findings; close ZNGTF0FG + OH3N6OXJ on hub rulings
+- The atomic release push can retry transients again (port of CPV 02a6aa5d / TRDD-WC2GEDOC)
+
+### Documentation
+
+- A shallow clone answers history questions wrongly, not emptily
+- Make the two human_review cards answerable in one glance; unpark SNG93TTD
+- Add Phase-2 TRDDs 2FIE5SFU, 2851SKBK, 05ZNSG4J from the BRRJK57P self-audit
+- Close 2FIE5SFU, 05ZNSG4J, 2851SKBK on adversarial ai_review PASS
+- Close JQ0T7MRC — trio guard fix reviewed and landed (f0f8a56 + dc8f7ef)
+
+### Features
+
+- Behavioural-check harness for mandate-verify + cross-agent unblock (TRDD-SNG93TTD)
+- Behavioural suite passes 4/4 live; close SNG93TTD, restore LLSSTD3P (TRDD-SNG93TTD)
 ## [3.1.25] — 2026-08-15
 
 ### Bug Fixes
