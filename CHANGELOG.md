@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.27] — 2026-08-19
+
+### Documentation
+
+- --team is required for non-members; GitHub-backed board 409/400 semantics
 ## [3.1.26] — 2026-08-19
 
 ### Bug Fixes
