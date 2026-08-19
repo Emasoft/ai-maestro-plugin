@@ -27,6 +27,13 @@
  * - PostCompact: After context compaction completes
  *
  * State is written to: ~/.aimaestro/chat-state/<cwd-hash>.json
+ *
+ * CONSUMER CONTRACT for subagentCount (plugin#64): the counter is only
+ * meaningful for the record's own sessionId. A force-killed session fires no
+ * SessionEnd, so its record keeps the last count until the NEXT SessionStart
+ * in that cwd rewrites it — no hook code can run inside that window. A reader
+ * whose record's sessionId has no live session (or whose updatedAt is stale)
+ * MUST treat subagentCount as 0 rather than trust the number.
  */
 
 const fs = require('fs');
