@@ -1,11 +1,9 @@
 ---
 trdd-id: LLSSTD3P
 title: agent-messaging — field-semantics reference and the sender-authority procedure as THE canonical check
-column: blocked
-pre-block-column: complete
-blocked-by: [SNG93TTD]
+column: complete
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-18T20:02:00+0200
+updated: 2026-08-19T07:15:00+0200
 implementation-commits: [e3ea162]
 current-owner: ai-maestro-plugin-session
 task-type: docs

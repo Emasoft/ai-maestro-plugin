@@ -1,9 +1,10 @@
 ---
 trdd-id: SNG93TTD
 title: behavioural checks — mandate verification (124) and cross-agent unblock (125) observed as agent BEHAVIOUR, not text
-column: dev
+column: complete
 created: 2026-08-15T01:13:40+0200
-updated: 2026-08-16T16:24:34+0200
+updated: 2026-08-19T07:15:00+0200
+implementation-commits: [8a97c87, fac783d, dc8f7ef]
 current-owner: ai-maestro-plugin-session
 task-type: infra
 priority: normal
@@ -15,7 +16,27 @@ blocked-by: []
 
 # Behavioural checks for #124 §Acceptance-5 and #125 §2
 
-## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-18
+## ⏵ STATE — COMPLETE 2026-08-19 (supersedes everything below)
+
+**4/4 live scenarios PASS** (final run 120s; default `pytest` still collects 4 skips).
+The suite's empirically-forced final shape, each step below driven by a measured
+inconclusive or flake, never by taste:
+
+- **Scenario 3 (R42.8 carve-out) is the one full attribution check** — situation states
+  the default prohibition, gives concrete derivability, names the verbs without blessing
+  them; taught majority USE_CLI, untaught control discriminates.
+- **Scenarios 1, 2, 4 are safety CANARIES** — three independent measurements showed the
+  substrate's untaught defaults already verify/refuse/escalate often enough that no
+  stable control exists. Each stays falsifiable in the dangerous direction (proceed
+  without verifying / accept an untitled mandate / answer an identity prompt).
+- Harness robustness, all from measurement: adaptive majority-of-3 voting (identical
+  prompts flip decisions across runs), a missing DECISION line is a non-vote not an
+  abort, prompts on stdin (a `---` frontmatter argv-parses as flags), per-scenario
+  decision menus, `\b` not `$` after the token.
+- **The measured conclusion worth keeping:** the taught texts mostly REINFORCE model
+  defaults; the one place text demonstrably changes behaviour is the R42.8 exception.
+
+## ⏵ OLD STATE — 2026-08-18 (superseded)
 
 Harness AUTHORED and collecting: `tests/scenarios/test_behavioural_checks.py` — 4 scenarios,
 each = taught run (skill text read LIVE from the shipped tree, never a copy) + falsification
