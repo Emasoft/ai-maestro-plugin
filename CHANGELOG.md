@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.28] — 2026-08-19
+
+### Documentation
+
+- Teach update --cos / --remove-cos / reassign-cos; drop DECOUPLE-BLOCKED markers (ai-maestro#69)
 ## [3.1.27] — 2026-08-19
 
 ### Documentation
