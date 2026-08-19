@@ -1,10 +1,10 @@
 ---
 trdd-id: OH3N6OXJ
 title: Align CORE with Claude Code 2.1.208-2.1.224 and exploit the new surfaces
-column: human_review
+column: complete
 blocked-by: []
 created: 2026-08-07T18:32:35+0200
-updated: 2026-08-16T16:28:19+0200
+updated: 2026-08-18T23:37:08+0200
 current-owner: ai-maestro-plugin
 task-type: infra
 min-approval-requirement: none
@@ -691,3 +691,17 @@ platform's own inter-agent messaging is asserting something untrue.
 - [x] Full suite green — 340 passed
 
 ## Approval log
+
+- 2026-08-18T23:37:08+0200 — RATIFIED (`human_review → complete`) by the hub session
+  (ai-maestro, under the USER's recorded delegation in TRDD-BRRJK57P; USER's in-session
+  grant to CORE: "follow the ai-maestro's claude instructions"): the document-only R42.3
+  fix as filed on `ai-maestro#143`. Scope note recorded per the hub (mirrors its
+  NSWPM93D note): naming BOTH AMP and native `SendMessage` as GOVERNED channels documents
+  reality and changes no authority — R42's ban on driving another agent stands untouched,
+  the R6 graph still governs who may message whom, and for REGISTERED agents AMP remains
+  the REQUIRED work channel with native transport NOT a sanctioned fallback
+  (AMP-unreachable = stop and surface). Checked before landing: the filed wording on
+  `#143` already carries this scope in substance ("AMP is the REQUIRED channel … the
+  native transport is not a sanctioned substitute … a 403 you never received is not
+  permission"), so no additional sentence was needed. All 7 acceptance boxes on this card
+  were already checked (grep verified, 0 unchecked).

@@ -889,7 +889,7 @@ def install_branch_rules(root: Path) -> int:
     hook alone is bypassable with `git push --no-verify`, but a ruleset is
     enforced by GitHub itself.
 
-    REFUSES on a repo already carrying the ratified `baseline-*` pair, because
+    REFUSES on a repo already carrying the ratified `baseline-*` trio, because
     on such a repo the upstream command does real harm. Verified by reading
     CPV v5.3.0 `scripts/setup_branch_rules.py` first-hand, not inferred:
 

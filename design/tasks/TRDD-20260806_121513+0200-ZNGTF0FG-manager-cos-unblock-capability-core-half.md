@@ -1,10 +1,10 @@
 ---
 trdd-id: ZNGTF0FG
 title: MANAGER/COS unblock capability — CORE's half (teach the verbs, extend the hook state)
-column: human_review
+column: complete
 blocked-by: []
 created: 2026-08-06T12:15:13+0200
-updated: 2026-08-16T16:28:19+0200
+updated: 2026-08-18T23:37:08+0200
 current-owner: core-session
 task-type: feature
 relevant-rules: []
@@ -171,3 +171,12 @@ already shipped — CHECK THE DEPLOYED CLI's `help` before designing a contract 
 are `block-state`/`read-prompt`/`answer`, and `--nudge` was rejected on principle, not
 by oversight); the earlier claim that the exception verbs include `inject`/`queue`; and
 the plan to sync the mirror this session (the catalog is unpushed).
+
+## Approval log
+
+- 2026-08-18T23:37:08+0200 — APPROVED `human_review → complete` by the hub session
+  (ai-maestro, under the USER's recorded delegation in TRDD-BRRJK57P; USER's in-session
+  grant to CORE: "follow the ai-maestro's claude instructions"). Condition checked
+  mechanically before the flip: the card carries ZERO checkbox lines (grep for `[ ]`/`[x]`
+  patterns → 0), so no fused-box split was needed; the two open server-side digests stay
+  tracked as ai-maestro-plugin#58/#60, which the hub confirmed do not block CORE.

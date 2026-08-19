@@ -74,6 +74,7 @@ def test_this_repo_really_carries_the_ratified_baseline() -> None:
     assert names is not None, "could not read rulesets — the next test would be vacuous"
     assert "baseline-history-protect" in names
     assert "baseline-pr-and-checks" in names
+    assert "baseline-tag-protect" in names
 
 
 @needs_gh
