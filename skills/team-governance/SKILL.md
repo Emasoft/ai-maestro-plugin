@@ -8,7 +8,7 @@ metadata:
   version: "2.1.1"
 ---
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example below calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. AMP (`amp-send.sh`/`amp-inbox.sh`) already uses the CLI. The one residual — assigning a COS to an EXISTING team — has no frozen verb yet and is marked DECOUPLE-BLOCKED inline; the hub committed to build `aimaestro-teams.sh update --cos` BEFORE LAUNCH (MANAGER ruling ai-maestro#64). Until it lands: set the COS at create time via `--cos`. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example below calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. AMP (`amp-send.sh`/`amp-inbox.sh`) already uses the CLI. The last residual — assigning/removing a COS on an EXISTING team — closed when `aimaestro-teams.sh update --cos | --remove-cos` (+ `reassign-cos` alias) shipped (ai-maestro#64/#69); no residual remains. -->
 
 ## Overview
 
@@ -57,7 +57,7 @@ Manage teams, assign agents, assign Chief-of-Staff titles, and handle broadcasts
 
 4. **COS assignment (R29/R32)** — the MANAGER assigns the COS; this needs **no user approval and no agent password** (the MANAGER authenticates by AID — R9.11). Per R29.1 creating a team auto-creates **the COS and only the COS**; the COS then creates the other 4 basic members itself (R12.2 / R31.1), and the team stays frozen until it has (R31.1). *(This line used to say "auto-creates its COS + 5 base members" — the pre-v4.2.1 R29.1 text the USER deleted on 2026-07-14 for saying six agents where R12.1 defines five INCLUDING the COS, and for crediting the system with work the COS owns. A rule that USES a term is governed by the rule that DEFINES it.)*
    - **At create time** (supported): `aimaestro-teams.sh create --name my-team --type closed --cos <cos-agent-id>` — assigns the COS title + auto-installs `ai-maestro-chief-of-staff`.
-   <!-- DECOUPLE-BLOCKED ai-maestro#64: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. MANAGER ruled this a real operational hole (under R6 v3 the COS is the sole entry into a team) and committed the hub to `aimaestro-teams.sh update --cos <id>` + a clear-path BEFORE LAUNCH. Drop this marker when that verb deploys. Until then: set the COS at create time via `--cos` above, or have the MANAGER assign it through their own tooling. Do NOT call `/api/*` directly (core#11). The deployed CLI's `--password` flag is a USER/UI residual (R32.3), never supplied by agents. -->
+   - **On an existing team** (ai-maestro#64/#69, deployed): `aimaestro-teams.sh update <team-id> --cos <cos-agent-id>` assigns or reassigns the COS; `aimaestro-teams.sh update <team-id> --remove-cos` clears the slot. `aimaestro-teams.sh reassign-cos <team-id> <cos-agent-id>` is an alias of `update --cos`. MANAGER by AID, no password — the CLI's `--password` flag is a USER/UI residual (R32.3), never supplied by agents. Do NOT call `/api/*` directly (core#11).
 
 5. **Broadcasts** — message all team agents via AMP:
 

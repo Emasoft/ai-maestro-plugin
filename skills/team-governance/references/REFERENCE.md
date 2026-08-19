@@ -1,6 +1,6 @@
 # Team Governance Reference
 
-<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. MANAGER verdicts on the former residuals (ai-maestro#64): assign/remove-COS-on-existing-team is a COMMITTED pre-launch build (marked DECOUPLE-BLOCKED inline until the verb deploys); change-team-type and Groups are PERMANENTLY out — deleted from the design, no verb pending. -->
+<!-- Decoupled per MANAGER core#11 (TRDD-90c8ad35): every example calls the frozen `aimaestro-governance.sh` / `aimaestro-teams.sh` / `aimaestro-agent.sh` CLIs (which resolve the API base + agent identity internally), never the server `/api/*` directly. MANAGER verdicts on the former residuals (ai-maestro#64): assign/remove-COS-on-existing-team shipped as `aimaestro-teams.sh update --cos | --remove-cos` (+ `reassign-cos` alias, ai-maestro#69); change-team-type and Groups are PERMANENTLY out — deleted from the design, no verb pending. -->
 
 ## Table of Contents
 
@@ -33,7 +33,8 @@ agent identity internally — no base URL and no `X-Agent-Id` header to set by h
 | Update team | `aimaestro-teams.sh update <team-id> [--name\|--description\|--agents\|--orchestrator]` | MANAGER or COS |
 | Delete team | `aimaestro-teams.sh delete <team-id>` | MANAGER (by AID; R29/R32 — no agent password) |
 | Add / remove agent | `aimaestro-teams.sh add-agent\|remove-agent <team-id> <agent>` | MANAGER or COS |
-| Assign COS to existing team | _no frozen verb yet — DECOUPLE-BLOCKED ai-maestro#64 (verb `update --cos` committed pre-launch; until then set `--cos` at create)_ | MANAGER (by AID; R29 — no user approval) |
+| Assign / reassign COS on existing team | `aimaestro-teams.sh update <team-id> --cos <agent-id>` (alias: `reassign-cos <team-id> <agent-id>`) | MANAGER (by AID; R29 — no user approval) |
+| Remove COS from team | `aimaestro-teams.sh update <team-id> --remove-cos` | MANAGER (by AID) |
 
 ---
 
@@ -66,7 +67,7 @@ aimaestro-teams.sh create --name security-team --type closed | jq .
 aimaestro-teams.sh create --name security-team --type closed --cos <cos-agent-id> | jq .
 ```
 
-**Auto-COS chain:** When `--cos` is provided, the `ai-maestro-chief-of-staff` role-plugin is automatically installed on the designated COS agent (`--scope local`). If no `--cos` is provided, the team is created without a COS. <!-- DECOUPLE-BLOCKED ai-maestro#64: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen verb yet (`aimaestro-teams.sh update` exposes no `--cos`); the hub committed `update --cos` BEFORE LAUNCH (MANAGER ruling). Until it deploys set `--cos` at create time, or have the MANAGER assign via their own tooling. -->
+**Auto-COS chain:** When `--cos` is provided, the `ai-maestro-chief-of-staff` role-plugin is automatically installed on the designated COS agent (`--scope local`). If no `--cos` is provided, the team is created without a COS — assign one later with `aimaestro-teams.sh update <team-id> --cos <agent-id>` (see "Assign COS" below).
 
 ### Delete a Closed Team (MANAGER Only)
 
@@ -119,11 +120,23 @@ At **create time**, pass `--cos` (supported):
 aimaestro-teams.sh create --name <team-name> --type closed --cos <cos-agent-id> | jq .
 ```
 
-<!-- DECOUPLE-BLOCKED ai-maestro#64: assigning a COS to an ALREADY-EXISTING team (was `POST /api/teams/{id}/chief-of-staff`) has no frozen-CLI verb yet — `aimaestro-teams.sh update` exposes no `--cos`. Hub-committed pre-launch build (`update --cos`, MANAGER ruling ai-maestro#64) — NOT the gov-password class (that class is permanent-by-design, see the title-verbs note). Until it deploys: set `--cos` at create, or the MANAGER assigns through their own tooling. Do NOT call `/api/*` directly (core#11). -->
+On an **existing** team (ai-maestro#64/#69 — the verb shipped in `aimaestro-teams.sh`), assign or reassign with:
+
+```bash
+aimaestro-teams.sh update <team-id> --cos <cos-agent-id> | jq .
+# alias, same route:
+aimaestro-teams.sh reassign-cos <team-id> <cos-agent-id> | jq .
+```
+
+The CLI authenticates by AID (MANAGER) — no governance password; its `--password` flag is a USER/UI residual (R32.3) agents never supply. Do NOT call `/api/*` directly (core#11).
 
 ### Remove COS
 
-<!-- DECOUPLE-BLOCKED ai-maestro#64: removing a COS from a team (was `POST /api/teams/{id}/chief-of-staff` with `agentId:null`) has no frozen-CLI verb yet — covered by the same hub-committed pre-launch build as assign-COS (a clear-path: `--cos ""` or `--remove-cos`, MANAGER ruling ai-maestro#64). Do NOT call `/api/*` directly (core#11). -->
+```bash
+aimaestro-teams.sh update <team-id> --remove-cos | jq .
+```
+
+Clears the COS slot (`agentId: null`). MANAGER by AID, no password. Do NOT call `/api/*` directly (core#11).
 
 **Agents never handle the governance/sudo password (R16/R32).** It is a USER/UI-only secret — if an operation genuinely requires it, the server surfaces a UI popup the **user** fills in; the agent never sees, stores, caches, logs, or supplies it.
 
