@@ -1,9 +1,10 @@
 ---
 trdd-id: JQ0T7MRC
 title: publish.py RATIFIED_BASELINE_RULESETS is the PAIR — the refusal guard cannot see baseline-tag-protect
-column: dev
+column: complete
 created: 2026-08-18T21:05:00+0200
-updated: 2026-08-18T21:05:00+0200
+updated: 2026-08-19T00:45:00+0200
+implementation-commits: [f0f8a56, dc8f7ef]
 current-owner: ai-maestro-plugin-session
 task-type: bugfix
 priority: high
@@ -32,6 +33,14 @@ ruling), and `:930` prints "The ratified pair IS the baseline".
 
 ## Acceptance
 
-- [ ] Constant names the ratified TRIO.
-- [ ] `:930` message and the `:905-906` docstring no longer assert the pair / the removed rule.
-- [ ] `tests/test_install_branch_rules_guard.py` passes (updated if it pinned the pair).
+- [x] Constant names the ratified TRIO (f0f8a56).
+- [x] The refusal message and the docstring no longer assert the pair / the removed rule —
+      including the `:891` "ratified pair" line the ai_review caught f0f8a56 missing (dc8f7ef).
+- [x] `tests/test_install_branch_rules_guard.py` passes: 4 passed, including the live-gh
+      refusal test and the premise test now asserting tag-protect membership on this repo.
+
+## Approval log
+
+- 2026-08-19T00:45:00+0200 — COMPLETE after adversarial ai_review (PASS with 5 non-blocking
+  findings, all applied in dc8f7ef; report in gitignored reports/ai-review/). Hub
+  acknowledged the re-derivation-before-authoring as the contract.
