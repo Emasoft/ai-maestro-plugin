@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.30] — 2026-08-20
+
+### Documentation
+
+- Cite the stable resolver exit-code contract (0/3/4/5)
 ## [3.1.29] — 2026-08-20
 
 ### Documentation
