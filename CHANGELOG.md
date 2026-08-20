@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.31] — 2026-08-20
+
+### Bug Fixes
+
+- The harness lockdown is INBOUND-ONLY, not an outbound deny
+
+### Documentation
+
+- Add TRDD-RFATWDM5 — janitor proposal, NO_PR_REVIEW off-baseline (awaiting USER approval)
 ## [3.1.30] — 2026-08-20
 
 ### Documentation
