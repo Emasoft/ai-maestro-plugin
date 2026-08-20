@@ -45,6 +45,15 @@ inter-agent coordination — it is what gets signed, routed, graph-checked and l
 a record — and treat a native `SendMessage` to another agent as a send you are
 accountable for unaided.
 
+**Inside the ai-maestro harness the native tool is now DENIED, not merely discouraged**
+(USER directive 2026-08-20; server commit 556f340f): every registered agent workdir gets
+`permissions.deny: ["SendMessage"]` written into its `.claude/settings.local.json` as a
+registry invariant — applied on create, on wake, and re-applied by the periodic sweep, so
+editing it back out only lasts until the next beat. AMP (`amp-send.sh`) is the only door
+for harness agents. A human's own session is not an agent workdir and keeps the tool.
+(The SERVER's internal `SendMessage` AIO pipeline is the AMP implementation itself —
+same name, opposite role; it is not what is denied.)
+
 This is easy to miss precisely because it reads as the obvious thing to do: guidance
 across this fleet says "send it a message", and a tool literally named `SendMessage`
 sits in the toolbelt. **2.1.232 removed the last accidental speed bump**: a bare name
