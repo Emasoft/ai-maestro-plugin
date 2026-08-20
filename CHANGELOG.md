@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.29] — 2026-08-20
+
+### Documentation
+
+- State the subagentCount consumer contract (plugin#64)
+- Native SendMessage is now DENIED in the harness, not just discouraged
 ## [3.1.28] — 2026-08-19
 
 ### Documentation
