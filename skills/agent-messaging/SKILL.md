@@ -226,6 +226,8 @@ amp-read.sh msg_abc   # Read specific message
 
 Run `amp-init.sh --auto` if not initialized. Run `amp-fetch.sh` if messages not arriving. See detailed guide for full troubleshooting.
 
+**Stable resolver exit codes (2026-08-20):** `--name` resolution (`amp-name-resolve.sh`) fails with the SAME codes as `aimaestro-message.sh resolve`, so a caller branches identically at either resolver: **0** exactly one match (UUID on stdout) · **3** index unavailable (no `.index.json` — distinct from not-found: never conclude an agent doesn't exist from a missing index) · **4** zero matches · **5** ambiguous (candidates on stderr). The five sourcing consumers (`amp-send`/`reply`/`inbox`/`read`/`download`) propagate the resolver's code at their own exit, so `amp-send.sh --name x` itself distinguishes no-match (4) from no-index (3). The contract lives in the scripts' own headers (ai-maestro repo).
+
 ## Resources
 
 - [Detailed guide](reference/detailed-guide.md) — full AMP command reference, address formats, message types, attachment security, and the R6 v3 communication graph
