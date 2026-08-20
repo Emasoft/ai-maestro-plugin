@@ -45,14 +45,23 @@ inter-agent coordination — it is what gets signed, routed, graph-checked and l
 a record — and treat a native `SendMessage` to another agent as a send you are
 accountable for unaided.
 
-**Inside the ai-maestro harness the native tool is now DENIED, not merely discouraged**
-(USER directive 2026-08-20; server commit 556f340f): every registered agent workdir gets
-`permissions.deny: ["SendMessage"]` written into its `.claude/settings.local.json` as a
-registry invariant — applied on create, on wake, and re-applied by the periodic sweep, so
-editing it back out only lasts until the next beat. AMP (`amp-send.sh`) is the only door
-for harness agents. A human's own session is not an agent workdir and keeps the tool.
+**Inside the ai-maestro harness the native channel is now CLOSED INBOUND, not merely
+discouraged** (USER directive 2026-08-20; governance R42.9, amended): every registered
+agent workdir gets `crossSessionInbound: "refuse"` written into its
+`.claude/settings.local.json` as a registry invariant — applied on create, on wake, and
+re-applied by the periodic sweep, so editing it back out only lasts until the next beat.
+A harness agent therefore cannot RECEIVE a native cross-session message; AMP
+(`amp-send.sh`) is the only door that reaches it, which is what makes the graph
+unavoidable.
+
+The enforcement is **inbound-only by design**. A `permissions.deny: ["SendMessage"]`
+entry is FORBIDDEN — it breaks subagent handling, so the invariant actively REMOVES it
+from every agent workdir. Do not add one, and do not read the inbound refusal as
+licence to send natively: R6 and R42 still bind you as the SENDER, and a send that now
+lands nowhere is worse than one that is refused loudly. Sub-agent `SendMessage` stays
+permitted throughout. A human's own session is not an agent workdir and is unaffected.
 (The SERVER's internal `SendMessage` AIO pipeline is the AMP implementation itself —
-same name, opposite role; it is not what is denied.)
+same name, opposite role; it is not what is restricted.)
 
 This is easy to miss precisely because it reads as the obvious thing to do: guidance
 across this fleet says "send it a message", and a tool literally named `SendMessage`
