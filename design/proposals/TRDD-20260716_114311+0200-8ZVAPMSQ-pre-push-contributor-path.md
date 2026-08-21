@@ -40,7 +40,14 @@ now GONE. Classified Tier 2. Approver is the USER.**
 `publish.py` with no PR needed. What remains is narrower and still real: a CONTRIBUTOR who
 installs the hook cannot push a feature branch at all, so the fork → branch → PR flow that
 `how-to-fix-issues-of-other-projects` mandates is still impossible for them. Keep the proposal,
-drop the "launch-blocking deadlock" framing — re-check `ai-maestro#63`'s row before citing it.
+drop the "launch-blocking deadlock" framing.
+
+**Ref pinned — the launch-gate row is `Emasoft/ai-maestro#63`, and the bare form is a trap.**
+Verified 2026-08-21: `Emasoft/ai-maestro#63` is the OPEN launch issue ("MANAGER needs the launch
+plan … go/no-go gates"), but `23blocks-OS/ai-maestro#63` is a MERGED PR about legacy host-id
+migration. Same number, two repos, opposite status — so a bare `#63` read against the wrong
+remote returns the OPPOSITE conclusion about whether this gate is still live. Always write the
+`owner/repo#N` form here. The row IS live; re-check it before citing this card's urgency.
 
 **TIER 2 — USER approval, not MANAGER, not self-mandate.** The change loosens a push gate that
 every contributor is forced through: it converts "every push needs `publish.py` ancestry" into
