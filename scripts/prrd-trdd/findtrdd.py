@@ -55,6 +55,14 @@ KNOWN_COLUMNS = {
     "refused",
     "cancelled",
     "superseded",
+    # Legacy archive spelling. The base rule's archive-eligible set is
+    # `complete|completed|cancelled|superseded|published|live` — BOTH spellings, because
+    # 3-pillars spec 2.0.0 (amendment 3P-ZON-05, 2026-08-18) admitted `complete` after the
+    # complete->completed rename was measured drifting 232 times fleet-wide. Its verdict was
+    # "the rule moved, not the cards", so cards already archived as `completed` are correct
+    # and must NOT be renamed to satisfy this validator. Omitting it here made the checker
+    # demand an edit to frozen terminal cards (rule 12) that the rule forbids.
+    "completed",
 }
 
 

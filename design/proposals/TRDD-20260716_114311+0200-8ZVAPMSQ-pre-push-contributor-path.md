@@ -3,7 +3,8 @@ trdd-id: 8ZVAPMSQ
 title: Pre-push hook contributor path — allow non-default-branch pushes without publish.py ancestry
 column: proposal
 created: 2026-07-16T11:43:11+0200
-updated: 2026-08-07T12:04:59+0200
+updated: 2026-08-21T16:39:01+0200
+approval-tier: 2
 current-owner: ai-maestro-plugin (core)
 task-type: infra
 min-approval-requirement: manager
@@ -24,10 +25,34 @@ genuine `scripts/publish.py` ancestor is refused, on any branch. The deadlock th
 describes is unchanged and still launch-blocking. (Worth re-checking rather than assuming:
 the sibling issue `#34` DID go moot while parked, so a stale proposal is a real risk here.)
 
-**Status: PROPOSAL awaiting MANAGER approval.** The MANAGER pre-committed on
-core#26 ("Pick (a) or (b), file the TRDD, and I will approve it") and put the
-deadlock on the launch gate list (ai-maestro#63). CORE recommends **(a)**.
-Once approved: move to `design/tasks/`, `column: planned`, then implement.
+**RE-VERIFIED AGAIN 2026-08-21 — hook premise HOLDS, but one of the three deadlock legs is
+now GONE. Classified Tier 2. Approver is the USER.**
+
+- **Leg 1 (hook) — STILL TRUE.** `.githooks/pre-push` at HEAD (213 lines, `core.hooksPath=.githooks`
+  confirmed active) contains no `refs/heads` or `refs/tags` read anywhere; its only decision is
+  `if ! find_publish_ancestor "$$"` (line 195) → `exit 1` (line 210). Unscoped, as described.
+- **Leg 3 (ruleset requires a PR) — NO LONGER TRUE.** `baseline-pr-and-checks` (17715691) carries
+  rules `[required_status_checks]` ONLY — no `pull_request` rule. Removed by USER ruling
+  2026-08-13 (self-approval is impossible on a solo-owner repo, so a 1-approval gate was
+  unsatisfiable). Verified live this session.
+
+**What that changes:** the OWNER is no longer deadlocked — they can push `main` through
+`publish.py` with no PR needed. What remains is narrower and still real: a CONTRIBUTOR who
+installs the hook cannot push a feature branch at all, so the fork → branch → PR flow that
+`how-to-fix-issues-of-other-projects` mandates is still impossible for them. Keep the proposal,
+drop the "launch-blocking deadlock" framing — re-check `ai-maestro#63`'s row before citing it.
+
+**TIER 2 — USER approval, not MANAGER, not self-mandate.** The change loosens a push gate that
+every contributor is forced through: it converts "every push needs `publish.py` ancestry" into
+"feature-branch pushes need none". That is a security-control relaxation on a forced path, which
+is Tier 2 even though `.githooks/` is not `.github/` and no ruleset is touched. The card's own
+`min-approval-requirement: manager` predates the current tier model; the hub session holds no
+MANAGER title over this repo and has explicitly declined to rule on it. Conservative default
+applies: when unsure, escalate one tier.
+
+CORE still recommends **(a)**. On USER approval: `git mv` to `design/tasks/`, `column: planned`,
+then implement with all four derived tasks below — the sha256 pin move in the SAME commit is
+load-bearing, not optional.
 
 ## The problem (MANAGER ruling, core#26)
 
@@ -87,5 +112,11 @@ that can drift.
 
 - 2026-07-16 — filed as proposal; MANAGER approval requested on core#26
   (MANAGER pre-committed to approve option (a) or (b) on 2026-07-15).
+- 2026-08-21T16:39:01+0200 — CLASSIFIED **Tier 2 (USER)**, still PENDING — no verdict rendered.
+  Premise re-verified: hook leg holds at HEAD, ruleset leg is gone (see STATE). Routed to the
+  USER rather than left implicit: this card had sat 36 days on an unasked question, which is the
+  failure mode being corrected, not a queue that was simply slow. NOT self-approved as Tier 0
+  despite living entirely in this repo — it relaxes a security gate on a path every contributor
+  is forced through.
 
 ## Notes and lessons learned
