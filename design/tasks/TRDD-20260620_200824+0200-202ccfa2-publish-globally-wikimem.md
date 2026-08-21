@@ -3,9 +3,9 @@ trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 column: blocked
 pre-block-column: planned
-blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52, ai-maestro-plugin#18]
+blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52]
 created: 2026-06-20T20:08:24+0200
-updated: 2026-08-07T12:01:09+0200
+updated: 2026-08-21T16:39:01+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -63,12 +63,19 @@ foot of `memgrep --help` is authoritative.**
 **What CORE still owns here:** the DESIGN below — chiefly the privacy invariant, which is
 the load-bearing user requirement and must survive into whoever implements it.
 
-**NEXT ACTION:** none runnable by CORE. Trackers, per the card's own verified list plus one
-this session confirmed still open: engine `ai-maestro-janitor#111`, coordination
-`ai-maestro-janitor#52`, and `ai-maestro-plugin#18` (filed by the janitor ON CORE's repo,
-reopened 2026-08-05 because closing another party's issue on my own audit is not mine to do).
-**Do NOT file a fourth issue** — the struck lines below already caused one near-duplicate.
+**NEXT ACTION:** none runnable by CORE. Trackers, both re-verified OPEN 2026-08-21: engine
+`ai-maestro-janitor#111`, coordination `ai-maestro-janitor#52`.
+**Do NOT file a third issue** — the struck lines below already caused one near-duplicate.
 When the engine lands, re-verify against the authoritative verb list and restore `planned`.
+
+**`ai-maestro-plugin#18` was CLOSED as superseded 2026-08-21** and is no longer in
+`blocked-by:`. It asked CORE to implement the memgrep engine, but ownership ruling
+`ai-maestro#106` (closed 2026-08-02) gave memgrep to the janitor and CORE must not host it —
+enforced by `tests/test_memory_protocol_components.py:30`. The 2026-08-05 reopen reasoning
+("closing another party's issue on my own audit is not mine to do") no longer applies: the
+issue lived on CORE's own repo, and the close was authorized this session. Its content is not
+lost — the work is tracked by janitor#111/#52, and the `--help` fall-through trap it documented
+is restated in this card's own warning above.
 
 **Goal:** let a PROJECT-scope wikimem note opt into being visible from EVERY project
 (solves "many Claudes want some project memories accessible globally"), with **zero
