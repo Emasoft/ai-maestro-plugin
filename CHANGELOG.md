@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.32] — 2026-08-25
+
+### Bug Fixes
+
+- Accept legacy `completed` column; classify TRDD-8ZVAPMSQ Tier 2
+
+### Documentation
+
+- Refuse TRDD-RFATWDM5 (detector false positive) + archive 10 terminal cards
+- Drop closed ai-maestro-plugin#18 from TRDD-202ccfa2 blocked-by
+- Pin the launch-gate ref to owner/repo#N — bare #63 collides
+- Align corpus with Claude Code 2.1.233-2.1.240
 ## [3.1.31] — 2026-08-20
 
 ### Bug Fixes
