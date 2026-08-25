@@ -1,7 +1,7 @@
 ---
 name: ama-trdd-transition
 user-invocable: true
-description: "Move a TRDD between kanban columns (the 19-stage pipeline plus blocked/failed/superseded, per 3-pillars 3.0.0) — enforcing the transition matrix: who may trigger each move, the frontmatter side-effects it requires, and the AMP broadcast it sends. Each move is role-gated (ORCH dispatches, ARCH designs, INTEGRATOR owns the ->complete flip, assignee signals dev->testing, MEMBER is signal-only). Use when advancing a task through the pipeline. Trigger with /ama-trdd-transition, 'move TRDD X to testing', 'dispatch this task', or 'mark it blocked'. Authoring is /ama-trdd-write, editing /ama-trdd-update, rendering /ama-kanban-render."
+description: "Move a TRDD between kanban columns (3-pillars 3.0.0 pipeline) enforcing the role-gated transition matrix — mover, frontmatter side-effects, AMP broadcast. Use when advancing a task. Trigger with /ama-trdd-transition, 'move TRDD X to testing', 'dispatch this task', or 'mark it blocked'."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(date:*), Bash(git:*), Bash(findtrdd.py:*), Bash(kanban.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Write, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
