@@ -199,6 +199,8 @@ class TRDDDoc:
         return f"TRDD-{self.uid8}" if self.uid8 else ""
 
 
+# 3-pillars 3.0.0 (2026-08-23): targets are still legal `column:` values
+# under the new 27-value set — no change needed here.
 _V1_TO_V2 = {
     "not-started": "backburner",
     "in-progress": "dev",

@@ -53,13 +53,25 @@ moves below.
 
 ## Master matrix
 
+> **3-pillars 3.0.0 note (3P-KAN-18/-19, ratified 2026-08-23):** the board
+> gained 5 columns and `design` moved BEFORE `todo` — the ratified order is
+> `backburner → approval → design → design_ai_review → design_human_review
+> → todo → verify_assumptions → plan → dispatch → dev → …` (full vocabulary:
+> `~/.claude/rules/universal-kanban.md`). The rows below carry the ORIGINAL
+> mechanics for the columns that predate 3.0.0, renumbered into the new
+> order; they do NOT yet enumerate mover/trigger/side-effect/AMP rows for
+> `approval`, `design_ai_review`, `design_human_review`, `verify_assumptions`
+> and `plan` — those five are new normative surface the 3-pillars spec
+> defines, and this matrix will grow rows for them rather than have this
+> skill invent transition mechanics the spec doesn't state.
+
 | # | From | To | Mover | Trigger | Frontmatter side effects | AMP broadcast |
 |---|---|---|---|---|---|---|
 | 1 | (new) | `backburner` | AMAMA, AUTO | TRDD authored from user input | Initialize all mandatory frontmatter; `column: backburner` | AMP → ORCH: "new TRDD in backburner: TRDD-<id>" |
-| 2 | `backburner` | `todo` | AMAMA | MANAGER decides this is next-up | bump `updated:` | AMP → COS: "TRDD-<id> promoted to todo; please claim via ORCH" |
-| 3 | `todo` | `design` | ORCH | ORCH delegates to ARCH | `assignee: <arch-session>` (temp during design); bump `updated:` | AMP → ARCH (via COS): "TRDD-<id> needs design" |
-| 4 | `design` | `dispatch` | ARCH | ARCH finished full TRDD (no split) | full frontmatter; `assignee: null`; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> designed; ready for dispatch" |
-| 5 | `design` | `superseded` | ARCH | ARCH 1→N split (or N→1 group) | `superseded-by: [...new children...]`; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> split into <N>: <ids>" |
+| 2 | `backburner` | `design` | AMAMA | MANAGER decides this is next-up (approval per `min-approval-requirement:` — see [approval-tiers-and-zones.md](approval-tiers-and-zones.md)) | bump `updated:` | AMP → COS: "TRDD-<id> approved for design; please claim via ORCH" |
+| 3 | `design` | `todo` | ORCH | ORCH delegates to ARCH; design body + AI/human design review pass | `assignee: <arch-session>` (temp during design); bump `updated:` | AMP → ARCH (via COS): "TRDD-<id> needs design" |
+| 4 | `todo` | `dispatch` | ARCH | ARCH finished full TRDD (no split); assumptions verified, plan filed | full frontmatter; `assignee: null`; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> designed; ready for dispatch" |
+| 5 | `todo` | `superseded` | ARCH | ARCH 1→N split (or N→1 group) | `superseded-by: [...new children...]`; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> split into <N>: <ids>" |
 | 5b | (new) | `dispatch` | ARCH | ARCH emits new child TRDDs from split | each child: `parent-trdd: <T_parent>`, `supersedes: [<T_parent>]`, `column: dispatch` | (covered by #5's broadcast) |
 | 6 | `dispatch` | `dev` | ORCH | ORCH assigns to an agent | `assignee: <session>`; bump `updated:`; `feature-branch:` if `delivery: pull-request` | AMP → assignee (via COS): "TRDD-<id> assigned; please implement" |
 | 7 | `dev` | `testing` | assignee (MEM/INT/AUTO) | assignee signals "code ready for tests" **after the pre-PR gate clears with ORCH** (dialog loop c — no PR/INT notification before ORCH's "go") | bump `updated:`; record commit SHAs in `implementation-commits:` | AMP → ORCH (via COS): "TRDD-<id> code ready; running tests" |
@@ -116,8 +128,8 @@ principle applied to the completed-state. Full definition:
   `complete-with-no-release`, `failed`, `superseded`) back to any
   earlier column. Terminals are absorptive. New work = new TRDD.
 - **Cannot** skip the design column for non-trivial TRDDs. If you find
-  yourself wanting to move `todo → dispatch` without ARCH involvement,
-  the TRDD is either trivial (just do it in-session — no card) OR
+  yourself wanting to move `design`/`todo` → `dispatch` without ARCH
+  involvement, the TRDD is either trivial (just do it in-session — no card) OR
   you're cutting corners. Do **not** reach for `TaskCreate` here: Claude
   Code 2.1.233 removed the todo/task tools on Opus 4.8, Sonnet 5,
   Fable 5, Mythos 5 and newer, so on every model this plugin targets

@@ -298,10 +298,14 @@ amp-kanban-move.sh <task-id> dev | jq .
 ```
 
 Status must match a column ID **in that team's kanban config** — read the config rather
-than assuming a vocabulary. The ratified set is the 17 columns (`backburner`, `todo`,
-`design`, `dispatch`, `dev`, `testing`, `ai_review`, `human_review`, `complete`,
-`publish`, `published`, `deploy`, `live`, `live_auditing`, plus `blocked`, `failed`,
-`superseded`). The legacy five (`backlog`/`pending`/`in_progress`/`review`/`completed`)
+than assuming a vocabulary. The ratified set (3-pillars 3.0.0, ratified 2026-08-23) is the
+22 columns (`backburner`, `approval`, `design`, `design_ai_review`, `design_human_review`,
+`todo`, `verify_assumptions`, `plan`, `dispatch`, `dev`, `testing`, `ai_review`,
+`human_review`, `complete`, `publish`, `published`, `deploy`, `live`, `live_auditing`, plus
+`blocked`, `failed`, `superseded`) — `design` sits before `todo`; `todo` asserts approved
+AND designed. The legal `column:` set is 27 counting the 5 bracket values
+(`proposal`/`planned`/`refused`/`completed`/`cancelled`) from the folder lifecycle, which
+sit outside the board. The legacy five (`backlog`/`pending`/`in_progress`/`review`/`completed`)
 are obsolete; an unmigrated team may still serve them.
 
 ### Assign/Unassign Task
@@ -356,15 +360,21 @@ amp-kanban-list.sh | \
 Column ids are **per-team**, set via `kanban-config --set` (below). Read a team's actual
 config before moving cards.
 
-The **ratified 17-column vocabulary** — 14 lifecycle, in order, then 3 orthogonal/terminal:
+The **ratified 22-column vocabulary** (3-pillars 3.0.0, ratified 2026-08-23) — 19
+lifecycle, in order, then 3 orthogonal/terminal:
 
 | id | meaning |
 |----|---------|
-| `backburner` | parked, not yet queued |
-| `todo` | queued |
-| `design` | being designed / split |
+| `backburner` | not yet approved |
+| `approval` | awaiting the approver named by `min-approval-requirement:` |
+| `design` | expanded in place with detailed design/specs (sits BEFORE `todo`) |
+| `design_ai_review` | the design body reviewed by AI |
+| `design_human_review` | the design body reviewed by a human (skipped when `min-approval-requirement: none`) |
+| `todo` | approved AND designed — queued |
+| `verify_assumptions` | every claim verified or a test created to verify it |
+| `plan` | plan-mode run non-interactively; passes only when a complete plan file exists |
 | `dispatch` | ready to assign |
-| `dev` | implementation in progress |
+| `dev` | implementation in progress (enforces the `plan` file's steps) |
 | `testing` | gates running |
 | `ai_review` | AI review |
 | `human_review` | escalated to a human |
@@ -372,6 +382,12 @@ The **ratified 17-column vocabulary** — 14 lifecycle, in order, then 3 orthogo
 | `publish` → `published` | release pipeline (tools) |
 | `deploy` → `live` → `live_auditing` | release pipeline (services) |
 | `blocked` / `failed` / `superseded` | orthogonal / terminal |
+
+The legal `column:` set is 27, not 22: five bracket values —
+`proposal`, `planned`, `refused`, `completed`, `cancelled` — sit outside the board,
+defined by the folder lifecycle rather than the board itself. Pre-3.0.0 cards that
+entered `todo`, `design`, or `backburner` on or before 2026-08-23 are grandfathered
+under the old meaning — do not flag or auto-migrate them.
 
 **Legacy (obsolete):** `backlog`, `pending`, `in_progress`, `review`, `completed` — an
 unmigrated team may still serve these; migrate it with `kanban-config --set` rather than

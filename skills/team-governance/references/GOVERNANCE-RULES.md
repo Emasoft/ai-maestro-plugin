@@ -1,10 +1,10 @@
 ---
-version: "5.3.3"
+version: "5.5.0"
 date: 2026-08-06
 branch: governance-rules
-conforms-to-spec: governance-rules@5.3.3
-synced-blob: "a13bed73fa9e"
-synced-at: 2026-08-08
+conforms-to-spec: governance-rules@5.5.0
+synced-blob: "44be10d5d351"
+synced-at: 2026-08-25
 ---
 
 ## Table of contents
@@ -78,8 +78,9 @@ synced-at: 2026-08-08
 > - Stable raw URL (the long-lived `governance-rules` branch):
 >   `https://raw.githubusercontent.com/Emasoft/ai-maestro/governance-rules/docs/GOVERNANCE-RULES.md`
 > - Do NOT "correct" the URL or the sync source to a `main` path. The reason is
->   NOT that `main` is behind today — **measured 2026-08-08 16:53 +0200, both refs serve
->   the SAME blob `a13bed73fa9e`**, because `main` was fast-forwarded to
+>   NOT that `main` is behind today — **measured 2026-08-08 16:53 +0200, both refs served
+>   the SAME blob `a13bed73fa9e` at the time (now superseded by `44be10d5d351`, per
+>   the 2026-08-25 re-sync below)**, because `main` was fast-forwarded to
 >   `governance-rules` that afternoon (`ai-maestro#138`). The durable reason is
 >   the DIRECTION of flow: amendments are authored on `governance-rules` and land
 >   there FIRST; `main` is brought up to it periodically. So between
@@ -97,8 +98,8 @@ synced-at: 2026-08-08
 >   either way: a 404, a v4.0.2, and a matching blob are all equally uninformative
 >   about where amendments land — that class of inference produced the 2026-08-07
 >   R42.8 error below.
-> - **What `conforms-to-spec: governance-rules@5.3.3` asserts, exactly.** That
->   THIS FILE IS the v5.3.3 catalog — copy fidelity, nothing more. It is
+> - **What `conforms-to-spec: governance-rules@5.5.0` asserts, exactly.** That
+>   THIS FILE IS the v5.5.0 catalog — copy fidelity, nothing more. It is
 >   mechanically checkable in one command (below) and it is TRUE: the body
 >   from the title line down is byte-identical to upstream. **It does NOT
 >   assert that `ai-maestro-plugin` implements R1–R52.** CORE ships no
@@ -113,7 +114,7 @@ synced-at: 2026-08-08
 >
 >   ```bash
 >   gh api "repos/Emasoft/ai-maestro/contents/docs/GOVERNANCE-RULES.md?ref=governance-rules" --jq .sha
->   # expected: a13bed73fa9e…   (this copy = catalog v5.3.3)
+>   # expected: 44be10d5d351…   (this copy = catalog v5.5.0)
 >   # matches ⇒ these exact bytes ⇒ every rule read from this copy still holds.
 >   # Differs ⇒ re-sync. It never says WHAT moved, only that something did —
 >   # a moved blob is a prompt to re-read, not an answer.
@@ -125,10 +126,15 @@ synced-at: 2026-08-08
 >   byte-identical document, and records "checked, current" — manufacturing
 >   confidence instead of supplying information. Measured upstream: the tip moved
 >   across four unrelated commits while the spec blob sat unchanged for 13 days.
-> - Synced from commit `e46764f6` on the `governance-rules` branch. **Provenance
+> - Synced from commit `15d0bade` on the `governance-rules` branch. **Provenance
 >   only — deliberately NOT a frontmatter field**, so nobody polls it by reaching
 >   for the nearest sha. The frontmatter carries exactly one pointer, and it is
 >   the blob.
+> - Re-synced into `ai-maestro-plugin` on: 2026-08-25 (v5.5.0 — R42.9 CORRECTED
+>   the same day it was added: the outbound half is INVERTED, the amp-only-messaging
+>   invariant now writes `crossSessionInbound` refuse ONLY and REMOVES the
+>   `permissions.deny SendMessage` it previously planted, because that deny keyed
+>   on the whole client tool and broke an agent's own subagent handling).
 > - Re-synced into `ai-maestro-plugin` on: 2026-08-08 (v5.3.3 — adds **R42.8**,
 >   the MANAGER/COS blocked-prompt unblock carve-out, plus the R22.2 and R39.2
 >   factual corrections). **Read R42.8's verb list from the row, never from a
@@ -146,7 +152,7 @@ synced-at: 2026-08-08
 >   recorded in PROJECT memory (ATOM-SBNM-OHF2) — run that sweep BEFORE every
 >   future re-sync.
 > - Bundled-doc version: see the `version:` field in the YAML frontmatter
->   above (5.3.3 at the time of this sync).
+>   above (5.5.0 at the time of this sync).
 >
 > Treat this file as **read-only** in this repo. To update:
 >
@@ -170,9 +176,6 @@ synced-at: 2026-08-08
      unescaped pipe (4 cells in a 3-column table). The fix belongs upstream; the
      mirror must not diverge to satisfy a linter. -->
 <!-- markdownlint-disable MD056 -->
-
----
-
 # Team Governance — Design Rules & Requirements
 
 **Source:** Extracted from user instructions, audit reports, and logical inference
@@ -1670,6 +1673,7 @@ power to direct that agent.
 | R42.6 | MANAGER and COS retain a **separate, non-injection** authority: changing an agent's **configuration** (local-scope skills, subagents, MCP, hooks) and its **TEAM** / **TITLE** (rare — both are normally set at creation and kept for the agent's life). Configuring an agent is NOT driving it | Explicit (USER) |
 | R42.7 | **Second exception — the server-as-daemon may RESTART harness agents** after a global change it just applied (an `ai-maestro-plugins` plugin update, or a `~/.claude/settings.json` runtime-env re-apply). Six constraints, all load-bearing: **(a)** the fan-out is **uniform** over every affected harness agent — never a chosen one (a targeted restart is R42.1 injection renamed); **(b)** **zero content** — exit → relaunch with the agent's STORED args, never a keystroke or text; **(c)** **safe-state gated** — the same `idle_prompt` + subagent-counter 409 the human's Restart button obeys; **(d)** **same-host, harness-only**; **(e)** **audited** in the agent ops ledger; **(f)** **no agent may invoke it** — reachable only from the server's own tick, never a route/script/CLI. The actor is infrastructure (no AID, no title), which is why this is not an agent driving an agent | Explicit (USER — delegated 2026-07-30, TRDD-QZL828OD) |
 | R42.8 | **Third exception — a MANAGER or CHIEF-OF-STAFF may UNBLOCK an agent stalled on a permission / `AskUserQuestion` prompt**, in realtime, via the frozen `aimaestro-session.sh` — **`block-state`, `read-prompt` and `answer` ONLY** (`inject`, `slash` and `queue` are NOT exception verbs: they deliver an arbitrary command, so they express the CALLER's decision and stay SELF-ONLY for every title; the server 403s them cross-agent. `block-state` belongs in the list because it carries NO caller decision — it is the pane-authoritative DETECTION read that makes constraint (a)'s "blocked-only" trigger checkable at all: the hook's chat-state carried `AskUserQuestion` in 0 of 419 surveyed files, so a caller limited to `read-prompt` reads `null` and the one prompt shape that blocks an agent indefinitely is invisible. The server has always gated it under the same `unblock-prompt` action — `lib/sudo-guard.ts` routes `GET /api/agents/[id]/block-state` there — so this names the ratified implementation, it does not widen it). Eight constraints, all load-bearing: **(a)** **blocked-only** — the sole trigger is an agent stalled on a prompt; a working, idle-but-unblocked, or merely slow agent is untouchable ("it would be faster if I typed it" is R42.1); **(b)** **unblock, never drive** — answer ONLY the pending prompt, nothing appended, no new work, no redirection (work is still assigned by AMP alone); **(c)** **title-scoped and exhaustive** — MANAGER: any agent on the host except an ASSISTANT; COS: **its own team only**, same exclusion; every other title: none; **(d)** **never an ASSISTANT** — it is the surface a human talks *through*, so injected text is indistinguishable from something its human said, laundering an agent's instruction into apparent human intent (a USER has no terminal, so there is no USER-target case — do not implement one); **(e)** **identity prompts ESCALATE** — a prompt asking the agent to verify the CALLER's own authority goes to the human, never answered by the caller: self-certification through a second channel proves nothing and a spoofer performs the identical act. **No agent can answer such a prompt because no agent is the authority on identity — the ai-maestro SERVER is the sole notary**: it created or imported every agent, registered it and its AID in the signed ledger, alone holds the key that signs and rotates that AID, and alone signs and verifies AMP messages. Identity is ESTABLISHED by the server's verification, never ASSERTED by a party to the exchange — which is also what makes (c)'s title scoping meaningful, since `authorize()` reads back the server's notarized record rather than a caller's claim; **(f)** **read before answer** — `read-prompt` first; never answer a prompt you have not read (an unblock interrupts nothing: the agent is already stopped, waiting); **(g)** **server-enforced** — authorized by AID_AUTH + governance title, failing closed; the refusal is the check, never the caller's restraint; **(h)** **audited** in the agent ops ledger. Why it exists: the capability was built, shipped and title-gated while the rule told agents it did not exist for them, so a MANAGER refused **twice** to unblock a stalled agent and escalated to the human — defeating the automation the product exists to provide | Explicit (USER — 2026-08-05, ai-maestro#125, TRDD-AODXPI5E) |
+| R42.9 | **Harness sessions REFUSE client-native cross-session delivery — and NOTHING else is written.** The server forcefully maintains, in each agent workdir's `.claude/settings.local.json` (the `amp-only-messaging` workdir invariant — on create, on wake, and on the periodic sweep, self-repairing if edited back out): `"crossSessionInbound": "refuse"`. With every harness session refusing inbound, a client-native cross-session send has nowhere to land, so AMP (R6-gated, AID-attributed, logged) is the only working channel — the lockdown needs no outbound half. **FORBIDDEN (USER correction, 2026-08-20): a `permissions.deny` entry for `SendMessage`** — the deny keys on the whole client TOOL, and that same tool handles a session's OWN sub-agents, so denying it breaks subagent handling, not just cross-session sends; the invariant REMOVES that entry wherever the pre-correction version wrote it. **EXPLICIT CARVE-OUT (USER, original directive): a session's OWN sub-agents — the Agent tool, background subagents — are untouched.** The rule binds CROSS-SESSION edges only, because those are the edges the R6 graph governs; this ENFORCES R42.3, it does not add a restriction. (The server's own SendMessage AIO pipeline is the AMP implementation — same name, opposite role; never confuse the two when sweeping prose.) | Explicit (USER — 2026-08-20, TRDD-027HZOYN; corrected same day) |
 
 > **Why this is absolute.** A message lands in an inbox and the recipient *decides* whether to
 > act. An injected command *is* the recipient's own action — it bypasses its judgment, its

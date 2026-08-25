@@ -1,9 +1,9 @@
 ---
 trdd-id: Z6QFP8MM
 title: Re-sync the governance-rules mirror after the upstream restructure
-column: backburner
+column: complete
 created: 2026-08-25T17:28:22+0200
-updated: 2026-08-25T17:28:22+0200
+updated: 2026-08-25T18:20:00+0200
 current-owner: ai-maestro-plugin (core)
 task-type: docs
 min-approval-requirement: none
@@ -47,3 +47,11 @@ stamp: declaring a version it does not have").
   in-scope docs sync, reversible, no baseline deviation. Deliberately NOT executed as a
   drive-by during the kanban 3.0.0 migration: the restructure makes source-of-truth location
   a judgment call, and a wrong guess produces a lying stamp.
+- 2026-08-25T18:20:00+0200 — **COMPLETED same session.** Hub answered the open question first-hand: canonical
+  corpus = `docs/GOVERNANCE-RULES.md` @ 5.5.0, blob 44be10d5d351 (lead re-verified via gh api:
+  blob + size 249063 match). Mirror re-synced by worker, then lead-verified on disk: stamp
+  version 5.5.0 / synced-blob 44be10d5d351 / synced-at 2026-08-25; R42.9 present WITH the
+  same-day correction (a `permissions.deny` for SendMessage is FORBIDDEN — matches what CORE's
+  own governance files already state); size 217885B consistent with the mirror's standing
+  exclusion of upstream's changelog block (prior 5.3.3 sync: 216002B). Full suite after sync:
+  403 passed / 6 skipped (lead run). Scope item 3 (supersession) moot — corpus not retired.

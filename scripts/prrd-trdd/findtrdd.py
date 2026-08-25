@@ -31,13 +31,18 @@ if str(_HERE) not in sys.path:
 import prrd_lib as plib  # noqa: E402
 
 KNOWN_COLUMNS = {
-    # approval lifecycle (4-zone model — see approval-tiers-and-zones.md)
+    # pre/post-board bracket values (not among the 22 board columns)
     "proposal",
     "planned",
-    # entry / design / work / ready / ship / operate
+    # 3-pillars 3.0.0 (2026-08-23): 19 lifecycle columns, `design` before `todo`
     "backburner",
-    "todo",
+    "approval",
     "design",
+    "design_ai_review",
+    "design_human_review",
+    "todo",
+    "verify_assumptions",
+    "plan",
     "dispatch",
     "dev",
     "testing",

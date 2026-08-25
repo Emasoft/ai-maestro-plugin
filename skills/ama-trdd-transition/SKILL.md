@@ -1,7 +1,7 @@
 ---
 name: ama-trdd-transition
 user-invocable: true
-description: "Move a TRDD between kanban columns (the 14-stage pipeline plus blocked/failed) — enforcing the transition matrix: who may trigger each move, the frontmatter side-effects it requires, and the AMP broadcast it sends. Each move is role-gated (ORCH dispatches, ARCH designs, INTEGRATOR owns the ->complete flip, assignee signals dev->testing, MEMBER is signal-only). Use when advancing a task through the pipeline. Trigger with /ama-trdd-transition, 'move TRDD X to testing', 'dispatch this task', or 'mark it blocked'. Authoring is /ama-trdd-write, editing /ama-trdd-update, rendering /ama-kanban-render."
+description: "Move a TRDD between kanban columns (the 19-stage pipeline plus blocked/failed/superseded, per 3-pillars 3.0.0) — enforcing the transition matrix: who may trigger each move, the frontmatter side-effects it requires, and the AMP broadcast it sends. Each move is role-gated (ORCH dispatches, ARCH designs, INTEGRATOR owns the ->complete flip, assignee signals dev->testing, MEMBER is signal-only). Use when advancing a task through the pipeline. Trigger with /ama-trdd-transition, 'move TRDD X to testing', 'dispatch this task', or 'mark it blocked'. Authoring is /ama-trdd-write, editing /ama-trdd-update, rendering /ama-kanban-render."
 allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(date:*), Bash(git:*), Bash(findtrdd.py:*), Bash(kanban.py:*), Bash(resolve_pillar_scripts.sh:*), Read, Write, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
@@ -29,11 +29,19 @@ never duplicated.
 
 ## Permission (this skill's matrix row) — SELF-CHECK WHICH MOVE YOU MAY MAKE
 
+> **3.0.0 note:** `design` now sits BEFORE `todo` (`backburner → approval →
+> design → design_ai_review → design_human_review → todo →
+> verify_assumptions → plan → dispatch → …` — see
+> [references/column-transitions.md](references/column-transitions.md) for
+> the ratified order). `todo` now asserts approved AND designed. The rows
+> below cover the mechanics this skill enforces today; the full matrix for
+> the 5 new columns lives in the reference.
+
 | TRDD column transition | who may trigger it |
 |---|---|
-| → `todo` (from backburner) | MANAGER |
-| `todo` → `design` | ORCHESTRATOR (delegates to ARCH) |
-| `design` → `dispatch` / split→`superseded` | ARCHITECT |
+| `backburner` → `approval` / `design` | MANAGER (per `min-approval-requirement:`) |
+| `design` → `design_ai_review` → `design_human_review` → `todo` | ORCHESTRATOR (delegates to ARCH) |
+| `todo` → `verify_assumptions` → `plan` → `dispatch` / split→`superseded` | ARCHITECT |
 | `dispatch` → `dev` (assign) | ORCHESTRATOR |
 | `dev` → `testing` | the assignee (MEMBER/INT/AUTO) — **after the pre-PR gate clears with ORCH** |
 | `testing` → `ai_review` / `dev` (fail) | the test runner (assignee triggers) |

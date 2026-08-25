@@ -76,12 +76,21 @@ Columns are **per-team configurable** — `status` must match a column id in tha
 kanban config, so read the team's real config before moving a card rather than assuming
 a vocabulary (`aimaestro-teams.sh kanban-config <team-id>`).
 
-The **ratified vocabulary is the 17 columns** — 14 lifecycle:
+The **ratified vocabulary is the 22 columns** (3-pillars 3.0.0, ratified 2026-08-23) —
+19 lifecycle:
 
-`backburner` → `todo` → `design` → `dispatch` → `dev` → `testing` → `ai_review` →
+`backburner` → `approval` → `design` → `design_ai_review` → `design_human_review` →
+`todo` → `verify_assumptions` → `plan` → `dispatch` → `dev` → `testing` → `ai_review` →
 `human_review` → `complete` → `publish` → `published` → `deploy` → `live` → `live_auditing`
 
-plus 3 orthogonal/terminal: `blocked`, `failed`, `superseded`.
+plus 3 orthogonal/terminal: `blocked`, `failed`, `superseded`. (The legal `column:` set is
+27 — 5 more bracket values, `proposal`/`planned`/`refused`/`completed`/`cancelled`, sit
+outside the board per the folder lifecycle; not task-board statuses.)
+
+`design` now sits BEFORE `todo`: `todo` asserts approved AND designed. `backburner` now
+means only *not yet approved*. Pre-3.0.0 cards that entered `todo`/`design`/`backburner`
+on or before 2026-08-23 are grandfathered under the old meaning — do not flag or
+auto-migrate them.
 
 The legacy five (`backlog`/`pending`/`in_progress`/`review`/`completed`) are **obsolete**
 and must not be taught as the target vocabulary — but a team whose config was never
@@ -105,7 +114,7 @@ not entitled to make fails with `403` rather than silently succeeding:
   `dev` (forward), `testing`, `ai_review`, `blocked`, `live_auditing`.
 
 **Caveat — teams on a custom column configuration.** The gate matches literal column strings,
-so this guarantee holds only for columns whose names match the ratified 17-column set; a
+so this guarantee holds only for columns whose names match the ratified 22-column set; a
 renamed governed column is not yet gated (tracked in TRDD-LY442MKH). A default-board team
 needs no qualifier.
 

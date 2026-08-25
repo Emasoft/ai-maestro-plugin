@@ -4,8 +4,9 @@ title: publish-globally — cross-project visibility for PROJECT-scope wikimem v
 column: blocked
 pre-block-column: planned
 blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52]
+review-after: 2026-09-15
 created: 2026-06-20T20:08:24+0200
-updated: 2026-08-21T16:39:01+0200
+updated: 2026-08-25T17:55:00+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -33,6 +34,12 @@ external-refs: []
 # publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-07
+
+> **2026-08-25 — PARKED with `review-after: 2026-09-15`.** Janitor session verified in
+> source: memgrep has the publish-globally FIELD normalization + symlink reconciliation
+> (write-path half, memory.rs) but NO publish-sync verb, no link/project resolver, no
+> symlink-aware recall — #111/#52 genuinely undone, horizon "weeks not days" behind the
+> TRDD-437UHNFS metadata-gate drain. Do not poll; re-verify both issues after the date.
 
 **BLOCKED, and CORE CANNOT UNBLOCK IT — the engine this card plans is no longer CORE's to
 build.** The ownership inversion is NOT a new finding: the 2026-08-02 block below already

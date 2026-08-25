@@ -28,27 +28,35 @@ if str(_HERE) not in sys.path:
 
 import prrd_lib as plib  # noqa: E402
 
-# Column ordering for visual layout
+# Column ordering for visual layout — 3-pillars 3.0.0 (2026-08-23): 19
+# lifecycle + 3 exception columns, plus the 5 pre/post-board bracket values.
 COLUMN_GROUPS = [
-    ("APPROVAL", ["proposal", "planned"]),
+    ("APPROVAL", ["proposal", "planned", "approval"]),
     ("ENTRY", ["backburner", "todo", "live_auditing"]),
-    ("DESIGN", ["design", "dispatch"]),
+    ("DESIGN", ["design", "design_ai_review", "design_human_review", "verify_assumptions", "plan", "dispatch"]),
     ("WORK", ["dev", "testing", "ai_review", "human_review"]),
     ("READY", ["complete"]),
     ("SHIP-tools", ["publish", "published"]),
     ("SHIP-services", ["deploy", "live"]),
     ("RED", ["blocked"]),
-    ("DEAD", ["failed", "refused", "cancelled", "superseded"]),
+    ("DEAD", ["failed", "refused", "cancelled", "superseded", "completed"]),
 ]
 
 ALL_COLUMNS = [c for _, cols in COLUMN_GROUPS for c in cols]
 
+# 3-pillars 3.0.0 (2026-08-23): open/in-flight columns, including the new
+# design_ai_review/design_human_review/verify_assumptions/plan/approval steps.
 WORKING_COLUMNS = {
     "proposal",
     "planned",
+    "approval",
     "backburner",
     "todo",
     "design",
+    "design_ai_review",
+    "design_human_review",
+    "verify_assumptions",
+    "plan",
     "dispatch",
     "dev",
     "testing",
