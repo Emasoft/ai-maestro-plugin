@@ -1,13 +1,12 @@
 ---
 trdd-id: 8ZVAPMSQ
 title: Pre-push hook contributor path — allow non-default-branch pushes without publish.py ancestry
-column: proposal
+column: complete
 created: 2026-07-16T11:43:11+0200
-updated: 2026-08-21T16:39:01+0200
-approval-tier: 2
+updated: 2026-08-25T14:08:05+0200
 current-owner: ai-maestro-plugin (core)
 task-type: infra
-min-approval-requirement: manager
+min-approval-requirement: user
 relevant-rules: [how-to-fix-issues-of-other-projects]
 parent-trdd:
 blocked-by: []
@@ -125,5 +124,24 @@ that can drift.
   failure mode being corrected, not a queue that was simply slow. NOT self-approved as Tier 0
   despite living entirely in this repo — it relaxes a security gate on a path every contributor
   is forced through.
+- 2026-08-25T14:08:05+0200 — **APPROVED (option a) by CORE under USER delegation** of
+  2026-08-25 ("complete all pending tasks and TRDDs … You can decide yourself without me …
+  never assume anything, verify first"). Verdict rendered on re-verified facts, not carried
+  ones: hook at HEAD still 213 lines, unscoped, sole decision `find_publish_ancestor` (l.195);
+  pin at `.githooks/pre-push.sha256` enforced by ci.yml/release.yml/publish.py/
+  test_pre_push_hook_integrity.py; `core.hooksPath=.githooks` active. Field note: retired
+  `approval-tier: 2` removed on this touch; `min-approval-requirement:` raised manager→user to
+  match this card's own 2026-08-21 escalation (USER ruling 2026-07-10 field rename).
+- 2026-08-25T14:08:05+0200 — **COMPLETED same session.** Contributor path landed exactly per
+  the contract table: refspecs read from stdin before the ancestry walk; ALLOW only when every
+  remote ref is a non-default `refs/heads/*`; default branch resolved dynamically
+  (`git symbolic-ref --short refs/remotes/origin/HEAD`, fallback `main`); tags/default/unknown/
+  empty-stdin fall through to ancestry (fail-closed); `[ -t 0 ]` guard so a tty invocation can
+  never block on the read. Derived tasks: (1) sha256 pin updated in the SAME commit;
+  (2) 4 verdict tests added to test_pre_push_gate.py — real hook, real stdin pipe, no mocks —
+  17/17 green with the pre-existing spoof suite; (3) docs = hook header block (CONTRIBUTING.md
+  does not exist in this repo — verified — so no file invented); (4) report-back: core#26 now
+  titles a fleet-status thread, so the landed release is announced there and on the hub channel
+  rather than assumed on-topic. Shipped via publish.py in the release following v3.1.32.
 
 ## Notes and lessons learned

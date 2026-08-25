@@ -246,3 +246,46 @@ def test_bare_push_no_publish_ancestor_denies(hook_repo: Path) -> None:
     # The only ancestors are pytest's interpreter and this bash; neither targets
     # THIS repo's publish.py, so the gate refuses.
     assert run_hook(["bash", str(hook)], hook_repo) == 1
+
+
+# ── Contributor path (TRDD-8ZVAPMSQ): verdicts decided from the pre-push
+# stdin refspecs, exercised with NO publish ancestor anywhere. Real hook,
+# real stdin, no mocks. Line format: `<lref> SP <lsha> SP <rref> SP <rsha>`.
+
+
+def _run_hook_stdin(hook_repo: Path, refspecs: str) -> int:
+    """Feed refspec lines to the real hook over a pipe; return its exit code."""
+    hook = hook_repo / ".githooks" / "pre-push"
+    proc = subprocess.run(
+        ["bash", str(hook)],
+        input=refspecs,
+        cwd=str(hook_repo),
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    return proc.returncode
+
+
+def test_feature_branch_push_allowed_without_ancestry(hook_repo: Path) -> None:
+    """All remote refs are non-default branches → exit 0, no publish needed."""
+    # hook_repo has no origin remote, so the hook's default-branch resolution
+    # falls back to `main`; `feature/x` is therefore a non-default branch.
+    assert _run_hook_stdin(hook_repo, "refs/heads/feature/x a1 refs/heads/feature/x b2\n") == 0
+
+
+def test_default_branch_push_still_requires_ancestry(hook_repo: Path) -> None:
+    """A remote ref hitting the default branch → the ancestry gate refuses."""
+    assert _run_hook_stdin(hook_repo, "refs/heads/main a1 refs/heads/main b2\n") == 1
+
+
+def test_tag_push_still_requires_ancestry(hook_repo: Path) -> None:
+    """A tag ref → the ancestry gate refuses (releases stay publish-only)."""
+    assert _run_hook_stdin(hook_repo, "refs/tags/v9.9.9 a1 refs/tags/v9.9.9 b2\n") == 1
+
+
+def test_mixed_feature_and_tag_push_refused(hook_repo: Path) -> None:
+    """One conforming ref does not launder a push that also moves a tag."""
+    lines = "refs/heads/feature/x a1 refs/heads/feature/x b2\nrefs/tags/v9.9.9 c3 refs/tags/v9.9.9 d4\n"
+    assert _run_hook_stdin(hook_repo, lines) == 1

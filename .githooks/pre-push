@@ -7,6 +7,13 @@
 # hook you edit it here AND update its sha256 pin in the same commit
 # (the pin is CI-verified — see TRDD-71a2239a, the immediate follow-up).
 #
+# CONTRIBUTOR PATH (TRDD-8ZVAPMSQ): a push whose remote refs are ALL
+# non-default branches (refs/heads/*, no tags, not the default branch) is
+# allowed WITHOUT publish.py ancestry — that is the fork -> feature branch
+# -> PR flow, which cannot move the default branch or ship a release.
+# Everything else (default branch, tags, unknown namespaces, empty stdin)
+# falls through to the ancestry requirement below — fail-closed.
+#
 # Walks the hook's ancestor process tree looking for a python invocation
 # of scripts/publish.py. If found, the push is allowed. Otherwise refused.
 # This is intentionally NOT gated by an environment variable — env vars
@@ -191,6 +198,38 @@ find_publish_ancestor() {
     done
     return 1
 }
+
+# ── Contributor path (TRDD-8ZVAPMSQ): decide from the refspecs BEFORE the
+# ancestry walk. git feeds one line per ref on stdin:
+#   <local ref> SP <local sha> SP <remote ref> SP <remote sha>
+# ALLOW without ancestry ONLY when every remote ref is a non-default branch
+# (create/update/delete of a feature branch). The default branch is resolved
+# dynamically — never hardcoded to a name that can drift. Any tag, default-
+# branch ref, unknown namespace, or EMPTY stdin falls through to the ancestry
+# requirement: fail-closed, so a parsing surprise can only make the hook
+# stricter, never looser.
+DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+[ -n "${DEFAULT_BRANCH}" ] || DEFAULT_BRANCH=main
+
+saw_ref=0
+only_feature_branches=1
+# Only read stdin when it is NOT a tty: git always feeds the refspecs through a
+# pipe, so a tty here means a human or a test invoked the hook directly — reading
+# would block forever. Skipping the read leaves saw_ref=0, which falls through to
+# the ancestry requirement (stricter, never looser).
+[ -t 0 ] || while IFS=' ' read -r _lref _lsha remote_ref _rsha; do
+    [ -n "${remote_ref}" ] || continue
+    saw_ref=1
+    case "${remote_ref}" in
+        "refs/heads/${DEFAULT_BRANCH}") only_feature_branches=0 ;;
+        refs/heads/*) : ;;
+        *) only_feature_branches=0 ;;   # tags, notes, anything unknown
+    esac
+done
+
+if [ "${saw_ref}" = "1" ] && [ "${only_feature_branches}" = "1" ]; then
+    exit 0
+fi
 
 if ! find_publish_ancestor "$$"; then
     printf '\n' >&2
