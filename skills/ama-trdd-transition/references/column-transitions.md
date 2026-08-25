@@ -117,8 +117,11 @@ principle applied to the completed-state. Full definition:
   earlier column. Terminals are absorptive. New work = new TRDD.
 - **Cannot** skip the design column for non-trivial TRDDs. If you find
   yourself wanting to move `todo → dispatch` without ARCH involvement,
-  the TRDD is either trivial (use TaskCreate, not a TRDD) OR you're
-  cutting corners.
+  the TRDD is either trivial (just do it in-session — no card) OR
+  you're cutting corners. Do **not** reach for `TaskCreate` here: Claude
+  Code 2.1.233 removed the todo/task tools on Opus 4.8, Sonnet 5,
+  Fable 5, Mythos 5 and newer, so on every model this plugin targets
+  that call does not exist.
 
 ## EHT gate for `complete`
 

@@ -57,8 +57,12 @@ unavoidable.
 The enforcement is **inbound-only by design**. A `permissions.deny: ["SendMessage"]`
 entry is FORBIDDEN — it breaks subagent handling, so the invariant actively REMOVES it
 from every agent workdir. Do not add one, and do not read the inbound refusal as
-licence to send natively: R6 and R42 still bind you as the SENDER, and a send that now
-lands nowhere is worse than one that is refused loudly. Sub-agent `SendMessage` stays
+licence to send natively: R6 and R42 still bind you as the SENDER. Since **2.1.238** that
+refusal is no longer silent — the platform reports `refused` back to the sender instead of
+a false success, so such a send now fails loudly rather than landing nowhere. Read that
+word narrowly. The refusal is **blanket, not edge-aware**: it fires identically for a
+route R6 permits and one it forbids, so it tells you the door was shut, never that you
+were the one who should not have knocked. Only AMP can tell you that. Sub-agent `SendMessage` stays
 permitted throughout. A human's own session is not an agent workdir and is unaffected.
 (The SERVER's internal `SendMessage` AIO pipeline is the AMP implementation itself —
 same name, opposite role; it is not what is restricted.)

@@ -94,8 +94,30 @@ _TERMINAL_BUILTINS = frozenset(
     {"help", "feedback", "clear", "compact", "config", "model", "status", "resume", "login", "logout", "doctor"}
 )
 
-# Every hook event Claude Code dispatches, taken from the 2.1.222 binary's own event enum
-# rather than from docs -- docs lag, and this list decides whether a hook ever runs.
+# Every hook event Claude Code dispatches, taken from the binary's own event enum rather
+# than from docs -- docs lag, and this list decides whether a hook ever runs. First derived
+# from 2.1.222.
+#
+# Re-checked against 2.1.240, and the METHOD matters more than the result. The documented
+# `strings … | grep -A34 -x 'PreToolUse'` recipe is an ADJACENCY read, not an enum read: the
+# 2.1.240 table holds 31 bare `PreToolUse` strings, so that recipe emits 31 blocks and the
+# eye takes the first. It matched these 29 exactly -- but "the first block matched" would
+# also be true if a new event had been interned somewhere else in the table. Corroboration,
+# never proof.
+#
+# The complement narrows it but does NOT close it, and the honest numbers are the point.
+# On 2.1.240: 16,542 CamelCase strings in the table; subtract the 29 pinned; 192 of the
+# remainder still match an event-ish shape. Reading those 192, none is a hook event -- they
+# are MCP/JSON schema identifiers (`ElicitRequestSchema`, `NotificationParamsSchema`), DOM
+# events (`DOMContentLoaded`), and UI class names (`AgentPromptDisplay`). So "no event was
+# added" is SUPPORTED BY INSPECTION, not proven by a mechanical diff. Do not upgrade that
+# to "verified" in a later refresh without a better method.
+#
+# What bounds the risk is the blast radius, not the evidence: this set is used ONLY to
+# reject an event as unknown. A real event missing from it costs nothing until this plugin
+# registers that event, and then it fails loudly in this test rather than silently at
+# runtime -- which is the safe direction. Run BOTH scans when refreshing; the adjacency
+# block alone has been mistaken for the enum once already.
 # Refresh when a release adds events (the block is contiguous, starting at PreToolUse):
 #   strings -a "$(readlink "$(command -v claude)")" | grep -A18 -x 'PreToolUse'
 _KNOWN_HOOK_EVENTS = frozenset(

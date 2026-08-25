@@ -1,14 +1,15 @@
 ---
 name: architecture
-description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live / are the dependencies safe / dependabot reports no alerts"
+description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live / are the dependencies safe / dependabot reports no alerts / why did a native cross-session send report refused and is the transport enforcing R6 now"
 ocd: 2026-06-16
-lmd: 2026-07-25
+lmd: 2026-08-22
 metadata:
   node_type: memory
   type: project
   tier: hub
   functionality: architecture
   globs: ["skills/**", "commands/**", "scripts/**", "rules/**", ".claude-plugin/**"]
+publish-globally: false
 ---
 ai-maestro-plugin is the umbrella core plugin of the AI Maestro ecosystem — the
 shared skills, AMP inter-agent messaging, AID Ed25519 identity, governance, and
@@ -416,7 +417,7 @@ Fixed in CORE v3.1.9 across `agent-messaging` (SKILL + detailed-guide) and `team
 The rule-text half is NOT fixed and is not CORE's: R42.3 ("messaging is the ONLY channel")
 is false as written, and R42 is `CRITICAL — IRON, USER-set` ⇒ Tier 3. Tracked as A1 of
 `TRDD-OH3N6OXJ`, open with the USER. The clean split: plugin text is each plugin's to fix
-today; rule text is ONE user request, not seven reinterpretations. [^5]
+today; rule text is ONE user request, not seven reinterpretations. [^5] [^6]
 
 ## Notes and lessons learned
 [^1]: [id:ATOM-ARCH-0001, status:valid, keywords:"install-governance-rules install a governance rule ~/.claude/rules SessionStart hook re-add rules directory", ocd:2026-07-23, lmd:2026-07-23]
@@ -457,3 +458,4 @@ today; rule text is ONE user request, not seven reinterpretations. [^5]
   `api.osv.dev/v1/querybatch`) and treat the alert count as covering only Actions and Python.
 [^4]: [id:ATOM-IW75-RF2M, status:valid, desc:"writerVersion must come from __dirname, never $CLAUDE_PLUGIN_ROOT — a wrong stamp is worse than none (#60, 2026-08-06)", keywords:"plugin_version_stamp_on_chat-state writerVersion_field CLAUDE_PLUGIN_ROOT_wrong_plugin_version how_does_the_hook_know_its_own_version is_the_version_stamp_redundant stale_producer_detection", ocd:2026-08-06, lmd:2026-08-06] DO NOT resolve the plugin version (or any plugin-root path) inside `scripts/ai-maestro-hook.cjs` from `$CLAUDE_PLUGIN_ROOT`, and DO NOT drop the `writerVersion` stamp as redundant. BECAUSE that env var names whichever plugin's context spawned the hook process, not this plugin, so it can stamp ANOTHER plugin's version onto our state record — and a wrong stamp is worse than none, since `writerVersion` is the one field a fleet consumer trusts to decide the producer is current (it is what lets the server distinguish 'no question pending' from 'this agent still runs the #59 clobber bug', which demand opposite actions). DO resolve from `__dirname`, whose value is the file's own location and cannot be wrong; the regression test passes with `CLAUDE_PLUGIN_ROOT` deliberately pointed elsewhere, so keep it that way.
 [^5]: [id:ATOM-E7FC-E5XZ, status:valid, desc:"corrects this atom's pre-2026-08-14 body, which read 'between live Claude Code sessions on one machine that never reaches the ai-maestro server'", keywords:"native_transport_is_local no_server_in_the_path same_machine_claim cross-machine_send_is_still_unpoliced the_stated_reason_went_false_but_the_conclusion_held scoping_argument_built_on_the_wrong_premise", ocd:2026-08-14, lmd:2026-08-14] DO NOT justify "a native send returns no 403" by calling the transport LOCAL, or by saying it "never reaches the server" unqualified — this atom's own body did, reading "between live Claude Code sessions on one machine", and three CORE skills taught the same until 2026-08-14. BECAUSE the reach was never one machine (2.1.224 any of your machines, 2.1.225 Remote Control by name, 2.1.229 cloud sessions), so a cross-machine send plainly traverses infrastructure; a reader who catches that false premise can discard the TRUE conclusion along with it and route around the comm graph believing the doc is merely stale. A right conclusion resting on a checkable-false reason is more dangerous than a visibly wrong one. DO name WHICH server is absent — the ai-maestro one, the only one holding the communication graph — so the argument survives every future change in reach.
+[^6]: [id: ATOM-U8NM-8NOS, status: valid, desc: "Claude Code 2.1.238 made a crossSessionInbound refusal visible to the sender; that is not the comm graph arriving on the native path", keywords: "sendmessage_returned_refused native_send_reported_refused is_the_native_transport_enforcing_R6_now crossSessionInbound_refuse_reports_to_sender 2.1.238_refusal_is_not_silent did_my_forbidden_send_get_blocked blanket_refusal_not_edge_aware silent_success_replaced_by_refused", ocd: 2026-08-22, lmd: 2026-08-22] DO NOT read a native cross-session `refused` as the communication graph enforcing R6, BECAUSE the refusal Claude Code 2.1.238 added is blanket — the `crossSessionInbound: "refuse"` that R42.9 writes into every agent workdir fires identically for a route R6 permits and one it forbids, so it reports a shut door and never a violated edge. DO keep every 403/R6 conclusion on the AMP path, and treat the native refusal only as evidence that the message did not land.
