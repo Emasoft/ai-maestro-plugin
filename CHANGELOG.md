@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.33] — 2026-08-25
+
+### Features
+
+- Contributor path in pre-push gate (TRDD-8ZVAPMSQ)
 ## [3.1.32] — 2026-08-25
 
 ### Bug Fixes
