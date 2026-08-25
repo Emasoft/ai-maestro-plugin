@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.0] — 2026-08-25
+
+### Bug Fixes
+
+- Tighten ama-trdd-transition description under the 200-token CPV cap
+
+### Documentation
+
+- Add TRDD-Z6QFP8MM — re-sync governance mirror after upstream restructure
+
+### Features
+
+- Kanban 17->22 migration + mirror re-sync to 5.5.0
 ## [3.1.33] — 2026-08-25
 
 ### Features
