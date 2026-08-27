@@ -9,6 +9,7 @@ metadata:
   tier: component
   functionality: governance
   globs: ["skills/ama-trdd-*/**", "skills/ama-proposal-approvals/**"]
+publish-globally: false
 ---
 
 # TRDD ids and the approval vocabulary — two ratified models CORE taught wrongly
