@@ -105,21 +105,40 @@ _TERMINAL_BUILTINS = frozenset(
 # also be true if a new event had been interned somewhere else in the table. Corroboration,
 # never proof.
 #
+# 2.1.247 BROKE THAT RECIPE, and the breakage is the reason to read this note before
+# refreshing. 2.1.243 zstd-compressed the binary and made code load on demand, so the enum
+# is no longer a contiguous plaintext run: the 2.1.247 table holds ONE bare `PreToolUse`
+# (not 31), and the 20 strings following it are `hookSpecificOutput`, HTTP error text and
+# unrelated messages -- NOT the event list. An adjacency read now yields a confident,
+# WRONG answer instead of an ambiguous one, which is worse. Verify by MEMBERSHIP instead:
+# grep -x each pinned name. On 2.1.247, 28 of the 29 are present verbatim; only `Stop` is
+# absent as a standalone line (a short token that interns differently), so absence there is
+# not evidence an event was removed.
+#
 # The complement narrows it but does NOT close it, and the honest numbers are the point.
 # On 2.1.240: 16,542 CamelCase strings in the table; subtract the 29 pinned; 192 of the
 # remainder still match an event-ish shape. Reading those 192, none is a hook event -- they
 # are MCP/JSON schema identifiers (`ElicitRequestSchema`, `NotificationParamsSchema`), DOM
-# events (`DOMContentLoaded`), and UI class names (`AgentPromptDisplay`). So "no event was
-# added" is SUPPORTED BY INSPECTION, not proven by a mechanical diff. Do not upgrade that
-# to "verified" in a later refresh without a better method.
+# events (`DOMContentLoaded`), and UI class names (`AgentPromptDisplay`).
+# Re-run on 2.1.247: 22,875 unique CamelCase strings, 175 event-shaped after removing the
+# pinned 29, and again none is a hook event -- GC internals (`BeforeGC`, `AfterMarking`),
+# MCP schema ids (`ToolListChangedNotificationSchema`), Azure credential classes
+# (`UsernamePasswordCredential`), CSS media features (`PrefersReducedMotion`). So "no event
+# was added" is SUPPORTED BY INSPECTION, not proven by a mechanical diff. Do not upgrade
+# that to "verified" in a later refresh without a better method.
 #
 # What bounds the risk is the blast radius, not the evidence: this set is used ONLY to
 # reject an event as unknown. A real event missing from it costs nothing until this plugin
 # registers that event, and then it fails loudly in this test rather than silently at
 # runtime -- which is the safe direction. Run BOTH scans when refreshing; the adjacency
 # block alone has been mistaken for the enum once already.
-# Refresh when a release adds events (the block is contiguous, starting at PreToolUse):
-#   strings -a "$(readlink "$(command -v claude)")" | grep -A18 -x 'PreToolUse'
+# Refresh when a release adds events. The block is NO LONGER contiguous (see 2.1.247
+# above), so scan 1 is a membership check, not an adjacency read:
+#   BIN="$(readlink "$(command -v claude)")"; strings -a "$BIN" > /tmp/cc-strings.txt
+#   # 1. membership: every pinned name still present?
+#   while read -r e; do grep -qx "$e" /tmp/cc-strings.txt || echo "ABSENT: $e"; done < pinned
+#   # 2. complement: event-shaped strings that are NOT pinned, read them all
+#   grep -xE '[A-Z][a-zA-Z]{3,40}' /tmp/cc-strings.txt | sort -u | grep -vxFf pinned
 _KNOWN_HOOK_EVENTS = frozenset(
     {
         "PreToolUse", "PostToolUse", "PostToolUseFailure", "PostToolBatch", "PermissionDenied",
