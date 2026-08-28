@@ -39,6 +39,15 @@ PreToolUse hooks can return JSON to control tool execution:
 
 If no JSON returned, the default permission model applies.
 
+**Since 2.1.248, MALFORMED JSON is no longer the same as no JSON.** A hook whose stdout
+starts a `{…}` object that does not parse used to be accepted silently as plain text — so a
+trailing comma or an unquoted key made a `deny` hook look like it had returned nothing, and
+the tool ran. It is now reported as a hook ERROR carrying the parse message. A hook you
+believed was gating something may start failing loudly on this upgrade; that is the bug
+surfacing, not a new one. In a BACKGROUND session an invalid `PermissionRequest`/`PreToolUse`
+answer no longer just hangs either — the `claude agents` row names the hook and the schema
+error.
+
 ---
 
 ## Testing Hooks Manually

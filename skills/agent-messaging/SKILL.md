@@ -60,10 +60,22 @@ from every agent workdir. Do not add one, and do not read the inbound refusal as
 licence to send natively: R6 and R42 still bind you as the SENDER. Since **2.1.238** that
 refusal is no longer silent — the platform reports `refused` back to the sender instead of
 a false success, so such a send now fails loudly rather than landing nowhere. Read that
-word narrowly. The refusal is **blanket, not edge-aware**: it fires identically for a
+word narrowly.
+
+**Since 2.1.248 a MALFORMED `crossSessionInbound` value is no longer ignored either, and
+it fails differently by scope**: written in user settings it WARNS and HOLDS inbound
+messages until fixed; written in managed settings it REFUSES them. This matters here
+because the invariant WRITES that value on every create/wake/sweep — so a typo in the
+writer no longer degrades to "setting absent, inbox open" (a silent hole in the lockdown)
+but to held or refused mail (a loud one). If harness agents stop receiving AMP-adjacent
+native traffic after an invariant change, check the written value before suspecting the
+transport. The refusal is **blanket, not edge-aware**: it fires identically for a
 route R6 permits and one it forbids, so it tells you the door was shut, never that you
 were the one who should not have knocked. Only AMP can tell you that. Sub-agent `SendMessage` stays
-permitted throughout. A human's own session is not an agent workdir and is unaffected.
+permitted throughout — but since **2.1.248** the result says plainly where a reply lands:
+**the PARENT session's conversation, not the subagent's**. A subagent that sends natively
+and then waits for an answer waits forever; the answer arrives in the transcript above it.
+Use AMP when the sender itself must receive the reply. A human's own session is not an agent workdir and is unaffected.
 (The SERVER's internal `SendMessage` AIO pipeline is the AMP implementation itself —
 same name, opposite role; it is not what is restricted.)
 
