@@ -307,7 +307,7 @@ AMP enforces a directed communication graph based on governance titles. Each nod
 
 Read "never reaches the ai-maestro server" literally: it is the **ai-maestro** server that is absent from the path, not all infrastructure. The transport reaches sessions on any of your machines (2.1.224), Remote Control sessions by name (2.1.225) and cloud sessions (2.1.229), so a cross-machine send plainly traverses something — just nothing that holds the communication graph. The conclusion rests on *which* server is missing, not on the message staying local.
 
-### Why this note exists — the ai-maestro#131 screen
+### Why this note exists
 
 The scoping note above is stated rather than assumed because a screen on `ai-maestro#131` found **7 of 7** role-plugin personas asserting server enforcement without scoping it to AMP. CORE's own skills were in that state until the note was written.
 

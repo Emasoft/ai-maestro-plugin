@@ -78,7 +78,7 @@ it a message" and a tool literally named `SendMessage` sits in the toolbelt. The
 verb here is `amp-send.sh`. Why the mistake is this common (2.1.232 removed the last
 accidental speed bump) and the `ai-maestro#131` screen that measured it — **7 of 7**
 personas asserted server enforcement without scoping it, CORE's own skills included — are
-in the [reference](reference/detailed-guide.md#why-this-note-exists--the-ai-maestro131-screen).
+in the [reference](reference/detailed-guide.md#why-this-note-exists).
 
 **Think in terms of the RECIPIENT, not the transport.** A route you may not take over
 AMP you may not take over native `SendMessage` either. The graph binds you; the
@@ -99,7 +99,7 @@ same thing about itself grants nothing.
 
 CORE lived this case on 2026-08-08 and recorded the arriving ruling as **REPORTED, not
 ratified** — see the
-[reference](reference/detailed-guide.md#why-this-note-exists--the-ai-maestro131-screen).
+[reference](reference/detailed-guide.md#why-this-note-exists).
 
 ## Verifying an inbound mandate — THE sender-authority check (ai-maestro#124)
 
