@@ -12,6 +12,7 @@ metadata:
 publish-globally: false
 split-lineage: cc9840b5939c4effac960eb58cab1b1e
 ---
+^GZEM1EU9 [desc:"ai-maestro-plugin is the umbrella core plugin of the AI Maestro ecosystem: shared skills, AMP messaging, AID identity, governance, PRRD/TRDD/Kanban, and it hosts the memgrep recall engine", keywords: what_is_ai-maestro-plugin ai-maestro-plugin_overview what_does_the_core_plugin_do umbrella_plugin_ecosystem where_does_AMP_messaging_live where_does_AID_identity_live where_is_memgrep_hosted what_hosts_the_recall_engine PRRD_TRDD_Kanban_home core_plugin_scope]
 ai-maestro-plugin is the umbrella core plugin of the AI Maestro ecosystem — the
 shared skills, AMP inter-agent messaging, AID Ed25519 identity, governance, and
 the universal PRRD/TRDD/Kanban workflow every role plugin inherits. It also
@@ -19,6 +20,7 @@ hosts the `memgrep` markdown-recall engine (Rust crate + prebuilt release-asset
 binaries) consumed by the other ecosystem plugins.
 
 ## Parts map
+^4ZM0NELC [desc:"skills/ ships 28 skills: AMP/AID/agent-mgmt/MCP-discovery/planning/network-security/memory-search, plus ama-* frozen-CLI wrappers each needing an allowed-tools Bash entry", keywords: how_many_skills_does_core_ship skills_directory_contents ama-_skill_wrappers frozen_CLI_wrapper_pattern allowed-tools_missing_looks_like_tool_missing permission_blocked_skill ama-session_ama-panel_ama-continuity wiki-memory_recall_skill memory-search_skill_location]
 - **Skills** (`skills/`, 28) — AMP messaging, AID identity, agent management,
   MCP discovery, planning, network security, wiki-memory recall
   (`memory-search`), the `ama-*` PRRD/TRDD/Kanban governance skills, and the
@@ -28,8 +30,10 @@ binaries) consumed by the other ecosystem plugins.
   `ama-statusline`), each declaring `allowed-tools: Bash(<script>:*)` — a skill
   that names a script without that entry is permission-blocked in a way that
   reads as "the tool is missing", so the allowed-tools line is not boilerplate.
+^B9AJI64E [desc:"commands/ ships 14 slash commands: 12 amp-* commands plus /memory-search and /team-governance (added 2026-08-02)", keywords: how_many_commands_does_core_ship commands_directory_contents amp-_slash_commands_list memory-search_command team-governance_command_added_date slash_command_count]
 - **Commands** (`commands/`) — 14: the 12 `/amp-*` AMP slash commands plus
   `/memory-search` and `/team-governance` (added 2026-08-02, D2).
+^IGGD5U2I [desc:"scripts/ hosts AMP/AID shell scripts, the PRRD/TRDD/Kanban python pillar, and publish.py; CORE ships no memgrep crate or installer since ownership moved to ai-maestro-janitor", keywords: where_do_amp_aid_scripts_live does_core_ship_memgrep_crate memgrep_ownership_ai-maestro-janitor why_was_cargo_removed_from_core test_core_does_not_ship_a_rival_memgrep publish.py_location prrd_trdd_kanban_python_scripts]
 - **Scripts** (`scripts/`) — AMP/AID shell scripts installed to PATH, the
   PRRD/TRDD/Kanban Python pillar scripts, and `publish.py` (release pipeline).
   **No memgrep crate and no installer**: ownership was ruled to the
@@ -38,6 +42,7 @@ binaries) consumed by the other ecosystem plugins.
   memgrep, it does not ship it. The guardrail is executable, not prose:
   `tests/test_memory_protocol_components.py::test_core_does_not_ship_a_rival_memgrep`
   fails if the crate, the installer, or the release job returns.
+^UJT2B0PU [desc:"CORE ships zero governance rules; IND universal bases come from the janitor's rules dir, DEP overlays from ai-maestro per workdir, guaranteed by a plugin.json dependency with no version pin", keywords: does_core_ship_governance_rules where_do_trdd-design-tasks_prrd-design-rules_universal-kanban_live ai-maestro-janitor_dependency_guarantee install-governance-rules_removed core-35_core-33_retired plugin_dependencies_field_no_version_pin unconstrained_dependency_is_safer]
 - **Rules** — CORE ships **zero** governance rules (retired core#35/#33, 2026-07-23).
   Per the 3-pillars SPEC ownership split: the IND universal bases
   (`trdd-design-tasks`, `prrd-design-rules`, `universal-kanban`) are shipped
@@ -56,6 +61,7 @@ binaries) consumed by the other ecosystem plugins.
   [[publish-and-validation-gate]]). Unconstrained is also the *safer* shape: a version-constrained
   dependency that cannot resolve **disables** the depending plugin rather than
   degrading, so a pin is a liability unless something actually needs it.
+^MP7FE8YO [desc:"scripts/publish.py is the canonical CPV release pipeline; the validator pin and gate failure modes live on publish-and-validation-gate; local --gate adds a jscpd copy-paste gate G3b; the type gate is mypy, not pyright", keywords: what_runs_the_release_pipeline publish.py_canonical_gate jscpd_copy_paste_gate_G3b mypy_type_gate_not_pyright where_is_cpv_validator_version_pinned scripts_publish.py_gates]
 - **Publish / CI pipeline** — `scripts/publish.py` is the canonical CPV release
   pipeline. **The validator pin and this gate's failure modes live on
   [[publish-and-validation-gate]]** — do not restate the version here; it has already
@@ -65,12 +71,14 @@ binaries) consumed by the other ecosystem plugins.
   version/lint/validate gates. The **type gate is mypy**
   (`mypy scripts/ --ignore-missing-imports`, in `release.yml` + publish.py G2),
   **not Pyright**.[^2]
+^ZYEFT734 [desc:"dependabot.yml (added 2026-07-25) covers github-actions and uv only; the cargo entry was removed with the crate so Rust dependencies are unscanned despite zero alerts looking clean", keywords: does_dependabot_scan_cargo_dependencies dependabot.yml_ecosystems_covered is_memgrep_rust_crate_scanned_for_vulnerabilities zero_dependabot_alerts_does_not_mean_safe rust_blindness_lesson_now_janitors cargo_entry_removed_2026-08-02]
 - **Dependency scanning** — `.github/dependabot.yml` (added 2026-07-25, `886778d`)
   covers **github-actions** and **uv**. The **cargo** entry was REMOVED 2026-08-02
   with the crate: an ecosystem pointing at a deleted directory scans nothing while
   still looking like Rust coverage. The Rust-blindness lesson below is now the
   **janitor's** to own, and it transfers wholesale — that crate is what ships as
   prebuilt binaries ecosystem-wide.[^3]
+^YMCTTVLA [desc:"this plugin uses the janitor's global wiki-memory system for recall/write/update; see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md", keywords: how_does_memory_work_in_ai-maestro-plugin wiki-memory_system_janitor recall_write_update_memory_contract where_is_the_proactive_memory_contract_documented does_core_have_its_own_memory_system]
 - **Memory** — this plugin USES the janitor's global wiki-memory system (recall /
   write / update); see the PROACTIVE MEMORY CONTRACT in the repo CLAUDE.md.
 
