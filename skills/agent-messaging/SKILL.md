@@ -33,11 +33,11 @@ sent over **AMP**. Claude Code has a second, native transport: `SendMessage` /
 ai-maestro server**. There is no request for `validateMessageRoute()` to inspect, so a
 forbidden edge over that path returns no 403 — nothing on it can.
 
-**Its reach is not one machine.** Sessions on **any of your machines** (2.1.224),
-Remote Control sessions **on other machines by name** (2.1.225), and **cloud** sessions
-(labelled as such by `ListAgents` since 2.1.229) are all addressable. Do not read
-"native" as "local": what makes the 403 impossible here is that the **ai-maestro**
-server is not in the path, not that the message stays on this box.
+**Its reach is not one machine** — other machines of yours, Remote Control sessions by
+name, and cloud sessions are all addressable
+([reference](reference/detailed-guide.md#communication-graph-title-based-directed-graph-r6-v3-2026-05-04)).
+Do not read "native" as "local": the 403 is impossible here because the **ai-maestro**
+server is not in the path, not because the message stays on this box.
 
 **So a 403 you never received is not permission.** R6 and R42 bind the agent on both
 transports; only one of them can tell you when you broke them. Prefer AMP for
@@ -58,38 +58,28 @@ The enforcement is **inbound-only by design**. A `permissions.deny: ["SendMessag
 entry is FORBIDDEN — it breaks subagent handling, so the invariant actively REMOVES it
 from every agent workdir. Do not add one, and do not read the inbound refusal as
 licence to send natively: R6 and R42 still bind you as the SENDER. Since **2.1.238** that
-refusal is no longer silent — the platform reports `refused` back to the sender instead of
-a false success, so such a send now fails loudly rather than landing nowhere. Read that
-word narrowly.
+refusal is no longer silent — the platform reports `refused` to the sender instead of a
+false success.
 
-**Since 2.1.248 a MALFORMED `crossSessionInbound` value is no longer ignored either, and
-it fails differently by scope**: written in user settings it WARNS and HOLDS inbound
-messages until fixed; written in managed settings it REFUSES them. This matters here
-because the invariant WRITES that value on every create/wake/sweep — so a typo in the
-writer no longer degrades to "setting absent, inbox open" (a silent hole in the lockdown)
-but to held or refused mail (a loud one). If harness agents stop receiving AMP-adjacent
-native traffic after an invariant change, check the written value before suspecting the
-transport. The refusal is **blanket, not edge-aware**: it fires identically for a
-route R6 permits and one it forbids, so it tells you the door was shut, never that you
-were the one who should not have knocked. Only AMP can tell you that. Sub-agent `SendMessage` stays
-permitted throughout — but since **2.1.248** the result says plainly where a reply lands:
-**the PARENT session's conversation, not the subagent's**. A subagent that sends natively
-and then waits for an answer waits forever; the answer arrives in the transcript above it.
-Use AMP when the sender itself must receive the reply. A human's own session is not an agent workdir and is unaffected.
-(The SERVER's internal `SendMessage` AIO pipeline is the AMP implementation itself —
-same name, opposite role; it is not what is restricted.)
+**Since 2.1.248 a MALFORMED `crossSessionInbound` value fails loudly too, and
+asymmetrically by scope**: WARN-and-HOLD in user settings, REFUSE in managed. Since the
+invariant WRITES that value on every create/wake/sweep, a typo in the writer no longer
+degrades to an open inbox — so if harness agents stop receiving native traffic after an
+invariant change, check the written value before suspecting the transport. The refusal is
+**blanket, not edge-aware**: it says the door was shut, never that you were the one who
+should not have knocked. Only AMP can tell you that. Sub-agent `SendMessage` stays
+permitted — but since **2.1.248** a subagent's reply lands in **the PARENT session's
+conversation, not the subagent's**, so a subagent that sends and waits, waits forever. Use
+AMP when the sender itself must receive the reply. A human's own session is not an agent
+workdir and is unaffected. (The SERVER's internal `SendMessage` AIO pipeline is the AMP
+implementation — same name, opposite role; not what is restricted.)
 
-This is easy to miss precisely because it reads as the obvious thing to do: guidance
-across this fleet says "send it a message", and a tool literally named `SendMessage`
-sits in the toolbelt. **2.1.232 removed the last accidental speed bump**: a bare name
-that matches one live session now delivers outright, where the tool used to stop and
-make you confirm a ref. Nothing about that confirm step was a governance control — but
-it was the moment at which an unconsidered send became a considered one, and it is
-gone. The correct verb here is `amp-send.sh`. Screened on
-`ai-maestro#131`: **7 of 7** role-plugin personas asserted server enforcement without
-scoping it — CORE's own skills were in the same state until this note, which is why it
-is stated here rather than assumed understood. (That screen's numbers, and the one row
-it got wrong, are in the [reference](reference/detailed-guide.md#why-this-note-exists--the-ai-maestro131-screen).)
+This is easy to miss because it reads as the obvious thing to do — the fleet says "send
+it a message" and a tool literally named `SendMessage` sits in the toolbelt. The correct
+verb here is `amp-send.sh`. Why the mistake is this common (2.1.232 removed the last
+accidental speed bump) and the `ai-maestro#131` screen that measured it — **7 of 7**
+personas asserted server enforcement without scoping it, CORE's own skills included — are
+in the [reference](reference/detailed-guide.md#why-this-note-exists--the-ai-maestro131-screen).
 
 **Think in terms of the RECIPIENT, not the transport.** A route you may not take over
 AMP you may not take over native `SendMessage` either. The graph binds you; the
