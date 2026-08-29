@@ -139,7 +139,7 @@ because the setting guarantees the backlog lands on whoever next edits the file.
 copy-paste and shell are CI's job, so a clean local publish says nothing about them. [^3]
 
 
-^ATOM-QHY3-BTGA [desc:"the governance mirror's rule tables DESCRIBE forbidden attacks; skillaudit flags them, and the .cpv-audit-consent.json registry is what lets them ride as visible consented WARNINGs — regenerate it on ANY mirror edit", keywords: publish_blocked_on_NIT_skillaudit governance_mirror_trips_the_security_scanner threat_description_prose_flagged_as_attack A2A_rules_flagged_in_references_file cpv_audit_consent_registry mirror_edit_reblocks_publish, ocd: 2026-08-05, lmd: 2026-08-06]
+^ATOM-QHY3-BTGA [desc:"the governance mirror rule tables DESCRIBE forbidden attacks; skillaudit flags them, and .cpv-audit-consent.json lets them ride as consented WARNINGs — regenerate on ANY mirror edit", keywords: publish_blocked_on_NIT_skillaudit governance_mirror_trips_the_security_scanner threat_description_prose_flagged_as_attack A2A_rules_flagged_in_references_file cpv_audit_consent_registry mirror_edit_reblocks_publish, ocd: 2026-08-05, lmd: 2026-08-06]
 
 The governance mirror's rule TABLE ROWS (R22.4/R42.1/R42.7 — prose FORBIDDING attacks)
 trip skillaudit's A2A_* patterns by design-collision: security documentation describes what
@@ -216,6 +216,12 @@ the wait would pass instantly: green precisely when not working.
 
 **Scope limit worth knowing:** the wait lives in `publish.py`'s runner, so a plain shell
 `git commit` by the agent does NOT get it, and has hit the same lock since.
+
+## See also
+- [[governance-mirror-sync]] — cites this page's CLI-contract-strictness rationale when
+  explaining why the mirror-sync test fires on `main` advancing.
+- [[test-guard-methodology]] — cites this page's validator-pin/failure-mode detail from
+  its own test-guard atoms (the mirror-stamp arity guard and the skill/CLI test layers).
 
 ## Notes and lessons learned
 
