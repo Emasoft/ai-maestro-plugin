@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.2] — 2026-08-29
+
+### Documentation
+
+- Record the governance-mirror branch trap and the SKILL.md token cap
+- Qualify R42.9's inbound lockdown with the --restricted carve-out
+- Make the reference anchor unguessable-by-construction
 ## [3.2.1] — 2026-08-29
 
 ### Documentation
