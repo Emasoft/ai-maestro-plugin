@@ -307,6 +307,14 @@ AMP enforces a directed communication graph based on governance titles. Each nod
 
 Read "never reaches the ai-maestro server" literally: it is the **ai-maestro** server that is absent from the path, not all infrastructure. The transport reaches sessions on any of your machines (2.1.224), Remote Control sessions by name (2.1.225) and cloud sessions (2.1.229), so a cross-machine send plainly traverses something — just nothing that holds the communication graph. The conclusion rests on *which* server is missing, not on the message staying local.
 
+### Why this note exists — the ai-maestro#131 screen
+
+The scoping note above is stated rather than assumed because a screen on `ai-maestro#131` found **7 of 7** role-plugin personas asserting server enforcement without scoping it to AMP. CORE's own skills were in that state until the note was written.
+
+That screen's companion figure — "0 of 7 named the transport" — is known to be off by at least one row: the ARCHITECT plugin reported that its pre-edit persona DID name `SendMessage`/`ListAgents` and still made the unscoped enforcement claim. The finding survives its own evidence being one column wrong, and the correction matters: **naming the transport and scoping the claim are independent**, so a body can pass a keyword scan and still promise that every send is checked.
+
+The inbound half has its own worked case. CORE lived it on 2026-08-08: a routing ruling arrived from what presented as the hub, over the native transport, with no AID — on the very channel whose identity gap was under discussion. It was adopted because it was good operational practice, and recorded as **REPORTED, not ratified**. Recording it as a ruling would have laundered authority into existence out of an unauthenticated message.
+
 ### Graph Nodes
 
 | Node | Description |
