@@ -34,9 +34,7 @@ ai-maestro server**. There is no request for `validateMessageRoute()` to inspect
 forbidden edge over that path returns no 403 — nothing on it can.
 
 **Its reach is not one machine** — other machines of yours, Remote Control sessions by
-name, and cloud sessions are all addressable
-([reference](reference/detailed-guide.md#communication-graph-title-based-directed-graph-r6-v3-2026-05-04)).
-Do not read "native" as "local": the 403 is impossible here because the **ai-maestro**
+name, and cloud sessions are all addressable. Do not read "native" as "local": the 403 is impossible here because the **ai-maestro**
 server is not in the path, not because the message stays on this box.
 
 **So a 403 you never received is not permission.** R6 and R42 bind the agent on both
@@ -50,9 +48,10 @@ discouraged** (USER directive 2026-08-20; governance R42.9, amended): every regi
 agent workdir gets `crossSessionInbound: "refuse"` written into its
 `.claude/settings.local.json` as a registry invariant — applied on create, on wake, and
 re-applied by the periodic sweep, so editing it back out only lasts until the next beat.
-A harness agent therefore cannot RECEIVE a native cross-session message; AMP
-(`amp-send.sh`) is the only door that reaches it, which is what makes the graph
-unavoidable.
+A **normally-launched** harness agent therefore cannot RECEIVE a native cross-session
+message; AMP (`amp-send.sh`) is the only door that reaches it. Read "normally-launched"
+literally — a `--restricted` session ignores that settings file, so the lockdown does not
+bind it (`Emasoft/ai-maestro#154`; details in the reference).
 
 The enforcement is **inbound-only by design**. A `permissions.deny: ["SendMessage"]`
 entry is FORBIDDEN — it breaks subagent handling, so the invariant actively REMOVES it
