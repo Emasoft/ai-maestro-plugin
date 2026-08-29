@@ -2,7 +2,7 @@
 name: architecture
 description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live / are the dependencies safe / dependabot reports no alerts / why did a native cross-session send report refused and is the transport enforcing R6 now"
 ocd: 2026-06-16
-lmd: 2026-08-22
+lmd: 2026-08-29
 metadata:
   node_type: memory
   type: project
@@ -185,6 +185,33 @@ Two assertions in the same suite exist for the same reason — that `os.replace`
 (not merely that the file's content changed, which a plain write also achieves), and that its
 source is a SIBLING of the target, since the cross-device degradation has no other witness on a
 box where the temp dir and the repo share a mount.
+
+
+^ATOM-4ZIF-ICEA [desc: "the mirrored GOVERNANCE-RULES.md branch: field is UPSTREAM's own frontmatter and is NOT sync provenance, and CORE tracks main which can lag the governance-rules branch", keywords: governance_blob_sha_mismatch mirror_looks_stale_but_is_not branch_field_says_governance-rules_but_synced-blob_is_main false_drift_alarm_on_GOVERNANCE-RULES which_branch_does_the_mirror_track 44be10d5d351_vs_ceb4ac163bc0 two_sessions_disagree_about_the_governance_blob synced-blob_does_not_match_what_a_peer_reports is_my_governance_mirror_out_of_date spec_half_falsifies_a_single-file_blob_comparison, ocd: 2026-08-29, lmd: 2026-08-29]
+
+**`branch: governance-rules` inside `skills/team-governance/references/GOVERNANCE-RULES.md` is
+part of UPSTREAM's own frontmatter — it sits directly above upstream's `changelog:` and the
+mirror reproduces it verbatim. It does NOT say which branch this copy was taken from.** Only
+`synced-blob:` and `synced-at:` are CORE-added provenance. Reading `branch:` as provenance
+manufactures a drift alarm out of a correctly-synced file; it is adjacent to `changelog:` and
+reads exactly like provenance, so a faithful mirror and a mislabelled one look identical.
+
+**CORE tracks `main`, deliberately.** Verified 2026-08-29 via the GitHub API:
+`docs/GOVERNANCE-RULES.md` @main = `44be10d5d351…` (what the mirror pins, exact match) and
+@governance-rules = `ceb4ac163bc0…`. These are NOT two branches that disagree — `main` simply
+lags by one commit (`41266cf14ab2`, 2026-08-26, R6.6/R6.9 prose corrected to match code,
+TRDD-2XV78BND). Same lineage, one behind. Mirroring `governance-rules` instead would ship
+content that has not landed, and `docs/GOVERNANCE-RULES.md` is the PRIMARY EMANATION per its
+own §0 while `main` is the default branch — so tracking `main` is correct and
+`tests/test_governance_mirror_stamp.py` fires exactly when `main` advances, which is when the
+resync should happen. No manual watch is needed. See [[publish-and-validation-gate]].
+
+**Comparing ONE file cannot tell "branch fork" from "branch lag".** The pair
+`design/specs/governance-spec.md` + `docs/GOVERNANCE-RULES.md` can: on 2026-08-29 a peer's pin
+`spec=b96efb43adc9 + rules=44be10d5d351` looked like main because its rules half matched main,
+but main's spec half is `6a4a1c9fa600`, so the pair was `governance-rules@928c96b3bed7` all
+along. Fetch BOTH halves before concluding anything structural about which branch a stamp
+belongs to.
 
 ## Applies to
 - [[publish-and-validation-gate]] — the release/validate gate: where the CPV validator

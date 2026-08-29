@@ -2,7 +2,7 @@
 name: publish-and-validation-gate
 description: "why does local publish.py validate disagree with CI / which CPV version does this repo validate against and where is it pinned / the strict gate went red and I changed no code / CI is red but the same suite passes locally / a test fails on every push naming the release commit as a file's last touch / shallow clone, fetch-depth, git log returning HEAD for every file / is exit 4 a real failure or a NIT / when may I bump the CPV pin"
 ocd: 2026-08-01
-lmd: 2026-08-01
+lmd: 2026-08-29
 metadata:
   node_type: memory
   type: project
@@ -40,6 +40,34 @@ Reproduce or falsify it in one command — `git clone --depth 1 file://$PWD /tmp
 then read `git log -1 --format=%aI -- <path>` there: it prints the tip date, not
 the file's. Running the OLD test file in that clone reproduces the CI failure
 exactly; the NEW one skips. [^6]
+
+
+^ATOM-ISFM-JU5D [desc: "a SKILL.md body over 5000 estimated Claude tokens is a MAJOR that blocks publish, and skills/agent-messaging is the one that keeps drifting into it", keywords: publish_blocked_MAJOR_no_code_changed SKILL.md_body_is_too_long estimated_Claude_tokens_limit_5000 docs_commit_will_not_publish split_into_smaller_more_focused_skills agent-messaging_skill_over_the_cap how_do_I_measure_the_skill_token_budget_before_publishing o200k_base_times_1.3 validator_rejects_a_docs-only_change adding_a_paragraph_to_a_skill_broke_the_release_gate, ocd: 2026-08-29, lmd: 2026-08-29]
+
+**CPV caps a SKILL.md BODY at 5000 estimated Claude tokens and reports an overflow as a
+MAJOR, which blocks `scripts/publish.py` outright.** The estimate is `o200k_base` BPE of the
+body with the YAML frontmatter EXCLUDED, times a 1.3 Claude correction, rounded up. Measure it
+locally before committing prose instead of discovering it at publish time:
+
+```
+uv run --with tiktoken python -c "
+import re,tiktoken,math
+b=re.sub(r'^---\n.*?\n---\n','',open('skills/<name>/SKILL.md').read(),flags=re.S)
+print(math.ceil(len(tiktoken.get_encoding('o200k_base').encode(b))*1.3))"
+```
+
+**`skills/agent-messaging/SKILL.md` is the one that keeps drifting over.** Its body tracks
+every Claude Code release that touches cross-session messaging, so each alignment pass adds
+prose. The 2.1.248 pass (`445265e`) pushed it to ~5273 and silently blocked publishing that
+commit for a day — nothing failed at commit time, and `tests/run-all-tests.py` is GREEN at
+403/6 while the gate is red, because the cap is a CPV validator rule and not a test.
+
+**Cut the DUPLICATION, not the prose at random.** That body and
+`reference/detailed-guide.md` had stated the R42.9 mechanism, the 2.1.238/2.1.248 refusal
+semantics and the transport's cross-machine reach twice over; deleting the second copy and
+leaving a pointer recovered ~400 tokens without losing an instruction. Rationale and
+provenance belong in the reference; the body keeps the rule and the diagnostic. Leave real
+headroom — landing at 4990 is a re-break waiting for the next sentence.
 
 ## Governed by
 - [[architecture]] — the hub; `scripts/publish.py` is the canonical CPV release
