@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.1] — 2026-08-29
+
+### Documentation
+
+- Record that an external Claude session is not an ai-maestro agent
+- Re-verify hook-event pin on 2.1.247 — the adjacency recipe is broken
+- Align corpus with Claude Code 2.1.248
+- Move #131 screen detail to reference to clear the 5k token cap
+- Cut SKILL.md body to 4870 tokens, well under the 5k cap
+
+### Miscellaneous Tasks
+
+- Normalize publish-globally on two PROJECT pages
 ## [3.2.0] — 2026-08-25
 
 ### Bug Fixes
