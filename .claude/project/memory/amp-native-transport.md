@@ -16,7 +16,7 @@ split-lineage: cc9840b5939c4effac960eb58cab1b1e
 Why a native cross-session `SendMessage`/`ListAgents` never returns a comm-graph 403,
 and what a 2.1.238 `refused` reply does and does not prove about R6 enforcement.
 
-^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: native SendMessage reaches another session with no ai-maestro server in the path, so a forbidden send returns no error — reach spans machines, RC, cloud", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport native_transport_is_not_local same_machine_claim_is_wrong cross_machine_send_still_unpoliced, ocd: 2026-08-08, lmd: 2026-08-14]
+^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: native SendMessage reaches another session with no ai-maestro server in the path, so a forbidden send returns no error — reach spans machines, RC, cloud", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport native_transport_is_not_local same_machine_claim_is_wrong cross_machine_send_still_unpoliced, ocd: 2026-08-08, lmd: 2026-09-04]
 
 `SendMessage` / `ListAgents` are a native session-to-session transport between live Claude
 Code sessions that **never reaches the ai-maestro server**. `validateMessageRoute()` is not
@@ -33,6 +33,9 @@ communication graph.
 **A 403 you never received is not permission.** R6 and R42 bind an agent on both
 transports; only AMP can tell it when it broke them. `amp-send.sh` is the verb that gets
 signed, routed, graph-checked and recorded.
+
+
+^ATOM-2AQH-XIO4 [desc: "Native-transport 403 blindness was measured across CORE and all 7 role-plugins (ai-maestro#131), fixed in CORE v3.1.9, but the R42.3 rule-text fix stays open as TRDD-OH3N6OXJ (Tier 3)", keywords: is_the_403_claim_fixed_now which_plugins_still_claim_server_enforcement CORE_v3.1.9_native_transport_fix role_plugin_403_audit_ai-maestro_131 R42.3_messaging_is_the_only_channel_is_false is_R42.3_fixed_yet TRDD-OH3N6OXJ_status rule_text_not_fixed_only_plugin_text tier_3_open_with_the_user agent-messaging_skill_fixed team-governance_skill_fixed test_no_403_claim_travels_without_the_transport, ocd: 2026-09-04, lmd: 2026-09-04]
 
 Measured 2026-08-08 (`ai-maestro#131`, filed by the ASSISTANT role-plugin): **7 of 7**
 role-plugin personas asserted server enforcement, **0 of 7** named the transport. CORE was
