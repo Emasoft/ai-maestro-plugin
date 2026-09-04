@@ -57,12 +57,6 @@ seeded into every agent workdir at `.claude/rules/`. CORE ships **no** copy (its
 `rules/trdd-approval-tiers.md` was retired, `e7b247f`, `core#35`). Skills state the principle
 and point at the overlay by name.[^7]
 
-## Governed by
-
-- [[architecture]] — the functionality hub this component sits under (its `## Applies to`
-  carries the reciprocal link).
-
-
 ^ATOM-0IT5-7SMY [desc:"the canonical column value is 'complete', NOT 'completed' — and a validate gated with ';' lets an invalid card commit", keywords: column_completed_not_in_canonical_enum findtrdd_validate_failed_but_the_commit_went_through which_column_value_closes_a_trdd my_trdd_validation_failed_and_i_committed_anyway, ocd: 2026-08-02, lmd: 2026-08-02]
 
 **`column: complete`** — the canonical terminal value (`findtrdd.py:33` `KNOWN_COLUMNS`).
@@ -79,6 +73,11 @@ python3 scripts/prrd-trdd/findtrdd.py --validate "$FN" && git add "$FN"
 Measured 2026-08-02: with `;` the validate printed `column='completed' not in canonical enum`
 and the commit proceeded anyway — an invalid card landed and needed an amend. The failure is
 silent in the only place it matters, because the exit code is discarded.
+
+## Governed by
+
+- [[architecture]] — the functionality hub this component sits under (its `## Applies to`
+  carries the reciprocal link).
 
 ## Notes and lessons learned
 

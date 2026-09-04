@@ -2,7 +2,7 @@
 name: architecture
 description: "how does ai-maestro-plugin work — overview, the main parts (skills, AMP/AID scripts, PRRD/TRDD/Kanban governance, memgrep), where the key pieces live / are the dependencies safe / dependabot reports no alerts / why did a native cross-session send report refused and is the transport enforcing R6 now"
 ocd: 2026-06-16
-lmd: 2026-08-29
+lmd: 2026-09-04
 metadata:
   node_type: memory
   type: project
@@ -61,7 +61,7 @@ binaries) consumed by the other ecosystem plugins.
   [[publish-and-validation-gate]]). Unconstrained is also the *safer* shape: a version-constrained
   dependency that cannot resolve **disables** the depending plugin rather than
   degrading, so a pin is a liability unless something actually needs it.
-^MP7FE8YO [desc:"scripts/publish.py is the canonical CPV release pipeline; the validator pin and gate failure modes live on publish-and-validation-gate; local --gate adds a jscpd copy-paste gate G3b; the type gate is mypy, not pyright", keywords: what_runs_the_release_pipeline publish.py_canonical_gate jscpd_copy_paste_gate_G3b mypy_type_gate_not_pyright where_is_cpv_validator_version_pinned scripts_publish.py_gates]
+^MP7FE8YO [desc:"scripts/publish.py is the canonical CPV release pipeline; validator pin + gate failures live on publish-and-validation-gate; local --gate adds jscpd G3b; type gate is mypy, not pyright", keywords: what_runs_the_release_pipeline publish.py_canonical_gate jscpd_copy_paste_gate_G3b mypy_type_gate_not_pyright where_is_cpv_validator_version_pinned scripts_publish.py_gates]
 - **Publish / CI pipeline** — `scripts/publish.py` is the canonical CPV release
   pipeline. **The validator pin and this gate's failure modes live on
   [[publish-and-validation-gate]]** — do not restate the version here; it has already

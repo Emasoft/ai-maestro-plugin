@@ -2,7 +2,7 @@
 name: hooks-runtime
 description: "directory guard returns allow or abstains / why does the PreToolUse guard emit nothing / permission prompts suppressed by our own hook / is it safe to return allow from our guard / does CORE ship any agents / sub agents do not inherit the memory contract / which hook events could CORE still adopt / how many hook events does Claude Code have / hook drops state after the next event / why did this agent stop / lastError missing / askuserquestion not captured in chat-state / blocked agent looks healthy"
 ocd: 2026-08-05
-lmd: 2026-08-29
+lmd: 2026-09-04
 metadata:
   node_type: memory
   type: project
@@ -86,7 +86,7 @@ a consumer judges staleness instead of being told nothing happened. An explicit 
 over the carry, so a handler resets deliberately (`subagentCount: 0`, `lastError: null`). [^4]
 
 
-^ATOM-VN4C-8QRP [desc:"a GENERIC hook notification must never overwrite a more SPECIFIC classification that is still pending — Notification(permission_prompt) fires for AskUserQuestion blocks too and used to clobber the captured question", keywords: askuserquestion_not_captured_in_chat-state read-prompt_returns_null_but_a_menu_is_on_screen notificationType_is_permission_prompt_for_a_question blocked_agent_looks_healthy question_text_never_recorded, ocd: 2026-08-06, lmd: 2026-08-06]
+^ATOM-VN4C-8QRP [desc:"a GENERIC hook notification must never overwrite a more SPECIFIC pending classification — Notification(permission_prompt) fires for AskUserQuestion too and used to clobber the captured question", keywords: askuserquestion_not_captured_in_chat-state read-prompt_returns_null_but_a_menu_is_on_screen notificationType_is_permission_prompt_for_a_question blocked_agent_looks_healthy question_text_never_recorded, ocd: 2026-08-06, lmd: 2026-08-06]
 
 The `Notification(permission_prompt)` handler must NOT clobber a pending `AskUserQuestion`.
 Claude Code emits that notification for question blocks too, and the handler used to rebuild

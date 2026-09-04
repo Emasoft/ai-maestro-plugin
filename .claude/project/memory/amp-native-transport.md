@@ -2,7 +2,7 @@
 name: amp-native-transport
 description: "403 not returned / forbidden send no error / does SendMessage bypass the comm graph / is AMP the only channel / is the native transport enforcing R6 now / did my forbidden send get blocked / sendmessage returned refused / native send reported refused / is my agent's cross-session message policed / R42.3 wording unpoliced transport / cross machine send still unpoliced"
 ocd: 2026-08-08
-lmd: 2026-08-29
+lmd: 2026-09-04
 metadata:
   node_type: memory
   type: project
@@ -16,7 +16,7 @@ split-lineage: cc9840b5939c4effac960eb58cab1b1e
 Why a native cross-session `SendMessage`/`ListAgents` never returns a comm-graph 403,
 and what a 2.1.238 `refused` reply does and does not prove about R6 enforcement.
 
-^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: native SendMessage reaches another session with no ai-maestro server in the path, so a forbidden send returns nothing at all — and its reach is not one machine, it spans your machines, Remote Control and cloud sessions", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport native_transport_is_not_local same_machine_claim_is_wrong cross_machine_send_still_unpoliced, ocd: 2026-08-08, lmd: 2026-08-14]
+^ATOM-P29X-WO6W [desc:"A comm-graph 403 is evidence about AMP only: native SendMessage reaches another session with no ai-maestro server in the path, so a forbidden send returns no error — reach spans machines, RC, cloud", keywords: 403_not_returned forbidden_send_no_error SendMessage_bypasses_the_comm_graph agent_messaged_another_agent_directly communication_graph_not_enforced ListAgents_cross-session AMP_is_the_only_channel_is_false R42.3_wording unpoliced_transport native_transport_is_not_local same_machine_claim_is_wrong cross_machine_send_still_unpoliced, ocd: 2026-08-08, lmd: 2026-08-14]
 
 `SendMessage` / `ListAgents` are a native session-to-session transport between live Claude
 Code sessions that **never reaches the ai-maestro server**. `validateMessageRoute()` is not
