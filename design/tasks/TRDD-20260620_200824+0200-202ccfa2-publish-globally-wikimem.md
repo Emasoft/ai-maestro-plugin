@@ -6,7 +6,7 @@ pre-block-column: planned
 blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52]
 review-after: 2026-09-15
 created: 2026-06-20T20:08:24+0200
-updated: 2026-08-25T17:55:00+0200
+updated: 2026-09-24T17:51:41+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -171,6 +171,7 @@ loadable skill);
 `~/.claude/rules/markdown-memory-recall.md` (scope model + roots).
 
 ---
+**2026-09-24 — blockers CLOSED, feature NOT delivered.** janitor#111 and #52 were closed COMPLETED on 2026-09-03 ("implemented differently": publish-globally normalization + symlink reconcile inside atomic_write_page, memory.rs ~2570-2672). Audit (reports/trdd-202ccfa2/20260924_161745+0200-publish-globally-equivalence.md, gitignored) found 2/7 MET (privacy invariant in code; LOCAL never published), 1 PARTIAL (prune met; flat `<USER-memdir>/<name>.md` layout, no per-project slug dir → cross-project filename collision), 4 NOT MET (recall does not follow symlinks; no cross-scope realpath dedup; no foreign read-only write guard; no link/project resolver). Recall miss CONFIRMED by controlled test: the note prrd-golden-silver-rules, queried by its own description, is found in its real PROJECT folder but NOT through the USER-memdir symlink, even after `memgrep reindex`. No dedicated privacy regression test exists. `blocked-by:` still names the two closed issues pending the owner's decision on commenting on #111 to request reopen (proposed; #52 left closed — its schema/skill/rule asks are done). NEXT ACTION: owner decision on the #111 comment; then repoint `blocked-by:`.
 
 ## 1. Problem
 
