@@ -35,6 +35,21 @@ external-refs: []
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-08-07
 
+> **2026-09-24 — blockers CLOSED, feature NOT delivered.** ai-maestro-janitor#111 and #52 were
+> closed COMPLETED on 2026-09-03 as "implemented differently": publish-globally normalization
+> plus USER-memdir symlink create/prune on every memgrep write (memory.rs:5847-6062 —
+> publish_globally_state, apply_publish_globally_fix, create_user_symlink,
+> reconcile_user_symlink_root). VERIFIED this session: recall does NOT follow the USER-memdir
+> symlinks — the note prrd-golden-silver-rules, queried by its own description, is found in its
+> real PROJECT folder but not through the symlink, even after `memgrep reindex`; and the layout
+> is flat `<USER-memdir>/<name>.md` (no per-project subdir, so a filename-collision risk). From
+> a local audit's source grep, NOT independently verified: no cross-scope realpath dedup, no
+> foreign read-only write guard, no link/project resolver, no dedicated privacy regression
+> test; the privacy invariant and LOCAL-never-published appear met in code. `blocked-by:` still
+> names the two closed issues pending the owner's decision on asking the janitor to reopen #111
+> (#52's schema/skill/rule asks are done). NEXT ACTION: that decision; then repoint
+> `blocked-by:`, or restore `planned` with an explicit "no open blocker" note.
+
 > **2026-08-25 — PARKED with `review-after: 2026-09-15`.** Janitor session verified in
 > source: memgrep has the publish-globally FIELD normalization + symlink reconciliation
 > (write-path half, memory.rs) but NO publish-sync verb, no link/project resolver, no
@@ -171,7 +186,7 @@ loadable skill);
 `~/.claude/rules/markdown-memory-recall.md` (scope model + roots).
 
 ---
-**2026-09-24 — blockers CLOSED, feature NOT delivered.** janitor#111 and #52 were closed COMPLETED on 2026-09-03 ("implemented differently": publish-globally normalization + symlink reconcile inside atomic_write_page, memory.rs ~2570-2672). Audit (reports/trdd-202ccfa2/20260924_161745+0200-publish-globally-equivalence.md, gitignored) found 2/7 MET (privacy invariant in code; LOCAL never published), 1 PARTIAL (prune met; flat `<USER-memdir>/<name>.md` layout, no per-project slug dir → cross-project filename collision), 4 NOT MET (recall does not follow symlinks; no cross-scope realpath dedup; no foreign read-only write guard; no link/project resolver). Recall miss CONFIRMED by controlled test: the note prrd-golden-silver-rules, queried by its own description, is found in its real PROJECT folder but NOT through the USER-memdir symlink, even after `memgrep reindex`. No dedicated privacy regression test exists. `blocked-by:` still names the two closed issues pending the owner's decision on commenting on #111 to request reopen (proposed; #52 left closed — its schema/skill/rule asks are done). NEXT ACTION: owner decision on the #111 comment; then repoint `blocked-by:`.
+*(2026-09-24 note moved to the top of the STATE block.)*
 
 ## 1. Problem
 
