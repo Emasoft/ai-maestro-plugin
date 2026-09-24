@@ -6,7 +6,7 @@ pre-block-column: planned
 blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52]
 review-after: 2026-09-15
 created: 2026-06-20T20:08:24+0200
-updated: 2026-09-24T17:51:41+0200
+updated: 2026-09-24T18:15:28+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -37,18 +37,22 @@ external-refs: []
 
 > **2026-09-24 — blockers CLOSED, feature NOT delivered.** ai-maestro-janitor#111 and #52 were
 > closed COMPLETED on 2026-09-03 as "implemented differently": publish-globally normalization
-> plus USER-memdir symlink create/prune on every memgrep write (memory.rs:5847-6062 —
-> publish_globally_state, apply_publish_globally_fix, create_user_symlink,
-> reconcile_user_symlink_root). VERIFIED this session: recall does NOT follow the USER-memdir
-> symlinks — the note prrd-golden-silver-rules, queried by its own description, is found in its
-> real PROJECT folder but not through the symlink, even after `memgrep reindex`; and the layout
-> is flat `<USER-memdir>/<name>.md` (no per-project subdir, so a filename-collision risk). From
-> a local audit's source grep, NOT independently verified: no cross-scope realpath dedup, no
-> foreign read-only write guard, no link/project resolver, no dedicated privacy regression
-> test; the privacy invariant and LOCAL-never-published appear met in code. `blocked-by:` still
-> names the two closed issues pending the owner's decision on asking the janitor to reopen #111
-> (#52's schema/skill/rule asks are done). NEXT ACTION: that decision; then repoint
-> `blocked-by:`, or restore `planned` with an explicit "no open blocker" note.
+> plus USER-memdir symlink create/prune on every memgrep write. VERIFIED this session: a note
+> reachable only through a USER-memdir symlink is NOT returned by recall (cause unconfirmed: the
+> walk skips the symlink, or scope filtering drops a target that lives in another project).
+> Isolated test: one folder holding ONLY a symlink to the note prrd-golden-silver-rules, and one
+> holding ONLY a copy of it; `memgrep reindex` exit 0 on both; `memgrep recall` with the note's
+> own description finds the copy (2 hits) and misses the symlink (0 hits). Also observed: that
+> symlink sits directly in the USER memdir root (`<USER-memdir>/<name>.md`, no per-project
+> subdir, so a filename-collision risk). NOT independently verified: the code location
+> memory.rs:5847-6062 (publish_globally_state, apply_publish_globally_fix, create_user_symlink,
+> reconcile_user_symlink_root) and "no cross-scope realpath dedup, no foreign read-only write
+> guard, no link/project resolver, no dedicated privacy regression test; privacy invariant and
+> LOCAL-never-published appear met in code" all come from a local audit's source grep; "#52's
+> schema/skill/rule asks are done" comes from the janitor's closing comment. `blocked-by:` still
+> names the two closed issues pending the owner's decision on asking the janitor to reopen #111.
+> NEXT ACTION: that decision; then repoint `blocked-by:`, or restore `planned` with an explicit
+> "no open blocker" note.
 
 > **2026-08-25 — PARKED with `review-after: 2026-09-15`.** Janitor session verified in
 > source: memgrep has the publish-globally FIELD normalization + symlink reconciliation
