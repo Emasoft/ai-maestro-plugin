@@ -72,7 +72,8 @@ a skill is a floor that goes stale.
    ```
 
 2. **Mint the card with the server verb** — the normal path (`aimaestro-trdd.sh
-   create` on PATH; AI Maestro running):
+   on PATH`; AI Maestro running). Never call the ai-maestro server API directly;
+   the CLI resolves the API base and your identity internally (core#11):
 
    ```bash
    aimaestro-trdd.sh create \
