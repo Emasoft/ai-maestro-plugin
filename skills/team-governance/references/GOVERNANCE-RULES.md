@@ -1,10 +1,10 @@
 ---
-version: "5.5.0"
-date: 2026-08-06
+version: "5.5.1"
+date: 2026-08-26
 branch: governance-rules
-conforms-to-spec: governance-rules@5.5.0
-synced-blob: "44be10d5d351"
-synced-at: 2026-08-25
+conforms-to-spec: governance-rules@5.5.1
+synced-blob: "ceb4ac163bc0"
+synced-at: 2026-09-25
 ---
 
 ## Table of contents
@@ -79,8 +79,8 @@ synced-at: 2026-08-25
 >   `https://raw.githubusercontent.com/Emasoft/ai-maestro/governance-rules/docs/GOVERNANCE-RULES.md`
 > - Do NOT "correct" the URL or the sync source to a `main` path. The reason is
 >   NOT that `main` is behind today — **measured 2026-08-08 16:53 +0200, both refs served
->   the SAME blob `a13bed73fa9e` at the time (now superseded by `44be10d5d351`, per
->   the 2026-08-25 re-sync below)**, because `main` was fast-forwarded to
+>   the SAME blob `a13bed73fa9e` at the time (later superseded by `44be10d5d351` and then
+>   by `ceb4ac163bc0`, per the re-sync history below)**, because `main` was fast-forwarded to
 >   `governance-rules` that afternoon (`ai-maestro#138`). The durable reason is
 >   the DIRECTION of flow: amendments are authored on `governance-rules` and land
 >   there FIRST; `main` is brought up to it periodically. So between
@@ -98,8 +98,8 @@ synced-at: 2026-08-25
 >   either way: a 404, a v4.0.2, and a matching blob are all equally uninformative
 >   about where amendments land — that class of inference produced the 2026-08-07
 >   R42.8 error below.
-> - **What `conforms-to-spec: governance-rules@5.5.0` asserts, exactly.** That
->   THIS FILE IS the v5.5.0 catalog — copy fidelity, nothing more. It is
+> - **What `conforms-to-spec: governance-rules@5.5.1` asserts, exactly.** That
+>   THIS FILE IS the v5.5.1 catalog — copy fidelity, nothing more. It is
 >   mechanically checkable in one command (below) and it is TRUE: the body
 >   from the title line down is byte-identical to upstream. **It does NOT
 >   assert that `ai-maestro-plugin` implements R1–R52.** CORE ships no
@@ -114,7 +114,7 @@ synced-at: 2026-08-25
 >
 >   ```bash
 >   gh api "repos/Emasoft/ai-maestro/contents/docs/GOVERNANCE-RULES.md?ref=governance-rules" --jq .sha
->   # expected: 44be10d5d351…   (this copy = catalog v5.5.0)
+>   # expected: ceb4ac163bc0…   (this copy = catalog v5.5.1)
 >   # matches ⇒ these exact bytes ⇒ every rule read from this copy still holds.
 >   # Differs ⇒ re-sync. It never says WHAT moved, only that something did —
 >   # a moved blob is a prompt to re-read, not an answer.
@@ -126,10 +126,16 @@ synced-at: 2026-08-25
 >   byte-identical document, and records "checked, current" — manufacturing
 >   confidence instead of supplying information. Measured upstream: the tip moved
 >   across four unrelated commits while the spec blob sat unchanged for 13 days.
-> - Synced from commit `15d0bade` on the `governance-rules` branch. **Provenance
+> - Synced from commit `0a76ca1c` on the `governance-rules` branch. **Provenance
 >   only — deliberately NOT a frontmatter field**, so nobody polls it by reaching
 >   for the nearest sha. The frontmatter carries exactly one pointer, and it is
 >   the blob.
+> - Re-synced into `ai-maestro-plugin` on: 2026-09-25 (v5.5.1 — R6.6 + R6.9
+>   prose corrected to match the code, record-only PATCH: R6.6 drops
+>   "unconditional" from the human sender's outbound `Y` — it is conditional on
+>   the sender's context resolving, the R38.2 fail-closed deny is deliberate and
+>   test-pinned; R6.9 names the generic amp-service 401 gate as today's
+>   enforcement and records the dedicated isSubagent guard as LATENT).
 > - Re-synced into `ai-maestro-plugin` on: 2026-08-25 (v5.5.0 — R42.9 CORRECTED
 >   the same day it was added: the outbound half is INVERTED, the amp-only-messaging
 >   invariant now writes `crossSessionInbound` refuse ONLY and REMOVES the
@@ -152,7 +158,7 @@ synced-at: 2026-08-25
 >   recorded in PROJECT memory (ATOM-SBNM-OHF2) — run that sweep BEFORE every
 >   future re-sync.
 > - Bundled-doc version: see the `version:` field in the YAML frontmatter
->   above (5.5.0 at the time of this sync).
+>   above (5.5.1 at the time of this sync).
 >
 > Treat this file as **read-only** in this repo. To update:
 >
@@ -538,10 +544,10 @@ The **persona name** may substitute for the agent-id whenever the substitution i
 | R6.5 | **ARCHITECT**, **INTEGRATOR**, **MEMBER** can only freely message COS and ORCHESTRATOR. H-edge is reply-only (may answer a user message once; cannot initiate). | Explicit |
 | R6.5a | **AUTONOMOUS** can freely message MANAGER, other AUTONOMOUS agents, AND the human user. Cannot reach COS, team roles, or MAINTAINER. The H-edge is `Y` (not reply-only) — AUTONOMOUS operates outside teams and may initiate user-directed messages. | Explicit |
 | R6.5b | **MAINTAINER** can freely message MANAGER and the human user. Cannot reach COS, team roles, AUTONOMOUS, or peer MAINTAINERs. The H-edge is `Y` (not reply-only) — MAINTAINERs need to surface repo-scoped concerns directly to the user when MANAGER routing would add latency. | Explicit |
-| R6.6 | The **human user (H)** is a first-class node with unconditional outbound `Y` to every other node INCLUDING other humans (H -> H is `Y` for user-to-user messaging). Inbound to H from team titles is `1` (reply-only: team agents cannot proactively initiate but may reply once to an inbound user message). Inbound to H from governance titles (M/T/A) is `Y`. Agents are additionally persona-discouraged from proactively initiating user contact — the reply-only rule is the hard floor; the persona sets the soft floor. | Explicit |
+| R6.6 | The **human user (H)** is a first-class node with outbound `Y` to every other node INCLUDING other humans (H -> H is `Y` for user-to-user messaging) — **conditional on the human sender's context RESOLVING** (legacy `isUserMessage`, or an R38.2 `userSender` block): an unresolved human sender is DENIED (`user sender context unresolved — cannot route (R38.2)`), not defaulted to allow. The static full-Y adjacency row is consulted only AFTER that resolution, so "unconditional" would misdescribe the live decision — the fail-closed branch is deliberate (it closed a blanket-allow hole) and is test-pinned; do not "reconcile" the code to an unconditional reading. Inbound to H from team titles is `1` (reply-only: team agents cannot proactively initiate but may reply once to an inbound user message). Inbound to H from governance titles (M/T/A) is `Y`. Agents are additionally persona-discouraged from proactively initiating user contact — the reply-only rule is the hard floor; the persona sets the soft floor. | Explicit |
 | R6.7 | When a message is blocked, the error must include a **routing suggestion**. The routing-suggestion table in `lib/communication-graph.ts` is authoritative. Under the 2026-04-22 tightening, almost every cross-layer route goes through MANAGER (not COS). | Explicit |
 | R6.8 | **Three layers of enforcement**: (1) API server validates sender/recipient titles before delivery via `validateMessageRoute()`, (2) Role-plugin main-agent .md files list allowed/reply-only recipients, (3) Sub-agents are forbidden from using AMP messaging entirely. | Explicit |
-| R6.9 | Sub-agents have no AMP identity and cannot authenticate — they communicate only with their spawning main-agent. | Explicit |
+| R6.9 | Sub-agents have no AMP identity and cannot authenticate — they communicate only with their spawning main-agent. **What enforces this TODAY is the generic authentication gate** (`services/amp-service.ts` — a subagent holds no API key, so it never gets past the 401), not the dedicated `isSubagent` guard: that guard exists (`lib/communication-graph.ts` `if (options.isSubagent) return { allowed: false … }`, test-pinned) but **no production caller passes `isSubagent: true`** — it is a latent second layer awaiting a caller that can actually detect a subagent, kept as defence-in-depth, not deleted. Do not read the flag as doing the work. | Explicit |
 | R6.10 | **Reply-only enforcement** (`1` edges): the sender MUST pass `inReplyToMessageId` when targeting a reply-only recipient. Today the graph layer only requires the field to be a truthy string; it does NOT load the referenced message, verify its sender/recipient pair, or prevent multiple replies to the same id. The "one reply per inbound message" invariant (AMP inbox sets `replied=true` on the original and rejects subsequent attempts) is planned but not yet implemented — tracked in `design/tasks/TRDD-80557822-comm-graph-downstream-sync.md`. The advisory check is latent in production because no flow currently routes messages to the human user; it becomes load-bearing the moment Phase 2 maestro auth wires H as an AMP recipient. | Explicit (enforcement partial; see TRDD-80557822) |
 | R6.11 | **Canonical address format** (2026-05-06): every agent is addressed by ONE unique id string per host. The wire format is `<agent-id>@<host>` (preferred) or `<host>:<agent-id>` (alternate). The bare `<agent-id>` resolves to the writer's host. Hierarchical/3-level addressing (`team/sub/name`) is deprecated for messaging — that pattern was only ever used by the sidebar's visual tag organization and never by the message router. | Explicit |
 | R6.12 | **Persona-name alias**: an agent's persona name (registry `label` field) MAY substitute for `<agent-id>` whenever the substitution is unambiguous on the target host (no other agent on that host has a name or label that collides). On collision, the address MUST use `<agent-id>` and the API returns HTTP 409 `disambiguation_required` if a persona-name alias is sent. | Explicit |
