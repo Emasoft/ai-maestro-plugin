@@ -3,10 +3,10 @@ trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 column: blocked
 pre-block-column: planned
-blocked-by: ai-maestro-janitor#310
+blocked-by: gh:Emasoft/ai-maestro-janitor#310
 review-after: 2026-09-15
 created: 2026-06-20T20:08:24+0200
-updated: 2026-09-25T14:00:29+0200
+updated: 2026-09-25T14:40:35+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -29,6 +29,10 @@ review-requirements: [human-review]
 impacts: [public-api]
 runtime-targets: [macos, linux]
 external-refs: []
+unblock-when: issue:Emasoft/ai-maestro-janitor#310 closed
+blocker-probe: gh issue view 310 --repo Emasoft/ai-maestro-janitor --json state -q .state
+blocker-holds-if: match:OPEN
+blocker-probe-canary: match:OPEN|CLOSED
 ---
 
 # publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
