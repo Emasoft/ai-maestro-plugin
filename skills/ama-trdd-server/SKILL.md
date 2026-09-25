@@ -281,9 +281,10 @@ tier check — are `ama-trdd-find` / `ama-trdd-write` / `ama-trdd-update` /
   corpus (the source of truth).
 - `Skill(skill: "ama-trdd-transition")` — move a TRDD between columns
   locally, with the full transition matrix (the local counterpart to
-  `promote`); also carries the four zones + the ladder + batch approval
-  syntax in
-  [approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md).
+  `promote`); also carries the approval-zone reference in
+  [approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md):
+
+  > Contents · A. The four design zones · B. The `proposal → planned` lifecycle · C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay) · D. Single-writer-per-domain (collision avoidance) · Batch approval syntax (the fast path)
 - `Skill(skill: "ama-proposal-approvals")` — batch proposal approvals on
   local `design/` files.
 - `Skill(skill: "team-kanban")` — the live team-coordination board (a
