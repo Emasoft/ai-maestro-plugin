@@ -2,7 +2,7 @@
 name: ama-trdd-write
 user-invocable: true
 description: "Author a new TRDD task-design document under design/ with correct v2 frontmatter — uuid + timestamps, the right zone (tasks/ for a Tier-0 task written directly as 'planned'; proposals/ for a Tier-1/2/3 task needing approval), and a self-contained body. Allowed for every role (MEMBER via COS). Use when a non-trivial task, feature, or decision must be captured as a tracked spec, or a report's decision becomes a TRDD. Trigger with /ama-trdd-write, 'write a TRDD for X', or 'capture this as a task spec'. Finding is /ama-trdd-find, editing /ama-trdd-update, column moves /ama-trdd-transition."
-allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(date:*), Bash(git:*), Bash(resolve_pillar_scripts.sh:*), Read, Write, Edit, Grep, Glob"
+allowed-tools: "Bash(python3:*), Bash(sh:*), Bash(date:*), Bash(git:*), Bash(aimaestro-trdd.sh:*), Bash(resolve_pillar_scripts.sh:*), Read, Write, Edit, Grep, Glob"
 metadata:
   author: "Emasoft"
   version: "1.0.0"
@@ -57,6 +57,8 @@ a skill is a floor that goes stale.
 - Python 3.10+ on PATH. The pillar scripts live at
   `${CLAUDE_PLUGIN_ROOT}/scripts/prrd-trdd/` and are resolved at runtime via
   `resolve_pillar_scripts.sh` (works from the core plugin OR any role plugin).
+- For the server-mint path (step 2, the normal path): `aimaestro-trdd.sh` on
+  PATH and the AI Maestro server running. Absent both, use the fallback (step 3).
 - You know your governance ROLE (MANAGER / ORCH / ARCH / INT / COS / MEMBER /
   AUTONOMOUS / MAINTAINER) — this skill's permission matrix is keyed on it.
 
@@ -69,8 +71,28 @@ a skill is a floor that goes stale.
    python3 "$DIR/bootstrap_design.py"
    ```
 
-2. Generate identity + timestamps and the filename (note: `$UID` is reserved by
-   zsh — use `$SHORT`):
+2. **Mint the card with the server verb** — the normal path (`aimaestro-trdd.sh
+   create` on PATH; AI Maestro running):
+
+   ```bash
+   aimaestro-trdd.sh create \
+     --title "<one line, no colon>" \
+     --type <task-type> \
+     --min-approval <none|orchestrator|chief-of-staff|manager|user> \
+     --body-file /tmp/trdd-body.md        # or: --body -  (stdin)
+   ```
+
+   Prints `TRDD-<id8> <zone> <column> <file>` (TSV). The server does what the
+   hand-rolled recipe cannot: **collision-checked id8 minting** and **zone
+   routing from your verified AID title, never from a self-declared flag** — a
+   `--min-approval` above your authority lands the card in `design/proposals/`
+   as `column: proposal`, so self-classification cannot place a card you may
+   not author. The file is written but NOT committed — stage it by name and
+   commit yourself (step 4).
+
+3. **Fallback — the server is UNREACHABLE only.** Hand-mint, with the lessons
+   of the incidents that shaped it intact (note: `$UID` is reserved by zsh —
+   use `$SHORT`):
 
    ```bash
    # The id IS 8-char UPPERCASE base36 (A-Z0-9) — it is the canonical identifier.
@@ -90,8 +112,12 @@ a skill is a floor that goes stale.
    FN="design/$ZONE/TRDD-$TS-$TID-<short-slug>.md"
    ```
 
-3. Write the frontmatter + body (canonical skeleton in the scripts-usage
-   reference). Mandatory fields: `trdd-id`, `title` (no colon), `column`
+   A fallback-minted card carrying any rung above `none` goes to
+   `design/proposals/` as `column: proposal` — the same routing rule the server
+   enforces, applied honestly by hand.
+
+4. Write the frontmatter + body (canonical skeleton in the scripts-usage
+   reference; skip on the server path, which writes them). Mandatory fields: `trdd-id`, `title` (no colon), `column`
    (`planned` for a `none` card in tasks/, `proposal` for proposals/), `created`,
    `updated` (same ISO in both). For a proposal add
    `min-approval-requirement: <title>` and end
@@ -99,8 +125,9 @@ a skill is a floor that goes stale.
    **self-contained** (a cross-team implementer shares none of your context).
    Add a `## ⏵ STATE` head block if the TRDD will span more than one session.
 
-4. Create a todo-list entry carrying the `TRDD-<8hex>` reference, then commit by
-   name (NEVER `git add -A`):
+5. Create a todo-list entry carrying the `TRDD-<8hex>` reference, then commit by
+   name (NEVER `git add -A`) — the `$FN` variable exists only on the fallback
+   path; on the server path use the file path from the `create` output:
 
    ```bash
    git add "$FN" && git commit -m "docs: add TRDD-$SHORT — <summary>"
@@ -115,7 +142,8 @@ hash to report to the user.
 
 <example>
 A MEMBER must add an e2e test for an already-approved feature (a DERIVED EHT).
-→ Tier 0: author directly in design/tasks/ as `column: planned`, parent-trdd set, commit, proceed.
+→ Tier 0: `aimaestro-trdd.sh create --title … --type feature --parent <parent-id>
+  --derived-kind eht` (server mints and routes), then commit the written file and proceed.
 </example>
 
 <example>

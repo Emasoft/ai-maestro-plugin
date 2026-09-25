@@ -1,7 +1,7 @@
 ---
 name: ama-trdd-server
 user-invocable: false
-description: "Search, read, verify, and server-mediated mutate TRDDs via the aimaestro-trdd.sh CLI — the AI Maestro dashboard's authorization-aware view of the design/ corpus. Write verbs (edit / approve / refuse / promote / archive) are STRICT, gated by each TRDD's min-approval-requirement with a hard self-approval ban. Use when server-mirrored state or server-side authorization matters: the dashboard kanban, approving a proposal, confirming an approval is real. Trigger with 'approve this TRDD', 'search TRDDs on the dashboard'. For local design/ file editing use ama-trdd-find/write/update/transition. Loaded by ai-maestro-plugin"
+description: "Search, read, verify, and server-mediated create/mutate TRDDs via the aimaestro-trdd.sh CLI — the AI Maestro dashboard's authorization-aware view of the design/ corpus. Write verbs (create / edit / approve / refuse / promote / archive) are STRICT, gated by the caller's verified AID title or each TRDD's min-approval-requirement with a hard self-approval ban. Use when server-mirrored state or server-side authorization matters: minting a card, the dashboard kanban, approving a proposal, confirming an approval is real. Trigger with 'create a TRDD', 'approve this TRDD', 'search TRDDs on the dashboard'. For local design/ file editing use ama-trdd-find/write/update/transition. Loaded by ai-maestro-plugin"
 allowed-tools: "Bash(aimaestro-trdd.sh:*), Bash(jq:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"
 metadata:
@@ -128,7 +128,15 @@ and `verify` will still say the approval is authentic, because it is.)
 
 ## Instructions
 
-1. **Search** the server's mirror, or **read** one card:
+1. **Mint a new card** (server-side; the write `ama-trdd-write` normally routes to):
+
+   ```bash
+   aimaestro-trdd.sh create --title "new feature" --type feature \
+     --min-approval none --body-file /tmp/body.md
+   # → TRDD-<id8> tasks planned design/tasks/TRDD-....md
+   ```
+
+2. **Search** the server's mirror, or **read** one card:
 
    ```bash
    aimaestro-trdd.sh search --column dev
@@ -138,45 +146,45 @@ and `verify` will still say the approval is authentic, because it is.)
    aimaestro-trdd.sh read 9a8aba94
    ```
 
-2. Before ANY write verb, **read the card's `min-approval-requirement:`**
+3. Before ANY write verb, **read the card's `min-approval-requirement:`**
    and confirm YOUR title meets it (rule 2), that the card is not
    `user`-tier if you are an agent (rule 3), and that you are not the
    proposer (rule 4). If you lack the authority, STOP and route through
    COS/MANAGER (rule 5) — do not call the verb.
 
-3. **Approve** a proposal (mints the signed token; moves `proposals/ →
+4. **Approve** a proposal (mints the signed token; moves `proposals/ →
    tasks/`):
 
    ```bash
    aimaestro-trdd.sh approve 9a8aba94 --approver <you> --tier <N> --rationale "meets the design spec"
    ```
 
-4. **Refuse** a proposal (→ `refused/`):
+5. **Refuse** a proposal (→ `refused/`):
 
    ```bash
    aimaestro-trdd.sh refuse 9a8aba94 --approver <you> --tier <N> --reason "duplicates TRDD-XXXX"
    ```
 
-5. **Promote** a card to the next column in place:
+6. **Promote** a card to the next column in place:
 
    ```bash
    aimaestro-trdd.sh promote 9a8aba94 --column testing --approver <you> --note "gates green"
    ```
 
-6. **Edit** frontmatter in place (no folder move):
+7. **Edit** frontmatter in place (no folder move):
 
    ```bash
    aimaestro-trdd.sh edit 9a8aba94 --set priority=1 --set assignee=alice
    ```
 
-7. **Archive** a terminal card (never `failed`):
+8. **Archive** a terminal card (never `failed`):
 
    ```bash
    aimaestro-trdd.sh archive 9a8aba94 --state completed --approver <you>
    aimaestro-trdd.sh archive 9a8aba94 --state superseded --superseded-by K3QX9P2W --approver <you>
    ```
 
-8. **Verify** an approval is authentic (read-only, exit-code contract):
+9. **Verify** an approval is authentic (read-only, exit-code contract):
 
    ```bash
    aimaestro-trdd.sh verify 9a8aba94 --json
@@ -192,6 +200,7 @@ and `verify` will still say the approval is authentic, because it is.)
 
 | Subcommand | Flags | Class |
 |---|---|---|
+| `create` | `--title T` `--type Y` `--column C` `--min-approval W` `--parent ID` `--derived-kind npt\|eht` `--npt ID,ID` `--eht ID,ID` `--body-file P \| --body -` | **write, STRICT** — server-side mint: collision-checked id8 + timestamps + ZONE ROUTING from your verified AID title (a `--min-approval` above your authority lands the card in `proposals/` as `column: proposal`). Prints `TRDD-<id8> <zone> <column> <file>` (TSV); written, NOT committed |
 | `search` | `--column C`, `--id I`, `--keyword K`, `--zone proposals\|tasks\|archived\|refused` | read, non-strict |
 | `read <id>` | — | read, non-strict |
 | `verify <id>` | `--json`, `--agent A` | read-only, non-strict, mutates nothing |
@@ -254,7 +263,8 @@ Archive a superseded card.
 
 ## Scope
 
-Server-mediated TRDD read (`search`/`read`/`verify`) **and** write
+Server-mediated TRDD create (`create`, STRICT, authority-routed) and read
+(`search`/`read`/`verify`) **and** write
 (`edit`/`approve`/`refuse`/`promote`/`archive`, STRICT, tier-gated). The
 `disallowed-tools` line drops the Claude-Code-native Edit/Write/NotebookEdit
 tools — this skill never hand-edits local files; all mutation flows through

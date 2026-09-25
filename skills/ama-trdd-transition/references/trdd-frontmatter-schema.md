@@ -35,7 +35,7 @@ Every field is engineered to answer a real grep question in one line.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `trdd-id` | string | — | **8-char UPPERCASE base36 (`A-Z0-9`) — this IS the canonical id; there is no UUID and nothing derives from anything.** Generate: `LC_ALL=C tr -dc 'A-Z0-9' < /dev/urandom \| head -c 8`, re-rolling while `find … -iname "TRDD-*-<id>-*.md" \| grep -q .`. **The uppercase constraint binds at MINT time only** — see the immutability note below. |
+| `trdd-id` | string | — | **8-char UPPERCASE base36 (`A-Z0-9`) — this IS the canonical id; there is no UUID and nothing derives from anything.** MINT IT with `aimaestro-trdd.sh create` (server-side, collision-checked; the normal path — see the `ama-trdd-write` skill). Offline fallback ONLY: `LC_ALL=C tr -dc 'A-Z0-9' < /dev/urandom \| head -c 8`, re-rolling while `find … -iname "TRDD-*-<id>-*.md" \| grep -q .`. **The uppercase constraint binds at MINT time only** — see the immutability note below. |
 | `title` | string | — | Single line, ≤80 chars, no colons. The TRDD's headline. |
 | `column` | enum | — | Current kanban column. See [column-transitions.md](column-transitions.md) for the transition matrix and [trdd-design-tasks.md](trdd-design-tasks.md) for the full enum (incl. the proposal-lifecycle values `proposal`/`planned`/`refused`/`cancelled` — see [approval-tiers-and-zones.md](approval-tiers-and-zones.md)). Mandatory. |
 | `created` | datetime | — | When this TRDD was authored. Never changes after creation. |
