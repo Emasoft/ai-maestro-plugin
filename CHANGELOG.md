@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.3] — 2026-09-25
+
+### Documentation
+
+- Split architecture.md hub into five component pages
+- Atomize the architecture overview free prose into 8 atoms
+- Trim 3 atom descs to the 200-char cap, move one atom above the footer
+- Split ATOM-P29X-WO6W, extracting the #131 audit into its own atom
+- Record publish-globally audit in STATE (TRDD-202CCFA2)
+- Move and correct the 2026-09-24 STATE note (TRDD-202CCFA2)
+- Base the 202CCFA2 recall finding on an isolated test (TRDD-202CCFA2)
+- Repoint 202CCFA2 blocked-by to janitor#310 — fresh engine issue
+- Make 202CCFA2's block machine-checkable (probe + unblock-when)
+- Teach aimaestro-trdd.sh create — server mint leads, hand-roll is fallback (ai-maestro-plugin#69, #65)
+- Add the core#11 API boundary sentence to ama-trdd-write
+- Resync the bundled GOVERNANCE-RULES mirror to upstream 5.5.1
+- Cite governance R41 (approval vs mandate, checkable approval) in the proposal-approval decision surface (ai-maestro-plugin#63)
+- Trim ama-trdd-server under the CPV size gates
+- Second trim of ama-trdd-server — under the 5000-token body cap
+- Embed the full approval-tiers-and-zones TOC in ama-trdd-server
+- Final trim of ama-trdd-server under the 5000-token cap
 ## [3.2.2] — 2026-08-29
 
 ### Documentation
