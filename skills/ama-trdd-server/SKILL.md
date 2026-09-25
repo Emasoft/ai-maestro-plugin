@@ -221,13 +221,10 @@ returns the minted token reference. Nothing is committed for you.
 
 | Symptom | Likely cause |
 |---|---|
-| 403 on a write verb | your title does not meet the card's `min-approval-requirement:` (rule 2), or it's a `user`-tier card and you're an agent (rule 3) — route through COS/MANAGER |
+| 403 on a write verb | title below the card's `min-approval-requirement:` (rule 2), or a `user`-tier card and you're an agent (rule 3) — route through COS/MANAGER |
 | 403 approving a card you authored | the self-approval ban (rule 4) — a different authority must approve it |
-| `archive --state failed` rejected | expected — `failed` is retryable and stays in `tasks/`; use `cancelled` to give up (rule 7) |
-| Card the local `design/` file shows isn't in server search | the dashboard mirror hasn't synced, or `--agent` targeted the wrong corpus |
-| `verify` exits `1` | transport/usage error — verdict unknown, not "unverified" |
-| `verify` exits `2` | the approval genuinely does not check out — do not trust the card's `## Approval log` prose over this |
-| 401 from a human terminal | there is no USER auth path in the script layer yet (`Emasoft/ai-maestro#55`) — this skill is agent-facing |
+| Card in the local file isn't in server search | the dashboard mirror hasn't synced, or `--agent` targeted the wrong corpus |
+| 401 from a human terminal | no USER auth path in the script layer yet (`Emasoft/ai-maestro#55`) — this skill is agent-facing |
 
 ## Examples
 
