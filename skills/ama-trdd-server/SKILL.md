@@ -1,7 +1,7 @@
 ---
 name: ama-trdd-server
 user-invocable: false
-description: "Search, read, verify, and server-mediated create/mutate TRDDs via the aimaestro-trdd.sh CLI — the AI Maestro dashboard's authorization-aware view of the design/ corpus. Write verbs (create / edit / approve / refuse / promote / archive) are STRICT, gated by the caller's verified AID title or each TRDD's min-approval-requirement with a hard self-approval ban. Use when server-mirrored state or server-side authorization matters: minting a card, the dashboard kanban, approving a proposal, confirming an approval is real. Trigger with 'create a TRDD', 'approve this TRDD', 'search TRDDs on the dashboard'. For local design/ file editing use ama-trdd-find/write/update/transition. Loaded by ai-maestro-plugin"
+description: "Search, read, verify, and server-mediated create/mutate TRDDs via the aimaestro-trdd.sh CLI — the AI Maestro dashboard's authorization-aware view of the design/ corpus. Write verbs (create / edit / approve / refuse / promote / archive) are STRICT, gated by verified AID title with a hard self-approval ban. Use when server-mirrored state or server-side authorization matters. For local design/ editing use ama-trdd-find/write/update/transition."
 allowed-tools: "Bash(aimaestro-trdd.sh:*), Bash(jq:*), Read, Grep, Glob"
 disallowed-tools: "Edit, Write, NotebookEdit"
 metadata:
@@ -289,14 +289,11 @@ tier check — are `ama-trdd-find` / `ama-trdd-write` / `ama-trdd-update` /
 
 - `Skill(skill: "ama-trdd-find")` — find a TRDD in the local `design/`
   corpus (the source of truth).
-- `Skill(skill: "ama-trdd-transition")` — the four zones + the `min-approval-requirement:`
-  ladder + the objective requirement-floor the write verbs enforce, in
-  [approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md).
-
-  > Contents · A. The four design zones · B. The `proposal → planned` lifecycle · C. The `min-approval-requirement:` field (rung semantics defer to the DEP overlay) · D. Single-writer-per-domain (collision avoidance) · Batch approval syntax (the fast path)
 - `Skill(skill: "ama-trdd-transition")` — move a TRDD between columns
   locally, with the full transition matrix (the local counterpart to
-  `promote`).
+  `promote`); also carries the four zones + the ladder + batch approval
+  syntax in
+  [approval-tiers-and-zones.md](../ama-trdd-transition/references/approval-tiers-and-zones.md).
 - `Skill(skill: "ama-proposal-approvals")` — batch proposal approvals on
   local `design/` files.
 - `Skill(skill: "team-kanban")` — the live team-coordination board (a
