@@ -37,6 +37,16 @@ proposal gating, double-gated by your role AND the script's authority check.
 - **Any other role** must NOT approve. Surface the request to the MANAGER (via
   COS for team-internal agents).
 
+**Authority model (governance R41 — APPROVAL vs MANDATE):** APPROVAL flows
+bottom-up — a proposal needs the tier above, and **no agent (or user) approves
+a card it authored**; the approver and the proposer must differ. MANDATE flows
+top-down (a mandate is born approved by the issuing authority) — a plain
+proposal here is never a mandate. An approval is **checkable**, not merely
+readable: when the decision must be proven rather than trusted, confirm it via
+`aimaestro-trdd.sh verify <id>` (the signed token), never the file's prose
+`## Approval log` alone. Never call the ai-maestro server API directly;
+`aimaestro-trdd.sh` resolves the API base and your identity internally (core#11).
+
 Hard backstop: `require_manager()` in the script calls
 `prrd_lib.caller_is_manager()` (`$AID_AUTH` → server). A non-MANAGER `approve` /
 `refuse` / `archive` without `--user` is refused with exit 4.
