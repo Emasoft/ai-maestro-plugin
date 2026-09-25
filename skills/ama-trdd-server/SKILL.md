@@ -234,19 +234,9 @@ returns the minted token reference. Nothing is committed for you.
 <example>
 An ORCHESTRATOR approves a designed proposal whose `min-approval-requirement:`
 is `orchestrator`.
-→ First confirm the tier and that you are not the proposer, then
+→ Confirm the tier and that you are not the proposer, then
 `aimaestro-trdd.sh approve 9a8aba94 --approver <self> --tier <N> --rationale "matches the accepted design"`.
-(`--tier` is NUMERIC — the deployed CLI rejects names with "must be a number
-(0-3)"; the canonical name→number mapping for the ladder above is pending on
-the ai-maestro side.)
 The server mints the signed token and moves the file `proposals/ → tasks/`.
-</example>
-
-<example>
-A MEMBER wants a proposal approved but the card is `manager`-tier.
-→ The MEMBER does NOT call `approve` (rule 5). It routes the request through
-its CHIEF-OF-STAFF to the MANAGER, who approves. A MEMBER never
-self-approves.
 </example>
 
 <example>
