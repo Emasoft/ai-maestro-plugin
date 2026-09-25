@@ -3,10 +3,10 @@ trdd-id: 202ccfa2-4883-46af-9a1c-64e5305d6d0f
 title: publish-globally — cross-project visibility for PROJECT-scope wikimem via memgrep
 column: blocked
 pre-block-column: planned
-blocked-by: [ai-maestro-janitor#111, ai-maestro-janitor#52]
+blocked-by: ai-maestro-janitor#310
 review-after: 2026-09-15
 created: 2026-06-20T20:08:24+0200
-updated: 2026-09-24T18:15:28+0200
+updated: 2026-09-25T14:00:29+0200
 current-owner: ai-maestro-plugin
 assignee: ai-maestro-plugin
 priority: 3
@@ -51,8 +51,10 @@ external-refs: []
 > LOCAL-never-published appear met in code" all come from a local audit's source grep; "#52's
 > schema/skill/rule asks are done" comes from the janitor's closing comment. `blocked-by:` still
 > names the two closed issues pending the owner's decision on asking the janitor to reopen #111.
-> NEXT ACTION: that decision; then repoint `blocked-by:`, or restore `planned` with an explicit
-> "no open blocker" note.
+> NEXT ACTION 2026-09-25: the owner sessions chose a FRESH issue over reopening #111 —
+> filed as Emasoft/ai-maestro-janitor#310 (root cause: the Rust walk does not follow
+> symlinks — a symlink-only memdir indexes 0 rows; repro in that issue). #310 is now the
+> live engine tracker. Restore `planned` when #310 lands.
 
 > **2026-08-25 — PARKED with `review-after: 2026-09-15`.** Janitor session verified in
 > source: memgrep has the publish-globally FIELD normalization + symlink reconciliation
