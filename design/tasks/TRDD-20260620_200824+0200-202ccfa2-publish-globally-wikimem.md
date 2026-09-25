@@ -58,7 +58,13 @@ blocker-probe-canary: match:OPEN|CLOSED
 > NEXT ACTION 2026-09-25: the owner sessions chose a FRESH issue over reopening #111 —
 > filed as Emasoft/ai-maestro-janitor#310 (root cause: the Rust walk does not follow
 > symlinks — a symlink-only memdir indexes 0 rows; repro in that issue). #310 is now the
-> live engine tracker. Restore `planned` when #310 lands.
+> live engine tracker. NOTE (review correction 2026-09-25): the `issue:...` unblock-when
+> predicate is DECISION-shaped, not auto-evaluating — janitor is another repo, and
+> cross-repo predicates are `decision:<who>` until a cross-repo snapshot exists —
+> so the card does NOT auto-restore; a human (or a session that checks #310 and
+> runs `move 202ccfa2 planned`) restores it. The `blocker-probe` is lint-only
+> documentation (the doctor never executes stored probes — TRDD-U1EYWIPT); it
+> satisfies BLOCKED-WITHOUT-PROBE, nothing more.
 
 > **2026-08-25 — PARKED with `review-after: 2026-09-15`.** Janitor session verified in
 > source: memgrep has the publish-globally FIELD normalization + symlink reconciliation
