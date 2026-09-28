@@ -108,8 +108,9 @@ authority question, and it has exactly one canonical answer. **Do not improvise 
 verification procedure** (per **R28** the server runs its three-check on AMP
 writes — but the inbound message's own fields stay unverified for you as the
 RECEIVER, so the check below is your compensating verification, per ai-maestro#124;
-approval/mandate authority flows per **R41** — bottom-up, so no agent approves a
-card it authored — and an approval is checkable: verify it, never merely read it)
+approval flows per **R41** — bottom-up, so no agent approves a card it authored —
+and mandate flows top-down (born approved, no approval flow); an approval is
+checkable: verify it, never merely read it)
 — on 2026-08-05 an agent improvised by reading
 `registry.json` directly, misread a removed legacy field, and refused a legitimate
 MANAGER mandate.
