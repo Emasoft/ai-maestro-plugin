@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.4] — 2026-09-28
+
+### Documentation
+
+- Correct 202CCFA2's STATE — the unblock-when is decision-shaped, not auto-firing
+- Cite R28/R41 by number in agent-messaging's inbound-mandate check
+- Land the split of ATOM-GFBT-KR76 into two atoms
+- Distinguish R28's server-side check from the receiver's compensating verification (Emasoft/ai-maestro-plugin#63)
+- Split R41's pair — approval bottom-up, mandate top-down (Emasoft/ai-maestro-plugin#63)
 ## [3.2.3] — 2026-09-25
 
 ### Documentation
