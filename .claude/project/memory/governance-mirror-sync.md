@@ -2,7 +2,7 @@
 name: governance-mirror-sync
 description: "governance blob sha mismatch / mirror looks stale but is not / which branch does the mirror track / is my governance mirror out of date / our skill teaches something a governance rule forbids / bundled governance rules are stale / why did nobody notice the rule violation / did we check the new governance rules against the skills / is the v5.2.0 contradiction sweep done / which rules had violations in core skills"
 ocd: 2026-08-05
-lmd: 2026-08-29
+lmd: 2026-09-27
 metadata:
   node_type: memory
   type: project
@@ -45,7 +45,7 @@ along. Fetch BOTH halves before concluding anything structural about which branc
 belongs to.
 
 
-^ATOM-GFBT-KR76 [desc:"CORE's vendored GOVERNANCE-RULES.md mirror lags upstream, so skills get written against superseded semantics and the artifact that would contradict them is the stale one", keywords: our_skill_teaches_something_a_governance_rule_forbids bundled_governance_rules_are_stale why_did_nobody_notice_the_rule_violation mirror_lags_upstream_so_skills_were_written_pre_rule R42_cross_agent_driving_forbidden, ocd: 2026-08-05, lmd: 2026-08-05]
+^ATOM-GFBT-KR76 [desc: "CORE's vendored GOVERNANCE-RULES.md mirror lags upstream — twelve rules behind — which silently produced WRONG SKILLS: the stale mirror was the artifact that would have contradicted them", keywords: our_skill_teaches_something_a_governance_rule_forbids bundled_governance_rules_are_stale why_did_nobody_notice_the_rule_violation mirror_lags_upstream_so_skills_were_written_pre_rule R42_cross_agent_driving_forbidden vendored_mirror_twelve_rules_behind_upstream skills_written_before_the_rule_reached_this_repo stale_mirror_is_the_artifact_that_would_contradict_them R42_landed_upstream_v4.3.0_forbids_cross_agent_driving ama-session_ama-panel_session-reference_taught_pre-R42_send-command_model, ocd: 2026-08-05, lmd: 2026-09-27]
 
 `skills/team-governance/references/GOVERNANCE-RULES.md` is a **vendored mirror** of
 `docs/GOVERNANCE-RULES.md` on the `governance-rules` branch of the ai-maestro repo, and it LAGS.
@@ -62,6 +62,9 @@ IRON) landed upstream in v4.3.0 and forbids it absolutely, with no title exempti
 were not defiant; they were written before the rule reached this repo, and then nothing could
 notice, because the artifact that would have contradicted them IS the stale mirror. Fixed `84aefa0`,
 shipped v3.0.4.
+
+
+^ATOM-15KT-K7RR [desc: "grep skills for what the NEW governance rules contradict BEFORE syncing the mirror — the sync is the cheap half, the consequences are the work; the mirror update is not a cp", keywords: grep_skills_before_syncing_the_mirror sync_is_the_cheap_half_the_consequences_are_the_work mirror_update_procedure_is_not_a_cp walk_the_section0_cross_reference_index spans_repos_reviewed_change_never_a_drive_by a_rule_arriving_by_mirror_binds_only_agents_whose_mirror_arrived pre_sync_contradiction_check update_vendored_governance_mirror_procedure governance_mirror_sync_checklist before_resyncing_governance_rules_grep_skills, ocd: 2026-09-27, lmd: 2026-09-27]
 
 **Therefore: before syncing the mirror, grep the skills for what the NEW rules contradict** — the
 sync is the cheap half; the consequences are the work. `grep -rn "requires MANAGER\|MANAGER (any" skills/`
