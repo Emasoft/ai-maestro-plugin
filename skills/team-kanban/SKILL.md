@@ -2,7 +2,7 @@
 name: team-kanban
 user-invocable: false
 description: "Manage team kanban boards and tasks. Use when creating, moving, filtering, getting, or editing tasks. Trigger with 'what's on the board', 'move this task to dev', 'create a kanban task', 'show the blocked tasks'. Loaded by ai-maestro-plugin"
-allowed-tools: "Bash(amp-kanban-list.sh:*), Bash(amp-kanban-get.sh:*), Bash(amp-kanban-create-task.sh:*), Bash(amp-kanban-move.sh:*), Bash(amp-kanban-edit.sh:*), Bash(amp-kanban-archive.sh:*), Bash(aimaestro-teams.sh:*), Bash(jq:*), Bash(kanban-sync.py:*), Read, Edit, Grep, Glob"
+allowed-tools: "Bash(amp-kanban-list.sh:*), Bash(amp-kanban-get.sh:*), Bash(amp-kanban-create-task.sh:*), Bash(amp-kanban-move.sh:*), Bash(amp-kanban-edit.sh:*), Bash(amp-kanban-archive.sh:*), Bash(aimaestro-teams.sh:*), Bash(jq:*), Bash(kanban-sync.py:*), Bash(gh:*), Read, Grep, Glob"
 metadata:
   author: "Emasoft"
   version: "2.1.1"
