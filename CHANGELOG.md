@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.5] — 2026-09-29
+
+### Bug Fixes
+
+- Add gh to team-kanban's allowed-tools, drop unused Edit
+- Narrow team-kanban's gh grant to `gh auth` (review round 1)
 ## [3.2.4] — 2026-09-28
 
 ### Documentation
