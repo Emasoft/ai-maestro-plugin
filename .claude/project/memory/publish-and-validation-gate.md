@@ -2,7 +2,7 @@
 name: publish-and-validation-gate
 description: "why does local publish.py validate disagree with CI / which CPV version does this repo validate against and where is it pinned / the strict gate went red and I changed no code / CI is red but the same suite passes locally / a test fails on every push naming the release commit as a file's last touch / shallow clone, fetch-depth, git log returning HEAD for every file / is exit 4 a real failure or a NIT / when may I bump the CPV pin"
 ocd: 2026-08-01
-lmd: 2026-08-29
+lmd: 2026-09-29
 metadata:
   node_type: memory
   type: project
@@ -42,7 +42,7 @@ the file's. Running the OLD test file in that clone reproduces the CI failure
 exactly; the NEW one skips. [^6]
 
 
-^ATOM-ISFM-JU5D [desc: "a SKILL.md body over 5000 estimated Claude tokens is a MAJOR that blocks publish, and skills/agent-messaging is the one that keeps drifting into it", keywords: publish_blocked_MAJOR_no_code_changed SKILL.md_body_is_too_long estimated_Claude_tokens_limit_5000 docs_commit_will_not_publish split_into_smaller_more_focused_skills agent-messaging_skill_over_the_cap how_do_I_measure_the_skill_token_budget_before_publishing o200k_base_times_1.3 validator_rejects_a_docs-only_change adding_a_paragraph_to_a_skill_broke_the_release_gate, ocd: 2026-08-29, lmd: 2026-08-29]
+^ATOM-ISFM-JU5D [desc: "a SKILL.md body over 5000 estimated Claude tokens is a MAJOR that blocks publish, and skills/agent-messaging is the one that keeps drifting into it", keywords: publish_blocked_MAJOR_no_code_changed SKILL.md_body_is_too_long estimated_Claude_tokens_limit_5000 docs_commit_will_not_publish split_into_smaller_more_focused_skills agent-messaging_skill_over_the_cap how_do_I_measure_the_skill_token_budget_before_publishing o200k_base_times_1.3 validator_rejects_a_docs-only_change adding_a_paragraph_to_a_skill_broke_the_release_gate, ocd: 2026-08-29, lmd: 2026-09-29]
 
 **CPV caps a SKILL.md BODY at 5000 estimated Claude tokens and reports an overflow as a
 MAJOR, which blocks `scripts/publish.py` outright.** The estimate is `o200k_base` BPE of the
@@ -55,6 +55,9 @@ import re,tiktoken,math
 b=re.sub(r'^---\n.*?\n---\n','',open('skills/<name>/SKILL.md').read(),flags=re.S)
 print(math.ceil(len(tiktoken.get_encoding('o200k_base').encode(b))*1.3))"
 ```
+
+
+^ATOM-0P37-BT9O [desc: "agent-messaging keeps drifting over the 5000-token cap; cut duplicated content shared with reference/detailed-guide.md, not prose at random, and leave headroom — 4990 is a re-break waiting.", keywords: publish_blocked_MAJOR_no_code_changed SKILL.md_body_is_too_long estimated_Claude_tokens_limit_5000 docs_commit_will_not_publish split_into_smaller_more_focused_skills agent-messaging_skill_over_the_cap how_do_I_measure_the_skill_token_budget_before_publishing o200k_base_times_1.3 validator_rejects_a_docs-only_change adding_a_paragraph_to_a_skill_broke_the_release_gate, ocd: 2026-09-29, lmd: 2026-09-29]
 
 **`skills/agent-messaging/SKILL.md` is the one that keeps drifting over.** Its body tracks
 every Claude Code release that touches cross-session messaging, so each alignment pass adds
