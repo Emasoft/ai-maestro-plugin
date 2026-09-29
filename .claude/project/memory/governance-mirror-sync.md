@@ -2,7 +2,7 @@
 name: governance-mirror-sync
 description: "governance blob sha mismatch / mirror looks stale but is not / which branch does the mirror track / is my governance mirror out of date / our skill teaches something a governance rule forbids / bundled governance rules are stale / why did nobody notice the rule violation / did we check the new governance rules against the skills / is the v5.2.0 contradiction sweep done / which rules had violations in core skills"
 ocd: 2026-08-05
-lmd: 2026-09-27
+lmd: 2026-09-29
 metadata:
   node_type: memory
   type: project
@@ -18,7 +18,7 @@ split-lineage: cc9840b5939c4effac960eb58cab1b1e
 upstream's `docs/GOVERNANCE-RULES.md`: what its own `branch:`/`synced-blob:` fields
 actually mean, why CORE tracks `main`, and the state of the v5.2.0 contradiction sweep.
 
-^ATOM-4ZIF-ICEA [desc: "the mirrored GOVERNANCE-RULES.md branch: field is UPSTREAM's own frontmatter and is NOT sync provenance, and CORE tracks main which can lag the governance-rules branch", keywords: governance_blob_sha_mismatch mirror_looks_stale_but_is_not branch_field_says_governance-rules_but_synced-blob_is_main false_drift_alarm_on_GOVERNANCE-RULES which_branch_does_the_mirror_track 44be10d5d351_vs_ceb4ac163bc0 two_sessions_disagree_about_the_governance_blob synced-blob_does_not_match_what_a_peer_reports is_my_governance_mirror_out_of_date spec_half_falsifies_a_single-file_blob_comparison, ocd: 2026-08-29, lmd: 2026-08-29]
+^ATOM-4ZIF-ICEA [desc: "the mirrored GOVERNANCE-RULES.md branch: field is UPSTREAM's own frontmatter and is NOT sync provenance, and CORE tracks main which can lag the governance-rules branch", keywords: governance_blob_sha_mismatch mirror_looks_stale_but_is_not branch_field_says_governance-rules_but_synced-blob_is_main false_drift_alarm_on_GOVERNANCE-RULES which_branch_does_the_mirror_track 44be10d5d351_vs_ceb4ac163bc0 two_sessions_disagree_about_the_governance_blob synced-blob_does_not_match_what_a_peer_reports is_my_governance_mirror_out_of_date spec_half_falsifies_a_single-file_blob_comparison, ocd: 2026-08-29, lmd: 2026-09-29]
 
 **`branch: governance-rules` inside `skills/team-governance/references/GOVERNANCE-RULES.md` is
 part of UPSTREAM's own frontmatter — it sits directly above upstream's `changelog:` and the
@@ -36,6 +36,9 @@ content that has not landed, and `docs/GOVERNANCE-RULES.md` is the PRIMARY EMANA
 own §0 while `main` is the default branch — so tracking `main` is correct and
 `tests/test_governance_mirror_stamp.py` fires exactly when `main` advances, which is when the
 resync should happen. No manual watch is needed. See [[publish-and-validation-gate]].
+
+
+^ATOM-00DL-IIWM [desc: "comparing ONE governance file cannot tell branch fork from branch lag — the spec+rules PAIR can; fetch both halves of a stamp before any structural conclusion", keywords: comparing_one_file_cannot_tell_branch_fork_from_lag spec_plus_rules_pair_tells_fork_from_lag fetch_both_halves_before_concluding_branch peer_stamp_looked_like_main b96efb43adc9_spec_vs_6a4a1c9fa600 which_branch_does_a_stamp_belong_to governance-spec_and_GOVERNANCE-RULES_pair 928c96b3bed7 single_file_blob_comparison_ambiguous peer_stamp_branch_attribution rules_half_matched_main_spec_half_did_not, ocd: 2026-09-29, lmd: 2026-09-29]
 
 **Comparing ONE file cannot tell "branch fork" from "branch lag".** The pair
 `design/specs/governance-spec.md` + `docs/GOVERNANCE-RULES.md` can: on 2026-08-29 a peer's pin
