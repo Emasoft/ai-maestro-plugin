@@ -2,7 +2,7 @@
 name: test-guard-methodology
 description: "why does my anti-vacuity test pass while checking nothing / first-match .find or .index selection bugs in test guards / is this .find a bug or correct / which stamp guards does CORE have / why does the PRRD stamp test skip / the CLI coverage census reports false gaps / do I need to scan commands/ as well as skills/ / anti-vacuity guard in the test suite / extractor scoping rules that look like bugs"
 ocd: 2026-08-02
-lmd: 2026-08-29
+lmd: 2026-09-29
 metadata:
   node_type: memory
   type: project
@@ -65,7 +65,7 @@ slice's real scope manufactures exactly this finding in any tree that narrows wi
 true one. Measure in the same corpus the selector runs in, or the count means nothing.
 
 
-^ATOM-X19C-BCK7 [desc:"CORE's two container-stamp guards (PRRD prrd-version/updated, and the governance-mirror version/synced-blob) — what each asserts, and the residue neither closes", keywords: prrd-version_is_stale my_hand_edit_did_not_bump_the_stamp why_does_the_PRRD_test_skip governance_mirror_synced-at_guard which_stamp_guards_does_CORE_have updated_field_predates_the_last_commit, ocd: 2026-08-12, lmd: 2026-08-12]
+^ATOM-X19C-BCK7 [desc:"CORE's two container-stamp guards (PRRD prrd-version/updated, and the governance-mirror version/synced-blob) — what each asserts, and the residue neither closes", keywords: prrd-version_is_stale my_hand_edit_did_not_bump_the_stamp why_does_the_PRRD_test_skip governance_mirror_synced-at_guard which_stamp_guards_does_CORE_have updated_field_predates_the_last_commit, ocd: 2026-08-12, lmd: 2026-09-29]
 
 **CORE ships TWO container-stamp guards, and they exist because both fields had already gone
 quietly wrong.** Neither is redundant with the other; they guard different documents with
@@ -81,6 +81,9 @@ different witnesses.
    Asserts the POINTER (`version:` + `synced-blob:` + `synced-at:`), **never fetches**, because a
    network test collapses "stale" and "offline" into one red and a gate with two opposite correct
    responses on one signal gets switched off.
+
+
+^ATOM-ZVHC-0LDL [desc: "a hand edit bypassed prrd-edit.py, leaving the PRRD stamp 52 days stale — guards assert the artifact vs git, not the tool; residue: fresh stamp + same-day edit is green, only a content hash closes it", keywords: prrd_stamp_was_52_days_stale why_did_the_stamp_guard_miss_a_hand_edit tool_side_guard_stays_green_through_a_hand_edit what_version_should_the_prrd_stamp_be_restored_to restored_to_2.0_not_invented_1.6 fresh_stamp_body_edited_same_day_is_green same_day_body_edit_not_caught_by_the_stamp_guard only_a_content_hash_closes_the_same_day_gap stamp_guard_asserts_the_artifact_against_git golden_change_bumps_the_prrd_version_major, ocd: 2026-09-29, lmd: 2026-09-29]
 
 **The PRRD stamp was 52 days stale and the cause was NOT forgetfulness.** `prrd-edit.py`
 already sets both fields on every mutation; `acbea84` edited the file BY HAND, so the tool's
