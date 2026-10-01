@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.6] — 2026-10-01
+
+### Bug Fixes
+
+- Make ATOM-ZVHC-0LDL recall-findable (adversarial review round 1)
+- Align failed-card semantics and PR review count to spec 4.0.0 rulings
+
+### Documentation
+
+- Add ATOM-ZVHC-0LDL — the PRRD-stamp 52-day-stale hand-edit incident
+- Split oversized atom ATOM-4ZIF-ICEA (1808 chars > 1500 budget)
+- Split oversized atom ATOM-ISFM-JU5D (1517 chars > 1500 budget)
 ## [3.2.5] — 2026-09-29
 
 ### Bug Fixes
