@@ -77,7 +77,7 @@ moves below.
 | 7 | `dev` | `testing` | assignee (MEM/INT/AUTO) | assignee signals "code ready for tests" **after the pre-PR gate clears with ORCH** (dialog loop c — no PR/INT notification before ORCH's "go") | bump `updated:`; record commit SHAs in `implementation-commits:` | AMP → ORCH (via COS): "TRDD-<id> code ready; running tests" |
 | 8 | `testing` | `ai_review` | test runner (assignee triggers) | All `test-requirements:` + `audit-requirements:` PASSED | `last-test-result: pass`; `last-test-at:`; bump `updated:` | AMP → AI-reviewer: "TRDD-<id> awaiting AI review" |
 | 9 | `testing` | `dev` | test runner | Any required test FAILED | `last-test-result: fail`; `last-test-at:`; `test-failures: +=1`; append failure post-mortem to body; bump `updated:` | AMP → assignee (via COS): "TRDD-<id> test failed; please fix" |
-| 10 | `testing` | `failed` | ORCH or AMAMA | `test-failures >= project-threshold` (default 5) | `column: failed`; body grows "## Abandonment post-mortem" section | AMP → AMAMA → USER: "TRDD-<id> abandoned after <N> test failures" |
+| 10 | `testing` | `failed` | ORCH or AMAMA | `test-failures >= project-threshold` (default 5) | `column: failed`; body grows "## Abandonment post-mortem" section | AMP → AMAMA → USER: "TRDD-<id> failed after <N> test failures" |
 | 11 | `ai_review` | `human_review` | AI reviewer | `review-requirements:` includes `human-review` or `human-evaluation`; AI review passed | bump `updated:`; review notes in body | AMP → AMAMA → USER: "TRDD-<id> needs human review" |
 | 12 | `ai_review` | `complete` | **INT** | `review-requirements:` does NOT include any `human-*`; AI review passed; PR merged; **INT validated the merged PR satisfies the TRDD** | bump `updated:`; gate on EHTs (see below) | AMP → ORCH (via COS): "TRDD-<id> validated against TRDD; complete" |
 | 13 | `ai_review` | `dev` | AI reviewer | AI review FOUND ISSUES | bump `updated:`; review notes in body | AMP → assignee (via COS): "TRDD-<id> review found issues" |
@@ -97,7 +97,7 @@ moves below.
 | 27 | `live_auditing` (entry) | `dev` | INT | `audit-conclusion: issue-confirmed` | `audit-conclusion: issue-confirmed`; body grows "## Fix plan"; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> audit found issue; needs fix" |
 | 28 | `<any working>` | `blocked` | owner of TRDD | `blocked-by:` becomes non-empty | `pre-block-column: <previous>`; bump `updated:` | AMP → ORCH: "TRDD-<id> blocked by: <ids>" |
 | 29 | `blocked` | `<pre-block-column>` | owner of TRDD | `blocked-by:` empties | restore `column: <pre-block-column>`; `pre-block-column: null`; bump `updated:` | AMP → ORCH: "TRDD-<id> unblocked; resumed" |
-| 30 | `<any non-terminal>` | `failed` | AMAMA or USER | USER decides to abandon | body: "## Abandonment decision" + rationale; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> abandoned per USER decision" |
+| 30 | `<any non-terminal>` | `failed` | AMAMA or USER | USER marks failed | body: "## Abandonment decision" + rationale; bump `updated:` | AMP → ORCH (via COS): "TRDD-<id> failed per USER decision" |
 | 31 | `<any non-terminal>` | `superseded` | ARCH | ARCH retroactively splits or groups | `superseded-by:` populated | AMP → ORCH (via COS): "TRDD-<id> superseded" |
 
 ## Pre-PR gate (dialog loop c)
@@ -125,8 +125,8 @@ principle applied to the completed-state. Full definition:
 ## Reverse moves NOT in the matrix
 
 - **Cannot** move from a terminal column (`published`, `live`,
-  `complete-with-no-release`, `failed`, `superseded`) back to any
-  earlier column. Terminals are absorptive. New work = new TRDD.
+  `complete-with-no-release`, `superseded`) back to any
+  earlier column. Terminals are absorptive. New work = new TRDD. `failed` is NOT terminal: a failed card stays open/retryable (3-pillars spec 4.0.0, 3P-ZON-06) — return it to the column it came from (record `pre-block-column`-style provenance in the body) rather than abandoning it; archiving a failed card is a separate definitive act (`trddgrep archive`) reserved to MANAGER/CHIEF-OF-STAFF (in harness) or the USER, and an ARCHIVED failed card never re-opens.
 - **Cannot** skip the design column for non-trivial TRDDs. If you find
   yourself wanting to move `design`/`todo` → `dispatch` without ARCH
   involvement, the TRDD is either trivial (just do it in-session — no card) OR

@@ -149,7 +149,7 @@ The three ratified rulesets (all `enforcement: active`; the first two
 - **`baseline-pr-and-checks`** — `bypass_actors:
   [{actor_id:5, actor_type:RepositoryRole, bypass_mode:always}]`
   (admin direct-push for `publish.py`; outside PRs still gated). Rules:
-  `pull_request` (`required_approving_review_count:1`,
+  `pull_request` (`required_approving_review_count:0`,
   `dismiss_stale_reviews_on_push:true`,
   `require_code_owner_review:false`,
   `require_last_push_approval:false`,
