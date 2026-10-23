@@ -35,7 +35,7 @@ jobs:
         # setup-uv enables its package cache by default. This workflow fires ONLY
         # on an owner-created `v*.*.*` tag push (never a fork PR), so there is no
         # untrusted-writer path to poison the cache the release reads.
-        uses: astral-sh/setup-uv@e4db8464a088ece1b920f60402e813ea4de65b8f # v4
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v4
 
       - name: Set up Python
         run: uv python install 3.12
